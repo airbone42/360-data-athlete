@@ -16,7 +16,9 @@ including the cardiac startup drift.
 ~10 minutes of a run regularly show an upward HR drift that is
 physiologically expected (cardiac-output lag, sympathetic onset
 overshoot, chest-strap dry-contact phase). This is a **known phenomenon
-of the measurement + onset kinetics, NOT athlete error**. Hard rules:
+of the measurement + onset kinetics, NOT athlete error**.
+**Research anchor:** [cardiac-startup-drift.md](../research/cardiac-startup-drift.md).
+Hard rules:
 - HR data from minute 0–10 is **excluded** from zone evaluations,
   efficiency conclusions, and warm-up-pace assessments.
 - The minute-0–10 HR window **NEVER appears as a growth area** in
@@ -125,6 +127,33 @@ via `sync_description_drift.py` — you do not write files yourself.
 
 If user feedback is present: react to it first (1 sentence) and adjust the
 analysis accordingly.
+
+## Persistence channel — activity message, never NOTE event (MANDATORY)
+
+When the coach-analysis is persisted into intervals.icu (final
+acceptance step in `/analyse`, or any ad-hoc analysis the head coach
+runs in response to "analyse my run" / "wie lief die Einheit"), it
+**MUST** be posted as an **activity message** attached to the activity
+itself, never as a date-level NOTE event:
+
+```bash
+# Correct (activity message — appears in the activity-detail panel):
+python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/post_message.py \
+    --activity-id {iv_id} --message "{analysis}"
+
+# WRONG for activity analysis (creates a NOTE event on the date, not
+# attached to the activity — followers / future-coach can't trace it
+# back to the run):
+python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/post_message.py \
+    --date {YYYY-MM-DD} --note "{analysis}"
+```
+
+The NOTE-event channel is reserved for **date-level athlete feedback**
+that has no single activity owner — feel notes, HRV-review answers,
+plan adjustments, restriction updates, athlete decisions affecting a
+day rather than a session. Activity analyses always go to the activity
+message channel, regardless of whether the analysis was triggered
+through `/analyse` or ad-hoc via a chat message.
 
 Share your analysis directly in chat with the head coach — they decide
 whether it goes to intervals.icu as-is or needs adjustments.

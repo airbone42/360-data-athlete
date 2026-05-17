@@ -63,6 +63,7 @@ What the research did NOT clarify — and what should be checked next.
 | 2026-05-16 | Concurrent training interference — strength + endurance temporal order | [concurrent-training-interference.md](concurrent-training-interference.md) | active |
 | 2026-05-16 | Strava GAP vs. Intervals.icu GAP vs. Minetti — algorithms, differences | [strava-vs-intervals-gap.md](strava-vs-intervals-gap.md) | active |
 | 2026-05-16 → 2026-05-17 | Strides — neuromuscular priming, running economy, format parametrisation (Paavolainen 1999, stop conditions, 4-vs-6 dosing) | [strides-protocol.md](strides-protocol.md) | active |
+| 2026-05-17 | Cardiac startup drift — minute-0–10 HR transient (onset overshoot + cardiac-output lag + strap dry-contact); 10-min exclusion convention | [cardiac-startup-drift.md](cardiac-startup-drift.md) | active |
 | 2026-05-16 | DOMS — peak timing, recovery window, 3-day validator window | [doms-peak-timing.md](doms-peak-timing.md) | active |
 | 2026-05-16 | Static stretching pre-exercise — dose-response, 30s sweet spot | [pre-exercise-stretching.md](pre-exercise-stretching.md) | active |
 | 2026-05-16 | Running cadence — 180-spm myth, self-selected, +5% rehab | [running-cadence-myths.md](running-cadence-myths.md) | active |

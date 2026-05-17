@@ -304,6 +304,7 @@ talking points:
    "Z4 in WU", "kalter Start" or "warm-up too fast" framing referring
    to the first 10 min is a **measurement / kinetics phenomenon, not
    athlete error** — it has no place in a coaching finding.
+   **Research anchor:** [cardiac-startup-drift.md](research/cardiac-startup-drift.md).
 2. **Stride pace numbers** (lap duration ≤30 s). GPS-pace on strides
    is unreliable by 10–40 s/km per segment; "schnellste Stride
    3:57/km", "S3 langsamer als S5", or pace-trend interpretations

@@ -119,6 +119,7 @@ for every entry → title-sync only, no body, no footer):
    sounds like an athlete mistake. Default: omit the early-HR window
    from insights entirely. The athlete's followers do not need the
    onset-kinetics nuance.
+   **Research anchor:** [cardiac-startup-drift.md](../research/cardiac-startup-drift.md).
 
 ### Pace anchor on hilly sessions (≥30 m/km)
 
