@@ -504,6 +504,45 @@ Physio-Routine, Core-Accessory") — not with cherry-picked exercises
 that may not survive the specialist's review of
 `config/exercise_progressions.md` + type-history.
 
+### Active-Sperren-Disziplin (mandatory)
+
+Every entry in the "AKTIVE SPERREN" / "active_blocks" list at the top of
+a plan presentation, planner directive, or specialist briefing **must
+trace back to a concrete, current trigger** — never speculative,
+never future-projected, never "just in case".
+
+Permitted triggers (each entry must cite one):
+
+| Trigger class | Source |
+|---------------|--------|
+| Injury / phase restriction | `athlete_static.md` block listed under current Phase / Status |
+| Active recovery week / taper | `athlete_status.md` recovery-week block OR `competition_plan.md` taper window AND `raceInDays` ≤ taper length |
+| Conditional PAP / interference rule | `training_paradigms.md` PAP-Regel — **only** when `todayWorkouts` OR tomorrow's workouts include a quality session (Threshold/VO2max/RACE). No same-day or next-day quality → no PAP-Sperre |
+| Load cap (not exclusion) | `exercise_progressions.md` explicit cap entry — surfaced as "Last-Cap @ Xkg", not as "gesperrt" |
+| Cross-pillar follow-day sperre | Yesterday's pillar conflicts with today's planned pillar — must reference yesterday's session by date |
+| Recent symptom / athlete report | `athleteFeedback` from `fetch_context.py` with date stamp |
+
+**Forbidden Sperren patterns** (drift-incident pattern):
+
+- "Bein offen für KW21-Race-Spezifik" — when `eventList` shows no event and `raceInDays` is `None`, there is no race to taper for. Don't manufacture a race.
+- "Wadenheben gesperrt heute (PAP)" — when neither `todayWorkouts` nor tomorrow's plan contains a Threshold/VO2max/RACE workout. PAP-Regel is conditional, not blanket.
+- "Pillar X aus heute" — when nothing in `planningConstraints` or the pillar-rotation history actually blocks it. Quiet rest > fabricated reason.
+
+**Drift incident pattern** (canonical case): A non-quality Pillar-Tag
+(no quality today, no quality tomorrow, no race scheduled) listed
+"Wadenheben mit Last gesperrt (PAP-Regel)" and "Bein-Strength gesperrt
+(KW21-Race-Spezifik)" as active sperren — both fabricated. The athlete
+caught it because the system docs (`training_paradigms.md` §339,
+`framework/research/eccentric-calf-pap-inhibition.md`,
+`framework/agents/specialist-complementary.md:374`) all correctly
+constrain the rule to "same-day quality". The error was at the
+head-coach briefing layer: pulling a contextual rule into a blanket
+ban without checking the trigger condition.
+
+**Operational rule:** Before each "AKTIVE SPERREN" line is written,
+the coach states the trigger in one phrase. If no trigger is
+verifiable from the listed sources, the entry is removed.
+
 ### Planner systematic-input rule (mandatory)
 
 Before the planner is briefed, the coach verifies the context carries

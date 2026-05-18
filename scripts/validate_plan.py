@@ -219,7 +219,10 @@ def check_reps_ceiling(workouts: list[dict], ctx: Context) -> list[Finding]:
 def check_injury_locks_shoulder(workouts: list[dict], ctx: Context) -> list[Finding]:
     """R002 — Schulter-Sperre rechts: Pull-up, Hang, Rope Climb, Bar Traverse, Campus Board verboten.
 
-    Ausnahme: Dead Hang aktiv 2-5s ist erlaubt (siehe athlete_static.md).
+    Ausnahmen:
+    - Dead Hang aktiv 2-5s ist erlaubt (siehe athlete_static.md).
+    - Scapular Pullups (skapulare Depression, keine Ellbogenflexion) sind Reha-Tier
+      und gehören explizit zum Schulter-Reha-Repertoire — kein verbotener Pull-up.
     Hard-Stop (ERROR) bei eindeutigen Verletzungs-Verstößen.
     """
     findings = []
@@ -231,6 +234,9 @@ def check_injury_locks_shoulder(workouts: list[dict], ctx: Context) -> list[Find
             if _matches_any(line, SHOULDER_LOCK_PATTERNS):
                 # Dead Hang 2-5s ist explizit erlaubt
                 if re.search(r"dead\s*hang.*[2-5]\s*s", line, flags=re.IGNORECASE):
+                    continue
+                # Scapular Pullups (skapulare Depression, keine Ellbogenflexion) sind Reha
+                if re.search(r"\b(scapular?|skapula(r|re|ren)?)\s*pull[-\s]?ups?", line, flags=re.IGNORECASE):
                     continue
                 findings.append(Finding(
                     rule_id="R002",
