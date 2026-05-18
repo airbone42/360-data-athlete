@@ -348,6 +348,8 @@ history.
   options?"), or decisions outside the coaching domain (logistics,
   hall slots, travel).
 
+*Enforcement: head-coach judgment only — no mechanizable code path.*
+
 ### No silent conservatism (mandatory)
 
 When the systematic signals — `hrvForecastLatest.verdict == "expected"`,
@@ -371,6 +373,9 @@ explicit reason logged in `coaching_notes`:
 When in doubt, check the type history: if the athlete's last *real*
 stimulus on that pillar is older than the rotation cadence, the answer
 is "schedule the stimulus", not "another physio session".
+
+*Enforcement: head-coach judgment based on the context fields named
+above — no single code gate.*
 
 ### Never silently drop or replace standing prescriptions (mandatory)
 
@@ -480,6 +485,10 @@ change reaches the athlete:
   was created, both `training_paradigms.md` paradigm entries were
   corrected, and this rule was added so the same drift doesn't repeat
   silently for the next protocol.
+
+*Enforcement: head-coach judgment — requires consulting
+`framework/research/` and persisting new findings there before applying
+the change.*
 
 ### Plan-vs-example clarity (mandatory)
 
@@ -678,14 +687,20 @@ Plan directive (planner output):
 
 Start `mental-coach` automatically — initially rather too often.
 
-| Situation | When | Context to pass |
-|-----------|------|-----------------|
-| Pre-long-effort | Planner schedules `LONG` (> 90 min) or `RACE` | Workout, HRV, TSB, weather |
-| After a bad session | `coach-analyst` flags significantly under plan | Analysis output, activity details |
-| After a setback | Injury NOTE, abandoned session, race well below goal | Note + activity context |
-| Unexplained HRV drop | Review yields no external factor | HRV data, training load |
-| Motivation signal | "no energy", "tired", "not motivated" | Direct text |
-| Direct invocation | `/mental` or similar | Free interaction |
+| Situation | When | Mechanization | Context to pass |
+|-----------|------|---------------|-----------------|
+| Pre-long-effort | Planner schedules `LONG` (> 90 min) or `RACE` | **Code: `push_workouts.py::_warn_on_mental_coach_triggers`** logs `🧠 MENTAL-COACH-TRIGGER` after every push | Workout, HRV, TSB, weather |
+| After a bad session | `coach-analyst` flags significantly under plan | Head-coach judgment (analysis-time signal) | Analysis output, activity details |
+| After a setback | Injury NOTE, abandoned session, race well below goal | Head-coach judgment | Note + activity context |
+| Unexplained HRV drop | Review yields no external factor | Head-coach judgment | HRV data, training load |
+| Motivation signal | "no energy", "tired", "not motivated" | Head-coach judgment (text) | Direct text |
+| Direct invocation | `/mental` or similar | Head-coach launches on request | Free interaction |
+
+The Pre-long-effort row is mechanically surfaced — every `push_workouts.py`
+invocation that contains a Long/RACE workout emits a `🧠 MENTAL-COACH-TRIGGER`
+WARNING line in the push log. The head-coach reads it and launches the
+`mental-coach` pane. The remaining rows are not derivable from push-time
+data alone and stay head-coach judgment for now.
 
 ---
 
@@ -1025,6 +1040,9 @@ print(date(YYYY, M, D).strftime('%A'))
 
 Never compute weekdays from memory.
 
+*Enforcement: head-coach judgment (anti-hallucination protocol) —
+the snippet above is the canonical verification step.*
+
 ---
 
 ## Development rules
@@ -1043,6 +1061,9 @@ Auto-push / auto-pull are optional. When enabled in the wrapper repository:
 - manual `/pull` is always available
 - the remote (URL, host) is configured via `.env` or the wrapper repo —
   the framework itself stays remote-agnostic
+
+*Enforcement: head-coach judgment — applies to development workflow,
+not training cycle.*
 
 ### Secrets
 - No hard-coded API keys — `.env` resolves via `$COACH_HOME/.env`

@@ -1302,6 +1302,214 @@ async def _fetch_online() -> dict[str, Any]:
 # ── Orchestrierung ───────────────────────────────────────────────────
 
 
+# ---------------------------------------------------------------------------
+# POLICY_COVERAGE — verhindert Drift zwischen CLAUDE.md (Policy) und
+# Code/Commands (Enforcement). Jede `(mandatory)`-Section im CLAUDE.md muss
+# entweder Code-anchored sein (Funktion/Script genannt) ODER von einem
+# `commands/*.md`-Workflow referenziert werden ODER explizit als
+# "head-coach judgment" markiert. Sektionen ohne Anker sind Drift-Kandidaten.
+# ---------------------------------------------------------------------------
+
+_POLICY_HEADING_RE = re.compile(
+    r"^(#{2,4})\s+(.+?)\s+\((mandatory|MANDATORY)\)\s*$",
+    re.MULTILINE,
+)
+
+# Inline-Bold-Marker: `**Daily balance rotation (mandatory ...):**` — die
+# Drift-Klasse, die am 18.05.2026 die Balance-Einheit zum Verschwinden
+# brachte (kein `###`-Heading, deshalb leicht zu übersehen).
+_POLICY_INLINE_RE = re.compile(
+    r"^\*\*(.+?)\s+\((mandatory|MANDATORY)[^)]*\)\s*[:.]?\*\*",
+    re.MULTILINE,
+)
+
+# Heuristik für Code-Anker: erkennt Erwähnungen konkreter Scripts, Module,
+# Funktionen, Helper, Tools oder typisierte Daten-Quellen, die als
+# Enforcement-Pfad gelten.
+_CODE_ANCHOR_PATTERNS = [
+    r"\b[a-z_][a-z0-9_]*\.py\b",                          # script.py
+    r"\b(?:app|scripts|framework)/[a-z0-9_/]+\.py\b",     # path/to/module.py
+    r"`[A-Za-z_][A-Za-z0-9_]*::[A-Za-z_][A-Za-z0-9_]*`",  # `module::function`
+    r"`_[a-z][a-z0-9_]+\(",                               # `_helper_func(`
+    r"\bcontext\.[a-zA-Z]+",                              # context.weeklyHardReizeBalance
+    r"\bcontext\[['\"]",                                  # context['xxx']
+    r"\bconfig/[a-z_]+\.[a-z]+\b",                        # config/foo.md / .json
+    r"\bsettings\.[a-z_]+",                               # settings.xxx
+    r"\bnotify_[a-z_]+",                                  # alerts
+    r"\bescape_for_prompt",                               # sanitize boundary
+    r"\bCron(?:Create|Delete|List)\b",                    # tool names
+    r"\bpost_message\.py\b",
+    r"\bvalidate_plan\.py\b",
+    r"\bpush_workouts\.py\b",
+    r"\bCode:\s",                                         # Explicit "Code:" tag
+    r"\bImplementation:\s",
+    r"\bimplemented in\b",
+    r"\benforced (?:in|by) code\b",
+    r"\benforces (?:this )?in code\b",
+]
+
+# Heuristik für Policy-Only-Marker — erlaubt explizites Opt-out vom
+# Audit, wenn der Coach-Judgment-Charakter dokumentiert ist.
+_POLICY_ONLY_PATTERNS = [
+    r"\bhead[- ]coach judgment\b",
+    r"\bcoach judgment\b",
+    r"\bjudgment only\b",
+    r"\bpolicy only\b",
+    r"\bno code possible\b",
+    r"\bnot mechan(?:isable|izable)\b",
+]
+
+
+def _extract_mandatory_sections(text: str) -> list[dict[str, Any]]:
+    """Return one dict per `(mandatory)` section in CLAUDE.md.
+
+    Includes both `### Title (mandatory)` headings AND inline
+    `**Title (mandatory ...):**` bold markers (the latter was the
+    Balance-Drift entry point on 2026-05-18).
+
+    Each dict carries: heading, body, line.
+    """
+    sections: list[dict[str, Any]] = []
+
+    # Heading-level (mandatory)
+    matches = list(_POLICY_HEADING_RE.finditer(text))
+    for i, m in enumerate(matches):
+        level = len(m.group(1))
+        title = m.group(2).strip()
+        start = m.start()
+        line_no = text[:start].count("\n") + 1
+        end = len(text)
+        for nxt in matches[i + 1:]:
+            if len(nxt.group(1)) <= level:
+                end = nxt.start()
+                break
+        body = text[m.end():end]
+        next_higher = re.search(rf"^#{{1,{level}}}\s", body, re.MULTILINE)
+        if next_higher:
+            body = body[: next_higher.start()]
+        sections.append({
+            "heading": title,
+            "body": body,
+            "line": line_no,
+        })
+
+    # Inline-Bold (mandatory): consume until next blank-block break or next
+    # bold-marker / heading. We use a heuristic "until next double newline +
+    # one more block" to capture the relevant body.
+    for m in _POLICY_INLINE_RE.finditer(text):
+        title = m.group(1).strip()
+        start = m.start()
+        line_no = text[:start].count("\n") + 1
+        # Body until next heading (any level), next inline bold marker, or
+        # end of file — keep it compact (max ~30 lines).
+        tail = text[m.end():]
+        # Stop at next heading
+        h_stop = re.search(r"^#{1,4}\s", tail, re.MULTILINE)
+        h_idx = h_stop.start() if h_stop else len(tail)
+        # Stop at next inline (mandatory) bold marker
+        b_stop = re.search(r"^\*\*[^*]+\((?:mandatory|MANDATORY)", tail, re.MULTILINE)
+        b_idx = b_stop.start() if b_stop else len(tail)
+        body = tail[: min(h_idx, b_idx)]
+        sections.append({
+            "heading": title,
+            "body": body,
+            "line": line_no,
+        })
+
+    return sections
+
+
+def _heading_keywords(heading: str) -> set[str]:
+    """Token set from a heading for fuzzy xref matching against commands/*.md."""
+    h = heading.lower()
+    # Strip parenthetical suffixes and common filler words
+    h = re.sub(r"\([^)]*\)", " ", h)
+    h = re.sub(r"[—–\-:,\.\(\)\[\]]", " ", h)
+    tokens = {t for t in re.split(r"\s+", h) if len(t) >= 4}
+    stop = {"rule", "rules", "must", "when", "head", "coach", "before", "after"}
+    return tokens - stop
+
+
+def check_policy_workflow_coverage() -> list[dict]:
+    """POLICY_COVERAGE — surface MANDATORY policies in framework/CLAUDE.md
+    that lack a verifiable enforcement anchor in code or a /command workflow.
+
+    Drift-Vorfall-Anker (2026-05-18): die "Daily balance rotation (mandatory)"
+    in CLAUDE.md hatte keinen Code-Path und keine Erwähnung in
+    `commands/training.md` — Folge: Coach hat die Balance-Einheit
+    übersprungen. Dieser Check fängt solche Sektionen frühzeitig ab.
+    """
+    findings: list[dict] = []
+
+    claude_path = FRAMEWORK_ROOT / "CLAUDE.md"
+    text = _read(claude_path)
+    if not text:
+        return findings
+
+    sections = _extract_mandatory_sections(text)
+
+    # Pre-load all commands/*.md once
+    commands_dir = FRAMEWORK_ROOT / "commands"
+    command_docs: dict[str, str] = {}
+    if commands_dir.is_dir():
+        for f in commands_dir.glob("*.md"):
+            command_docs[f.name] = _read(f).lower()
+
+    for section in sections:
+        body = section["body"]
+        body_lower = body.lower()
+
+        # 1. Code-Anker?
+        has_code = any(re.search(p, body, re.IGNORECASE) for p in _CODE_ANCHOR_PATTERNS)
+
+        # 2. Policy-Only-Marker?
+        is_policy_only = any(re.search(p, body_lower) for p in _POLICY_ONLY_PATTERNS)
+
+        # 3. Workflow-Xref?
+        kw = _heading_keywords(section["heading"])
+        has_workflow_xref = False
+        matched_cmd: str | None = None
+        if kw:
+            for cmd_name, cmd_text in command_docs.items():
+                # Match if >= 2 distinctive keywords appear in the same command doc
+                hits = sum(1 for t in kw if t in cmd_text)
+                if hits >= 2:
+                    has_workflow_xref = True
+                    matched_cmd = cmd_name
+                    break
+
+        if has_code or is_policy_only or has_workflow_xref:
+            continue
+
+        # Drift candidate.
+        findings.append(_finding(
+            HIGH,
+            "policy_coverage_drift",
+            "framework/CLAUDE.md",
+            source_line=section["line"],
+            evidence=f"(mandatory)-Section '{section['heading']}' ohne Code-Anker, "
+                     f"Workflow-Xref oder Policy-Only-Marker",
+            canonical_source="framework/CLAUDE.md",
+            suggested_action="add_enforcement_anchor",
+            fix_hint=(
+                "Wähle einen Pfad: (a) Code-Anker — Funktion/Script in der "
+                "Body-Beschreibung benennen (z.B. `enforced by push_workouts.py::_warn_on_xxx`). "
+                "(b) Workflow-Xref — entsprechende `commands/*.md`-Datei erwähnt "
+                "die Section explizit mit ≥2 Stichwörtern. (c) Policy-Only — "
+                "expliziter Marker wie 'head-coach judgment' im Body, "
+                "wenn keine Mechanisierung möglich ist."
+            ),
+            description=(
+                f"`{section['heading']}` ist als (mandatory) markiert, aber "
+                "weder ein konkreter Code-Path noch ein Workflow-Doc-Xref ist "
+                "auffindbar. Das ist die Drift-Klasse, die die Balance-Einheit "
+                "am 18.05.2026 zum Verschwinden gebracht hat."
+            ),
+        ))
+
+    return findings
+
+
 CHECK_MAP = {
     "HR_ZONES": ("check_hr_zones", True),       # online
     "ORPHAN_MUSCLES": ("check_orphan_muscles", False),
@@ -1315,6 +1523,7 @@ CHECK_MAP = {
     "PROGRESSION_OVERSHOOT": ("check_progression_overshoot", False),
     "OVERRIDE_DRIFT": ("check_override_drift", False),
     "PROMPT_DRIFT": ("check_prompt_drift", False),
+    "POLICY_COVERAGE": ("check_policy_workflow_coverage", False),
 }
 
 
@@ -1356,6 +1565,8 @@ def run_audit(offline: bool, only: str | None) -> dict[str, Any]:
                 results = check_override_drift()
             elif name == "PROMPT_DRIFT":
                 results = check_prompt_drift()
+            elif name == "POLICY_COVERAGE":
+                results = check_policy_workflow_coverage()
             else:
                 results = []
             raw_findings.extend(results)
