@@ -374,8 +374,30 @@ When in doubt, check the type history: if the athlete's last *real*
 stimulus on that pillar is older than the rotation cadence, the answer
 is "schedule the stimulus", not "another physio session".
 
-*Enforcement: head-coach judgment based on the context fields named
-above — no single code gate.*
+**Activity-NOTE-Caps sind nicht-persistente Empfehlungen.** Wenn die
+`coach-analyst`-Auswertung einer einzelnen Aktivität eine
+Volumen-/Intensitäts-Empfehlung enthält (Format: "Brick bleibt
+30–35 min bis 2× Tag in Folge LWS-frei"), ist das eine
+**conditional**, **activity-scope**, **ephemeral** Empfehlung —
+nicht eine permanente Regel. Bevor sie in einen späteren Plan
+übernommen wird:
+
+1. **Scope-Check:** Gilt die Empfehlung für den heutigen Workout-Typ?
+   („Brick bleibt 30–35 min" gilt für Brick = Bike→Run, NICHT für
+   Plyo→Run oder reine Easy-Runs.)
+2. **Condition-Check:** Ist die Bedingung verifiziert? („bis 2× Tag
+   LWS-frei" — wurde das erfüllt? Athleten-Feedback +
+   `fetch_context.athleteFeedback` als Quelle.)
+3. **Recency-Check:** Ist die Empfehlung noch aktuell? Activity-NOTE
+   älter als ~5 Tage und Wellness inzwischen grün → erloschen, nicht
+   übertragen.
+
+Activity-NOTE-Empfehlungen, die zu permanenten Regeln werden sollen,
+müssen explizit in `config/athlete_status.md` oder
+`config/training_paradigms.md` migriert werden. Bis dahin: NICHT
+generalisieren.
+
+*Enforcement: mechanischer Validator-Hook `validate_plan.py::check_easy_run_conservatism` (R014) — surfacet Easy-Runs unterhalb 70% des 30d-Easy-Median ohne dokumentierten Recovery-Grund. Plus head-coach judgment für die anderen Drift-Klassen.*
 
 ### Never silently drop or replace standing prescriptions (mandatory)
 

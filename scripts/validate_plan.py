@@ -839,6 +839,92 @@ def check_intervals_repeat_block_adjacency(workouts: list[dict], ctx: Context) -
     return findings
 
 
+def check_easy_run_conservatism(workouts: list[dict], ctx: Context) -> list[Finding]:
+    """R014 — Easy/Z2-Run Conservatism-Guard.
+
+    Surfacet, wenn ein Easy/EASY-Run im Plan deutlich kürzer ist als das
+    rolling Easy-Run-Baseline der letzten ~3 Wochen UND in coaching_notes /
+    description kein expliziter Recovery-/Symptom-Trigger genannt ist.
+    Verletzt potenziell die `No silent conservatism`-Regel (CLAUDE.md).
+
+    Drift-Vorfall 2026-05-18: Easy-Run wurde auf 35 min gesetzt, obwohl
+    die Easy-Run-Baseline bei 50–65 min lag, alle Wellness-Signale grün
+    waren und kein dokumentierter Recovery-Trigger vorlag. Der Cut kam
+    aus einer Activity-NOTE-Cap (Brick-spezifisch, 30-35 min „bis 2× Tag
+    LWS-frei"), die fehlerhaft als generelle Run-Cap übertragen wurde.
+    """
+    findings = []
+    easy_runs = [
+        w for w in workouts
+        if w.get("type") == "Run"
+        and (
+            (w.get("workout_type") or "").upper() == "EASY"
+            or (w.get("intensity") or "").lower() == "low"
+        )
+    ]
+    if not easy_runs:
+        return findings
+
+    # Baseline aus den letzten 21 Tagen Easy-Runs (Long-Runs/Quality ausgeschlossen)
+    recent_easy_durations = []
+    for a in (ctx.recent_activities or [])[-30:]:
+        if a.get("type") != "Run":
+            continue
+        dur = a.get("duration_min") or 0
+        if dur < 20:
+            continue  # zu kurz — kein Easy-Baseline
+        # Long-Runs (>=75 min) und Quality-Runs (training_load >70) ausschließen
+        if dur >= 75:
+            continue
+        if (a.get("training_load") or 0) > 70:
+            continue
+        recent_easy_durations.append(dur)
+    if len(recent_easy_durations) < 3:
+        return findings  # ungenügende Baseline
+
+    recent_easy_durations.sort()
+    median_dur = recent_easy_durations[len(recent_easy_durations) // 2]
+
+    RECOVERY_REASON_RE = re.compile(
+        r"\b(recovery\s*week|deload|taper|active\s*injury|symptom|"
+        r"acute\s*fatigue|abandoned|🔴|red\s*flag|reha\s*phase|"
+        r"phase\s*[123]\s*aufbau|achilles[-\s]*schutz|"
+        r"hrv.*🔴|intensityreadiness.*🔴|"
+        r"morgensteifigkeit|nach\s*quality|post[-\s]*quality)\b",
+        re.IGNORECASE,
+    )
+
+    for w in easy_runs:
+        planned = w.get("duration_min") or 0
+        if planned <= 0:
+            continue
+        if not median_dur:
+            continue
+        ratio = planned / median_dur
+        if ratio >= 0.7:
+            continue  # innerhalb 30% der Baseline
+        notes = (w.get("description") or "") + " " + (w.get("coaching_notes") or "")
+        if RECOVERY_REASON_RE.search(notes):
+            continue
+        findings.append(Finding(
+            rule_id="R014",
+            severity=SEVERITY_WARNING,
+            workout=_workout_name(w),
+            message=(
+                f"Easy-Run {planned} min = {int(ratio*100)}% des 30d-Easy-Median "
+                f"({median_dur} min) — keine expliziten Recovery-Trigger im Plan."
+            ),
+            suggestion=(
+                "Über-Konservativ-Verdacht (CLAUDE.md §No silent conservatism). "
+                "Entweder die Dauer Richtung Baseline anheben oder einen "
+                "konkreten Recovery-Grund in coaching_notes/description nennen "
+                "(Recovery-Week, Red-Flag-Wellness, akutes Symptom, Reha-Phase, "
+                "Achilles-Schutz)."
+            ),
+        ))
+    return findings
+
+
 # Plugin-Registry: neue Regeln hier eintragen.
 RULES: list[Callable[[list[dict], Context], list[Finding]]] = [
     check_reps_ceiling,
@@ -854,6 +940,7 @@ RULES: list[Callable[[list[dict], Context], list[Finding]]] = [
     check_intervals_duration_sanity,
     check_intervals_step_targets,
     check_intervals_repeat_block_adjacency,
+    check_easy_run_conservatism,
 ]
 
 
@@ -888,6 +975,24 @@ async def _fetch_sport_settings() -> list[dict]:
         return r.json() or []
 
 
+async def _fetch_recent_activities(target_date: str, days_back: int = 30) -> list[dict]:
+    """Fetch recent activities from intervals.icu für Conservatism-Guard (R014)."""
+    client = IntervalsClient(settings.intervals_icu_athlete_id)
+    end = datetime.fromisoformat(target_date).date()
+    start = end - timedelta(days=days_back)
+    activities = await client.get_activities(start.isoformat(), end.isoformat())
+    return [
+        {
+            "date": a.get("start_date_local", "")[:10],
+            "type": a.get("type"),
+            "name": a.get("name"),
+            "duration_min": int((a.get("moving_time") or 0) / 60),
+            "training_load": a.get("icu_training_load"),
+        }
+        for a in activities
+    ]
+
+
 def load_context(target_date: str, fetch_remote: bool = True) -> Context:
     ctx = Context(
         target_date=target_date,
@@ -904,6 +1009,10 @@ def load_context(target_date: str, fetch_remote: bool = True) -> Context:
             ctx.sport_settings = asyncio.run(_fetch_sport_settings())
         except Exception:
             ctx.sport_settings = []
+        try:
+            ctx.recent_activities = asyncio.run(_fetch_recent_activities(target_date))
+        except Exception:
+            ctx.recent_activities = []
     return ctx
 
 
