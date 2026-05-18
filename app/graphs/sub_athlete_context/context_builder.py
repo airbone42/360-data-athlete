@@ -1680,10 +1680,28 @@ def _compute_planning_constraints(
     import re
 
     # Break-keyword detection in athlete NOTEs — bilingual to support both
-    # German and English note text.
+    # German and English note text.  Word boundaries prevent compound-word
+    # false positives (e.g. "Ruheposition", "Reisefoto").
     break_keywords = re.compile(
-        r"urlaub|pause|kein training|ruhe|reise|verreist|auszeit"
-        r"|vacation|no training|rest|travel|away|time off|break\b",
+        r"\burlaub\b|\bpause\b|\btrainingspause\b"
+        r"|\bkein training\b|\bruhe\b|\breise\b"
+        r"|\bverreist\b|\bauszeit\b"
+        r"|\bvacation\b|\bno training\b|\brest\b|\btravel\b"
+        r"|\baway\b|\btime off\b|\bbreak\b",
+        re.IGNORECASE,
+    )
+    # Exercise-instruction patterns that contain break keywords but describe
+    # rep/set structure, not actual training breaks.  When the NOTE text
+    # matches one of these, skip the break detection.
+    exercise_pause_ctx = re.compile(
+        r"\d+\s*s\s+pause"
+        r"|\bpause\s+am\b"
+        r"|\bpause\s+zwischen\b"
+        r"|\bpause\s+nach\b"
+        r"|\bruhe(?:position|phase)\b"
+        r"|\brest\s+between\b"
+        r"|\brest\s+period\b"
+        r"|\brest\s+position\b",
         re.IGNORECASE,
     )
 
@@ -1732,6 +1750,8 @@ def _compute_planning_constraints(
             continue
         text = (e.get("description") or "") + " " + (e.get("name") or "")
         if not break_keywords.search(text):
+            continue
+        if exercise_pause_ctx.search(text):
             continue
 
         d_str = (e.get("start_date_local") or "")[:10]
