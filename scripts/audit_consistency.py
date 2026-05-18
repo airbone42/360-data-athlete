@@ -1,15 +1,15 @@
-"""Konsistenz-Scanner für Coach-Wissensbasis.
+"""Consistency scanner for the coach knowledge base.
 
-Mechanische Drift-Checks zwischen `config/`, `.claude/agents/`, `prompts/`,
-`exercise_muscle_mapping.json` und externen Quellen (intervals.icu, Strava).
+Mechanical drift checks between `config/`, `.claude/agents/`, `prompts/`,
+`exercise_muscle_mapping.json` and external sources (intervals.icu, Strava).
 
-Output: JSON nach stdout — vom config-auditor-Agent konsumiert.
+Output: JSON to stdout — consumed by the config-auditor agent.
 
 Usage:
     python3 scripts/audit_consistency.py                  # online, JSON
-    python3 scripts/audit_consistency.py --offline        # nur lokale Files
-    python3 scripts/audit_consistency.py --human          # lesbarer Summary
-    python3 scripts/audit_consistency.py --check ORPHAN   # einzelner Check
+    python3 scripts/audit_consistency.py --offline        # local files only
+    python3 scripts/audit_consistency.py --human          # readable summary
+    python3 scripts/audit_consistency.py --check ORPHAN   # single check
 """
 
 from __future__ import annotations
@@ -42,8 +42,8 @@ logger = logging.getLogger("audit_consistency")
 
 HIGH, MEDIUM, LOW = "HIGH", "MEDIUM", "LOW"
 
-# Trigger-Phrasen in NOTEs, die auf Heilung/Auskurierung hinweisen.
-# Phrasen statt einzelner Wörter, um False Positives wie "weg" → "wegen" zu vermeiden.
+# Trigger phrases in NOTEs indicating healing / recovery resolution.
+# Phrases (not single words) to avoid false positives like "weg" → "wegen".
 HEALING_KEYWORDS = [
     "schmerzfrei",
     "ausgeheilt",
@@ -93,14 +93,14 @@ RESTRICTION_PATTERNS: dict[str, list[str]] = {
     ],
 }
 
-# Files, die wir nach Hardcodes scannen
+# Files scanned for hardcoded values
 HARDCODE_SCAN_GLOBS = [
     ".claude/agents/*.md",
     "prompts/*.yaml",
     "config/equipment.md",
 ]
 
-# Files, die wir vom Hardcode-Scan ausschließen (Meta-Files über das Audit selbst)
+# Files excluded from hardcode scan (meta-files about the audit itself)
 HARDCODE_SCAN_EXCLUDE = {
     ".claude/agents/config-auditor.md",
     ".claude/agents/config-fixer.md",
@@ -177,7 +177,7 @@ def check_hr_zones(athlete_settings: dict | None) -> list[dict]:
         return []
     icu_zones = athlete_settings.get("hr_zones") or []
     if not icu_zones:
-        # API liefert kein Zonen-Feld → kein Vergleich möglich, kein Drift-Befund
+        # API returns no zone field — no comparison possible, no drift finding
         return []
     text = _read(resolve_config("athlete_status.md"))
     m = re.search(r"hr_zones:\s*\[([0-9,\s]+)\]", text)
@@ -236,8 +236,8 @@ def check_orphan_muscles() -> list[dict]:
                         evidence=f"{ex_key}.{role}: '{muscle_id}'",
                         canonical_source="config/muscle_db.md",
                         suggested_action="add_or_rename",
-                        fix_hint=f"Muskel-ID '{muscle_id}' in muscle_db.md ergänzen oder Eintrag im Mapping korrigieren",
-                        description=f"Übung '{ex_key}' ({role}) referenziert nicht-existente Muskel-ID '{muscle_id}'",
+                        fix_hint=f"Add muscle ID '{muscle_id}' to muscle_db.md or fix the mapping entry",
+                        description=f"Exercise '{ex_key}' ({role}) references non-existent muscle ID '{muscle_id}'",
                     ))
     return findings
 
@@ -265,8 +265,8 @@ def check_unmapped_exercises() -> list[dict]:
             evidence=f"{entry.get('parsed_name')} (act {entry.get('activity_id')}, {entry.get('date')})",
             canonical_source="config/exercise_muscle_mapping.json",
             suggested_action="add_mapping",
-            fix_hint=f"Mapping für '{entry.get('parsed_name')}' in exercise_muscle_mapping.json ergänzen",
-            description=f"Übung in Activity {entry.get('activity_id')} konnte nicht gemappt werden — Muskel-Last fehlt in DB",
+            fix_hint=f"Add mapping for '{entry.get('parsed_name')}' in exercise_muscle_mapping.json",
+            description=f"Exercise in activity {entry.get('activity_id')} could not be mapped — muscle load missing from DB",
         ))
     return findings
 
@@ -285,10 +285,10 @@ def check_note_vs_static(notes: list[dict] | None) -> list[dict]:
     for zone in zones:
         zone_name = zone["zone"]
         status = zone["status"]
-        # Nur "aktiv eingeschränkt" oder "Phase X aktiv" prüfen
+        # Only check "aktiv eingeschränkt" or "Phase X aktiv" statuses
         if not re.search(r"aktiv|phase", status, re.IGNORECASE):
             continue
-        # Suche Heilungs-Hinweise in NOTEs für diese Zone
+        # Search for healing indicators in NOTEs for this zone
         zone_keywords = _zone_keywords(zone_name)
         matches: list[str] = []
         for note in notes:
@@ -308,12 +308,12 @@ def check_note_vs_static(notes: list[dict] | None) -> list[dict]:
                 MEDIUM,
                 "note_vs_static_drift",
                 "config/athlete_static.md",
-                evidence=f"Zone '{zone_name}' (Status: {status}) — Heilungs-Hinweise in NOTEs:\n  - "
+                evidence=f"Zone '{zone_name}' (status: {status}) — healing indicators in NOTEs:\n  - "
                          + "\n  - ".join(matches[:5]),
                 canonical_source="intervals.icu NOTEs (4w)",
                 suggested_action="review_zone_status",
-                fix_hint=f"Status '{zone_name}' prüfen — ggf. auf 'latent' oder 'ausgeheilt' setzen",
-                description=f"Risikozone '{zone_name}' steht als '{status}', aber NOTEs enthalten Heilungs-Hinweise",
+                fix_hint=f"Review status of '{zone_name}' — consider setting to 'latent' or 'resolved'",
+                description=f"Risk zone '{zone_name}' is set to '{status}', but NOTEs contain healing indicators",
             ))
     return findings
 
@@ -361,11 +361,11 @@ def check_strava_shoes(strava_shoes: list[dict] | None) -> list[dict]:
                 evidence=f"strava_id={s['strava_id']} | {s.get('name')} | {s.get('distance_km'):.0f}km",
                 canonical_source="Strava (list_shoes)",
                 suggested_action="add_profile",
-                fix_hint=f"Profil für strava_id={s['strava_id']} in equipment.md anlegen",
-                description=f"Aktiver Strava-Schuh '{s.get('name')}' fehlt in equipment.md — Shoe-Advisor kann ihn nicht empfehlen",
+                fix_hint=f"Add profile for strava_id={s['strava_id']} in equipment.md",
+                description=f"Active Strava shoe '{s.get('name')}' missing from equipment.md — shoe advisor cannot recommend it",
             ))
 
-    # Profile, die in Strava nicht (mehr) existieren
+    # Profiles that no longer exist in Strava
     strava_ids = {s["strava_id"] for s in strava_shoes}
     for p in profiles:
         if p["strava_id"] not in strava_ids:
@@ -376,11 +376,11 @@ def check_strava_shoes(strava_shoes: list[dict] | None) -> list[dict]:
                 evidence=f"strava_id={p['strava_id']} | {p.get('name')}",
                 canonical_source="Strava (list_shoes)",
                 suggested_action="remove_profile",
-                fix_hint=f"Profil für strava_id={p['strava_id']} aus equipment.md entfernen — Schuh nicht (mehr) in Strava",
-                description=f"Profil '{p.get('name')}' in equipment.md hat keinen Strava-Match",
+                fix_hint=f"Remove profile for strava_id={p['strava_id']} from equipment.md — shoe no longer in Strava",
+                description=f"Profile '{p.get('name')}' in equipment.md has no Strava match",
             ))
 
-    # Schuhe nahe Threshold
+    # Shoes near threshold
     for s in active:
         prof = next((p for p in profiles if p["strava_id"] == s["strava_id"]), None)
         if not prof:
@@ -395,8 +395,8 @@ def check_strava_shoes(strava_shoes: list[dict] | None) -> list[dict]:
                 evidence=f"{s.get('name')}: {km:.0f}/{threshold}km ({km/threshold*100:.0f}%)",
                 canonical_source="Strava (list_shoes)",
                 suggested_action="rotate_or_retire",
-                fix_hint=f"Schuh '{s.get('name')}' nahe Threshold — Rotation prüfen oder retire",
-                description=f"Schuh '{s.get('name')}' bei ≥95% des Thresholds ({km:.0f}/{threshold}km)",
+                fix_hint=f"Shoe '{s.get('name')}' near threshold — check rotation or retire",
+                description=f"Shoe '{s.get('name')}' at ≥95% of threshold ({km:.0f}/{threshold}km)",
             ))
     return findings
 
@@ -431,14 +431,14 @@ def check_hardcoded_restrictions() -> list[dict]:
                             rel,
                             source_line=line,
                             evidence=f"[{cat}] {line_text.strip()[:160]}",
-                            canonical_source="config/athlete_static.md (Risikozonen + Aufschlüsselung)",
+                            canonical_source="config/athlete_static.md (risk zones + breakdown)",
                             suggested_action="verify_against_athlete_static",
                             fix_hint=(
-                                "Auditor-Agent: Vergleiche Restriction-String gegen aktuellen Status "
-                                f"in athlete_static.md. Wenn Status 'aktiv' → OK. Wenn aufgehoben → "
-                                "Stelle entfernen oder Verweis auf {athlete_static} setzen."
+                                "Auditor agent: compare restriction string against current status "
+                                f"in athlete_static.md. If status 'aktiv' → OK. If resolved → "
+                                "remove the reference or replace with a pointer to athlete_static."
                             ),
-                            description=f"Hartkodierte {cat}-Restriction in {rel}:{line}",
+                            description=f"Hardcoded {cat} restriction in {rel}:{line}",
                         ))
     return findings
 
@@ -586,8 +586,8 @@ def check_log_vs_history(activities: list[dict] | None) -> list[dict]:
 
     for entry in entries:
         norm_name = _normalize(entry["name"])
-        # Tokens > 4 Zeichen, MINUS generische Stop-Wörter. Wenn nach Filter
-        # nichts übrig bleibt → Fallback auf alle >3-Zeichen-Tokens.
+        # Tokens > 4 chars, minus generic stop words. If nothing remains
+        # after filtering → fall back to all >3-char tokens.
         specific_tokens = [t for t in norm_name.split() if len(t) > 4 and t not in _GENERIC_TOKENS]
         fallback_tokens = [t for t in norm_name.split() if len(t) > 3]
         key_tokens = specific_tokens or fallback_tokens
@@ -600,9 +600,9 @@ def check_log_vs_history(activities: list[dict] | None) -> list[dict]:
             if not desc:
                 continue
             norm_desc = _normalize(desc)
-            # ALLE spezifischen Tokens müssen vorkommen — vermeidet False
-            # Positives wo nur ein einzelnes generisches Wort matcht
-            # ("balance" in einem Balance-Board-Workout-Namen).
+            # ALL specific tokens must be present — avoids false
+            # positives where only a single generic word matches
+            # ("balance" in a balance-board workout name).
             if not all(t in norm_desc for t in key_tokens):
                 continue
             # Datum extrahieren
@@ -656,11 +656,11 @@ def check_log_vs_history(activities: list[dict] | None) -> list[dict]:
 
 
 def check_config_drift() -> list[dict]:
-    """Cross-Source-Drift zwischen athlete_static.md, CLAUDE.md und Code-Konstanten.
+    """Cross-source drift between athlete_static.md, CLAUDE.md and code constants.
 
-    Vergleicht denselben numerischen/faktischen Wert in mehreren Quellen und
-    meldet jede Abweichung als Finding. Definiere neue Facts unten in
-    `config_facts` — generisch ohne Code-Änderung am Check selbst.
+    Compares the same numerical/factual value across multiple sources and
+    reports any deviation as a finding. Define new facts below in
+    `config_facts` — generic, no code change needed for the check itself.
     """
     static_text = _read(resolve_config("athlete_static.md"))
     # CLAUDE.md lives in COACH_HOME (athlete wrapper). If absent, fall back to
@@ -675,22 +675,22 @@ def check_config_drift() -> list[dict]:
         "CLAUDE.md": claude_text,
     }
 
-    # Fact-Definition: ein Fact, in N Quellen mit jeweils einem Regex.
-    # Severity gilt fürs ganze Fact, nicht pro Quelle.
+    # Fact definition: one fact, N sources each with a regex.
+    # Severity applies to the whole fact, not per source.
     config_facts = [
         {
             "name": "athlete_weight_kg",
-            "label": "Körpergewicht (kg)",
+            "label": "Body weight (kg)",
             "severity": LOW,
             "extractors": [
-                ("config/athlete_static.md", r"Körpergewicht:\s*(\d{2,3})\s*kg"),
-                # In Kommentaren: "× 75 kg"
+                ("config/athlete_static.md", r"(?:Körpergewicht|Body\s*weight):\s*(\d{2,3})\s*kg"),
+                # In comments: "× 75 kg"
                 ("CLAUDE.md", r"×\s*(\d{2,3})\s*kg"),
             ],
         },
     ]
 
-    # Wert-Normierungen: gleiche Größe in andere Einheit umrechnen
+    # Value normalisation: convert the same quantity to a common unit
     def _normalize(name: str, source: str, raw: str) -> float | None:
         try:
             val = float(raw.replace(",", "."))
@@ -716,16 +716,16 @@ def check_config_drift() -> list[dict]:
             extracted[source_path] = (raw, normalized)
 
         if len(extracted) < 2:
-            # nur 1 Quelle gefunden → kein Drift möglich, aber ggf. Fact unvollständig
+            # only 1 source found — no drift possible, but fact may be incomplete
             continue
 
         unique_values = {v[1] for v in extracted.values()}
         if len(unique_values) <= 1:
-            # alle Quellen gleicher Meinung → kein Drift
+            # all sources agree — no drift
             continue
 
-        # Drift: mindestens zwei Quellen widersprechen sich
-        # Mehrheitswert als wahrscheinliche Wahrheit, abweichende Quellen als Drift
+        # Drift: at least two sources disagree
+        # Majority value as likely truth, deviating sources as drift
         from collections import Counter
         cnt = Counter(v[1] for v in extracted.values())
         likely_canon, _ = cnt.most_common(1)[0]
@@ -735,7 +735,7 @@ def check_config_drift() -> list[dict]:
         for drift_source, drift_raw in drift_sources:
             evidence_lines = [
                 f"{drift_source}: {drift_raw}",
-                f"andere Quellen: " + " / ".join(
+                f"other sources: " + " / ".join(
                     f"{s}={extracted[s][0]}" for s in canon_sources
                 ),
             ]
@@ -747,15 +747,15 @@ def check_config_drift() -> list[dict]:
                 canonical_source=" / ".join(canon_sources),
                 suggested_action="align_values",
                 fix_hint=(
-                    f"{fact['label']}: in `{drift_source}` steht `{drift_raw}`, "
-                    f"andere Quellen sagen `{extracted[canon_sources[0]][0]}` "
-                    f"({len(canon_sources)} Quelle(n)). Wert in `{drift_source}` "
-                    f"angleichen ODER alle anderen Quellen bewusst aktualisieren."
+                    f"{fact['label']}: `{drift_source}` has `{drift_raw}`, "
+                    f"other sources say `{extracted[canon_sources[0]][0]}` "
+                    f"({len(canon_sources)} source(s)). Align value in `{drift_source}` "
+                    f"OR deliberately update all other sources."
                 ),
                 description=(
-                    f"Drift im Fact `{fact['name']}` ({fact['label']}). "
-                    f"Mindestens zwei Quellen haben unterschiedliche Werte — "
-                    f"führt zu Inkonsistenz zwischen Doku und Code-Verhalten."
+                    f"Drift in fact `{fact['name']}` ({fact['label']}). "
+                    f"At least two sources have different values — "
+                    f"leads to inconsistency between docs and code behaviour."
                 ),
             ))
 
@@ -763,7 +763,7 @@ def check_config_drift() -> list[dict]:
 
 
 def check_deload_consistency() -> list[dict]:
-    """Prüft ob Erholungswoche-Status konsistent ist (Datum vs. aktiv-Flag)."""
+    """Checks whether recovery-week status is consistent (date vs. active flag)."""
     text = _read(resolve_config("athlete_status.md"))
     m = re.search(r"## Erholungswoche-Status\n(.*?)(?=\n##|\Z)", text, re.DOTALL)
     if not m:
@@ -785,22 +785,22 @@ def check_deload_consistency() -> list[dict]:
                     MEDIUM,
                     "deload_expired",
                     "config/athlete_status.md",
-                    evidence=f"aktiv: ja, ende_geplant: {ende_val} (vergangen)",
-                    canonical_source="Heute",
+                    evidence=f"aktiv: ja, ende_geplant: {ende_val} (past)",
+                    canonical_source="Today",
                     suggested_action="reset_deload",
-                    fix_hint="Erholungswoche-Status auf aktiv: nein zurücksetzen",
-                    description="Erholungswoche-Flag steht auf 'aktiv: ja', aber ende_geplant liegt in der Vergangenheit",
+                    fix_hint="Reset recovery-week status to aktiv: nein",
+                    description="Recovery-week flag is 'aktiv: ja' but ende_geplant is in the past",
                 ))
         except ValueError:
             pass
     return findings
 
 
-# ── Check: Gesperrte Übungen in aktiven Pools ────────────────────────
+# ── Check: Blocked exercises in active pools ─────────────────────────
 
 
 def _parse_progression_exercises_from_log() -> list[dict]:
-    """Parsed exercise_log.md auf Einträge mit Status: progression.
+    """Parses exercise_log.md for entries with Status: progression.
 
     Returns: [{
       'name': str,
@@ -818,7 +818,7 @@ def _parse_progression_exercises_from_log() -> list[dict]:
         if not re.search(r"\*\*Status:\*\*\s*progression", section, re.IGNORECASE):
             continue
         header = section.splitlines()[0].lstrip("# ").strip()
-        if not header or header == "{Übung}":
+        if not header or header == "{Übung}" or header == "{Exercise}":
             continue
         reason_m = re.search(r"\*\*Befund:\*\*\s*(.+?)(?:\n\*\*|\Z)", section, re.DOTALL)
         reason = (reason_m.group(1).strip()[:200] if reason_m else "")
@@ -846,16 +846,16 @@ def _parse_progression_exercises_from_log() -> list[dict]:
 def _name_tokens(name: str) -> set[str]:
     """Tokenize an exercise name to lower-case alphanumeric tokens (≥3 chars)."""
     tokens = re.findall(r"[a-zA-ZäöüÄÖÜß0-9]+", name.lower())
-    # Filter Stop-Words und kurze Tokens
+    # Filter stop words and short tokens
     stop = {"und", "oder", "auf", "mit", "der", "die", "das", "ein", "eine", "im", "vor", "nach"}
     return {t for t in tokens if len(t) >= 3 and t not in stop}
 
 
 def _scannable_lines_from_pool(path: Path) -> list[tuple[int, str]]:
-    """Extrahiert pro Pool-File die Übungs-Zeilen (jede Übung = eine Zeile).
+    """Extracts exercise lines from a pool file (one exercise per line).
 
-    JSON-Files: liest description-Strings, splittet bei echten Newlines + |-Trennern.
-    Markdown-Files: liest jede Zeile.
+    JSON files: reads description strings, splits on real newlines + | separators.
+    Markdown files: reads every line.
     Returns: [(approx_line_num, scan_line), ...]
     """
     # Use path.suffix directly — resolve_config() can return a path outside
@@ -890,12 +890,12 @@ def _scannable_lines_from_pool(path: Path) -> list[tuple[int, str]]:
 
 
 def _is_block_annotation(line: str) -> bool:
-    """True wenn die Zeile eher einen Sperr-Hinweis ist als eine aktive Übung."""
+    """True if the line is a block/lock annotation rather than an active exercise."""
     lower = line.lower()
-    # Direkte Sperrwörter
+    # Direct block keywords
     if any(s in lower for s in ("gesperrt", "verboten", "blockiert", "siehe _constraints")):
         return True
-    # Klammer-Annotationen mit Sperr-Hinweis
+    # Parenthesised annotations with block hint
     paren_text = " ".join(re.findall(r"\(([^)]*)\)", lower))
     if paren_text and any(s in paren_text for s in ("gesperrt", "verboten", "blockiert")):
         return True
@@ -906,7 +906,7 @@ def _is_block_annotation(line: str) -> bool:
 
 OVERRIDE_FILES = ["training_paradigms.md", "exercise_progressions.md"]
 
-# Patterns die NICHT in Framework-Defaults stehen sollten (athletenspezifisch)
+# Patterns that should NOT appear in framework defaults (athlete-specific)
 _FRAMEWORK_LEAK_PATTERNS = [
     (re.compile(r"\b\d{2,3}\s*[-–]\s*\d{2,3}\s*bpm\b", re.I), "raw HR range"),
     (re.compile(r"≥\s*\d{3}\s*bpm\b", re.I), "raw HR threshold"),
@@ -957,13 +957,13 @@ def _extract_headings(text: str) -> set[str]:
 
 
 def check_override_drift() -> list[dict]:
-    """Drift zwischen Framework-Defaults und Wrapper-Overrides.
+    """Drift between framework defaults and wrapper overrides.
 
-    Vier Drift-Klassen:
-      - framework_leak: Athleten-Inhalt in Framework-Version
-      - pointless_override: Wrapper-Kopie byte-identisch zu Framework
-      - wrapper_missing_section: Wrapper hinkt Framework hinterher
-      - missing_tracking: exercise_progressions ohne Aktueller-Stand-Einträge
+    Four drift classes:
+      - framework_leak: athlete content in framework version
+      - pointless_override: wrapper copy byte-identical to framework
+      - wrapper_missing_section: wrapper lags behind framework
+      - missing_tracking: exercise_progressions without current-state entries
     """
     findings: list[dict] = []
     for filename in OVERRIDE_FILES:
@@ -974,10 +974,10 @@ def check_override_drift() -> list[dict]:
             continue
         fw_text = fw_path.read_text(encoding="utf-8")
 
-        # Check 1: framework_leak — Athleten-Marker im Framework
+        # Check 1: framework_leak — athlete markers in framework
         for pattern, label in _FRAMEWORK_LEAK_PATTERNS:
             for m in pattern.finditer(fw_text):
-                # Skip wenn der Kontext einen legitimen Verweis enthält
+                # Skip if context contains a legitimate reference
                 ctx = fw_text[max(0, m.start() - 100):m.end() + 50]
                 if "athlete_static.md" in ctx or "athlete_overrides" in ctx:
                     continue
@@ -988,45 +988,45 @@ def check_override_drift() -> list[dict]:
                     f"framework/config.example/{filename}",
                     source_line=line,
                     evidence=f"{label}: {m.group(0)!r}",
-                    canonical_source=f"config/{filename} oder config/athlete_static.md",
+                    canonical_source=f"config/{filename} or config/athlete_static.md",
                     suggested_action="genericize",
                     fix_hint=(
-                        f"Athleten-spezifischen {label} aus Framework-Version entfernen; "
-                        "bei Bedarf in Wrapper-Override oder athlete_static.md verschieben."
+                        f"Remove athlete-specific {label} from framework version; "
+                        "move to wrapper override or athlete_static.md if needed."
                     ),
-                    description=f"Framework-Default enthält {label} — Domäne der Wrapper-Override.",
+                    description=f"Framework default contains {label} — belongs in wrapper override.",
                 ))
 
         if not wrap_path.exists():
             continue
         wrap_text = wrap_path.read_text(encoding="utf-8")
 
-        # Check 2: pointless_override — Wrapper-Kopie identisch zu Framework
+        # Check 2: pointless_override — wrapper copy identical to framework
         if fw_text == wrap_text:
             findings.append(_finding(
                 LOW,
                 "pointless_override",
                 f"config/{filename}",
-                evidence="byte-identisch zu framework-Default",
+                evidence="byte-identical to framework default",
                 canonical_source=f"framework/config.example/{filename}",
                 suggested_action="delete_wrapper_copy",
-                fix_hint="Wrapper-Kopie löschen — Loader-Fallback liefert identische Datei aus Framework.",
-                description="Wrapper-Override ohne Mehrwert: erzeugt nur zukünftiges Drift-Risiko.",
+                fix_hint="Delete wrapper copy — loader fallback delivers identical file from framework.",
+                description="Wrapper override with no added value: only creates future drift risk.",
             ))
             continue
 
-        # Check 3: wrapper_missing_section — fehlende Headings im Wrapper.
-        # Override-Mechanik: Wrapper kann via HTML-Kommentar-Block bewusste
-        # Override-Decisions deklarieren (DE-Übersetzung, exercise-replaced,
-        # nicht-relevant für diesen Athleten). Format:
+        # Check 3: wrapper_missing_section — missing headings in wrapper.
+        # Override mechanism: wrapper can declare deliberate override
+        # decisions (translation, exercise-replaced, not-relevant for this
+        # athlete) via HTML comment block. Format:
         #
         #     <!-- audit-skip-missing:
-        #       - Latzug (Physio-Protokoll)   # ersetzt durch Scapular Pullups
-        #       - HR zones                    # DE-Übersetzung als "HR-Zonen"
+        #       - Latzug (Physio-Protokoll)   # replaced by Scapular Pullups
+        #       - HR zones                    # translated as "HR-Zonen"
         #     -->
         #
-        # Headings darin werden aus der Missing-Liste entfernt, BEVOR das
-        # Finding generiert wird.
+        # Headings listed therein are removed from the missing list
+        # BEFORE the finding is generated.
         fw_headings = _extract_headings(fw_text)
         wrap_headings = _extract_headings(wrap_text)
         skip_block_re = re.compile(
@@ -1052,21 +1052,21 @@ def check_override_drift() -> list[dict]:
                 MEDIUM,
                 "wrapper_missing_section",
                 f"config/{filename}",
-                evidence=f"{len(missing)} Section(s) fehlen: {preview}",
+                evidence=f"{len(missing)} section(s) missing: {preview}",
                 canonical_source=f"framework/config.example/{filename}",
                 suggested_action="sync_wrapper",
                 fix_hint=(
-                    "Fehlende Sektionen aus Framework in Wrapper-Override ergänzen ODER "
-                    "via `<!-- audit-skip-missing: \\n - <heading>\\n -->`-Block in der "
-                    "Wrapper-Datei als bewusst-überschrieben markieren."
+                    "Add missing sections from framework to wrapper override OR "
+                    "mark as deliberately overridden via "
+                    "`<!-- audit-skip-missing: \\n - <heading>\\n -->` block in the wrapper file."
                 ),
                 description=(
-                    "Framework wurde um Sektionen erweitert die im Wrapper-Override fehlen "
-                    "— Athlet sieht die neuen Regeln nicht."
+                    "Framework was extended with sections missing from wrapper override "
+                    "— athlete does not see the new rules."
                 ),
             ))
 
-        # Check 4 (file-spezifisch): exercise_progressions.md ohne Tracking
+        # Check 4 (file-specific): exercise_progressions.md without tracking
         if filename == "exercise_progressions.md":
             wrap_tracking = len(re.findall(r"^- \*\*Aktueller Stand:\*\*", wrap_text, re.M))
             if wrap_tracking == 0:
@@ -1074,16 +1074,16 @@ def check_override_drift() -> list[dict]:
                     LOW,
                     "missing_tracking",
                     f"config/{filename}",
-                    evidence="0 Aktueller-Stand-Einträge im Wrapper-Override",
-                    canonical_source="(Wrapper ist der Tracking-Ort)",
+                    evidence="0 current-state entries in wrapper override",
+                    canonical_source="(wrapper is the tracking location)",
                     suggested_action="add_tracking_or_delete",
                     fix_hint=(
-                        "Aktueller-Stand-Einträge pro Übung pflegen ODER Wrapper-Override "
-                        "löschen (Tracking dann nur via Type-History)."
+                        "Add current-state entries per exercise OR delete wrapper override "
+                        "(tracking then only via type history)."
                     ),
                     description=(
-                        "Wrapper-Override für exercise_progressions ohne Tracking — "
-                        "der wesentliche Mehrwert des Overrides fehlt."
+                        "Wrapper override for exercise_progressions without tracking — "
+                        "the key added value of the override is missing."
                     ),
                 ))
 
@@ -1091,16 +1091,16 @@ def check_override_drift() -> list[dict]:
 
 
 def check_progression_overshoot() -> list[dict]:
-    """Findet Pool-Einträge die Stufen über `current_level + 1` einer
-    progression-markierten Übung enthalten.
+    """Finds pool entries containing stages above `current_level + 1` of a
+    progression-marked exercise.
 
-    Erkennung: Pro Übung mit Status: progression in exercise_log.md werden alle
-    Stufen-Texte aus dem Stufen-Plan extrahiert. Pool-Files (balance_pool.json,
-    exercise_progressions.md) werden zeilenweise gescannt; matchen die Tokens
-    einer Stufe und ist deren Level > current_level + 1 → HIGH-Finding.
+    Detection: For each exercise with Status: progression in exercise_log.md,
+    all stage texts from the stage plan are extracted. Pool files (balance_pool.json,
+    exercise_progressions.md) are scanned line by line; if the tokens of a stage
+    match and its level > current_level + 1 → HIGH finding.
 
-    Warum +1: Pool darf die nächste Stufe als Test-Reiz enthalten, aber keine
-    weiter entfernten Stufen (die wären zu großer Sprung).
+    Why +1: The pool may contain the next stage as a test stimulus, but no
+    stages further out (those would be too large a jump).
     """
     entries = _parse_progression_exercises_from_log()
     if not entries:
@@ -1115,9 +1115,9 @@ def check_progression_overshoot() -> list[dict]:
                 continue
             phrases = stage.get("match_phrases") or []
             if not phrases:
-                # Ohne explizite [match: ...]-Hints kein Check (False-Positive-
-                # Risiko zu hoch bei Token-Heuristik). Coach pflegt match-Hints
-                # in exercise_log.md.
+                # Without explicit [match: ...] hints no check (false-positive
+                # risk too high with token heuristics). Coach maintains
+                # match hints in exercise_log.md.
                 continue
             for rel in pool_files:
                 try:
@@ -1140,21 +1140,21 @@ def check_progression_overshoot() -> list[dict]:
                             canonical_source="config/exercise_log.md (Status: progression)",
                             suggested_action="reduce_to_current_level",
                             fix_hint=(
-                                f"Übung '{entry['name']}' ist auf Stufe {entry['current_level']} "
-                                f"(max erlaubt: Stufe {max_allowed}). Pool-Eintrag enthält "
-                                f"Stufe {stage['level']} ({stage['text'][:80]}…) — Sprung zu groß. "
-                                "Pool an aktuelles Level anpassen oder Re-Eval triggern."
+                                f"Exercise '{entry['name']}' is at stage {entry['current_level']} "
+                                f"(max allowed: stage {max_allowed}). Pool entry contains "
+                                f"stage {stage['level']} ({stage['text'][:80]}…) — jump too large. "
+                                "Adjust pool to current level or trigger re-evaluation."
                             ),
                             description=(
-                                f"Progressions-Sprung: Übung '{entry['name']}' steht in {rel}:{line_num} "
-                                f"auf Stufe {stage['level']}, aktuelles Level ist nur {entry['current_level']}"
+                                f"Progression overshoot: exercise '{entry['name']}' in {rel}:{line_num} "
+                                f"at stage {stage['level']}, current level is only {entry['current_level']}"
                             ),
                         ))
                         break
     return findings
 
 
-# Backward-compat alias (CHECK_MAP nutzt den alten Namen)
+# Backward-compat alias (CHECK_MAP uses the old name)
 check_blocked_exercises = check_progression_overshoot
 
 
@@ -1193,16 +1193,15 @@ _CANONICAL_PHRASES: list[dict[str, str]] = [
 
 
 def check_prompt_drift() -> list[dict]:
-    """Drift-Scanner für kanonische Phrasen über Prompts und Agents.
+    """Drift scanner for canonical phrases across prompts and agents.
 
-    Sucht in allen `framework/prompts/*.yaml` und `framework/agents/*.md`
-    nach Trigger-Substrings; jede Treffer-Zeile muss byte-genau mit der
-    `canonical`-Form übereinstimmen. Mismatches werden als MEDIUM-Finding
-    geflaggt.
+    Searches all `framework/prompts/*.yaml` and `framework/agents/*.md`
+    for trigger substrings; every matching line must be byte-identical to
+    the `canonical` form. Mismatches are flagged as MEDIUM findings.
 
-    Kein automatischer Fix — der Fixer kennt die kanonische Form nicht
-    aus dem Code, sondern aus diesem Modul. Beim Triagieren manuell auf
-    die `canonical`-Zeile updaten.
+    No automatic fix — the fixer does not derive the canonical form from
+    code but from this module. When triaging, manually update to the
+    `canonical` line.
     """
     findings: list[dict] = []
 
@@ -1315,17 +1314,17 @@ _POLICY_HEADING_RE = re.compile(
     re.MULTILINE,
 )
 
-# Inline-Bold-Marker: `**Daily balance rotation (mandatory ...):**` — die
-# Drift-Klasse, die am 18.05.2026 die Balance-Einheit zum Verschwinden
-# brachte (kein `###`-Heading, deshalb leicht zu übersehen).
+# Inline bold marker: `**Daily balance rotation (mandatory ...):**` — the
+# drift class that caused the balance unit to vanish (no `###` heading,
+# therefore easy to overlook).
 _POLICY_INLINE_RE = re.compile(
     r"^\*\*(.+?)\s+\((mandatory|MANDATORY)[^)]*\)\s*[:.]?\*\*",
     re.MULTILINE,
 )
 
-# Heuristik für Code-Anker: erkennt Erwähnungen konkreter Scripts, Module,
-# Funktionen, Helper, Tools oder typisierte Daten-Quellen, die als
-# Enforcement-Pfad gelten.
+# Heuristic for code anchors: detects mentions of concrete scripts, modules,
+# functions, helpers, tools or typed data sources that serve as enforcement
+# paths.
 _CODE_ANCHOR_PATTERNS = [
     r"\b[a-z_][a-z0-9_]*\.py\b",                          # script.py
     r"\b(?:app|scripts|framework)/[a-z0-9_/]+\.py\b",     # path/to/module.py
@@ -1348,8 +1347,8 @@ _CODE_ANCHOR_PATTERNS = [
     r"\benforces (?:this )?in code\b",
 ]
 
-# Heuristik für Policy-Only-Marker — erlaubt explizites Opt-out vom
-# Audit, wenn der Coach-Judgment-Charakter dokumentiert ist.
+# Heuristic for policy-only markers — allows explicit opt-out from
+# the audit when the coach-judgment character is documented.
 _POLICY_ONLY_PATTERNS = [
     r"\bhead[- ]coach judgment\b",
     r"\bcoach judgment\b",
@@ -1434,10 +1433,10 @@ def check_policy_workflow_coverage() -> list[dict]:
     """POLICY_COVERAGE — surface MANDATORY policies in framework/CLAUDE.md
     that lack a verifiable enforcement anchor in code or a /command workflow.
 
-    Drift-Vorfall-Anker (2026-05-18): die "Daily balance rotation (mandatory)"
-    in CLAUDE.md hatte keinen Code-Path und keine Erwähnung in
-    `commands/training.md` — Folge: Coach hat die Balance-Einheit
-    übersprungen. Dieser Check fängt solche Sektionen frühzeitig ab.
+    Drift incident anchor: the "Daily balance rotation (mandatory)" in
+    CLAUDE.md had no code path and no mention in `commands/training.md` —
+    consequence: the coach skipped the balance unit. This check catches
+    such sections early.
     """
     findings: list[dict] = []
 
@@ -1459,7 +1458,7 @@ def check_policy_workflow_coverage() -> list[dict]:
         body = section["body"]
         body_lower = body.lower()
 
-        # 1. Code-Anker?
+        # 1. Code anchor?
         has_code = any(re.search(p, body, re.IGNORECASE) for p in _CODE_ANCHOR_PATTERNS)
 
         # 2. Policy-Only-Marker?
@@ -1487,23 +1486,23 @@ def check_policy_workflow_coverage() -> list[dict]:
             "policy_coverage_drift",
             "framework/CLAUDE.md",
             source_line=section["line"],
-            evidence=f"(mandatory)-Section '{section['heading']}' ohne Code-Anker, "
-                     f"Workflow-Xref oder Policy-Only-Marker",
+            evidence=f"(mandatory) section '{section['heading']}' without code anchor, "
+                     f"workflow xref, or policy-only marker",
             canonical_source="framework/CLAUDE.md",
             suggested_action="add_enforcement_anchor",
             fix_hint=(
-                "Wähle einen Pfad: (a) Code-Anker — Funktion/Script in der "
-                "Body-Beschreibung benennen (z.B. `enforced by push_workouts.py::_warn_on_xxx`). "
-                "(b) Workflow-Xref — entsprechende `commands/*.md`-Datei erwähnt "
-                "die Section explizit mit ≥2 Stichwörtern. (c) Policy-Only — "
-                "expliziter Marker wie 'head-coach judgment' im Body, "
-                "wenn keine Mechanisierung möglich ist."
+                "Choose a path: (a) Code anchor — name a function/script in the "
+                "body description (e.g. `enforced by push_workouts.py::_warn_on_xxx`). "
+                "(b) Workflow xref — corresponding `commands/*.md` file mentions "
+                "the section with >=2 keywords. (c) Policy-only — "
+                "explicit marker like 'head-coach judgment' in the body, "
+                "when no mechanisation is possible."
             ),
             description=(
-                f"`{section['heading']}` ist als (mandatory) markiert, aber "
-                "weder ein konkreter Code-Path noch ein Workflow-Doc-Xref ist "
-                "auffindbar. Das ist die Drift-Klasse, die die Balance-Einheit "
-                "am 18.05.2026 zum Verschwinden gebracht hat."
+                f"`{section['heading']}` is marked (mandatory) but "
+                "neither a concrete code path nor a workflow doc xref is "
+                "discoverable. This is the drift class that caused the "
+                "balance unit to be silently dropped."
             ),
         ))
 
@@ -1610,18 +1609,18 @@ def _human_summary(report: dict) -> str:
     for f in report["findings"]:
         by_cat[f["category"]] = by_cat.get(f["category"], 0) + 1
     if by_cat:
-        lines.append("\nKategorien:")
+        lines.append("\nCategories:")
         for cat, n in sorted(by_cat.items(), key=lambda x: -x[1]):
             lines.append(f"  {n:3d}  {cat}")
-    lines.append("\nDetails: --json verwenden für vollständige Findings")
+    lines.append("\nDetails: use --json for full findings")
     return "\n".join(lines)
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0] if __doc__ else "")
-    parser.add_argument("--offline", action="store_true", help="Skipt intervals.icu + Strava")
-    parser.add_argument("--human", action="store_true", help="Lesbarer Summary statt JSON")
-    parser.add_argument("--check", choices=list(CHECK_MAP.keys()), help="Nur einen Check ausführen")
+    parser.add_argument("--offline", action="store_true", help="Skip intervals.icu + Strava")
+    parser.add_argument("--human", action="store_true", help="Readable summary instead of JSON")
+    parser.add_argument("--check", choices=list(CHECK_MAP.keys()), help="Run a single check only")
     parser.add_argument("--log-level", default="WARNING")
     args = parser.parse_args()
 

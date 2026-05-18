@@ -52,7 +52,7 @@ Before producing the plan:
    Both sources green (no ⛔, no ⚠️ in mesoLoadTrend) → normal plan; HRV
    and TSB steer intensity.
 
-   **Recherche-Anker (Recovery-Week-Trigger):** [recovery-week-triggers.md](../research/recovery-week-triggers.md) | **HRV-Forecast-Logik:** [hrv-forecast-model.md](../research/hrv-forecast-model.md) | **HRV/RHR-Baseline:** [hrv-rhr-baseline-methodology.md](../research/hrv-rhr-baseline-methodology.md)
+   **Research anchor (Recovery-Week-Trigger):** [recovery-week-triggers.md](../research/recovery-week-triggers.md) | **HRV-Forecast-Logic:** [hrv-forecast-model.md](../research/hrv-forecast-model.md) | **HRV/RHR-Baseline:** [hrv-rhr-baseline-methodology.md](../research/hrv-rhr-baseline-methodology.md)
 
 7. **Check weekly balance (`weeklyZoneBalance`):** If the past week shows
    Z4/Z5 share over 25 % or Z1/Z2 share below 70 %, prioritize a Z1/Z2

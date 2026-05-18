@@ -27,7 +27,7 @@ recommendations for the next diagnostic step.
 5. What the examining physio/physician should specifically test
 6. Realistic timeframe estimate — not optimistic
 
-**Recherche-Anker (Achilles-Reha):** For Achilles tendinopathy rehabilitation phases (Silbernagel protocol — isometric → isotonic → energy-storage), see [achilles-rehab-phases.md](../research/achilles-rehab-phases.md).
+**Research anchor (Achilles-Reha):** For Achilles tendinopathy rehabilitation phases (Silbernagel protocol — isometric → isotonic → energy-storage), see [achilles-rehab-phases.md](../research/achilles-rehab-phases.md).
 
 Answer in the athlete's preferred language (see
 `config/athlete_preferences.md`). Be direct and concrete. No filler phrases.

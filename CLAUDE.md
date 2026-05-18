@@ -112,6 +112,7 @@ Configuration files live in `config/` (athlete-specific) with fallback to
 | `competition_plan.md` | Target events, ramp & taper plans |
 | `recovery_protocol.md` | Deload-week rules (framework defaults) |
 | `training_paradigms.md` | HR zones, polarized/pyramidal, intensity rules |
+| `injury_locks.json` | Configurable injury-lock activation keywords per body zone (used by validator R002) |
 
 Path resolution is governed by `app/utils/paths.py` (see `COACH_HOME`,
 `CONFIG_DIR`, `DATA_DIR`, `CONFIG_FALLBACK`).
@@ -374,30 +375,28 @@ When in doubt, check the type history: if the athlete's last *real*
 stimulus on that pillar is older than the rotation cadence, the answer
 is "schedule the stimulus", not "another physio session".
 
-**Activity-NOTE-Caps sind nicht-persistente Empfehlungen.** Wenn die
-`coach-analyst`-Auswertung einer einzelnen Aktivität eine
-Volumen-/Intensitäts-Empfehlung enthält (Format: "Brick bleibt
-30–35 min bis 2× Tag in Folge LWS-frei"), ist das eine
-**conditional**, **activity-scope**, **ephemeral** Empfehlung —
-nicht eine permanente Regel. Bevor sie in einen späteren Plan
-übernommen wird:
+**Activity-NOTE caps are non-persistent recommendations.** When the
+`coach-analyst` analysis of a single activity contains a volume or
+intensity recommendation (format: "Brick stays at 30–35 min until
+2× consecutive days lower-back-free"), that is a **conditional**,
+**activity-scope**, **ephemeral** recommendation — not a permanent
+rule. Before carrying it into a later plan:
 
-1. **Scope-Check:** Gilt die Empfehlung für den heutigen Workout-Typ?
-   („Brick bleibt 30–35 min" gilt für Brick = Bike→Run, NICHT für
-   Plyo→Run oder reine Easy-Runs.)
-2. **Condition-Check:** Ist die Bedingung verifiziert? („bis 2× Tag
-   LWS-frei" — wurde das erfüllt? Athleten-Feedback +
-   `fetch_context.athleteFeedback` als Quelle.)
-3. **Recency-Check:** Ist die Empfehlung noch aktuell? Activity-NOTE
-   älter als ~5 Tage und Wellness inzwischen grün → erloschen, nicht
-   übertragen.
+1. **Scope check:** Does the recommendation apply to today's workout
+   type? ("Brick stays at 30–35 min" applies to Brick = Bike→Run,
+   NOT to Plyo→Run or plain easy runs.)
+2. **Condition check:** Has the condition been verified? ("until 2×
+   consecutive days lower-back-free" — has that been met?
+   `fetch_context.athleteFeedback` as the source.)
+3. **Recency check:** Is the recommendation still current? Activity-NOTE
+   older than ~5 days and wellness now green → expired, do not carry
+   forward.
 
-Activity-NOTE-Empfehlungen, die zu permanenten Regeln werden sollen,
-müssen explizit in `config/athlete_status.md` oder
-`config/training_paradigms.md` migriert werden. Bis dahin: NICHT
-generalisieren.
+Activity-NOTE recommendations that should become permanent rules must
+be explicitly migrated to `config/athlete_status.md` or
+`config/training_paradigms.md`. Until then: do NOT generalise.
 
-*Enforcement: mechanischer Validator-Hook `validate_plan.py::check_easy_run_conservatism` (R014) — surfacet Easy-Runs unterhalb 70% des 30d-Easy-Median ohne dokumentierten Recovery-Grund. Plus head-coach judgment für die anderen Drift-Klassen.*
+*Enforcement: mechanical validator hook `validate_plan.py::check_easy_run_conservatism` (R014) — surfaces easy runs below 70% of 30d easy median without a documented recovery reason. Plus head-coach judgment for the other drift classes.*
 
 ### Never silently drop or replace standing prescriptions (mandatory)
 
@@ -535,9 +534,9 @@ Physio-Routine, Core-Accessory") — not with cherry-picked exercises
 that may not survive the specialist's review of
 `config/exercise_progressions.md` + type-history.
 
-### Active-Sperren-Disziplin (mandatory)
+### Active-block discipline (mandatory)
 
-Every entry in the "AKTIVE SPERREN" / "active_blocks" list at the top of
+Every entry in the "ACTIVE BLOCKS" / "active_blocks" list at the top of
 a plan presentation, planner directive, or specialist briefing **must
 trace back to a concrete, current trigger** — never speculative,
 never future-projected, never "just in case".
@@ -548,21 +547,21 @@ Permitted triggers (each entry must cite one):
 |---------------|--------|
 | Injury / phase restriction | `athlete_static.md` block listed under current Phase / Status |
 | Active recovery week / taper | `athlete_status.md` recovery-week block OR `competition_plan.md` taper window AND `raceInDays` ≤ taper length |
-| Conditional PAP / interference rule | `training_paradigms.md` PAP-Regel — **only** when `todayWorkouts` OR tomorrow's workouts include a quality session (Threshold/VO2max/RACE). No same-day or next-day quality → no PAP-Sperre |
-| Load cap (not exclusion) | `exercise_progressions.md` explicit cap entry — surfaced as "Last-Cap @ Xkg", not as "gesperrt" |
-| Cross-pillar follow-day sperre | Yesterday's pillar conflicts with today's planned pillar — must reference yesterday's session by date |
+| Conditional PAP / interference rule | `training_paradigms.md` PAP rule — **only** when `todayWorkouts` OR tomorrow's workouts include a quality session (Threshold/VO2max/RACE). No same-day or next-day quality → no PAP block |
+| Load cap (not exclusion) | `exercise_progressions.md` explicit cap entry — surfaced as "Load cap @ Xkg", not as "blocked" |
+| Cross-pillar follow-day block | Yesterday's pillar conflicts with today's planned pillar — must reference yesterday's session by date |
 | Recent symptom / athlete report | `athleteFeedback` from `fetch_context.py` with date stamp |
 
-**Forbidden Sperren patterns** (drift-incident pattern):
+**Forbidden block patterns** (drift-incident pattern):
 
-- "Bein offen für KW21-Race-Spezifik" — when `eventList` shows no event and `raceInDays` is `None`, there is no race to taper for. Don't manufacture a race.
-- "Wadenheben gesperrt heute (PAP)" — when neither `todayWorkouts` nor tomorrow's plan contains a Threshold/VO2max/RACE workout. PAP-Regel is conditional, not blanket.
-- "Pillar X aus heute" — when nothing in `planningConstraints` or the pillar-rotation history actually blocks it. Quiet rest > fabricated reason.
+- "Leg open for race specificity" — when `eventList` shows no event and `raceInDays` is `None`, there is no race to taper for. Don't manufacture a race.
+- "Calf raises locked today (PAP)" — when neither `todayWorkouts` nor tomorrow's plan contains a Threshold/VO2max/RACE workout. The PAP rule is conditional, not blanket.
+- "Pillar X off today" — when nothing in `planningConstraints` or the pillar-rotation history actually blocks it. Quiet rest > fabricated reason.
 
-**Drift incident pattern** (canonical case): A non-quality Pillar-Tag
+**Drift incident pattern** (canonical case): A non-quality pillar day
 (no quality today, no quality tomorrow, no race scheduled) listed
-"Wadenheben mit Last gesperrt (PAP-Regel)" and "Bein-Strength gesperrt
-(KW21-Race-Spezifik)" as active sperren — both fabricated. The athlete
+"Weighted calf raises locked (PAP rule)" and "Leg strength locked
+(race specificity)" as active blocks — both fabricated. The athlete
 caught it because the system docs (`training_paradigms.md` §339,
 `framework/research/eccentric-calf-pap-inhibition.md`,
 `framework/agents/specialist-complementary.md:374`) all correctly
@@ -570,7 +569,7 @@ constrain the rule to "same-day quality". The error was at the
 head-coach briefing layer: pulling a contextual rule into a blanket
 ban without checking the trigger condition.
 
-**Operational rule:** Before each "AKTIVE SPERREN" line is written,
+**Operational rule:** Before each "ACTIVE BLOCKS" line is written,
 the coach states the trigger in one phrase. If no trigger is
 verifiable from the listed sources, the entry is removed.
 
@@ -661,7 +660,7 @@ power, with legs as the limiter long before HR catches up.
   (per the Rad-control slot in `athlete_status.md`); HR is a sanity-cap
   and decoupling signal, not the pacing driver
 
-**Recherche-Anker:** [cross-sport-hr-differential.md](research/cross-sport-hr-differential.md)
+**Research anchor:** [cross-sport-hr-differential.md](research/cross-sport-hr-differential.md)
 
 ---
 
@@ -972,6 +971,9 @@ Two-layer architecture:
    plyo + asphalt, LTHR drift, pillar duplication, %lthr plausibility).
    Called by `push_workouts.py` before every push. ERRORs block (exit 2);
    override with `--skip-validation` (emergency, document).
+   R002 (shoulder lock) reads activation keywords from
+   `config/injury_locks.json` — see `config.example/injury_locks.json`
+   for schema and defaults.
 2. **Semantic validator** — `plan-validator` subagent (fresh context).
    Runs in step 3.5b after specialists. Checks pillar rotation, stimulus
    adequacy vs. wellness, weekly volume jump, progression consistency,

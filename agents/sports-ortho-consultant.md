@@ -29,7 +29,7 @@ recommendations for the practice setting.
 5. Return-to-sport criteria — when can intervals / competition resume?
 6. Long-term prognosis with correct treatment
 
-**Recherche-Anker (Achilles-Reha):** For Achilles tendinopathy rehabilitation phases (Silbernagel protocol — isometric → isotonic → energy-storage), see [achilles-rehab-phases.md](../research/achilles-rehab-phases.md).
+**Research anchor (Achilles-Reha):** For Achilles tendinopathy rehabilitation phases (Silbernagel protocol — isometric → isotonic → energy-storage), see [achilles-rehab-phases.md](../research/achilles-rehab-phases.md).
 
 Answer in the athlete's preferred language (see
 `config/athlete_preferences.md`). Be precise and clinically concrete. No

@@ -179,7 +179,7 @@ Name Gripmaster exercises correctly:
 → Move to the next level only when feedback is "easy" or hold time
   exceeds 60 s.
 
-**Recherche-Anker:** [grip-training-progression.md](../research/grip-training-progression.md)
+**Research anchor:** [grip-training-progression.md](../research/grip-training-progression.md)
 
 ## Set limit for ALL strength + isometric exercises (MANDATORY)
 
@@ -193,7 +193,7 @@ maximalkraft default in `framework/config.example/exercise_progressions.md`
 "Set-Volumen"). Grip isometrics in multi-exercise sessions have always
 followed this cap; it now applies uniformly across all pillars.
 
-**Recherche-Anker (Volume-Tolerance):** [ninja-set-volume-tolerance.md](../research/ninja-set-volume-tolerance.md)
+**Research anchor (Volume-Tolerance):** [ninja-set-volume-tolerance.md](../research/ninja-set-volume-tolerance.md)
 
 **Rationale:**
 - Forearm-flexor volume accumulates across all grip exercises — 5

@@ -103,7 +103,7 @@ def _format_shoe_footer(shoe_ctx: dict) -> str:
     if not primary.get("name"):
         return ""
     km = primary.get("distance_km")
-    head = f"Schuh-Empfehlung: {primary['name']}"
+    head = f"Shoe recommendation: {primary['name']}"
     if km is not None:
         head += f" ({km:.0f} km)"
     reason = primary.get("reason")
@@ -157,7 +157,7 @@ def main() -> None:
     parser.add_argument(
         "--skip-validation",
         action="store_true",
-        help="Skip validate_plan pre-push check (Notfall-Bypass — explizit dokumentieren!)",
+        help="Skip validate_plan pre-push check (emergency bypass — document explicitly!)",
     )
     parser.add_argument(
         "--no-auto-balance",
@@ -187,7 +187,7 @@ def main() -> None:
 
     from app.utils.tracing import script_span, set_span_io
 
-    # Pre-Push-Validation — ZWINGEND, kann nur via --skip-validation umgangen werden.
+    # Pre-push validation — MANDATORY, can only be bypassed via --skip-validation.
     if not args.skip_validation:
         try:
             workouts_for_validation = [
@@ -199,21 +199,21 @@ def main() -> None:
             errors = [f for f in findings if f.severity == SEVERITY_ERROR]
             warnings = [f for f in findings if f.severity == SEVERITY_WARNING]
             if findings:
-                logger.warning("Validator-Findings:\n%s", format_findings_text(findings))
+                logger.warning("Validator findings:\n%s", format_findings_text(findings))
             if errors:
                 notify_error("push_workouts: validate_plan ERROR(s) — push blocked", {
                     "errors": [f.to_dict() for f in errors],
                 })
-                logger.error("Push blockiert wegen %d ERROR-Finding(s). Override mit --skip-validation.", len(errors))
+                logger.error("Push blocked due to %d ERROR finding(s). Override with --skip-validation.", len(errors))
                 sys.exit(2)
             if warnings:
-                logger.warning("Push fährt mit %d WARNING(s) durch.", len(warnings))
+                logger.warning("Push proceeding with %d WARNING(s).", len(warnings))
         except SystemExit:
             raise
         except Exception as exc:  # noqa: BLE001
-            logger.warning("Validator-Aufruf fehlgeschlagen (fail-soft): %s — push fährt durch", exc)
+            logger.warning("Validator call failed (fail-soft): %s — push proceeding", exc)
     else:
-        logger.warning("⚠️ --skip-validation aktiv — Pre-Push-Check übersprungen!")
+        logger.warning("⚠️ --skip-validation active — pre-push check skipped!")
 
     logger.info("push_workouts: %d workout(s) for %s", len(workouts), args.date)
     events = prepare_workout_events(workouts, args.date)
@@ -286,9 +286,9 @@ def _auto_push_balance(target_date: str, current_workouts: list, athlete_id: str
 
 
 def _warn_on_warmup_overlap(target_date: str) -> None:
-    """Sanity-Check nach Push: warnt bei doppelten Warm-up-Drills im Tag.
+    """Post-push sanity check: warns on duplicate warm-up drills in the day.
 
-    Fail-soft — wenn Check fehlschlägt, blockt das den Push nicht.
+    Fail-soft — if the check fails, it does not block the push.
     """
     try:
         from check_warmup_overlap import detect_overlaps, fetch_workouts
@@ -296,26 +296,26 @@ def _warn_on_warmup_overlap(target_date: str) -> None:
         overlaps = detect_overlaps(events)
         if not overlaps:
             return
-        logger.warning("⚠️  Drill-Doppelung in %s — %d Treffer:", target_date, len(overlaps))
+        logger.warning("⚠️  Drill duplication on %s — %d hit(s):", target_date, len(overlaps))
         for o in overlaps:
             logger.warning("   • %s: %s", o["drill"], " ↔ ".join(o["in_workouts"]))
-        logger.warning("   → Coach sollte WU bereinigen oder einen Block weglassen.")
+        logger.warning("   → Coach should clean up warmup or remove one block.")
     except Exception as exc:  # noqa: BLE001
-        logger.debug("Warm-up-Overlap-Check übersprungen: %s", exc)
+        logger.debug("Warm-up overlap check skipped: %s", exc)
 
 
 def _warn_on_mental_coach_triggers(workouts: list, target_date: str) -> None:
-    """Sanity-Check nach Push: surfacet mechanisch erkennbare Mental-Coach-Triggers.
+    """Post-push sanity check: surfaces mechanically detectable mental-coach triggers.
 
     Triggers (per framework/CLAUDE.md "Mental-coach triggers"):
     - workout_type == "LONG" or duration_min > 90 on a Run
     - workout_type == "RACE"
 
-    Fail-soft — wenn Check fehlschlägt, blockt das den Push nicht. Der Head-
-    Coach (Claude) liest diese WARNING und entscheidet, mental-coach als
-    Pane-Teammate zu starten. Die anderen Triggers (Bad-Session,
-    Setback-Note, HRV-Drop, Motivation-Signal) sind nicht aus
-    Push-Workouts-Daten erkennbar und bleiben Head-Coach-Judgment.
+    Fail-soft — if check fails, it does not block the push. The head
+    coach (Claude) reads this WARNING and decides to start mental-coach
+    as a pane teammate. The other triggers (bad session, setback note,
+    HRV drop, motivation signal) are not derivable from push-workouts
+    data and stay head-coach judgment.
     """
     try:
         triggers = []
@@ -323,23 +323,23 @@ def _warn_on_mental_coach_triggers(workouts: list, target_date: str) -> None:
             wo_type = w.get("type") if isinstance(w, dict) else getattr(w, "type", None)
             wo_subtype = w.get("workout_type") if isinstance(w, dict) else getattr(w, "workout_type", None)
             duration = w.get("duration_min") if isinstance(w, dict) else getattr(w, "duration_min", None)
-            name = w.get("name") if isinstance(w, dict) else getattr(w, "name", "(unbenannt)")
+            name = w.get("name") if isinstance(w, dict) else getattr(w, "name", "(unnamed)")
             if wo_subtype == "RACE":
-                triggers.append(("RACE", name, "Renn-Tag — Pre-Race Mental-Setup"))
+                triggers.append(("RACE", name, "Race day — pre-race mental setup"))
                 continue
             if wo_subtype == "LONG" and wo_type in ("Run", "Ride"):
-                triggers.append(("LONG", name, f"Long-Effort {duration or '?'} min"))
+                triggers.append(("LONG", name, f"Long effort {duration or '?'} min"))
                 continue
             if wo_type == "Run" and isinstance(duration, (int, float)) and duration > 90:
-                triggers.append(("LONG", name, f"Lauf > 90 min ({duration} min)"))
+                triggers.append(("LONG", name, f"Run > 90 min ({duration} min)"))
         if not triggers:
             return
-        logger.warning("🧠 MENTAL-COACH-TRIGGER für %s — %d Treffer:", target_date, len(triggers))
+        logger.warning("🧠 MENTAL-COACH-TRIGGER for %s — %d hit(s):", target_date, len(triggers))
         for kind, name, reason in triggers:
             logger.warning("   • [%s] %s — %s", kind, name, reason)
-        logger.warning("   → Head-Coach: mental-coach in eigener Pane starten (Kontext: workout, HRV, TSB, weather).")
+        logger.warning("   → Head coach: start mental-coach in its own pane (context: workout, HRV, TSB, weather).")
     except Exception as exc:  # noqa: BLE001
-        logger.debug("Mental-Coach-Trigger-Check übersprungen: %s", exc)
+        logger.debug("Mental-coach trigger check skipped: %s", exc)
 
 
 if __name__ == "__main__":

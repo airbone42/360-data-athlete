@@ -60,7 +60,7 @@ be based on **GAP (Grade-Adjusted Pace)**, not avg pace. Downhill segments
 inflate avg pace artificially — what looks like efficiency is often just a
 downhill gift.
 
-**Recherche-Anker (Strava-GAP vs. intervals.icu):** [strava-vs-intervals-gap.md](../research/strava-vs-intervals-gap.md)
+**Research anchor (Strava-GAP vs. intervals.icu):** [strava-vs-intervals-gap.md](../research/strava-vs-intervals-gap.md)
 
 Mandatory workflow for run analyses:
 1. **Pull GAP from the activity:** `IntervalsClient.get_activity()` fields
@@ -78,8 +78,8 @@ Mandatory workflow for run analyses:
    uncritical there.
 
 **Post-trail / post-downhill analysis notes (MANDATORY when significant descent present):**
-- **DOMS peak timing:** Muscle soreness from trail/downhill sessions peaks 24–48 h after the session, not on the day itself. When assessing next-day readiness after a trail run with descent, account for the delayed onset window — do NOT assess readiness by same-day feel alone. **Recherche-Anker:** [doms-peak-timing.md](../research/doms-peak-timing.md)
-- **Downhill damage:** Eccentric load from downhill running causes measurable structural muscle damage and elevated DOMS risk, independent of HR zones. Flag in growth areas when significant descent (>100 m) was part of the session. **Recherche-Anker:** [downhill-running-doms-taper.md](../research/downhill-running-doms-taper.md)
+- **DOMS peak timing:** Muscle soreness from trail/downhill sessions peaks 24–48 h after the session, not on the day itself. When assessing next-day readiness after a trail run with descent, account for the delayed onset window — do NOT assess readiness by same-day feel alone. **Research anchor:** [doms-peak-timing.md](../research/doms-peak-timing.md)
+- **Downhill damage:** Eccentric load from downhill running causes measurable structural muscle damage and elevated DOMS risk, independent of HR zones. Flag in growth areas when significant descent (>100 m) was part of the session. **Research anchor:** [downhill-running-doms-taper.md](../research/downhill-running-doms-taper.md)
 
 All steps including warmup have a defined duration and contribute to the
 planned total duration. Assess compliance directly, no correction factor.
@@ -121,7 +121,7 @@ wrongly by the planner. If you need a temporal anchor, derive it from
 **Description drift on strength sessions:** If the activity description
 differs from the planned workout (athlete edited weights, sets, reps, or
 hold time), name the change briefly in the analysis and ask the reason
-("Du hast Pinch Grip auf 4 kg reduziert — Grund?"). The persistent
+("You reduced Pinch Grip to 4 kg — reason?"). The persistent
 update of `config/exercise_progressions.md` runs in `/analyse` step 6.7
 via `sync_description_drift.py` — you do not write files yourself.
 

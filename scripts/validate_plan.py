@@ -1,17 +1,17 @@
-"""Mechanischer Plan-Validator — prüft geplante Workouts gegen Trainingsparadigmen.
+"""Mechanical plan validator — checks planned workouts against training paradigms.
 
-Plugin-Architektur: jede Regel ist eine Funktion `check_<name>(workouts, ctx) -> list[Finding]`.
-Neue Regeln einfach in `RULES` eintragen.
+Plugin architecture: each rule is a function `check_<name>(workouts, ctx) -> list[Finding]`.
+Register new rules in `RULES`.
 
-Input: JSON-Array (workouts mit description/intervals_icu) via --file oder stdin.
-Output: JSON mit findings[].
-Exit Code: 1 wenn ERROR-Finding vorhanden, sonst 0.
+Input: JSON array (workouts with description/intervals_icu) via --file or stdin.
+Output: JSON with findings[].
+Exit code: 1 if ERROR finding present, else 0.
 
 Usage:
     echo '[{...}]' | python3 scripts/validate_plan.py --date YYYY-MM-DD
     python3 scripts/validate_plan.py --date YYYY-MM-DD --file /tmp/workouts.json
-    python3 scripts/validate_plan.py --date YYYY-MM-DD --file plan.json --json   # JSON-Output statt Klartext
-    python3 scripts/validate_plan.py --date YYYY-MM-DD --file plan.json --rule R001   # einzelne Regel testen
+    python3 scripts/validate_plan.py --date YYYY-MM-DD --file plan.json --json   # JSON output instead of plain text
+    python3 scripts/validate_plan.py --date YYYY-MM-DD --file plan.json --rule R001   # run a single rule
 """
 
 from __future__ import annotations
@@ -59,11 +59,12 @@ class Context:
     recent_notes: list[dict] = field(default_factory=list)
     recent_activities: list[dict] = field(default_factory=list)
     sport_settings: list[dict] = field(default_factory=list)
+    injury_locks: dict[str, list[str]] = field(default_factory=dict)
 
 
 # ─────────────────────────── Helpers ───────────────────────────
 
-# Übungen, bei denen >15 Reps EXPLIZIT erlaubt sind (Iso-Holds, Mobility, Plyo-Hops, Aktivierung).
+# Exercises where >15 reps are explicitly allowed (iso-holds, mobility, plyo-hops, activation).
 HIGH_REP_WHITELIST = [
     r"\bpogo[-\s]?(hop|jump)",
     r"\bjumping jack",
@@ -86,10 +87,10 @@ HIGH_REP_WHITELIST = [
     r"\beinbeinstand", r"\bsingle.?leg\s*stand",
     r"\bdehnung", r"\bstretch",
     r"\bfoam\s*roll",
-    r"\bface\s*pull",  # Sonderfall: hier prüft R001 zusätzlich anhand der Reps
+    r"\bface\s*pull",  # special case: R001 additionally checks reps for these
 ]
 
-# Für Face Pulls + ähnliche Hypertrophie/Stabilitäts-Übungen wird trotz Whitelist auf >15 geprüft
+# For Face Pulls + similar hypertrophy/stability exercises: check >15 reps despite whitelist match
 HYPERTROPHY_REPS_CAP_OVERRIDES = [
     r"\bface\s*pull",
     r"\by-?raise", r"\bw-?raise", r"\bt-?raise",
@@ -111,7 +112,7 @@ HYPERTROPHY_REPS_CAP_OVERRIDES = [
     r"\bpush-?up", r"\bliegestütz",
 ]
 
-# Schulter-Lock: dauerhaft gesperrt laut athlete_static.md
+# Shoulder lock: exercises blocked when shoulder restriction is active (per athlete_static.md + injury_locks.json)
 SHOULDER_LOCK_PATTERNS = [
     r"\bpull-?up", r"\bklimmzug",
     r"\brope\s*climb", r"\bseilklettern",
@@ -120,14 +121,14 @@ SHOULDER_LOCK_PATTERNS = [
     r"\bmuscle-?up",
 ]
 
-# Schweres Push (Ausnahme: KB OHP 4kg = Reha)
+# Heavy overhead push (exception: KB OHP 4kg = rehab)
 HEAVY_OVERHEAD_PATTERNS = [
     r"\b(barbell|langhantel)\s*overhead",
     r"\bschulterpress\s*\d{2,}\s*kg",
     r"\bovermhead\s*press\s*\d{2,}\s*kg",
 ]
 
-# Hard-Glute-Übungen (für DOMS-Check)
+# Hard glute exercises (for DOMS check)
 HARD_GLUTE_PATTERNS = [
     r"\brdl\b.*\d+\s*kg",
     r"\bromanian\s*deadlift",
@@ -146,10 +147,10 @@ PLYO_PATTERNS = [
     r"\bdepth\s*jump",
 ]
 
-# Übungs-Zeile: muss Mengenangabe enthalten (sonst Fließtext)
+# Exercise line: must contain quantity (otherwise prose text)
 _QUANT_LINE = re.compile(r"\d+\s*[x×]\s*\d+|\d+\s*(?:s|sec|sek|min|m\b)", flags=re.IGNORECASE)
 
-# Reps aus einer Übungs-Zeile extrahieren: "3×17" oder "3x17" → (sets=3, reps=17)
+# Extract reps from an exercise line: "3×17" or "3x17" → (sets=3, reps=17)
 _SETS_REPS = re.compile(r"\b(\d+)\s*[x×]\s*(\d+)(?!\s*(?:s|sec|sek|min|m\b|kg))")
 
 
@@ -164,7 +165,7 @@ def _exercise_lines(description: str) -> list[str]:
             continue
         if not _QUANT_LINE.search(stripped):
             continue
-        # Section headers like "WARM-UP (5 min)" filtern
+        # Filter section headers like "WARM-UP (5 min)"
         if re.match(r"^(WARM-?UP|HAUPTTEIL|HAUPT-TEIL|COOL-?DOWN|AKTIVIERUNG|BLOCK\b|FINISHER\b|MAIN\b)", stripped, flags=re.IGNORECASE):
             continue
         out.append(stripped)
@@ -176,7 +177,7 @@ def _matches_any(line: str, patterns: list[str]) -> bool:
 
 
 def _workout_name(w: dict) -> str:
-    return w.get("name") or "(unbenannt)"
+    return w.get("name") or "(unnamed)"
 
 
 def _description(w: dict) -> str:
@@ -186,13 +187,13 @@ def _description(w: dict) -> str:
 # ─────────────────────────── Rules ───────────────────────────
 
 def check_reps_ceiling(workouts: list[dict], ctx: Context) -> list[Finding]:
-    """R001 — Reps-Decke 15: Hypertrophie-/Strength-Übungen sollen max. 15 Reps haben.
+    """R001 — Reps ceiling 15: hypertrophy/strength exercises should have max 15 reps.
 
-    Ausnahme: Whitelist (Iso-Holds, Mobility, Plyo-Hops). Override: HYPERTROPHY_REPS_CAP_OVERRIDES
-    kennen explizite Hypertrophie-Übungen, die TROTZ Whitelist-Match auf Reps geprüft werden
-    (z.B. Face Pulls).
+    Exception: whitelist (iso-holds, mobility, plyo-hops). Override: HYPERTROPHY_REPS_CAP_OVERRIDES
+    lists explicit hypertrophy exercises that are checked for >15 reps DESPITE whitelist match
+    (e.g. Face Pulls).
 
-    Sport-Science-Anker: `framework/research/hypertrophy-rep-ranges.md`
+    Sport-science anchor: `framework/research/hypertrophy-rep-ranges.md`
     """
     findings = []
     for w in workouts:
@@ -210,85 +211,90 @@ def check_reps_ceiling(workouts: list[dict], ctx: Context) -> list[Finding]:
                     rule_id="R001",
                     severity=SEVERITY_WARNING,
                     workout=name,
-                    message=f"Reps {reps} > 15 — verlässt Hypertrophie-Zone. Zeile: «{line[:80]}»",
-                    suggestion="Reps auf 12-15 senken und Last erhöhen (stärkeres Band/Gewicht) oder Tempo-Reiz (3-4s eccentric + Hold).",
+                    message=f"Reps {reps} > 15 — leaves hypertrophy zone. Line: «{line[:80]}»",
+                    suggestion="Reduce reps to 12-15 and increase load (heavier band/weight) or add tempo stimulus (3-4s eccentric + hold).",
                 ))
     return findings
 
 
 def check_injury_locks_shoulder(workouts: list[dict], ctx: Context) -> list[Finding]:
-    """R002 — Schulter-Sperre rechts: Pull-up, Hang, Rope Climb, Bar Traverse, Campus Board verboten.
+    """R002 — Shoulder lock: Pull-up, Hang, Rope Climb, Bar Traverse, Campus Board prohibited.
 
-    Ausnahmen:
-    - Dead Hang aktiv 2-5s ist erlaubt (siehe athlete_static.md).
-    - Scapular Pullups (skapulare Depression, keine Ellbogenflexion) sind Reha-Tier
-      und gehören explizit zum Schulter-Reha-Repertoire — kein verbotener Pull-up.
-    Hard-Stop (ERROR) bei eindeutigen Verletzungs-Verstößen.
+    Activation: `config/injury_locks.json` defines keywords per lock zone. When any
+    keyword is found in `athlete_static.md`, the corresponding lock is active.
+
+    Exceptions:
+    - Dead Hang 2-5s is explicitly allowed (see athlete_static.md).
+    - Scapular Pullups (scapular depression, no elbow flexion) are rehab-tier
+      and belong to the shoulder rehab repertoire — not a prohibited pull-up.
+    Hard stop (ERROR) on clear injury violations.
     """
     findings = []
-    if "Schulter rechts" not in ctx.athlete_static and "Schultersteife" not in ctx.athlete_static:
-        return findings  # keine aktive Schulter-Restriktion
+    shoulder_keywords = ctx.injury_locks.get("shoulder", [])
+    if not shoulder_keywords:
+        return findings
+    static_lower = ctx.athlete_static.lower()
+    if not any(kw.lower() in static_lower for kw in shoulder_keywords):
+        return findings
     for w in workouts:
         name = _workout_name(w)
         for line in _exercise_lines(_description(w)):
             if _matches_any(line, SHOULDER_LOCK_PATTERNS):
-                # Dead Hang 2-5s ist explizit erlaubt
                 if re.search(r"dead\s*hang.*[2-5]\s*s", line, flags=re.IGNORECASE):
                     continue
-                # Scapular Pullups (skapulare Depression, keine Ellbogenflexion) sind Reha
                 if re.search(r"\b(scapular?|skapula(r|re|ren)?)\s*pull[-\s]?ups?", line, flags=re.IGNORECASE):
                     continue
                 findings.append(Finding(
                     rule_id="R002",
                     severity=SEVERITY_ERROR,
                     workout=name,
-                    message=f"Schulter-Sperre verletzt — gesperrte Übung: «{line[:80]}»",
-                    suggestion="Übung ersetzen durch erlaubte Variante (TRX Row statt Pull-up, Face Pull statt Hang, etc.) oder weglassen.",
+                    message=f"Shoulder lock violated — blocked exercise: «{line[:80]}»",
+                    suggestion="Replace with allowed variant (TRX Row instead of Pull-up, Face Pull instead of Hang, etc.) or remove.",
                 ))
             if _matches_any(line, HEAVY_OVERHEAD_PATTERNS):
                 findings.append(Finding(
                     rule_id="R002",
                     severity=SEVERITY_ERROR,
                     workout=name,
-                    message=f"Schwerer Overhead Press trotz Schulter-Restriktion: «{line[:80]}»",
-                    suggestion="Last reduzieren auf Reha-Niveau (KB OHP 4kg = OK) oder Übung weglassen.",
+                    message=f"Heavy overhead press despite shoulder restriction: «{line[:80]}»",
+                    suggestion="Reduce load to rehab level (KB OHP 4kg = OK) or remove exercise.",
                 ))
     return findings
 
 
 def check_surface_required(workouts: list[dict], ctx: Context) -> list[Finding]:
-    """R003 — Run/Ride muss surface-Feld haben (Schuh-Advisor hängt davon ab)."""
+    """R003 — Run/Ride must have a surface field (shoe advisor depends on it)."""
     findings = []
     valid_surfaces = {"asphalt", "forstweg", "trail", "track", "treadmill"}
     for w in workouts:
         if w.get("type") not in ("Run", "Ride"):
             continue
         if w.get("indoor"):
-            continue  # indoor = treadmill/turbo, kein surface nötig
+            continue  # indoor = treadmill/turbo, no surface needed
         surface = w.get("surface")
         if not surface:
             findings.append(Finding(
                 rule_id="R003",
                 severity=SEVERITY_ERROR,
                 workout=_workout_name(w),
-                message="Run/Ride ohne surface-Feld — Schuh-Advisor kann nicht zuverlässig empfehlen.",
-                suggestion=f"surface setzen: einer von {sorted(valid_surfaces)}",
+                message="Run/Ride missing surface field — shoe advisor cannot reliably recommend.",
+                suggestion=f"Set surface: one of {sorted(valid_surfaces)}",
             ))
         elif surface.lower() not in valid_surfaces:
             findings.append(Finding(
                 rule_id="R003",
                 severity=SEVERITY_WARNING,
                 workout=_workout_name(w),
-                message=f"surface='{surface}' nicht in Standard-Set — Schuh-Advisor rät heuristisch.",
-                suggestion=f"Standardisieren: {sorted(valid_surfaces)}",
+                message=f"surface='{surface}' not in standard set — shoe advisor uses heuristic.",
+                suggestion=f"Standardize: {sorted(valid_surfaces)}",
             ))
     return findings
 
 
 def check_glute_doms(workouts: list[dict], ctx: Context) -> list[Finding]:
-    """R004 — Aktive Glute-DOMS-NOTE in letzten 3 Tagen + harte Glute-Übungen heute.
+    """R004 — Active glute DOMS note in the last 3 days + hard glute exercises today.
 
-    Sport-Science-Anker: `framework/research/doms-peak-timing.md`
+    Sport-science anchor: `framework/research/doms-peak-timing.md`
     """
     findings = []
     cutoff = (datetime.fromisoformat(ctx.target_date) - timedelta(days=3)).date()
@@ -303,7 +309,7 @@ def check_glute_doms(workouts: list[dict], ctx: Context) -> list[Finding]:
             continue
         desc = (note.get("description") or "").lower()
         if "glute" in desc and ("doms" in desc or "schmerz" in desc or "angeschlagen" in desc or "spürbar" in desc):
-            # Nur "noch aktiv" wenn nicht ausdrücklich aufgehoben
+            # Only "still active" if not explicitly resolved
             if "aufgehoben" in desc or "weg" in desc or "deutlich besser" in desc:
                 continue
             has_active_doms = True
@@ -317,17 +323,17 @@ def check_glute_doms(workouts: list[dict], ctx: Context) -> list[Finding]:
                     rule_id="R004",
                     severity=SEVERITY_WARNING,
                     workout=_workout_name(w),
-                    message=f"Harte Glute-Übung trotz aktiver DOMS-NOTE (≤3d): «{line[:80]}»",
-                    suggestion="Last deutlich reduzieren oder Übung streichen, bis Glute symptomfrei.",
+                    message=f"Hard glute exercise despite active DOMS note (≤3d): «{line[:80]}»",
+                    suggestion="Significantly reduce load or remove exercise until glute is symptom-free.",
                 ))
     return findings
 
 
 def check_achilles_plyo_surface(workouts: list[dict], ctx: Context) -> list[Finding]:
-    """R005 — Achilles Phase 3 + harte Plyo + Asphalt/Track → Hinweis auf weichen Untergrund.
+    """R005 — Achilles Phase 3 + hard plyo + asphalt/track → suggest softer surface.
 
-    Sport-Science-Anker: `framework/research/achilles-rehab-phases.md`,
-                         `framework/research/plyometrics-frequency-recovery.md`
+    Sport-science anchor: `framework/research/achilles-rehab-phases.md`,
+                          `framework/research/plyometrics-frequency-recovery.md`
     """
     findings = []
     if "Phase 3" not in ctx.athlete_static:
@@ -353,20 +359,20 @@ def check_achilles_plyo_surface(workouts: list[dict], ctx: Context) -> list[Find
                 rule_id="R005",
                 severity=SEVERITY_INFO,
                 workout=_workout_name(w),
-                message=f"Plyo-Block ({plyo_workout}) + harte Surface ({surface}) am gleichen Tag bei Achilles Phase 3.",
-                suggestion="Forstweg/Trail bevorzugen wenn möglich, oder Plyo auf einen anderen Tag legen.",
+                message=f"Plyo block ({plyo_workout}) + hard surface ({surface}) on the same day during Achilles Phase 3.",
+                suggestion="Prefer forest path/trail if possible, or move plyo to a different day.",
             ))
     return findings
 
 
 def check_lthr_settings_drift(workouts: list[dict], ctx: Context) -> list[Finding]:
-    """R006 — Sport-Settings LTHR muss mit athlete_status.md übereinstimmen.
+    """R006 — Sport-settings LTHR must match athlete_status.md.
 
-    Heutiger Lehrfall: intervals.icu Run-LTHR=154, status.md=166 → %lthr-Steps falsch.
+    Historical finding: intervals.icu Run-LTHR diverged from status.md → %lthr steps wrong.
     """
     findings = []
-    # Erwartete LTHR aus athlete_status.md extrahieren
-    m = re.search(r"LTHR\s*aktuell[:\*\s]*?(\d{2,3})\s*bpm", ctx.athlete_status)
+    # Extract expected LTHR from athlete_status.md (supports both German "aktuell" and English "current")
+    m = re.search(r"LTHR\s*(?:aktuell|current)[:\*\s]*?(\d{2,3})\s*bpm", ctx.athlete_status)
     if not m:
         return findings
     expected_lthr = int(m.group(1))
@@ -380,14 +386,14 @@ def check_lthr_settings_drift(workouts: list[dict], ctx: Context) -> list[Findin
                 rule_id="R006",
                 severity=SEVERITY_ERROR,
                 workout="(global)",
-                message=f"intervals.icu Run-LTHR ({actual_lthr}) ≠ athlete_status.md LTHR ({expected_lthr}) — %lthr-Steps + Load-Berechnung falsch.",
-                suggestion=f"PUT /api/v1/athlete/{settings.intervals_icu_athlete_id or '<athlete-id>'}/sport-settings/{s.get('id')} mit lthr={expected_lthr}",
+                message=f"intervals.icu Run-LTHR ({actual_lthr}) ≠ athlete_status.md LTHR ({expected_lthr}) — %lthr steps + load calculation wrong.",
+                suggestion=f"PUT /api/v1/athlete/{settings.intervals_icu_athlete_id or '<athlete-id>'}/sport-settings/{s.get('id')} with lthr={expected_lthr}",
             ))
     return findings
 
 
 def check_pillar_rotation(workouts: list[dict], ctx: Context) -> list[Finding]:
-    """R007 — Ninja-Säulen-Rotation: Pull+Push am gleichen Tag = WARNING (Säulen-Doppel)."""
+    """R007 — Ninja pillar rotation: Pull+Push on the same day = WARNING (pillar double)."""
     findings = []
     has_pull = False
     has_push = False
@@ -397,11 +403,11 @@ def check_pillar_rotation(workouts: list[dict], ctx: Context) -> list[Finding]:
         if "ninja" not in (w.get("tags") or []):
             continue
         desc = _description(w).lower()
-        # Pull-Indikatoren
+        # Pull indicators
         if any(re.search(p, desc, flags=re.IGNORECASE) for p in [r"\bpull-säule", r"\bpull\s*block", r"\btrx row", r"\bface\s*pull", r"\brudern\b"]):
             has_pull = True
             pull_workout = _workout_name(w)
-        # Push-Indikatoren (außer Reha-OHP)
+        # Push indicators (excluding rehab OHP)
         if any(re.search(p, desc, flags=re.IGNORECASE) for p in [r"\bpush-?up", r"\bdip\b", r"\bbench\s*press", r"\bpush-säule", r"\bpush\s*block"]):
             has_push = True
             push_workout = _workout_name(w)
@@ -417,13 +423,13 @@ def check_pillar_rotation(workouts: list[dict], ctx: Context) -> list[Finding]:
 
 
 def check_intervals_lthr_format(workouts: list[dict], ctx: Context) -> list[Finding]:
-    """R008 — Wenn Workout %lthr-Step verwendet, sicherstellen dass die Werte zur athleten-LTHR passen.
+    """R008 — When a workout uses %lthr steps, verify values match the athlete's LTHR.
 
-    Beispiel: Bei LTHR 166 ist '93-99% lthr' = 154-164 bpm. Wenn der Coach jedoch '90-95% lthr'
-    schreibt aber Z4-Reiz (154-166) erwartet, ist das inkonsistent.
+    Example: with LTHR 166, '93-99% lthr' = 154-164 bpm. If the coach writes '90-95% lthr'
+    but expects Z4 stimulus (154-166), that is inconsistent.
     """
     findings = []
-    m = re.search(r"LTHR\s*aktuell[:\*\s]*?(\d{2,3})\s*bpm", ctx.athlete_status)
+    m = re.search(r"LTHR\s*(?:aktuell|current)[:\*\s]*?(\d{2,3})\s*bpm", ctx.athlete_status)
     if not m:
         return findings
     lthr = int(m.group(1))
@@ -436,37 +442,37 @@ def check_intervals_lthr_format(workouts: list[dict], ctx: Context) -> list[Find
             hi_pct = int(match.group(2))
             lo_bpm = lthr * lo_pct / 100
             hi_bpm = lthr * hi_pct / 100
-            # Erwartetes Z4: Cap soll <= LTHR sein, untere Grenze >= 0.93*LTHR
+            # Expected Z4: cap should be <= LTHR, lower bound >= 0.93*LTHR
             if hi_bpm > lthr + 0.5:
                 findings.append(Finding(
                     rule_id="R008",
                     severity=SEVERITY_WARNING,
                     workout=_workout_name(w),
-                    message=f"%lthr-Cap ({hi_pct}%={hi_bpm:.0f}bpm) > LTHR ({lthr}bpm) — über Schwelle, unsicher für Wiederaufbau.",
-                    suggestion="Cap auf 99-100% lthr begrenzen (Z4-Threshold-Reiz, nicht VO2max).",
+                    message=f"%lthr cap ({hi_pct}%={hi_bpm:.0f}bpm) > LTHR ({lthr}bpm) — above threshold, risky for build-up.",
+                    suggestion="Cap at 99-100% lthr (Z4 threshold stimulus, not VO2max).",
                 ))
             if lo_bpm < lthr * 0.85:
                 findings.append(Finding(
                     rule_id="R008",
                     severity=SEVERITY_INFO,
                     workout=_workout_name(w),
-                    message=f"%lthr-Range startet bei {lo_pct}% ({lo_bpm:.0f}bpm) — unterhalb Z3, unsauber für Z4-Reiz.",
-                    suggestion="Untere Range >= 92% LTHR setzen für saubere Z4-Reiz-Range.",
+                    message=f"%lthr range starts at {lo_pct}% ({lo_bpm:.0f}bpm) — below Z3, imprecise for Z4 stimulus.",
+                    suggestion="Set lower range >= 92% LTHR for a clean Z4 stimulus range.",
                 ))
     return findings
 
 
 def check_hr_range_consistency(workouts: list[dict], ctx: Context) -> list[Finding]:
-    """R009 — HR-Range-Konsistenz zwischen Description und intervals_icu-Code.
+    """R009 — HR range consistency between description and intervals_icu code.
 
-    Wenn die Description eine BPM-Range nennt (z.B. 'HR 120-130' oder '120-130 bpm'),
-    muss der intervals_icu-Code diese BPM-Range explizit setzen — nicht 'Z<n> HR' verwenden.
-    'Z<n> HR' pusht im Garmin-Sync die volle Zone, was bei zonen-übergreifenden Ranges
-    (z.B. Z1-oben + Z2-unten = 120-130) oder Teil-Range einer Zone zur falschen
-    Vorgabe führt. Athlet sieht im Garmin den Sync-Code, nicht die Description.
+    When the description names a BPM range (e.g. 'HR 120-130' or '120-130 bpm'),
+    the intervals_icu code must set that BPM range explicitly — not use 'Z<n> HR'.
+    'Z<n> HR' pushes the full zone on Garmin sync, which for cross-zone ranges
+    (e.g. Z1-upper + Z2-lower = 120-130) or partial-zone ranges leads to the wrong
+    target. The athlete sees the sync code on the watch, not the description.
 
-    Beispiel-Bug 2026-05-08: Description 'HR 120-130', intervals_icu '50m Z1 HR' →
-    Athlet bekommt Z1-Range (1-125) statt 120-130 angezeigt.
+    Historical bug: description 'HR 120-130', intervals_icu '50m Z1 HR' →
+    athlete gets Z1 range (1-125) instead of 120-130 on the watch.
     """
     findings = []
     bpm_pattern = re.compile(
@@ -481,15 +487,15 @@ def check_hr_range_consistency(workouts: list[dict], ctx: Context) -> list[Findi
         intervals = w.get("intervals_icu") or ""
         if not intervals:
             continue
-        # Hat Description eine BPM-Range, die NICHT auch im intervals_icu-Code als BPM steht?
+        # Does description have a BPM range NOT also present in intervals_icu code?
         desc_bpm_matches = list(bpm_pattern.finditer(desc))
         if not desc_bpm_matches:
             continue
         intervals_bpm_matches = list(bpm_pattern.finditer(intervals))
         zone_only_matches = list(zone_only_pattern.finditer(intervals))
-        # Wenn intervals_icu "Z<n> HR" enthält UND keine BPM-Range explizit nennt
+        # If intervals_icu contains "Z<n> HR" AND no explicit BPM range
         if zone_only_matches and not intervals_bpm_matches:
-            # Range aus Description extrahieren für Hinweis-Text
+            # Extract range from description for the hint text
             for m in desc_bpm_matches:
                 lo = m.group(1) or m.group(3)
                 hi = m.group(2) or m.group(4)
@@ -498,14 +504,13 @@ def check_hr_range_consistency(workouts: list[dict], ctx: Context) -> list[Findi
                     severity=SEVERITY_WARNING,
                     workout=_workout_name(w),
                     message=(
-                        f"Description nennt HR-Range {lo}-{hi}, intervals_icu-Code "
-                        f"verwendet aber '{zone_only_matches[0].group(0)}'. Athlet sieht "
-                        f"im Garmin die ganze Zone, nicht die spezifische BPM-Range."
+                        f"Description names HR range {lo}-{hi}, but intervals_icu code "
+                        f"uses '{zone_only_matches[0].group(0)}'. Athlete sees the full "
+                        f"zone on the watch, not the specific BPM range."
                     ),
                     suggestion=(
-                        f"Im intervals_icu-Code 'Z<n> HR' ersetzen durch "
-                        f"explizite BPM-Range, z.B. 'XXm HR {lo}-{hi}' "
-                        f"(siehe memory feedback_hr_range_intervals_icu.md)."
+                        f"Replace 'Z<n> HR' in intervals_icu code with an explicit "
+                        f"BPM range, e.g. 'XXm HR {lo}-{hi}'."
                     ),
                 ))
                 break  # ein Treffer pro Workout reicht
@@ -513,21 +518,21 @@ def check_hr_range_consistency(workouts: list[dict], ctx: Context) -> list[Findi
 
 
 def check_easy_hr_ceiling(workouts: list[dict], ctx: Context) -> list[Finding]:
-    """R010 — Easy/Recovery-Lauf darf HR-Decke nicht in Z3 hochlaufen.
+    """R010 — Easy/Recovery run must not let HR ceiling creep into Z3.
 
-    Bei workout_type EASY oder RECOVERY (Reha-Lauf) prüft die Regel, ob die im
-    intervals_icu-Code oder Description gesetzte HR-Obergrenze die Z2-Obergrenze
-    aus athlete_status.md überschreitet. Z3-Bereich = Tempo/Schwelle, gehört nicht
-    in Recovery-Workouts.
+    For workout_type EASY or RECOVERY, this rule checks whether the HR ceiling
+    set in intervals_icu code or description exceeds the Z2 upper bound from
+    athlete_status.md. Z3 territory = tempo/threshold, does not belong in
+    recovery workouts.
 
-    Beispiel-Bug 2026-05-11: Reha-Lauf mit HR 110-145 — 145 lag in Z3-Mitte
-    (Z2-Obergrenze 139). Athlet hat es selbst korrigiert; Validator hatte
-    keine Regel dafür.
+    Historical bug: recovery run with HR 110-145 — 145 was mid-Z3
+    (Z2 upper bound 139). Athlete corrected it manually; validator had
+    no rule for it.
 
-    Sport-Science-Anker: `framework/research/polarized-training-seiler.md`
+    Sport-science anchor: `framework/research/polarized-training-seiler.md`
     """
     findings = []
-    # Z2-Obergrenze aus athlete_status.md extrahieren — Format:
+    # Extract Z2 upper bound from athlete_status.md — format:
     # "Z1 1–125 | Z2 126–139 | Z3 140–153 | ..."
     m = re.search(
         r"Z1[^|]*?(\d{2,3})\s*\|\s*Z2[^|]*?\d{2,3}\s*[-–—]\s*(\d{2,3})",
@@ -543,7 +548,7 @@ def check_easy_hr_ceiling(workouts: list[dict], ctx: Context) -> list[Finding]:
         wt = (w.get("workout_type") or "").upper()
         if wt not in ("EASY", "RECOVERY"):
             continue
-        # In intervals_icu-Code UND Description nach BPM-Ranges suchen
+        # Search for BPM ranges in both intervals_icu code and description
         sources = [
             ("intervals_icu", w.get("intervals_icu") or ""),
             ("description", _description(w)),
@@ -558,15 +563,14 @@ def check_easy_hr_ceiling(workouts: list[dict], ctx: Context) -> list[Finding]:
                         severity=SEVERITY_ERROR,
                         workout=_workout_name(w),
                         message=(
-                            f"{wt}-Lauf hat HR-Decke {hi} bpm im {source_name} — "
-                            f"das überschreitet die Z2-Obergrenze ({z2_upper} bpm) "
-                            f"und läuft in Z3 (Tempo). Easy/Recovery-Workouts dürfen "
-                            f"nie in Z3+ hochziehen."
+                            f"{wt} run has HR ceiling {hi} bpm in {source_name} — "
+                            f"exceeds Z2 upper bound ({z2_upper} bpm) "
+                            f"and creeps into Z3 (tempo). Easy/recovery workouts must "
+                            f"never push into Z3+."
                         ),
                         suggestion=(
-                            f"HR-Decke auf max. {z2_upper} bpm setzen — "
-                            f"bei Recovery-/Reha-Charakter eher 5-10 bpm Puffer drunter "
-                            f"(siehe memory feedback_easy_run_hr_ceiling.md)."
+                            f"Set HR ceiling to max {z2_upper} bpm — "
+                            f"for recovery character prefer 5-10 bpm buffer below."
                         ),
                     ))
                     break  # ein Treffer pro Source reicht
@@ -574,20 +578,19 @@ def check_easy_hr_ceiling(workouts: list[dict], ctx: Context) -> list[Finding]:
 
 
 def check_intervals_duration_sanity(workouts: list[dict], ctx: Context) -> list[Finding]:
-    """R011 — intervals_icu computed total muss zu duration_min passen.
+    """R011 — intervals_icu computed total must match duration_min.
 
-    Beispiel-Bug 2026-05-12: `Steigerungen 4x 100m` in intervals_icu wurde von
-    intervals.icu als 4 × 100 Minuten interpretiert (statt 4 × 100m Distanz),
-    resultierende moving_time 9450s (157 min) für ein als 65 min geplantes
-    Threshold-Workout. Athlet musste manuell nachfragen.
+    Historical bug: `Strides 4x 100m` in intervals_icu was interpreted by
+    intervals.icu as 4 × 100 minutes (instead of 4 × 100m distance),
+    resulting moving_time 9450s (157 min) for a workout planned as 65 min.
 
-    Diese Regel parst intervals_icu mit derselben Heuristik (Loop-Header `Nx`,
-    Step-Lines mit Xm/Xs) und vergleicht mit workout.duration_min. Abweichung
-    >50% → ERROR (sicher ein Format-Bug), >25% → WARNING (vermutlich press-lap
-    oder unparseable Steps, aber lohnt Review).
+    This rule parses intervals_icu with the same heuristic (loop header `Nx`,
+    step lines with Xm/Xs) and compares with workout.duration_min. Deviation
+    >50% → ERROR (certainly a format bug), >25% → WARNING (probably press-lap
+    or unparseable steps, but worth reviewing).
 
-    Lint-Regel im Linter blockt ohnehin schon `Distanz statt Zeit`-Format
-    (z.B. `100m`), aber R011 fängt auch andere Parser-Diskrepanzen.
+    The linter already blocks `distance instead of time` format
+    (e.g. `100m`), but R011 also catches other parser discrepancies.
     """
     from app.utils.intervals_icu_linter import compute_intervals_total_seconds
 
@@ -604,8 +607,8 @@ def check_intervals_duration_sanity(workouts: list[dict], ctx: Context) -> list[
         if computed_s == 0:
             # No parseable durations — can't compare. Skip silently.
             continue
-        # press-lap Steps haben keine Duration → niedrige computed_s ist OK,
-        # nur Abweichung NACH OBEN (>50%) ist sicher Bug.
+        # press-lap steps have no duration → low computed_s is OK,
+        # only upward deviation (>50%) is certainly a bug.
         ratio = computed_s / planned_s
         if ratio > 1.5:
             findings.append(Finding(
@@ -614,15 +617,15 @@ def check_intervals_duration_sanity(workouts: list[dict], ctx: Context) -> list[
                 workout=_workout_name(w),
                 message=(
                     f"intervals_icu computed total {computed_s}s ({computed_s//60} min) "
-                    f"ist >{(ratio-1)*100:.0f}% über geplanter duration_min {duration_min} min. "
-                    f"Vermutlich Format-Bug (z.B. `100m` als Minuten statt Distanz, oder "
-                    f"falscher Loop-Multiplier)."
+                    f"is >{(ratio-1)*100:.0f}% above planned duration_min {duration_min} min. "
+                    f"Likely a format bug (e.g. `100m` parsed as minutes instead of distance, or "
+                    f"wrong loop multiplier)."
                 ),
                 suggestion=(
-                    "intervals_icu-Steps prüfen: Strides als `- Xs` (Sekunden) notieren, "
-                    "keine Distanz-Notation (`100m`, `200m`) — intervals.icu interpretiert "
-                    "`m` als Minuten. Distanz nur in Description-Klartext, nicht im "
-                    "intervals_icu-Code."
+                    "Check intervals_icu steps: write strides as `- Xs` (seconds), "
+                    "no distance notation (`100m`, `200m`) — intervals.icu interprets "
+                    "`m` as minutes. Distance only in description prose, not in "
+                    "intervals_icu code."
                 ),
             ))
         elif ratio > 1.25:
@@ -632,43 +635,43 @@ def check_intervals_duration_sanity(workouts: list[dict], ctx: Context) -> list[
                 workout=_workout_name(w),
                 message=(
                     f"intervals_icu computed total {computed_s}s ({computed_s//60} min) "
-                    f"weicht +{(ratio-1)*100:.0f}% von duration_min {duration_min} min ab — "
-                    f"Review empfohlen."
+                    f"deviates +{(ratio-1)*100:.0f}% from duration_min {duration_min} min — "
+                    f"review recommended."
                 ),
-                suggestion="Steps und Loop-Multiplier kontrollieren.",
+                suggestion="Check steps and loop multiplier.",
             ))
     return findings
 
 
 def check_intervals_step_targets(workouts: list[dict], ctx: Context) -> list[Finding]:
-    """R012 — intervals_icu-Steps müssen jeweils ein valides Target tragen.
+    """R012 — intervals_icu steps must each carry a valid target.
 
-    Zwei Vorfall-Klassen, die diese Regel verhindert:
+    Two incident classes this rule prevents:
 
-    (A) **Silent-Drop bei arbiträren BPM-Ranges (alle Typen, ERROR).**
-        intervals.icu unterstützt keine `XX-YYbpm`-Syntax — der Step wird
-        zwar angelegt, aber das Target-Suffix wird ignoriert und der Step
-        landet ohne HR-Anker im `workout_doc`. Athlet bekommt auf der Watch
-        keine HF-Anzeige. → Erlaubte HR-Tokens: `Zn HR`, `Zn-Zm HR`,
+    (A) **Silent drop on arbitrary BPM ranges (all types, ERROR).**
+        intervals.icu does not support `XX-YYbpm` syntax — the step is
+        created but the target suffix is ignored, leaving the step without
+        an HR anchor in `workout_doc`. Athlete gets no HR display on the
+        watch. → Allowed HR tokens: `Zn HR`, `Zn-Zm HR`,
         `XX% LTHR`, `XX-YY% LTHR`, `XX% HR`, `XX-YY% HR`.
 
-    (B) **Wahoo 422 für Ride-Steps ohne Target (Ride only, ERROR).**
-        Wahoo-Plan-Upload validiert strenger als intervals.icu und failt mit
-        `"each interval that is not of type 'repeat' must have a valid
-        'targets' array"` wenn ein Ride-Step nur Cadence (`110rpm`) oder
-        gar nichts trägt. Spin-ups, Cool-downs und Locker-Pause-Steps müssen
-        IMMER ein Power-/HR-Target haben.
+    (B) **Wahoo 422 for Ride steps without target (Ride only, ERROR).**
+        Wahoo plan upload validates more strictly than intervals.icu and fails
+        with `"each interval that is not of type 'repeat' must have a valid
+        'targets' array"` when a Ride step only carries cadence (`110rpm`) or
+        nothing at all. Spin-ups, cool-downs and recovery-pause steps must
+        ALWAYS have a power/HR target.
 
-    Run-Drills (Hip-Flexor, A-Skips, Beinpendel etc.) sind absichtlich
-    target-frei — werden als Cue-Steps interpretiert. Daher gilt für Run:
-    nur Main-Set-Steps (Duration ≥ 3 min) ohne Target → WARNING.
+    Run drills (hip-flexor, A-skips, leg swings etc.) are intentionally
+    target-free — interpreted as cue steps. Therefore for Run:
+    only main-set steps (duration ≥ 3 min) without target → WARNING.
 
-    Beide Vorfall-Klassen aus realer Anwendung dokumentiert, Details
-    siehe `framework/research/intervals-icu-workout-syntax.md`.
+    Both incident classes documented from real usage, details in
+    `framework/research/intervals-icu-workout-syntax.md`.
     """
     import re
 
-    # Tokens, die als „echtes" Target gelten
+    # Tokens that count as a "real" target
     TARGET_PATTERNS = [
         r"\d+(?:-\d+)?w\b",                  # 220w, 200-240w
         r"\d+(?:-\d+)?%\s*(?:ftp|map|mmp|lthr|hr|pace)?\b",  # 75%, 95-105% LTHR
@@ -715,13 +718,13 @@ def check_intervals_step_targets(workouts: list[dict], ctx: Context) -> list[Fin
                     severity=SEVERITY_ERROR,
                     workout=_workout_name(w),
                     message=(
-                        f"intervals_icu-Step `{content[:80]}` verwendet "
-                        f"arbiträre BPM-Range — intervals.icu droppt das "
-                        f"Suffix silent, Step landet ohne HF-Target."
+                        f"intervals_icu step `{content[:80]}` uses "
+                        f"arbitrary BPM range — intervals.icu silently drops "
+                        f"the suffix, step ends up without HR target."
                     ),
                     suggestion=(
-                        "HR-Targets als `Zn HR`, `XX-YY% LTHR` oder "
-                        "`XX-YY% HR` schreiben. Beispiel-Umrechnung bei "
+                        "Write HR targets as `Zn HR`, `XX-YY% LTHR` or "
+                        "`XX-YY% HR`. Example conversion with "
                         "LTHR 166: 126-135 bpm = 76-81% LTHR."
                     ),
                 ))
@@ -741,26 +744,25 @@ def check_intervals_step_targets(workouts: list[dict], ctx: Context) -> list[Fin
 
             # Step has duration but no target — flag based on workout type
             if is_ride:
-                # Ride: Wahoo strict — every non-repeat step needs target
                 findings.append(Finding(
                     rule_id="R012",
                     severity=SEVERITY_ERROR,
                     workout=_workout_name(w),
                     message=(
-                        f"intervals_icu-Step `{content[:80]}` (Ride) hat kein "
-                        f"Target (kein Watt, keine HR-Zone, kein %-Anker). "
-                        f"Wahoo-Plan-Upload schlägt mit 422 fehl."
+                        f"intervals_icu step `{content[:80]}` (Ride) has no "
+                        f"target (no watts, no HR zone, no % anchor). "
+                        f"Wahoo plan upload will fail with 422."
                     ),
                     suggestion=(
-                        "Ride-Steps brauchen IMMER ein Target (auch Spin-ups, "
-                        "Locker-Pausen, Cool-downs). Beispiele: Spin-up → "
-                        "`15s 240W 110rpm`; Locker-Pause → `60s 150W`; "
-                        "Cool-down → `6m 130W 85rpm`."
+                        "Ride steps ALWAYS need a target (including spin-ups, "
+                        "recovery pauses, cool-downs). Examples: spin-up → "
+                        "`15s 240W 110rpm`; recovery pause → `60s 150W`; "
+                        "cool-down → `6m 130W 85rpm`."
                     ),
                 ))
             else:
-                # Run/other: drills (< 3 min) ohne Target sind OK,
-                # längere Main-Set-Steps ohne Target → WARNING
+                # Run/other: drills (< 3 min) without target are OK,
+                # longer main-set steps without target → WARNING
                 dur_s = _step_duration_seconds(content)
                 if dur_s >= 180:
                     findings.append(Finding(
@@ -768,31 +770,31 @@ def check_intervals_step_targets(workouts: list[dict], ctx: Context) -> list[Fin
                         severity=SEVERITY_WARNING,
                         workout=_workout_name(w),
                         message=(
-                            f"intervals_icu-Step `{content[:80]}` (Run) "
-                            f"hat {dur_s//60} min Duration, aber kein Target "
-                            f"— vermutlich Main-Set ohne HF-/Pace-Anker."
+                            f"intervals_icu step `{content[:80]}` (Run) "
+                            f"has {dur_s//60} min duration but no target "
+                            f"— likely main-set without HR/pace anchor."
                         ),
                         suggestion=(
-                            "Run-Drills < 3 min ohne Target sind OK (Cue-Steps). "
-                            "Aber Main-Set / längere Steps brauchen Target: "
-                            "`Z2 HR`, `85-90% LTHR`, oder `5:00/km Pace`."
+                            "Run drills < 3 min without target are OK (cue steps). "
+                            "But main-set / longer steps need a target: "
+                            "`Z2 HR`, `85-90% LTHR`, or `5:00/km Pace`."
                         ),
                     ))
     return findings
 
 
 def check_intervals_repeat_block_adjacency(workouts: list[dict], ctx: Context) -> list[Finding]:
-    """R013 — Repeat-Block-Header (`Nx`) und seine `-`-Items müssen adjazent stehen.
+    """R013 — Repeat block header (`Nx`) and its `-` items must be adjacent.
 
-    intervals.icu's Server-Parser erkennt einen Repeat-Block nur, wenn der
-    Header (`Strides 5x`, `Set1 8x`, `Main Set 5x`) und seine Item-Zeilen
-    durch einfache Newlines (`\\n`) getrennt sind — KEINE Leerzeile.
+    intervals.icu's server parser only recognises a repeat block when the
+    header (`Strides 5x`, `Set1 8x`, `Main Set 5x`) and its item lines
+    are separated by simple newlines (`\\n`) — NO blank line.
 
-    Vorfalls-Muster aus realer Anwendung: Strides-Block mit Leerzeile
-    zwischen `Strides 5x` und den `- Stride ...`-Items wurde als `reps=1`
-    statt `reps=5` geparst. Athlet bekam auf der Watch nur 1 Stride statt
-    5. Stille Drift, kein Server-Error. Details:
-    `framework/research/intervals-icu-workout-syntax.md` (Falle C-bis).
+    Incident pattern from real usage: strides block with blank line between
+    `Strides 5x` and the `- Stride ...` items was parsed as `reps=1`
+    instead of `reps=5`. Athlete got only 1 stride on the watch instead of
+    5. Silent drift, no server error. Details:
+    `framework/research/intervals-icu-workout-syntax.md` (trap C-bis).
     """
     import re
 
@@ -824,34 +826,32 @@ def check_intervals_repeat_block_adjacency(workouts: list[dict], ctx: Context) -
                         severity=SEVERITY_ERROR,
                         workout=_workout_name(w),
                         message=(
-                            f"Repeat-Block-Header `{line.strip()}` hat eine "
-                            f"Leerzeile vor den `-`-Items — intervals.icu "
-                            f"droppt dann die Wiederholung silent (reps=1 "
-                            f"statt N)."
+                            f"Repeat block header `{line.strip()}` has a "
+                            f"blank line before the `-` items — intervals.icu "
+                            f"silently drops the repeat (reps=1 instead of N)."
                         ),
                         suggestion=(
-                            f"Leerzeile zwischen `{line.strip()}` und dem "
-                            f"ersten `-`-Item entfernen. Header und Items "
-                            f"adjazent (nur `\\n`), Leerzeile (`\\n\\n`) NUR "
-                            f"zwischen verschiedenen Blöcken."
+                            f"Remove blank line between `{line.strip()}` and the "
+                            f"first `-` item. Header and items must be adjacent "
+                            f"(only `\\n`), blank line (`\\n\\n`) ONLY between "
+                            f"different blocks."
                         ),
                     ))
     return findings
 
 
 def check_easy_run_conservatism(workouts: list[dict], ctx: Context) -> list[Finding]:
-    """R014 — Easy/Z2-Run Conservatism-Guard.
+    """R014 — Easy/Z2-Run Conservatism Guard.
 
-    Surfacet, wenn ein Easy/EASY-Run im Plan deutlich kürzer ist als das
-    rolling Easy-Run-Baseline der letzten ~3 Wochen UND in coaching_notes /
-    description kein expliziter Recovery-/Symptom-Trigger genannt ist.
-    Verletzt potenziell die `No silent conservatism`-Regel (CLAUDE.md).
+    Surfaces when an Easy/EASY run in the plan is significantly shorter than
+    the rolling easy-run baseline of the last ~3 weeks AND coaching_notes /
+    description contain no explicit recovery/symptom trigger.
+    Potentially violates the `No silent conservatism` rule (CLAUDE.md).
 
-    Drift-Vorfall 2026-05-18: Easy-Run wurde auf 35 min gesetzt, obwohl
-    die Easy-Run-Baseline bei 50–65 min lag, alle Wellness-Signale grün
-    waren und kein dokumentierter Recovery-Trigger vorlag. Der Cut kam
-    aus einer Activity-NOTE-Cap (Brick-spezifisch, 30-35 min „bis 2× Tag
-    LWS-frei"), die fehlerhaft als generelle Run-Cap übertragen wurde.
+    Drift incident pattern: an easy run was set well below the baseline
+    despite green wellness signals and no documented recovery trigger. The
+    cut came from an activity-NOTE cap (workout-type-specific) that was
+    erroneously applied as a general run cap.
     """
     findings = []
     easy_runs = [
@@ -872,15 +872,15 @@ def check_easy_run_conservatism(workouts: list[dict], ctx: Context) -> list[Find
             continue
         dur = a.get("duration_min") or 0
         if dur < 20:
-            continue  # zu kurz — kein Easy-Baseline
-        # Long-Runs (>=75 min) und Quality-Runs (training_load >70) ausschließen
+            continue  # too short for easy baseline
+        # Exclude long runs (>=75 min) and quality runs (training_load >70)
         if dur >= 75:
             continue
         if (a.get("training_load") or 0) > 70:
             continue
         recent_easy_durations.append(dur)
     if len(recent_easy_durations) < 3:
-        return findings  # ungenügende Baseline
+        return findings  # insufficient baseline
 
     recent_easy_durations.sort()
     median_dur = recent_easy_durations[len(recent_easy_durations) // 2]
@@ -902,7 +902,7 @@ def check_easy_run_conservatism(workouts: list[dict], ctx: Context) -> list[Find
             continue
         ratio = planned / median_dur
         if ratio >= 0.7:
-            continue  # innerhalb 30% der Baseline
+            continue  # within 30% of baseline
         notes = (w.get("description") or "") + " " + (w.get("coaching_notes") or "")
         if RECOVERY_REASON_RE.search(notes):
             continue
@@ -911,21 +911,21 @@ def check_easy_run_conservatism(workouts: list[dict], ctx: Context) -> list[Find
             severity=SEVERITY_WARNING,
             workout=_workout_name(w),
             message=(
-                f"Easy-Run {planned} min = {int(ratio*100)}% des 30d-Easy-Median "
-                f"({median_dur} min) — keine expliziten Recovery-Trigger im Plan."
+                f"Easy run {planned} min = {int(ratio*100)}% of 30d easy median "
+                f"({median_dur} min) — no explicit recovery triggers in the plan."
             ),
             suggestion=(
-                "Über-Konservativ-Verdacht (CLAUDE.md §No silent conservatism). "
-                "Entweder die Dauer Richtung Baseline anheben oder einen "
-                "konkreten Recovery-Grund in coaching_notes/description nennen "
-                "(Recovery-Week, Red-Flag-Wellness, akutes Symptom, Reha-Phase, "
-                "Achilles-Schutz)."
+                "Over-conservatism suspect (CLAUDE.md §No silent conservatism). "
+                "Either raise duration toward baseline or document a concrete "
+                "recovery reason in coaching_notes/description "
+                "(recovery week, red-flag wellness, acute symptom, rehab phase, "
+                "achilles protection)."
             ),
         ))
     return findings
 
 
-# Plugin-Registry: neue Regeln hier eintragen.
+# Plugin registry: register new rules here.
 RULES: list[Callable[[list[dict], Context], list[Finding]]] = [
     check_reps_ceiling,
     check_injury_locks_shoulder,
@@ -955,7 +955,7 @@ def _read_config(path: str) -> str:
 
 
 async def _fetch_recent_notes(target_date: str, days_back: int = 7) -> list[dict]:
-    """Fetch NOTE-events from intervals.icu für Glute-DOMS / Athleten-Feedback-Check."""
+    """Fetch NOTE events from intervals.icu for glute-DOMS / athlete feedback check."""
     client = IntervalsClient(settings.intervals_icu_athlete_id)
     end = datetime.fromisoformat(target_date).date()
     start = end - timedelta(days=days_back)
@@ -976,7 +976,7 @@ async def _fetch_sport_settings() -> list[dict]:
 
 
 async def _fetch_recent_activities(target_date: str, days_back: int = 30) -> list[dict]:
-    """Fetch recent activities from intervals.icu für Conservatism-Guard (R014)."""
+    """Fetch recent activities from intervals.icu for conservatism guard (R014)."""
     client = IntervalsClient(settings.intervals_icu_athlete_id)
     end = datetime.fromisoformat(target_date).date()
     start = end - timedelta(days=days_back)
@@ -993,12 +993,30 @@ async def _fetch_recent_activities(target_date: str, days_back: int = 30) -> lis
     ]
 
 
+def _load_injury_locks() -> dict[str, list[str]]:
+    """Load injury lock keywords from config/injury_locks.json (or config.example/ fallback)."""
+    from app.utils.paths import resolve_config
+    try:
+        path = resolve_config("injury_locks.json")
+        data = json.loads(path.read_text())
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+    result: dict[str, list[str]] = {}
+    for zone, cfg in data.items():
+        if isinstance(cfg, dict):
+            result[zone] = cfg.get("activation_keywords", [])
+        elif isinstance(cfg, list):
+            result[zone] = cfg
+    return result
+
+
 def load_context(target_date: str, fetch_remote: bool = True) -> Context:
     ctx = Context(
         target_date=target_date,
         athlete_static=_read_config("athlete_static.md"),
         athlete_status=_read_config("athlete_status.md"),
         training_paradigms=_read_config("training_paradigms.md"),
+        injury_locks=_load_injury_locks(),
     )
     if fetch_remote:
         try:
@@ -1033,14 +1051,14 @@ def run_validation(workouts: list[dict], ctx: Context, only_rule: str = "") -> l
                 rule_id="VALIDATOR",
                 severity=SEVERITY_WARNING,
                 workout="(global)",
-                message=f"Regel {rule.__name__} crashed: {exc}",
+                message=f"Rule {rule.__name__} crashed: {exc}",
             ))
     return findings
 
 
 def format_findings_text(findings: list[Finding]) -> str:
     if not findings:
-        return "✅ Keine Findings — Plan ist sauber."
+        return "✅ No findings — plan is clean."
     by_severity = {SEVERITY_ERROR: [], SEVERITY_WARNING: [], SEVERITY_INFO: []}
     for f in findings:
         by_severity.setdefault(f.severity, []).append(f)
@@ -1061,8 +1079,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Validate workout plan against training paradigms")
     parser.add_argument("--date", default=date.today().isoformat())
     parser.add_argument("--file", help="Path to JSON file with workouts array")
-    parser.add_argument("--json", action="store_true", help="JSON-Output statt Klartext")
-    parser.add_argument("--rule", default="", help="Nur eine Regel ausführen (z.B. R001)")
+    parser.add_argument("--json", action="store_true", help="JSON output instead of plain text")
+    parser.add_argument("--rule", default="", help="Run only one rule (e.g. R001)")
     parser.add_argument("--no-remote", action="store_true", help="Skip intervals.icu fetches (offline mode)")
     parser.add_argument("--warnings-ok", action="store_true", help="Exit 0 even if WARNINGs (only ERRORs block)")
     args = parser.parse_args()

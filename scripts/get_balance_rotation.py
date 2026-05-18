@@ -74,7 +74,7 @@ def main() -> None:
         return
 
     rotation, workout = build_rotation_workout(target_date)
-    json.dump({"coaching_notes": f"Tägliche Balance-Rotation {rotation}", "workouts": [workout]}, sys.stdout, ensure_ascii=False)
+    json.dump({"coaching_notes": f"Daily balance rotation {rotation}", "workouts": [workout]}, sys.stdout, ensure_ascii=False)
     sys.stdout.write("\n")
 
 

@@ -14,13 +14,12 @@ onward.
 
 ## Question / Trigger
 
-After a Z2 forest run the coach analysis flagged "Lap-4 HF-Spike
-163 bpm in the warm-up" as a growth area, framed as "warm-up too fast,
-cold start with hill". The athlete pushed back: this is a well-known
-HR transient at exercise onset, exists across all of his sessions, and
-must never appear as athlete error in coaching feedback. The fix
-required a written reference so the rule is enforceable, not just an
-inline note in agent contracts.
+During a Z2 forest run analysis, the coach flagged "Lap-4 HF-Spike in
+the warm-up" as a growth area, framed as "warm-up too fast, cold start
+with hill". This is a well-known HR transient at exercise onset, present
+across sessions, and must never appear as athlete error in coaching
+feedback. The fix required a written reference so the rule is
+enforceable, not just an inline note in agent contracts.
 
 ## Findings
 

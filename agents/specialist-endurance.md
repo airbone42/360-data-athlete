@@ -176,7 +176,7 @@ earlier alias-map gap) and inspect three fields:
 | < 80 % | any | Reduce volume by ~30 % AND reduce intensity (drop into the lower half of the prescribed band, or step down one MAP-zone) |
 | `interval_summary` missing | — | Fall back to lap-count vs planned-rep-count; if still ambiguous: flag as data gap in `focus` and choose the conservative side |
 
-**Recherche-Anker:** [compliance-decoupling-thresholds.md](../research/compliance-decoupling-thresholds.md)
+**Research anchor:** [compliance-decoupling-thresholds.md](../research/compliance-decoupling-thresholds.md)
 
 **Mandatory cross-check with `framework/research/`:** When the
 re-prescribed format has a research entry in `framework/research/`,
@@ -337,7 +337,7 @@ routes, pick the dominant surface (>60 %); if truly 50/50, mention in
   setting the intensity floor.
 - **Hill intervals** (tag contains "hill" or workout includes hills):
   load AND recovery steps ALWAYS with `press lap`
-  **Recherche-Anker:** [hill-repeats.md](../research/hill-repeats.md)
+  **Research anchor:** [hill-repeats.md](../research/hill-repeats.md)
 - **Cool-down — easy jog (Run + outdoor Ride only):** Like warmup:
   `press lap` + time suggestion, NO HR target. Format: `- Cool-down Xm
   press lap`. HR orientation may appear in the `structure` text.
