@@ -183,6 +183,7 @@ def prepare_workout_events(workouts: list[dict], date: str) -> list[dict]:
         _lint_intervals_icu(w, i + 1)
     events = []
     start_minutes = 6 * 60  # first workout always at 06:00
+    prev_start_minutes = start_minutes
     for i, w in enumerate(sorted_workouts):
         if i > 0:
             prev = sorted_workouts[i - 1]

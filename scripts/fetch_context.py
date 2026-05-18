@@ -17,6 +17,7 @@ import sys
 from datetime import date, timedelta
 
 import httpx
+import logging
 
 # Ensure project root is on path when run from any directory
 import os

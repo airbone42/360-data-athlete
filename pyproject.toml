@@ -1,6 +1,9 @@
 [build-system]
 requires = ["setuptools>=68"]
-build-backend = "setuptools.backends.legacy:build"
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages]
+find = {include = ["app*"]}
 
 [project]
 name = "coach"
@@ -19,7 +22,7 @@ dependencies = [
     "opentelemetry-api>=1.41,<2",
     "opentelemetry-sdk>=1.41,<2",
     "opentelemetry-exporter-otlp-proto-http>=1.41,<2",
-    "opentelemetry-instrumentation-httpx>=0.62,<1",
+    "opentelemetry-instrumentation-httpx>=0.62b0",
     "langsmith>=0.7,<1",
     "openai>=1.50,<3",
     "garminconnect>=0.2,<1",
@@ -55,5 +58,6 @@ ignore_errors = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
 asyncio_mode = "auto"
 markers = ["integration: marks tests that require external services"]

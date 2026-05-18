@@ -588,7 +588,7 @@ def _get_video_duration_sec(video_path: str) -> float:
     except Exception:
         pass
     try:
-        all_frames = list(iio.imiter(video_path, plugin="pyav"))
+        all_frames = list(imageio.imiter(video_path, plugin="pyav"))
         fps = 30.0
         return len(all_frames) / fps
     except Exception:

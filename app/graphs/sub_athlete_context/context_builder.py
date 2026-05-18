@@ -172,7 +172,7 @@ def build_context(state: AthleteContextState) -> dict:
 
     today_workouts = _summarize_today_workouts(events, today)
 
-    return {
+    result = {
         "hrvContext": hrv_context,
         "hrv": hrv if hrv is not None else "-",
         "rhr": rhr if rhr is not None else "-",
