@@ -1,0 +1,18 @@
+# Runtime data — never committed to the public plugin repo.
+data/
+cache/
+# Exception: bundled package assets under app/data/ (e.g. wordlists)
+# are versioned — they ship with the plugin.
+!app/data/
+!app/data/**
+
+# Local env file (use .env.example as the template).
+.env
+
+# Python build artefacts.
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/

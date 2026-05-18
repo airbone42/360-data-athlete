@@ -1,0 +1,20 @@
+{
+  "name": "360-data-athlete",
+  "owner": {
+    "name": "Tobias Zander",
+    "email": "info@tobiaszander.de"
+  },
+  "plugins": [
+    {
+      "name": "aicoach-framework",
+      "source": "./",
+      "description": "Multi-agent AI coach for endurance & strength athletes — planner, specialist agents, post-activity analysis, video form check, consistency audit.",
+      "version": "0.1.0",
+      "keywords": [
+        "coaching",
+        "endurance",
+        "multi-agent"
+      ]
+    }
+  ]
+}

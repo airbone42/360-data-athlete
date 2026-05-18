@@ -1,0 +1,23 @@
+{
+  "name": "aicoach-framework",
+  "version": "0.1.0",
+  "description": "Multi-agent AI coach for endurance & strength athletes — runs entirely inside Claude Code.",
+  "author": {
+    "name": "Tobias Zander",
+    "email": "info@tobiaszander.de"
+  },
+  "homepage": "https://github.com/airbone42/360-data-athlete",
+  "repository": "https://github.com/airbone42/360-data-athlete",
+  "license": "MIT",
+  "keywords": [
+    "claude-code",
+    "coaching",
+    "endurance",
+    "multi-agent",
+    "running",
+    "triathlon",
+    "intervals-icu",
+    "strava",
+    "garmin"
+  ]
+}

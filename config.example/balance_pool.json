@@ -1,0 +1,29 @@
+{
+  "_rotation_logic": "from datetime import date; rotation = ['A','B','C','D'][date.today().toordinal() % 4]",
+  "_constraints": [
+    "Beispiel-Slot: aktive Verletzungen / Reha-Phasen / Restrictions als generische Strings auflisten (z.B. 'Gelenk X: Bewegungsmuster Y temporär eingeschränkt', 'Sehne Z: Last-Restriktion bis Freigabe-Kriterium'). Im Demo-Default leer.",
+    "Beispiel-Slot: Progression-Stufenmodelle für sensible Übungen (z.B. instabile Unterlage in Stufen, Re-Eval-Datum). Im Demo-Default leer."
+  ],
+  "sessions": {
+    "A": {
+      "name": "Balance — Statische Stabilität",
+      "duration_min": 10,
+      "description": "AKTIVIERUNG (5 min)\n\nA-Skips: 2×20m — Fuß aktiv unter die Hüfte\n\nBeinpendel: 10×/Seite — Hüfte voll öffnen lassen\n\nBALANCE-HAUPTTEIL\n\nEinbeinstand Augen zu: 3×30s/Seite | Ziel: S2–S3\n\nStar Reach + KB Last kontralateral: 3×3 Richtungen/Seite (anterior, posteromedial, posterolateral) | KB 8kg in der Reach-Hand | Standbein leicht gebeugt | Ziel: S2–S3 — Last verschiebt das Lot, Standbein-Hüfte muss aktiv gegenhalten\n\nTandem-Stand + Kopfrotation (Gaze-Stabilization) auf Schaumstoff/Yogamatte: 3×20s | Ziel: S2–S3 | Blick auf fixem Punkt halten | Matte gefaltet als instabile Unterlage"
+    },
+    "B": {
+      "name": "Balance — Balance Board",
+      "duration_min": 10,
+      "description": "AKTIVIERUNG (5 min)\n\nCarioca: 2×20m — Hüfte rotiert, Knie hoch, Schritte überkreuz vorne und hinten | Hüftrotations-Drill, vestibuläre Aktivierung\n\nBeinpendel: 10×/Seite — Hüfte voll öffnen\n\nBALANCE-HAUPTTEIL\n\nBalance Board beidbeinig + Kopfrotation langsam (Stufe 2): 3×20s | Augen offen, fixer Blickpunkt → Kopf 30°/Seite pendeln + zurückblicken | vestibulärer Reiz ohne Visus-Verlust | Ziel: S2\n\nBalance Board einbeinig: 2×20s/Seite | Ziel: S2–S3\n\nBalance Board einbeinig + Ballwurf gegen Wand: 2×30s/Seite | leichter Ball oder Wasserflasche, einhändig werfen + fangen | dynamische Stör-Aufgabe für Standbein-Stabilisatoren | Ziel: S2–S3"
+    },
+    "C": {
+      "name": "Balance — Dynamische Einbein-Kontrolle",
+      "duration_min": 12,
+      "description": "AKTIVIERUNG (5 min)\n\nBeinpendel: 10×/Seite — Hüfte voll öffnen\n\nInchworm: 5× — aus Stand mit gestreckten Beinen Hände zum Boden, Hände vor in High-Plank, Hände wieder zum Fuß und aufrichten | volle posterior-chain Mobilisierung\n\nBALANCE-HAUPTTEIL\n\nLateral Step-Down + 3s Balance Hold am Stand-Top: 3×6/Seite | 3s halten am Stand-Top, langsam runter | Standbein-Kontrolle ist der Reiz, kein Kraft-Reiz | Ziel: S2–S3\n\nTRX-unterstützter Single-Leg Squat: 3×5/Seite | TRX als Sicherung, nicht als Stütze — Eigenbalance anstreben | Ziel: S2–S3\n\nBalance Board Single-Leg + Catch (Wasserflasche gegen Wand): 2×20s/Seite | leichter Wurf-Reiz, Standbein muss aktiv gegenhalten | Ziel: S2–S3\n\nFALLS HEUTE BEIN-STRENGTH BEREITS GEPLANT: Lateral Step-Down + TRX SL Squat als Volumen-Risiko prüfen — bei Bein-RPE ≥6 in der Strength-Session diese beiden Übungen weglassen und durch reine Stabilitätsdrills ersetzen (z.B. Einbeinstand Augen zu 3×30s/Seite + Tandem-Stand auf Schaumstoff)."
+    },
+    "D": {
+      "name": "Balance — Vestibulär + Reaktiv",
+      "duration_min": 10,
+      "description": "AKTIVIERUNG (5 min)\n\nSide-Shuffle: 2×20m — flache Knie, schnelle Schritte seitlich, Hüfte tief halten | laterale Reaktivität, passt zum vestibulären Hauptblock\n\nBeinpendel: 10×/Seite\n\nBALANCE-HAUPTTEIL\n\nVestibulär Einbeinstand — Kopfnicken + Kopfdrehen: 3×20s/Seite | Blick zuerst auf fixem Punkt, dann Kopf rhythmisch bewegen | Ziel: S2\n\nBalance Board einbeinig + Kopfrotation langsam: 3×20s/Seite | Augen offen auf fixem Punkt, Kopf 30° links/rechts pendeln | vestibulärer Reiz ohne Augenschluss | Ziel: S2–S3\n\nSingle-Leg Mini-Squat + Anterior Reach: 3×6/Seite | Standbein beugt leicht, freie Fußspitze tippt nach vorne — Körperlot kontrollieren | Ziel: S2–S3"
+    }
+  }
+}

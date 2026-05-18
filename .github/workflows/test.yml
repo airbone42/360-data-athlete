@@ -1,0 +1,55 @@
+name: tests
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install package + dev deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Lint (ruff) — currently advisory; legacy issues TBD
+        run: ruff check . --exclude vendor
+        continue-on-error: true
+
+      - name: Test (pytest)
+        run: pytest tests/ -v
+
+  validate-plugin:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate plugin manifest JSON
+        run: |
+          python -c "import json; json.load(open('.claude-plugin/plugin.json'))"
+          python -c "import json; json.load(open('.claude-plugin/marketplace.json'))"
+
+      - name: Check required plugin name field
+        run: |
+          python -c "import json; m=json.load(open('.claude-plugin/plugin.json')); assert 'name' in m, 'plugin.json missing required name field'; print('plugin name:', m['name'])"
+
+      - name: List agents and commands shipped
+        run: |
+          echo "=== agents/ ===" && ls -1 agents/ | wc -l && ls -1 agents/
+          echo "=== commands/ ===" && ls -1 commands/ | wc -l && ls -1 commands/

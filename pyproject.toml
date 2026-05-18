@@ -1,0 +1,59 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "coach"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "requests>=2.31,<3",
+    "python-dotenv>=1.0,<2",
+    "pydantic>=2.5,<3",
+    "pydantic-settings>=2.0,<3",
+    "httpx>=0.27,<1",
+    "fitparse>=1.2,<2",
+    "pyyaml>=6.0,<7",
+    "garth>=0.5,<1",
+    "tzdata>=2024.1",
+    "opentelemetry-api>=1.41,<2",
+    "opentelemetry-sdk>=1.41,<2",
+    "opentelemetry-exporter-otlp-proto-http>=1.41,<2",
+    "opentelemetry-instrumentation-httpx>=0.62,<1",
+    "langsmith>=0.7,<1",
+    "openai>=1.50,<3",
+    "garminconnect>=0.2,<1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.23",
+    "ruff>=0.4",
+    "mypy>=1.10",
+    "types-requests",
+    "types-PyYAML",
+]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+ignore_missing_imports = true
+exclude = ["scripts/", "vendor/"]
+
+[[tool.mypy.overrides]]
+module = "scripts.*"
+ignore_errors = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+markers = ["integration: marks tests that require external services"]
