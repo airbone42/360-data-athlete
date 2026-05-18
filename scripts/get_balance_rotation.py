@@ -32,26 +32,16 @@ def get_rotation(target_date: date) -> str:
     return ROTATION_KEYS[target_date.toordinal() % 4]
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Output balance rotation workout JSON")
-    parser.add_argument("--date", default=date.today().isoformat(), help="YYYY-MM-DD")
-    parser.add_argument("--show", action="store_true", help="Human-readable output, no JSON envelope")
-    args = parser.parse_args()
+def build_rotation_workout(target_date: date) -> tuple[str, dict]:
+    """Return (rotation_key, workout_dict) for the given date.
 
-    target_date = date.fromisoformat(args.date)
+    Exposed for in-process callers (e.g. push_workouts.py auto-push) so they
+    don't need to subprocess this script.
+    """
     rotation = get_rotation(target_date)
-
     with open(_pool_path()) as f:
         pool = json.load(f)
-
     session = pool["sessions"][rotation]
-
-    if args.show:
-        print(f"Rotation {rotation}: {session['name']} ({session['duration_min']} min)")
-        print()
-        print(session["description"].replace("\\n", "\n"))
-        return
-
     workout = {
         "type": "Workout",
         "name": session["name"],
@@ -62,7 +52,28 @@ def main() -> None:
         "indoor": True,
         "description": session["description"],
     }
+    return rotation, workout
 
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Output balance rotation workout JSON")
+    parser.add_argument("--date", default=date.today().isoformat(), help="YYYY-MM-DD")
+    parser.add_argument("--show", action="store_true", help="Human-readable output, no JSON envelope")
+    args = parser.parse_args()
+
+    target_date = date.fromisoformat(args.date)
+
+    if args.show:
+        rotation = get_rotation(target_date)
+        with open(_pool_path()) as f:
+            pool = json.load(f)
+        session = pool["sessions"][rotation]
+        print(f"Rotation {rotation}: {session['name']} ({session['duration_min']} min)")
+        print()
+        print(session["description"].replace("\\n", "\n"))
+        return
+
+    rotation, workout = build_rotation_workout(target_date)
     json.dump({"coaching_notes": f"Tägliche Balance-Rotation {rotation}", "workouts": [workout]}, sys.stdout, ensure_ascii=False)
     sys.stdout.write("\n")
 

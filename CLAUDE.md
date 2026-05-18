@@ -699,12 +699,17 @@ Acceptance phrases push to intervals.icu — list configurable per athlete
 in `athlete_preferences.md`.
 
 **Daily balance rotation (mandatory after main workout push):**
-On every training day — including rest days — push a balance unit as a
-third, separate workout:
+On every training day — including rest days — a balance unit runs as a
+third, separate workout. `push_workouts.py` enforces this in code: after
+each successful main push it auto-pushes the daily rotation, unless a
+`balance`-tagged event for the date already exists. This is the single
+source of truth — no separate workflow step needed in `/training`.
+Manual invocation remains available for ad-hoc / preview purposes:
 
 ```bash
+python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/get_balance_rotation.py --date YYYY-MM-DD --show   # preview only
 python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/get_balance_rotation.py --date YYYY-MM-DD \
-    | python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/push_workouts.py --date YYYY-MM-DD
+    | python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/push_workouts.py --date YYYY-MM-DD --no-auto-balance
 ```
 
 - Rotation A/B/C/D is `date.toordinal() % 4` — automatic
@@ -712,6 +717,9 @@ python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/get_balance_rotation.py --date YYYY-M
 - Duration: 10–12 min, always as the third unit — existing workouts are
   not shortened
 - Pool: `config/balance_pool.json`
+- Opt-out: `push_workouts.py --no-auto-balance` only when explicitly
+  justified (surgical recovery day, athlete-requested skip). Default is
+  auto-on.
 
 **Pool-content rules (MANDATORY):**
 - **Every rotation entry MUST carry an S-rating column** (S1–S5,

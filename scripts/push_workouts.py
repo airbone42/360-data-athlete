@@ -159,6 +159,11 @@ def main() -> None:
         action="store_true",
         help="Skip validate_plan pre-push check (Notfall-Bypass — explizit dokumentieren!)",
     )
+    parser.add_argument(
+        "--no-auto-balance",
+        action="store_true",
+        help="Skip auto-push of the daily balance rotation after the main push.",
+    )
     args = parser.parse_args()
 
     if args.file:
@@ -235,7 +240,48 @@ def main() -> None:
     print(json.dumps(created, ensure_ascii=False, indent=2))
 
     if not args.dry_run:
+        if not args.no_auto_balance:
+            _auto_push_balance(args.date, workouts, athlete_id)
         _warn_on_warmup_overlap(args.date)
+
+
+def _auto_push_balance(target_date: str, current_workouts: list, athlete_id: str) -> None:
+    """Push the daily balance rotation as a third workout if none exists yet.
+
+    Implements the SSOT for the "Daily balance rotation (mandatory)" rule from
+    `framework/CLAUDE.md`: the rule is enforced in code here, not duplicated as
+    a workflow step in `commands/training.md`. Fail-soft — never blocks the
+    main push.
+
+    Skip conditions:
+    - Current push already contains a workout with the `balance` tag (the
+      caller is pushing balance themselves, e.g. via the manual
+      `get_balance_rotation.py | push_workouts.py` pipe).
+    - An intervals.icu event with the `balance` tag already exists for the
+      target date (idempotent — re-pushes don't stack duplicates).
+    """
+    try:
+        for w in current_workouts:
+            tags = w.get("tags") if isinstance(w, dict) else getattr(w, "tags", None)
+            if tags and "balance" in tags:
+                logger.debug("Auto-balance: balance already in current push, skipping")
+                return
+        from datetime import date as _date
+        from get_balance_rotation import build_rotation_workout
+
+        client = IntervalsClient(athlete_id)
+        existing = asyncio.run(client.get_events(target_date, target_date))
+        if any("balance" in (e.get("tags") or []) for e in existing):
+            logger.debug("Auto-balance: balance event already exists for %s, skipping", target_date)
+            return
+
+        rotation, workout = build_rotation_workout(_date.fromisoformat(target_date))
+        logger.info("Auto-balance: pushing rotation %s for %s", rotation, target_date)
+        events = prepare_workout_events([workout], target_date)
+        asyncio.run(_push(athlete_id, events, dry_run=False, date_str=target_date))
+        logger.info("Auto-balance: rotation %s pushed", rotation)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Auto-balance push failed (fail-soft): %s", exc)
 
 
 def _warn_on_warmup_overlap(target_date: str) -> None:
