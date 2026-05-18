@@ -179,4 +179,38 @@ was skipped or plan changes happened in between. ERRORs block the push
 (exit 2). Override only via `--skip-validation` (emergency, document as
 NOTE).
 
+### Step 6: Push the daily balance rotation (MANDATORY)
+
+After the main push succeeds — **before** announcing "Plan created" —
+push the daily balance unit as the third workout. This rule lives in
+`framework/CLAUDE.md` ("Daily balance rotation (mandatory after main
+workout push)") and applies to every training day **including rest
+days**. Skipping it has happened in real use; this explicit step
+eliminates that drift.
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/get_balance_rotation.py --date {DATE} \
+    | python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/push_workouts.py --date {DATE}
+```
+
+**Before piping into push_workouts.py** — quick coach review:
+
+1. **Bein-Strength-Konflikt:** Day plan already carries a `beine`-tagged
+   WeightTraining workout? → Inspect the rotation's exercises; if it
+   duplicates the strength block (e.g. SL-RDL twice on one day), swap
+   to a bein-light rotation or apply the rotation's
+   "Falls heute Bein-Strength bereits geplant"-fallback.
+2. **Plyo-Volumen-Konflikt:** Day plan already carries a `plyo`-tagged
+   block at meaningful volume (>30 BK)? → Single-leg Step-Down /
+   TRX-SL-Squat in the rotation stays as a stability drill (S-rating
+   tier), but consider swapping if Plyo RPE was ≥6.
+3. **Drill-Doppelung:** Rotation may include Beinpendel / A-Skips /
+   Hip Flexor that already live in the Run-WU of the same day. Pre-edit
+   the rotation description to drop those lines before piping into
+   push_workouts (the validator's drill-duplication check would catch
+   it, but the coach removes the issue at source).
+
+Only AFTER the balance unit is pushed → "✅ Plan created and pushed to
+intervals.icu."
+
 "✅ Plan created and pushed to intervals.icu."
