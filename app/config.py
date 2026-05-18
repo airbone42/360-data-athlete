@@ -47,7 +47,7 @@ class Settings(BaseSettings):
     # marker. Override per wrapper via `STRAVA_PUBLISHER_FOOTER_SUFFIX`
     # if you prefer a different signature. The string also doubles as
     # the re-run idempotency anchor (see `strava_pending.py`).
-    strava_publisher_footer_suffix: str = "by 360° Data Athlete"
+    strava_publisher_footer_suffix: str = "by 360° Data Athlete (https://github.com/airbone42/360-data-athlete/)"
     # OpenRouter `X-Title` header — surfaces on the API account dashboard.
     # Override per wrapper to label requests with the consumer's app name.
     openrouter_x_title: str = "aicoach-framework"
