@@ -206,6 +206,12 @@ def prepare_workout_events(workouts: list[dict], date: str) -> list[dict]:
         extra: dict = {}
         if is_endurance:
             description = (intervals_icu or structure_text) or ""
+            # Same defensive locales=[] for endurance — protects against a
+            # future heuristic change on intervals.icu mis-flagging the
+            # German description / intervals_icu text. The server still
+            # parses our intervals_icu syntax to build the steps; we just
+            # override the locales hint.
+            extra["workout_doc"] = {"locales": []}
         else:
             structure = w.get("structure") or []
             if structure:
@@ -223,6 +229,15 @@ def prepare_workout_events(workouts: list[dict], date: str) -> list[dict]:
                 extra["workout_doc"] = {
                     "steps": doc_steps,
                     "duration": total_secs,
+                    # Explicit empty locales — without this the intervals.icu
+                    # server runs its own language-detection heuristic on the
+                    # description text and sometimes mis-flags German workouts
+                    # as Japanese ("ja") when the text contains onomatopoeia
+                    # like 'Tss!' or other ambiguous tokens. A non-empty locales
+                    # tag causes the intervals.icu UI to render some labels in
+                    # that language, which looks like random CJK characters to
+                    # a German-language athlete.
+                    "locales": [],
                 }
                 # Human-readable description with time annotations (30s, 45s etc.).
                 # intervals.icu respects the explicit workout_doc over description parsing
@@ -230,6 +245,14 @@ def prepare_workout_events(workouts: list[dict], date: str) -> list[dict]:
                 description = _structure_to_text(structure)
             else:
                 description = structure_text or ""
+                # No explicit structure → still send an empty workout_doc with
+                # locales=[] to suppress the server-side language-detection
+                # heuristic (same rationale as above).
+                extra["workout_doc"] = {
+                    "steps": [],
+                    "duration": 0,
+                    "locales": [],
+                }
             description = _normalize_newlines(description)
         events.append(
             {
