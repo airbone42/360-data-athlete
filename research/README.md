@@ -40,6 +40,9 @@ What the research did NOT clarify — and what should be checked next.
 
 | Date | Topic | File | Status |
 |------|-------|------|--------|
+| 2026-05-19 | Hard-easy microcycle around Quality — day-before / day-of / day-after design | [hard-easy-microcycle-around-quality.md](hard-easy-microcycle-around-quality.md) | active |
+| 2026-05-19 | Shoulder-rehab exercise frequency — differential dosing by stress class | [shoulder-rehab-frequency.md](shoulder-rehab-frequency.md) | active |
+| 2026-05-19 | Passive vs. active dead hang — when is each indicated? | [passive-vs-active-hang.md](passive-vs-active-hang.md) | active |
 | 2026-05-16 | VO2max short intervals (30/15, 30/30) — intensity, volume, scaling | [vo2max-short-intervals.md](vo2max-short-intervals.md) | active |
 | 2026-05-16 | Intervals.icu workout-builder syntax — step targets, repeats, cadence | [intervals-icu-workout-syntax.md](intervals-icu-workout-syntax.md) | active |
 | 2026-05-16 | Hill repeats — gradient, duration, intensity, typology (run) | [hill-repeats.md](hill-repeats.md) | active |

@@ -32,6 +32,15 @@ Before producing the plan:
 5. **Temporal workout names only if `planningConstraints` confirms them.**
    "Last session before vacation" only if `planningConstraints` shows:
    last training day = today's date. Otherwise pick a neutral name.
+
+   **No calendar-week references in workout names** (e.g. "KW21",
+   "Week 21", "Woche 21"). The activity timestamp already carries
+   the date and the calendar week is derivable from it — the marker
+   adds no information for the athlete in the activity feed and is
+   pure noise on Strava once the title is mirrored. Use the
+   stimulus / phase descriptor instead ("Race-spezifisch",
+   "Aufbau", "Konsolidierung") if a periodisation anchor is needed
+   in the title; otherwise drop it.
 6. **Recovery week — two sources, one decision:**
 
    **Source A — `planningConstraints`:** Contains `⛔ RECOVERY WEEK ACTIVE`

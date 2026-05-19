@@ -168,6 +168,123 @@ Strides 5x
 
 Simple newlines (`\n`) between the repeat header and its items. A blank line (`\n\n`) ONLY between different blocks (Warmup ↔ Main ↔ Strides ↔ Cool-down). Adjacency between the `Nx` header and the `-` bullets is the only marker by which the server parser recognises the repeat block.
 
+### Trap D: bare `Zn` on Run — silently dropped as Power zone
+
+**Push attempt (Run):**
+```
+- Trab Easy 2m Z1-Z2
+- Easy 90s Z1
+```
+
+**What intervals.icu makes of it:**
+- `Zn` (or `Zn-Zm`) WITHOUT the explicit `HR` or `Pace` suffix is
+  interpreted as a Power-zone reference. Power zones are a bike concept;
+  for Run the parser drops the suffix and the step lands without any
+  target.
+- Athlete sees only "Trab Easy" / "Easy" on the watch — no HR
+  guidance. The plan view shows the step at base intensity (no zone
+  bar).
+
+**Fix:**
+```
+- Trab Easy 2m Z1-Z2 HR
+- Easy 90s Z1 HR
+```
+
+Or use the `% LTHR` / `% HR` notation (precise corridor). Bare `Zn`
+is valid ONLY for Ride/VirtualRide (where it refers to the Power zone
+explicitly). Validator R012 catches this on Run as ERROR.
+
+### Trap E: dash-prefixed repeat header — degraded to list item
+
+**Push attempt:**
+```
+Main
+- 4x
+- Threshold 5m 92-100% LTHR
+- Trab Easy 2m Z1-Z2 HR
+```
+
+**What intervals.icu makes of it:**
+- The header line `- 4x` looks like a list item (leading `-`), not a
+  repeat-block header. The parser does not open a repeat scope.
+- The next `- Threshold ...` and `- Trab Easy ...` items become
+  adjacent top-level steps, not loop body.
+- Total volume silently degrades from 4×(5m+2m)=28m to 5m+2m=7m. The
+  athlete gets two single steps instead of four interval pairs.
+
+**Fix:**
+```
+Main
+4x
+- Threshold 5m 92-100% LTHR
+- Trab Easy 2m Z1-Z2 HR
+```
+
+Header is **standalone**, no dash. The optional cue (e.g.
+`Main Set 5x`, `Strides 2x`) goes on the same line, again without a
+leading dash. Validator R013 catches dash-prefixed headers as ERROR.
+
+### Trap F: tilde-prefix on press-lap duration → step silently dropped
+
+**Push attempt** (well-intentioned attempt to make the duration hint
+visible on Garmin):
+```
+- Easy ~5m press lap
+- Cool-down ~5m press lap
+```
+
+**What intervals.icu does:**
+- The leading `~` makes the duration token unparseable. Rather than
+  treating `~5m` as cue text and falling back to `press lap`, the
+  intervals.icu server **silently drops the entire step from
+  `workout_doc`**. The step is gone — not just degraded.
+- Athlete-visible damage: the warmup easy-jog step (and/or cool-down
+  step) is completely missing on Garmin. The athlete gets the
+  description-text but no executable step.
+
+**Fix:**
+```
+- Easy 5m press lap
+- Cool-down 5m press lap
+```
+
+Classical form. The `5m` lives only in the intervals.icu plan view,
+NOT as a Garmin cue. To communicate the duration estimate to the
+athlete, use the `structure` description text (`coaching_notes` or
+the `description` block visible in intervals.icu and Strava).
+**Investigated and rejected approaches:** leading `~`, leading `ca.`,
+duration in cue (`Easy 5min press lap`) — all either drop the step
+or have undefined parser behaviour. The intervals.icu syntax does
+not currently support a "press-lap with visible Garmin duration"
+combination.
+
+**Open follow-up:** if intervals.icu adds explicit Garmin cue-text
+support for press-lap steps in the future, revisit. Until then,
+the description-text + plan-view duration is the only stable way.
+
+### Trap G: zone tokens inside cue free text — silent power-zone tagging
+
+**Push attempt** (cue mentions a zone for context):
+```
+- Calf raises easy 1m — 2×10 bodyweight, neuromuskuläre Wake-up vor Z4
+```
+
+**What intervals.icu does:**
+- The server parser sees `Z4` anywhere on the step line and treats
+  it as a target token. For a Run/VirtualRun step that has no real
+  target, it lands as `power: {units: 'power_zone', value: 4}` in
+  `workout_doc`. Garmin then displays a Power-Z4 target on a Run —
+  nonsensical and confusing.
+- The em-dash separator is NOT respected by the intervals.icu
+  parser (only by our local validator R012 catch).
+
+**Fix:**
+- Drop zone tokens from cue free text. Paraphrase: "vor dem
+  Quality-Block", "vor den Intervallen", "Wake-up vor der Hauptbelastung".
+- Reserve `Zn HR` / `% LTHR` / `% HR` / `Zn` notations exclusively
+  for the structural target slot of a real loaded step.
+
 ### Trap C: indoor-ride cool-down with only HR zone
 
 **Push attempt:**

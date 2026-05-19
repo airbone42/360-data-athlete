@@ -590,6 +590,54 @@ signal — the planner overrides the gate-based suggestion and documents
 the reasoning in `coaching_notes`. The athlete should not have to remind
 the coach of agreed deload thresholds or taper plans.
 
+### Hands-on therapy coverage check (mandatory)
+
+On days where the athlete attends a hands-on therapy / rehab / physio
+practice session, the planner and the head coach must check **what
+that external session is likely to cover** before scheduling
+overlapping home work. Doubling the same mechanic on the same day
+(e.g. a physio Row exercise plus a TRX Row main set; a physio shoulder
+external-rotation block plus a parallel home AR-band block) is a
+duplicated stimulus, not a complementary one.
+
+**Operational rule:**
+
+1. **Scope check before the plan is built.** Ask once — and persist
+   the answer — what the athlete's regular therapy appointment
+   typically covers (which body region, which prescribed exercises,
+   atomic-block coverage yes/no). Record in
+   `config/athlete_static.md` under the relevant rehab/physio block.
+2. **At plan time, treat the therapy slot like a sibling workout.**
+   Its (anticipated) exercises count as "already taken" for the
+   day's pillar / muscle-group rotation. Skip the second main
+   stimulus on the same pillar; defer to a later day in the week.
+3. **Standing-prescription scope correction.** If the therapy
+   appointment is known to cover only a subset of the
+   standing-prescription layers (e.g. only shoulder, not the
+   biceps/LBP layers), the un-covered layers continue to run in the
+   home plan that day — never silently drop them just because "the
+   athlete is at therapy". The planner must explicitly route the
+   uncovered layers into the remaining session(s).
+4. **Athlete-confirmed scope changes.** When the athlete reports
+   that the therapy scope deviates from the persisted default (e.g.
+   "today only shoulder, no core") — accept the override for that
+   day, then update the persisted scope if the change is structural,
+   not ad-hoc.
+
+**Drift incident pattern:** A day with a physio appointment is
+planned with a "Physio-Termin" placeholder that claims to cover
+multiple home layers (shoulder + biceps + LBP), plus a parallel home
+plan with a Row main set. Athlete points out (a) the therapy
+appointment only covers shoulder, so biceps and LBP need to stay in
+the home plan, and (b) the home Row duplicates the physio Row from
+the atomic shoulder block. Fix: scope check up-front and route
+uncovered layers into the remaining session; drop the duplicated
+pillar main stimulus and defer it to a later weekday.
+
+*Enforcement: head-coach judgment — relies on a persisted
+therapy-scope note in `config/athlete_static.md` and the
+sibling-workout treatment in step 2.*
+
 ### Per-exercise last-seen verification (mandatory)
 
 Specialists must check the `exercises_seen` field on each session in the
@@ -867,14 +915,40 @@ ask first whether one of the canonical files would carry it better.
 ## Athlete feedback persistence (mandatory)
 
 Whenever the athlete provides feedback — feeling, restriction, plan, status
-— save it as an intervals.icu NOTE:
+— save it to intervals.icu. The **routing decision** is whether the
+feedback is bound to a specific activity or scoped to a date:
+
+| Feedback scope | Destination | CLI |
+|----------------|-------------|-----|
+| Activity-bound (coach analysis, post-activity feedback, comment on a specific session) | **Activity message** — visible "in der Einheit", scrolled with the activity timeline | `post_message.py --activity-id {ID} --message "{text}"` (or `--note` as alias) |
+| Date-scoped (general feeling, athlete-update, restriction-status, planning note not tied to one session) | **Date NOTE event** — visible in the calendar, read by `fetch_context.py` into the planner context | `post_message.py --date {DATE} --note "{text}"` |
 
 ```bash
+# Activity message (preferred for coach-analyst output)
+python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/post_message.py --activity-id {ID} --message "{feedback}"
+
+# Date NOTE (for athlete feeling / status / planning notes)
 python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/post_message.py --date {DATE} --note "{feedback}"
 ```
 
-`fetch_context.py` reads NOTEs into the planner context. intervals.icu is
-the canonical source — never store athlete state only in Claude memory.
+**Drift incident pattern** (canonical case): a coach analysis was
+posted with `--activity-id {ID} --note "{text}"`. The script silently
+ignored `--note` in combination with `--activity-id` (it only accepted
+`--message` for the activity-bound path) and fell through to the
+date-NOTE path, creating a stray NOTE event next to the activity
+instead of attaching feedback to the session. The athlete reported
+"das Coaching-Feedback ist schon wieder als NOTE gespeichert, nicht
+in der Einheit". `post_message.py` now accepts `--message` and
+`--note` as aliases when `--activity-id` is set; the **routing is
+driven by `--activity-id` being present**, not by the text flag the
+caller chose. The `/analyse` flow (step 6.5) explicitly uses
+`--activity-id {ID} --message "..."` — head coach always uses the
+activity-id form when posting coach-analyst output.
+
+`fetch_context.py` reads date-scoped NOTEs into the planner context;
+activity messages are visible when the athlete (or coach) opens the
+activity. intervals.icu is the canonical source — never store athlete
+state only in Claude memory.
 
 ### Exercise-specific feedback — canonical locations (mandatory)
 

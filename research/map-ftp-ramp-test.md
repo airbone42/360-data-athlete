@@ -200,7 +200,7 @@ If no smart trainer with a fixed watt target is available:
 
 2. **5MMP vs. 1-min ramp MAP confusion in the literature** is persistent. Many coach sources (TrainingPeaks, Spare Cycles) use "MAP" synonymously with 5MMP — which does not strictly match the Rønnestad definition. When adopting power-anchor recommendations from sources, the MAP definition must always be checked.
 
-3. **Ramp-rate sensitivity** is not trivial — the same athlete delivers different "MAP" values at 20 W/min vs. 25 W/min ramp because glycolytic participation is different. A standardised 25 W/min ramp for our athlete and consistent repetition is mandatory.
+3. **Ramp-rate sensitivity** is not trivial — the same athlete delivers different "MAP" values at 20 W/min vs. 25 W/min ramp because glycolytic participation is different. A standardised ramp rate (commonly 25 W/min) and consistent repetition is mandatory if MAP is to remain a comparable anchor across tests.
 
 4. **Indoor vs. outdoor MAP:** indoor ramp test is the standard because watt control is exact; outdoor field tests (5-min hill peak) have higher variability (wind, gradient fluctuation). Indoor smart trainer is the clean measurement environment.
 

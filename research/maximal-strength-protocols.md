@@ -27,14 +27,14 @@
 - RPE 7-8 → 2-3 reps in reserve, not to failure
 - Rest 90-180s → middle ground
 
-→ Consistent with "strength-hypertrophy hybrid" for non-powerlifters with a sport background (runners, ninja athletes). Pure powerlifters would do 3×3 @ 90%+; pure bodybuilders 4×10 @ 70%. Our mix is optimised for power-endurance transfer.
+→ Consistent with "strength-hypertrophy hybrid" for non-powerlifters with a sport background (runners, ninja athletes). Pure powerlifters would do 3×3 @ 90%+; pure bodybuilders 4×10 @ 70%. The 4×4-6 @ 80-85% mix is optimised for power-endurance transfer.
 
 **Mattocks et al. 2017 / Androulakis-Korakakis et al. 2021 (minimum effective dose):**
 > "Powerlifters can perform ~3-6 working sets of 1-5 repetitions each week, with these sets spread across 1-3 sessions per week per powerlift, using loads above 80% 1RM at a Rate of Perceived Exertion (RPE) of 7.5-9.5 for 6-12 weeks and expect to gain strength."
 
-→ The minimum effective dose is surprisingly low. For our athlete (maximal-strength block for pull/grip/leg periodisation), 1 session/week per pillar is sufficient if the volume anchors fit.
+→ The minimum effective dose is surprisingly low. For a maximal-strength block in a multi-pillar periodisation (pull/grip/leg), 1 session/week per pillar is sufficient if the volume anchors fit.
 
-**Zatsiorsky classic ("Science and Practice of Strength Training"):** maximal strength requires "maximum tension" — that is: heavy loads (≥ 80% 1RM) or dynamic load (velocity close to maximum). Both trigger maximum motor-unit recruitment. Our 80-85% band satisfies the maximum-tension component.
+**Zatsiorsky classic ("Science and Practice of Strength Training"):** maximal strength requires "maximum tension" — that is: heavy loads (≥ 80% 1RM) or dynamic load (velocity close to maximum). Both trigger maximum motor-unit recruitment. The 80-85% band satisfies the maximum-tension component.
 
 ## Primary sources
 

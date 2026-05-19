@@ -65,6 +65,21 @@ python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/fetch_type_history.py \
   --date {DATE} --type {type} --tags {tags} --max-sessions {3 for endurance, 5 otherwise}
 ```
 
+**Tags filter is MANDATORY when the directive carries them.** For a
+Quality Run (`tags: ["run", "intervals"]` or contains "intervals"), pass
+`--tags run,intervals` — otherwise the unfiltered call returns whatever
+the last 3 runs happened to be (often Easy Z2 days), which carries no
+progression information for a Quality directive. Same for Quality Ride
+(`intervals` tag). The specialist falls back to a second filtered
+fetch if the briefed history lacks the matching class, but the head
+coach should not depend on that fallback.
+
+*Drift incident pattern:* head coach called `--type Run --max-sessions
+3` without `--tags`, briefed 3 Easy Z2 runs; specialist prescribed a
+Threshold workout that **regressed** vs. the previous same-class
+session (5×5 → 4×5 instead of 5×5 → 5×6 per the KW21 build). Tags
+filter on the head-coach side prevents this silently.
+
 **3b. Launch specialist agent in a pane** (routing: Run/Ride →
 `specialist-endurance`, ninja tag → `specialist-ninja`, otherwise →
 `specialist-complementary`):
