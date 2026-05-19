@@ -671,15 +671,24 @@ def check_intervals_step_targets(workouts: list[dict], ctx: Context) -> list[Fin
     """
     import re
 
-    # Tokens that count as a "real" target
-    TARGET_PATTERNS = [
+    # Tokens that count as a "real" target.
+    # For Z-zone notation we split Power vs HR/Pace because intervals.icu
+    # interprets bare `Zn` as a POWER-zone reference — on Run/VirtualRun
+    # there is no power zone, so `Zn` alone is silently dropped and the
+    # step ends up without a target. Always require the explicit `HR` or
+    # `Pace` suffix on Run steps.
+    TARGET_PATTERNS_COMMON = [
         r"\d+(?:-\d+)?w\b",                  # 220w, 200-240w
         r"\d+(?:-\d+)?%\s*(?:ftp|map|mmp|lthr|hr|pace)?\b",  # 75%, 95-105% LTHR
-        r"\bZ\d(?:-Z\d)?(?:\s+(?:HR|Pace))?\b",  # Z2, Z2-Z3, Z2 HR
+        r"\bZ\d(?:-Z\d)?\s+(?:HR|Pace)\b",   # Z2 HR, Z2-Z3 HR, Z2 Pace — explicit suffix
         r"\d+:\d+/(?:km|100m)\s*Pace",       # 5:00/km Pace
         r"\bramp\s+\d+",                     # ramp 50%-75%
         r"\bfreeride\b",
     ]
+    TARGET_PATTERNS_RIDE = TARGET_PATTERNS_COMMON + [
+        r"\bZ\d(?:-Z\d)?\b",                 # Z2 (bare) is power zone on bike — valid
+    ]
+    BARE_ZONE_RE = re.compile(r"\bZ\d(?:-Z\d)?\b(?!\s+(?:HR|Pace))", re.IGNORECASE)
     BAD_BPM_RE = re.compile(r"\b\d+(?:-\d+)?\s*bpm\b", re.IGNORECASE)
     LAP_PRESS_RE = re.compile(r"\bpress\s+lap\b", re.IGNORECASE)
     LOOP_HEADER_RE = re.compile(r"\b\d+x\b", re.IGNORECASE)
@@ -738,7 +747,40 @@ def check_intervals_step_targets(workouts: list[dict], ctx: Context) -> list[Fin
             if LOOP_HEADER_RE.search(content) and not re.search(r"\d+[ms]\b", content.lower()):
                 continue
 
-            has_target = any(re.search(p, content, re.IGNORECASE) for p in TARGET_PATTERNS)
+            target_patterns = TARGET_PATTERNS_RIDE if is_ride else TARGET_PATTERNS_COMMON
+            has_target = any(re.search(p, content, re.IGNORECASE) for p in target_patterns)
+
+            # Run/VirtualRun-specific catch: `Zn` or `Zn-Zm` WITHOUT a `HR`/`Pace`
+            # suffix is silently dropped or mis-tagged on Run. The intervals.icu
+            # server parser is greedy and tags `Z4` ANYWHERE on the step line as a
+            # power-zone target, including inside cue free text after an em-dash.
+            # Drift incident pattern: `- Calf raises easy 1m — neuromuskuläre
+            # Wake-up vor Z4` landed in workout_doc as
+            # `{text: 'Calf raises easy', power: {units: 'power_zone', value: 4}}`
+            # — a nonsensical Power-Z4 target on a Run step.
+            # → Scan the entire content (em-dash is NOT a parser boundary on the
+            # intervals.icu side).
+            if not is_ride and BARE_ZONE_RE.search(content) and not has_target:
+                dur_s = _step_duration_seconds(content)
+                if dur_s >= 60:  # short cue steps (< 1 min) tolerated
+                    findings.append(Finding(
+                        rule_id="R012",
+                        severity=SEVERITY_ERROR,
+                        workout=_workout_name(w),
+                        message=(
+                            f"intervals_icu step `{content[:80]}` (Run) uses "
+                            f"bare `Zn` notation — intervals.icu interprets that "
+                            f"as a Power zone and silently drops it on Run. "
+                            f"Step ends up without HR target on the watch."
+                        ),
+                        suggestion=(
+                            "Append the explicit suffix: `Z2 HR`, `Z1-Z2 HR`, "
+                            "`Z4 HR`. Or use `% LTHR` / `% HR` notation. "
+                            "Bare `Zn` is valid only on Ride/VirtualRide (Power zone)."
+                        ),
+                    ))
+                    continue
+
             if has_target:
                 continue
 
@@ -798,7 +840,12 @@ def check_intervals_repeat_block_adjacency(workouts: list[dict], ctx: Context) -
     """
     import re
 
-    REPEAT_HEADER_RE = re.compile(r"^\s*(?:[A-Za-zÄÖÜäöüß0-9 _\-]+\s+)?\d+x\s*$", re.IGNORECASE)
+    # Repeat header: must NOT start with a `-` (dash = list item, not a header).
+    # Optional leading cue (e.g. `Strides`, `Main Set`) followed by `Nx`.
+    REPEAT_HEADER_RE = re.compile(r"^\s*(?:[A-Za-zÄÖÜäöüß0-9 _]+\s+)?\d+x\s*$", re.IGNORECASE)
+    # Dash-prefixed pseudo-header (`- 4x` alone on a line) — silent drift:
+    # intervals.icu treats this as a list item, not a repeat header.
+    DASH_PSEUDO_HEADER_RE = re.compile(r"^\s*-\s*\d+x\s*$", re.IGNORECASE)
     findings = []
     for w in workouts:
         icu = w.get("intervals_icu") or ""
@@ -807,6 +854,25 @@ def check_intervals_repeat_block_adjacency(workouts: list[dict], ctx: Context) -
         lines = icu.split("\n")
         for idx, raw in enumerate(lines):
             line = raw.rstrip()
+            if DASH_PSEUDO_HEADER_RE.match(line):
+                findings.append(Finding(
+                    rule_id="R013",
+                    severity=SEVERITY_ERROR,
+                    workout=_workout_name(w),
+                    message=(
+                        f"Repeat block header `{line.strip()}` is dash-prefixed "
+                        f"— intervals.icu parses this as a list item, NOT as a "
+                        f"repeat header. The following `- ` items are treated as "
+                        f"adjacent steps, not loop body. Step count silently "
+                        f"degrades to reps=1."
+                    ),
+                    suggestion=(
+                        f"Drop the leading `- `. Header must be standalone: "
+                        f"`{line.strip().lstrip('-').strip()}` (just `Nx` or "
+                        f"`<Cue> Nx`)."
+                    ),
+                ))
+                continue
             if not REPEAT_HEADER_RE.match(line):
                 continue
             # Header found — look at the next non-blank line. If there is a blank

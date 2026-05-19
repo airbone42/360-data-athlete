@@ -156,9 +156,34 @@ Strides 4x
 Before prescribing **any structured high-intensity format** that has
 been run before (Rønnestad 30/15, Billat 30/30, threshold reps,
 VO2max long sets, hill reps, tempo intervals), the specialist MUST
-pull the most recent activity of the same format from the type-history
-(including `VirtualRide` / `VirtualRun`, which used to be omitted by an
-earlier alias-map gap) and inspect three fields:
+locate the most recent activity of the same format and inspect three
+fields — see below.
+
+**Briefing-window check first (MANDATORY).** The head-coach briefing
+typically passes the last 3 sessions of the workout type. For Run that
+returns *whatever* the last 3 runs were — often Easy Z2 days when the
+new directive is Quality. **If the briefed type-history contains NO
+recent activity of the matching quality class** (e.g. directive is
+"Threshold reps" but the briefed runs are all `EASY` / Z2), the
+specialist MUST pull additional history with a quality filter before
+deciding the progression:
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/fetch_type_history.py \
+  --date {DATE} --type Run --max-sessions 10 \
+  | jq '[.[] | select((.name|test("Threshold|VO2|30/15|30/30|Hill|Bergauf|Z4|Z5"; "i")) or
+                       (.description|test("Threshold|VO2|30/15|30/30|Hill|Bergauf|Z4|Z5"; "i")))]'
+```
+
+Then anchor the progression vector to the most recent same-class
+session, NOT to the last Easy run (which carries no progression
+information for a Quality directive). **Drift incident pattern:** Coach
+briefed last 3 Easy Z2 runs; specialist prescribed 4×5 min Threshold
+when the previous same-class session 7 days earlier had been 5×5 min
+Threshold — silent regression instead of the expected race-specific
+build (5×4 → 5×5 → 5×6 in the KW19→KW20→KW21 hill-block ramp).
+
+The fields to inspect once the matching session is in hand:
 
 | Field | Source | What it means |
 |-------|--------|--------------|
@@ -206,6 +231,15 @@ for the full case.
 ## Output format
 
 Respond with valid JSON only. Start directly with `{`.
+
+**Workout-name convention (mandatory):** the `name` you reuse from the
+planner directive (or override) must NOT carry calendar-week markers
+(`KW21`, `Week 21`, `Woche 21`). The activity timestamp already carries
+the date and the calendar week is derivable from it — the marker adds
+no information for the athlete in the activity feed and is pure noise
+once `strava-publisher` mirrors the title to Strava. Stimulus / phase
+descriptors are allowed if they help recall ("Race-spezifisch",
+"Aufbau", "Konsolidierung"), but not the literal KW-number.
 
 The `focus` field contains 3–5 sentences of coaching prose for the
 athlete: goal of the session, focus points, context from history /
@@ -296,7 +330,15 @@ routes, pick the dominant surface (>60 %); if truly 50/50, mention in
   digit unless it has an HR target.
 - **Warmup — easy jog (Run + outdoor Ride only):** Use `press lap`
   (athlete runs/rides until ready), NO HR target in the intervals_icu
-  step. Format: `- Easy Xm press lap` (X = time suggestion, e.g. 3–5m).
+  step. Format: **`- Easy Xm press lap`** (X = time suggestion, e.g.
+  3–5m). The `Xm` is intervals.icu's plan-view default duration —
+  visible in the intervals.icu plan, NOT pushed as a cue to Garmin
+  (Garmin shows the cue text only). Earlier attempts to make the
+  duration visible on Garmin via a leading `~` (`Easy ~5m press
+  lap`) broke the parser: the entire step was silently dropped from
+  `workout_doc`, leaving the athlete without that part of the warmup.
+  → Stick with the classical form; communicate the duration estimate
+  in the `structure` description text and/or directly to the athlete.
   HR orientation may appear in the `structure` description text.
 - **Warmup — indoor ride (`type: Ride` + `indoor: true`):** NO `press
   lap` (athlete is already on the trainer, no decision moment). Fixed
@@ -326,8 +368,13 @@ routes, pick the dominant surface (>60 %); if truly 50/50, mention in
 - **Steps ≥ 60 s:** HR zone as target (`Z2 HR`, `Z3 HR`, etc.)
 - **Steps < 60 s:** NO HR target — title and duration only. Example:
   `- Stride 30s`
-- **Interval blocks:** repetition syntax `Nx` as section header.
-  Example: `Main 4x`
+- **Interval blocks:** repetition syntax `Nx` as a **standalone**
+  section header. Example: `Main 4x` (no leading dash). The following
+  `- ` items become the loop body. A **dash-prefixed header (`- 4x` on
+  a line of its own) is silently dropped to a list item by the
+  intervals.icu parser** — the items below become adjacent steps, not
+  loop body, and the rep count silently degrades to reps=1. Validator
+  R013 catches this as ERROR.
 - **30/15 and 30/30 short-rep blocks (Rønnestad/Billat):** target
   **130–145 % FTP** (anaerobic-capacity zone), NOT 110 % FTP — 110 % is
   the 3–5 min VO2max-power zone for sustained 5-min intervals. Confusing
@@ -339,8 +386,9 @@ routes, pick the dominant surface (>60 %); if truly 50/50, mention in
   load AND recovery steps ALWAYS with `press lap`
   **Research anchor:** [hill-repeats.md](../research/hill-repeats.md)
 - **Cool-down — easy jog (Run + outdoor Ride only):** Like warmup:
-  `press lap` + time suggestion, NO HR target. Format: `- Cool-down Xm
-  press lap`. HR orientation may appear in the `structure` text.
+  `press lap` + time suggestion as the plan-view default. Format:
+  **`- Cool-down Xm press lap`**. Same Tilde-trap caveat as the
+  warmup applies. HR orientation may appear in the `structure` text.
 - **Cool-down — indoor Ride:** NO `press lap`, fixed time step with
   Z1 HR target. Format: `- Cool-down Xm Z1 HR`.
 - **Time format MANDATORY:** minutes as `Xm`, seconds as `Xs`.
