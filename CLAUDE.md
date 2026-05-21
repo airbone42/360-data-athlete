@@ -311,15 +311,44 @@ talking points:
    3:57/km", "S3 langsamer als S5", or pace-trend interpretations
    across the stride set are forbidden in the briefing. Stride-quality
    talk uses step length, cadence, HR peak, GCT — not pace.
+3. **Surface / elevation framed as a finding without a route-history
+   baseline.** Phrasings like "today was hilly", "wellig statt flach",
+   "unerwartete Höhenmeter", "Race-Prep-Höhenmeter-Anker", or any
+   comparison of today's ascent against the **planner's surface tag**
+   (`forstweg`, `trail`, etc.) are forbidden. The surface field is a
+   routing default for the shoe advisor, **not** an elevation oath —
+   it does NOT carry a "flat" claim. Athletes typically have a small
+   set of home routes that they re-run weekly; the elevation profile
+   on those routes is **a property of the route**, not a property of
+   today's session. Before listing elevation as a finding, the head
+   coach MUST cross-reference the same-name / same-region runs in
+   `fetch_type_history.py` output: if last week's Z2 on the same loop
+   carried similar ascent, today's ascent is no finding. The legitimate
+   "elevation matters" cases are (a) a real route change confirmed in
+   the briefing context, (b) structured Z3/Z4 climb intervals as the
+   workout itself, (c) elevation **per minute of training time** that
+   is a clear outlier vs. the type-history median. Otherwise: elevation
+   is descriptive metadata, not a finding.
 
 The corresponding agent contracts (`coach-analyst.md`,
 `strava-publisher.md`) require the agents to **reject** these inputs
 silently if they appear in a briefing — but the head coach removes the
-risk at the source by not listing them. Both rules apply to all run
-analyses; the exception that the cardiac startup drift may be **named
-with its technical term** in Strava insights (recognition that the
-data is understood, never as athlete error) is documented in
+risk at the source by not listing them. All three rules apply to every
+run analysis; the exception that the cardiac startup drift may be
+**named with its technical term** in Strava insights (recognition that
+the data is understood, never as athlete error) is documented in
 `strava-publisher.md`.
+
+**Drift incident pattern** (canonical case to learn from): an Easy-Z2
+plan listed `surface: forstweg` for routing/shoe purposes; the head
+coach briefed the analyst with "Plan said 'forstweg flach', actual was
+259 m ascent on 6 km — race-prep bonus elevation". The athlete
+corrected: the route in question is the regular home-loop, that ascent
+profile is the **default**, not a deviation — and the actual race-prep
+quality (structured Z4 climb intervals) was still missing. Lesson: the
+"flach" wording in the surface-tag context is a shoe-advisor default,
+not a topography claim about the route. Always check the type-history
+elevation pattern before treating elevation as exceptional.
 
 ### Warm-up drill rule (mandatory)
 

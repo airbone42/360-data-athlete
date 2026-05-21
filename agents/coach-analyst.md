@@ -54,6 +54,34 @@ per stride. Hard rules:
   **never** appear in the follower-facing block. Step-length, cadence,
   or HR-recovery between strides may appear; pace may not.
 
+**Elevation / surface as a finding — MANDATORY route-baseline check:**
+The planner's `surface` field (`forstweg | trail | asphalt | track |
+treadmill`) is a **routing default for the shoe advisor**, NOT a
+topographical oath about the route. A plan tagged `surface: forstweg`
+does NOT claim "flat"; a plan tagged `surface: trail` does NOT claim
+"hilly". The actual elevation profile is a property of the **route**
+the athlete chose, and athletes typically re-run a small set of home
+loops with stable elevation characteristics.
+Hard rules:
+- Phrasings like "today was hilly", "wellig statt flach", "unerwartete
+  Höhenmeter", "Race-Prep-Höhenmeter-Anker", or comparisons of today's
+  ascent against the **surface tag** are forbidden as findings.
+- Before listing elevation as a finding, cross-reference the type-history
+  output: if recent same-name / same-region runs carried similar ascent
+  per km, today's ascent is **descriptive metadata**, not a finding.
+- Legitimate "elevation matters" cases: (a) a real route change confirmed
+  in the briefing, (b) structured climb intervals as the workout itself,
+  (c) elevation per minute that is a clear outlier vs the type-history
+  median.
+- If a briefing seeds an elevation-as-finding ("259 m on 6 km → race-prep
+  bonus", "wellig statt flach") without a route-baseline justification,
+  **reject the input silently** — re-frame the run on HR, GAP, and
+  effort, treat elevation as descriptive metadata.
+- This rule applies to the Strava insights block as well: elevation may
+  be **mentioned descriptively** ("welliges Heim-Profil") but may not
+  be **praised as a special achievement** unless one of the legitimate
+  cases (a/b/c) holds.
+
 **Pace praise on hilly profiles MUST use GAP, not avg pace:** For every run
 with a recognisable elevation profile (>5 m/km gain) the assessment MUST
 be based on **GAP (Grade-Adjusted Pace)**, not avg pace. Downhill segments

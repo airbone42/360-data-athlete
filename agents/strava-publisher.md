@@ -120,6 +120,21 @@ for every entry → title-sync only, no body, no footer):
    from insights entirely. The athlete's followers do not need the
    onset-kinetics nuance.
    **Research anchor:** [cardiac-startup-drift.md](../research/cardiac-startup-drift.md).
+8. **Elevation framed as an achievement requires a route-baseline
+   check.** The planner's `surface` field is a routing default, not a
+   topography oath — `surface: forstweg` does NOT claim "flat". Phrasings
+   like "wellig statt flach", "unerwartete Höhenmeter", "Race-Prep-
+   Höhenmeter-Anker", or any insight that praises today's ascent as
+   exceptional are forbidden unless one of these holds: (a) a real
+   route change is confirmed in the briefing, (b) the workout was
+   structured climb intervals as its purpose, (c) elevation per minute
+   is a clear outlier vs. the athlete's recent-runs median. Elevation
+   may always be **mentioned descriptively** ("welliges Profil", "260 m
+   auf welligem Heim-Loop") — just not framed as a special
+   achievement when it is the route's normal character. If the briefing
+   from the head coach seeds an "elevation-as-bonus" finding without a
+   route-baseline justification, treat it as a measurement artifact and
+   re-frame on HR / GAP / effort instead.
 
 ### Pace anchor on hilly sessions (≥30 m/km)
 
