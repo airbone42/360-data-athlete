@@ -1,4 +1,4 @@
-# VO2max long intervals — Norwegian 4×4 (Helgerud) and comparison with the current framework
+# VO2max long intervals — Norwegian 4×4 (Helgerud) and how it relates to other VO2max formats
 
 **Created:** 2026-05-21
 
@@ -20,9 +20,9 @@ testing. **Mixing the two on the same training calendar is not "the
 Norwegian Method" — it is two different toolkits stacked.**
 
 Everything below addresses the **first** — Helgerud's Norwegian 4×4
-VO2max protocol — and how it relates to the framework's existing
-short-interval VO2max work (Rønnestad 30/15) and run-threshold work
-(5×6 min Z4).
+VO2max protocol — and how it relates to other VO2max formats
+(short-interval Rønnestad 30/15, hill-repeats, and run-threshold work
+at LT2).
 
 ## TL;DR
 
@@ -37,20 +37,19 @@ short-interval VO2max work (Rønnestad 30/15) and run-threshold work
    spent only **≈ 3.4 min**. Going shorter and faster does not
    compensate for the lost cumulative duration in the target aerobic
    zone.
-3. **The Rønnestad 30/15 we already use is a different design point.**
-   Rønnestad targets **MAP** (5MMP variant ≈ 105–120 % FTP, NOT the
-   higher 1-min ramp peak) with a 2:1 work:rest ratio. Time-above-90 %
-   VO2max in Rønnestad sits between Helgerud's 4×4 and the
-   "intensified" 30 s short intervals — slightly less than 4×4 in most
-   reports, but the central training stress is similar and the
-   per-rep failure risk is lower.
-4. **For the current framework, Norwegian 4×4 is an ALTERNATIVE, not an
-   upgrade.** The existing two-stimulus weekly strategy
-   (Run-Threshold 5×6 min Z4 + Bike-VO2max Rønnestad 30/15) already
-   covers the LT2 and VO2max bases without adding run impact. Adding a
-   third hard stimulus (Run 4×4) would break the 2-stimulus quota and
-   reintroduce the impact load that the cross-training strategy was
-   designed to spare.
+3. **Rønnestad 30/15 is a different design point.** Rønnestad targets
+   **MAP** (5MMP variant ≈ 105–120 % FTP, NOT the higher 1-min ramp
+   peak) with a 2:1 work:rest ratio. Time-above-90 % VO2max in
+   Rønnestad sits between Helgerud's 4×4 and the "intensified" 30 s
+   short intervals — slightly less than 4×4 in most reports, but the
+   central training stress is similar and the per-rep failure risk is
+   lower.
+4. **Norwegian 4×4 is an alternation tool, not a default upgrade.**
+   When a weekly plan already carries one LT2 stimulus + one VO2max
+   stimulus (typical 2-stimulus structure), inserting Norwegian 4×4 as
+   a third hard session breaks the hard-stimulus quota. The clean way
+   to use 4×4 is **as a swap** for one of the existing slots — see the
+   decision criteria below.
 
 ## Findings
 
@@ -93,89 +92,89 @@ work: long intervals (3–4 min) at 90–95 % HRmax are a reliable
 "time-in-target-zone" stimulus that benefits from each rep's full
 VO2 climb.
 
-### 3. Rønnestad 30/15 — where the framework already sits
+### 3. Rønnestad 30/15 — design point and intensity anchor
 
-The framework's bike-VO2max default is Rønnestad 30/15 at **MAP
+The framework's bike-VO2max anchor is Rønnestad 30/15 at **MAP
 intensity (5MMP variant ≈ 105–120 % FTP)**, with 3 sets × 8–13 reps
 × (30 s on / 15 s off) and 3 min between sets. The doc
 [vo2max-short-intervals.md](vo2max-short-intervals.md) carries the
-intensity / volume / scaling rules and the prior drift-incident anchor
-(do NOT push 30/15 to 130–145 % FTP — that is the "intensified" short
-band that the Skovgaard 2024 result also flags as inferior).
+intensity / volume / scaling rules and warns against pushing 30/15 to
+130–145 % FTP (the "intensified" short band that the Skovgaard 2024
+result also flags as inferior).
 
 Time-above-90 % VO2max for properly-prescribed Rønnestad 30/15 at MAP
-sits between Helgerud 4×4 and the Skovgaard "intensified" short
-condition — depending on the set length, reported values are around
-3–7 min per session in trained cyclists. Slightly less per session
-than Helgerud 4×4, but more reps-per-set means cleaner pacing and
+sits between Helgerud 4×4 and the "intensified" short condition —
+depending on the set length, reported values are around 3–7 min per
+session in trained cyclists. Slightly less per session than Helgerud
+4×4, but the more granular rep structure means cleaner pacing and
 lower per-rep failure risk than running 4×4 hard at 95 % HRmax.
 
-### 4. Run-Threshold 5×6 min Z4 — what it is and is not
+### 4. Run-Threshold (e.g. 5 × 6 min Z4) — what it is and is not
 
-The framework's current run-quality slot is **5 × 6 min at Z4
-(92–100 % LTHR)** with short trabs as recovery. Z4 sits at LT2 / the
-lactate-threshold band — this is **LT2 / threshold work**, NOT VO2max
-work. Time-above-90 % VO2max during a 5×6 Z4 session is essentially
-zero by design — the intent is to extend the sustainable-LT2 envelope,
-not to drive VO2max upward.
-
-This means the current weekly carries one LT2-stimulus (Run-Threshold)
-+ one VO2max-stimulus (Bike-Rønnestad). The two are complementary, not
-redundant.
+A common run-quality slot is **5 × 6 min at Z4 (92–100 % LTHR)** with
+short trab recoveries. Z4 sits at LT2 / the lactate-threshold band —
+this is **LT2 / threshold work, NOT VO2max work**. Time-above-90 %
+VO2max during a 5×6 Z4 session is essentially zero by design — the
+intent is to extend the sustainable-LT2 envelope, not to drive VO2max
+upward. Run-Threshold and VO2max-format sessions are complementary,
+not redundant.
 
 ### 5. Hill-repeats 4–5 × 5–6 min Z4 uphill — race-specific overlap with 4×4
 
-For trail-race specificity, the framework's competition plan can call
-in **4–5 × 5–6 min Z4 uphill repeats** (hill-repeats anchor in
-[hill-repeats.md](hill-repeats.md)). This format overlaps with
-Norwegian 4×4 on duration (5–6 min ≈ 4 min) and intensity (top-Z4 ≈
-90–95 % HRmax for a runner whose LTHR is ~92 % HRmax). Hill-repeats
-ADD the gradient component (race specificity, eccentric sparing on
-the bergab) and replace some VO2max stimulus the 4×4 would provide.
+For race-specificity in events with substantial elevation, **4–5 × 5–6
+min Z4 uphill repeats** (anchor in [hill-repeats.md](hill-repeats.md))
+overlap with Norwegian 4×4 on duration (5–6 min ≈ 4 min) and intensity
+(top-Z4 ≈ 90–95 % HRmax for a runner whose LTHR is ~92 % HRmax).
+Hill-repeats ADD the gradient component (race specificity, eccentric
+sparing on the downhill recovery) and replace some VO2max stimulus
+that flat 4×4 would provide.
 
-→ For a runner training toward a hilly trail A-race, **uphill hill-repeats
-deliver the Norwegian-4×4 VO2max-style stimulus AND race-specificity
-in one slot**. Running a flat 4×4 separately would duplicate the
-cardiovascular load without adding race-relevant content.
+→ **For an athlete training toward an event with significant elevation,
+uphill hill-repeats deliver a Norwegian-4×4-style VO2max stimulus AND
+race-specificity in one slot**. Running a flat 4×4 separately on top
+duplicates the cardiovascular load without adding race-relevant
+content.
 
-## Comparison matrix — when each format fits
+## Comparison matrix — stimulus characteristics by format
 
-| Slot | Stimulus | Surface impact | Cardiac/CNS cost | Race-specificity (trail) | Achilles tax |
-|------|----------|----------------|------------------|--------------------------|--------------|
-| Helgerud 4×4 (run, flat) | VO2max | High (16 min at near-vVO2max running) | High | Low | High |
-| Hill-repeats 4–5 × 5–6 min Z4 uphill | VO2max + LT2 hybrid + race-specific | Medium (uphill spares eccentric) | High | High | Medium |
-| Rønnestad 30/15 (bike) | VO2max | None (bike) | Medium-high | Low | None |
-| Run-Threshold 5×6 min Z4 | LT2 | Medium | Medium | Medium | Low-Medium |
-| Bike 4×4 (Helgerud-style on bike) | VO2max | None | High | None | None |
+| Slot | Stimulus | Surface impact (on the runner) | Cardiac/CNS cost | Race-specificity to a hilly event |
+|------|----------|-------------------------------|------------------|-----------------------------------|
+| Helgerud 4×4 (run, flat) | VO2max | High — ~16 min near vVO2max running | High | Low |
+| Hill-repeats 4–5 × 5–6 min Z4 uphill | VO2max + LT2 hybrid + race-specific | Medium — uphill spares eccentric | High | High |
+| Rønnestad 30/15 (bike) | VO2max | None | Medium-high | Low |
+| Run-Threshold 5 × 6 min Z4 | LT2 | Medium | Medium | Medium |
+| Bike 4×4 (Helgerud-style on bike) | VO2max | None | High | None |
 
-## Decision criteria — when does adding Norwegian 4×4 make sense?
+## Decision criteria — when to swap Norwegian 4×4 into a plan
 
-**Run 4×4 IS sensible when ALL the following are true:**
+**Run 4×4 IS a sensible slot when ALL the following hold:**
 
-1. **Achilles / lower-leg full-clear** — no active Phase-3 rehab, no
-   eccentric calf reactivity, no morning stiffness.
-2. **No higher-priority race-specificity stimulus in the current
-   block** — i.e. no hilly trail A-race that is being served by hill
-   repeats.
-3. **Off the bike-VO2max slot week** (or replacing it consciously) —
-   running 4×4 on top of bike Rønnestad in the same rolling-7d window
-   would break the 2-stimulus quota documented in the weekly
-   hard-stimulus strategy.
-4. **CTL is at a build-supporting level** — historically ≥ ~ baseline
-   CTL band, not in a Rebuild-from-low CTL phase where impact volume
-   should be conservative.
-5. **Surface is controlled** — treadmill, athletic track, or a
-   confirmed flat forest path. Hilly outdoor 4×4 turns into a
-   hill-repeats session whether you wanted that or not.
+1. **No active lower-leg rehab or impact-sensitivity restriction.** Run
+   4×4 places ~16 min of work near vVO2max on the legs; if a rehab
+   protocol is currently rationing impact volume, the format violates
+   that ration.
+2. **No race-specific hill-repeat block is active in the same period.**
+   Hill-repeats already cover the long-VO2max + race-specificity slot;
+   adding a flat 4×4 duplicates the cardiovascular load.
+3. **Off the bike-VO2max slot week, or replacing it consciously.**
+   Running 4×4 on top of a bike-VO2max session in the same rolling-7d
+   window breaks the hard-stimulus quota of a 2-stimulus weekly
+   strategy.
+4. **CTL is at a build-supporting level**, not in a rebuild-from-low
+   phase where impact volume is being rationed.
+5. **Surface is controlled.** Treadmill, athletic track, or a confirmed
+   flat path. Hilly outdoor 4×4 silently turns into a hill-repeat
+   session whether intended or not.
 
-**Bike 4×4 IS sensible as an alternation with Rønnestad 30/15 when:**
+**Bike 4×4 IS a sensible alternation with Rønnestad 30/15 when:**
 
-1. The athlete has run two or three Rønnestad blocks and is reporting
+1. The athlete has run two or three Rønnestad blocks and reports
    protocol monotony or psychological fatigue.
 2. A simpler pacing structure is wanted (one steady 4-min effort vs.
    25+ on-off transitions).
-3. The set up benefits from longer steady efforts (e.g. outdoor
-   climbing where 4-min steady is easier than 30/15 cadence cycling).
+3. The set-up benefits from longer steady efforts (e.g. outdoor
+   climbing where 4-min steady is easier to pace than 30/15 cadence
+   cycling).
 
 Format: 4 × 4 min at the upper end of Z4 / lower Z5 (~105–115 % FTP)
 with 3 min @ 50–60 % FTP active recovery. WU 15 min ramping into Z3.
@@ -183,13 +182,12 @@ Expected time-above-90 % VO2max comparable to Helgerud 4×4 on the run.
 
 **Norwegian 4×4 is NOT a sensible swap-in when:**
 
-- The athlete is in race-specificity build for a hilly trail event
-  (hill-repeats already serve the slot).
-- Achilles or other lower-leg rehab is active and run impact is
-  rationed.
-- The 2-stimulus quota is already full for the week.
+- A race-specific hill-repeat block is active (cardiovascular
+  redundancy with no race-specificity gain).
+- Lower-leg rehab or impact-sensitivity restrictions are active.
+- The hard-stimulus quota is already full for the week.
 - CTL is in a rebuild phase from below baseline (impact volume
-  cap → keep cross-training).
+  rationing).
 
 ## What about the Norwegian Double-Threshold Method?
 
@@ -204,30 +202,28 @@ above-LT2 sessions. Key practical preconditions:
 - **High weekly running volume** — typically 110+ km/week to make the
   high-frequency LT-band volume make sense.
 - **Single-sport runner identity** — adding bike VO2max + plyo +
-  ninja on top of double-threshold work undoes the volume-preserving
-  logic of the method.
+  ninja-style strength on top of double-threshold work undoes the
+  volume-preserving logic of the method.
 
-For a multi-sport masters athlete on a Rebuild-CTL phase with active
-Achilles management, double-threshold is **not the right tool** —
-neither the equipment requirements nor the volume targets fit. The
-current 2-stimulus weekly strategy with cross-training is the
-better-matched paradigm for that profile.
+For training profiles that don't meet all three preconditions (no
+lactate testing routine, sub-110 km running volume, multi-sport
+calendar), double-threshold is not the right tool — neither the
+equipment requirements nor the volume targets fit. A 2-stimulus
+weekly strategy with cross-training is the better-matched paradigm
+for those profiles.
 
 ## Application in framework
 
-- **Current default (unchanged):** Run Threshold 5×6 min Z4 + Bike
-  Rønnestad 30/15 + race-specific Hill-Repeats when an event is in
-  KW21-style race-prep windows. No change to the
-  [training_paradigms.md](../config.example/training_paradigms.md)
-  2-stimulus strategy is recommended on the basis of this research.
-- **Future option — Bike 4×4 alternation:** can be slotted in as a
-  variant of the bike-VO2max session every 4–6 weeks for protocol
-  variety. Same role as Rønnestad 30/15 in the weekly quota.
-- **Future option — Run 4×4:** only when Achilles is fully cleared
-  AND no race-specific hill-repeat block is active AND the athlete
-  wants a flat-track VO2max stimulus distinct from threshold work.
-  Document the trigger and the protocol in a planner pane note before
-  the first session.
+- **Default 2-stimulus weekly structure** (Run-Threshold + bike-VO2max,
+  with race-specific hill-repeats slotted in when an event with
+  elevation is in the build): unchanged. The Norwegian 4×4 evidence
+  does not displace this structure — it is an alternation tool.
+- **Bike 4×4 alternation:** documented as a variant of the bike-VO2max
+  slot every 4–6 weeks for protocol variety. Same quota role as
+  Rønnestad 30/15.
+- **Run 4×4 swap-in:** documented as a swap for one of the existing
+  slots only when ALL of the decision criteria above are met. Never
+  added on top.
 
 ## Primary sources
 
@@ -243,9 +239,9 @@ better-matched paradigm for that profile.
 ## Open questions / Caveats
 
 1. **Bike vs run 4×4 transfer.** Helgerud's original was run. The
-   running adaptation requires pace control near vVO2max that masters
-   athletes may find injury-risky; the bike adaptation has no impact
-   cost but loses some neuromuscular specificity for running events.
+   running adaptation requires pace control near vVO2max that carries
+   real impact load; the bike adaptation has no impact cost but loses
+   some neuromuscular specificity for running events.
 2. **Hill-repeats vs flat 4×4.** When a race-specific hill-repeat
    block is active, flat 4×4 is redundant on the cardiovascular axis
    and adds without subtracting. Open question whether a "rotate
