@@ -71,6 +71,76 @@ for every entry → title-sync only, no body, no footer):
    "in the morning" — say "before the run", "afterwards", "as a brick"
    neutrally.
 
+### Athlete-feedback lessons — narrative priority & template-phrase ban (MANDATORY)
+
+**Stock-phrase ban.** Recurring phrases lose their meaning. The
+following formulations are **banned as default lines** in the insights
+block — they may only appear when they are demonstrably the day's
+data-led story, not a coupling-driven reflex:
+
+- "überraschend frisch" / "surprisingly fresh legs" / "fresh-leg" /
+  "fresh despite" — banned as default opener for any session that
+  carried a Vorbelastung. Use only when (a) the session was a quality
+  run and (b) the data actively shows fresh-leg evidence (stable
+  cadence + step length under fatigue, HR drift in line with baseline,
+  GAP not bleeding). On an Easy-Z2 day the leg-freshness claim is
+  meaningless — Easy-Z2 doesn't stress the legs enough for "fresh" to
+  be informative.
+- "diszipliniert eingehalten" / "disciplined ceiling" — banned as a
+  recurring HR-decke compliment. The first time this is data-true in a
+  block it is meaningful; the third time it is template noise. Vary or
+  drop.
+- "stable pace at stable HR" — banned as default Z2 closer. Same logic.
+
+**Narrative priority rule.** The day's headline insight is **the one
+data anomaly that explains the session character**, not the
+coupling-default. Priority order before composing the body:
+
+1. **Wellness anomaly:** HRV deviation ≥10% from baseline, TSB outlier,
+   `intensityReadiness 🔴`, `hrvForecastLatest.verdict ≠ expected`,
+   sleep score outlier, athlete-reported symptom (GI, illness, soreness).
+   → Headline is the wellness story + how training was adjusted
+   ("HRV-Tief war heute der Anlass für die abgespeckte Z2-Variante",
+   "Bei niedrigerem Bereitschafts-Score blieb das Tempo bewusst
+   unterhalb der Z2-Decke").
+2. **Quality session:** intervals / threshold / race-spec — headline is
+   interval consistency / pace+HR pattern.
+3. **Vorbelastung:** if and ONLY if 1 and 2 are absent, and the
+   coupling actually shaped the session (e.g. brick logic, glute
+   fatigue mattering). Even then: NOT in stock-phrase form (see ban).
+4. **Surface / route flavor:** descriptive metadata, never the
+   headline.
+
+If a wellness anomaly is present in the briefing, the body MUST open
+with it. The Vorbelastungs-Zeile (if any) becomes secondary or is
+dropped entirely.
+
+**HR-drift framing rule (MANDATORY baseline check).**
+
+HR drift % cannot be qualified ("nur", "praktisch konstant", "lag bei
+…") without a comparison to the athlete's recent Z2 baseline. Hard
+rules:
+
+- Before quoting an HR-drift number, the agent MUST check the
+  type-history baseline. Recent Z2 sessions of the same athlete are the
+  reference; values like "3% Drift" are the working baseline for a
+  healthy endurance runner — but the actual athlete baseline lives in
+  the type-history.
+- If today's drift is **within 1.5× of the recent baseline** → frame
+  as in line ("Drift in der gewohnten Range").
+- If today's drift is **clearly higher than baseline** (e.g. 2× or
+  more) → frame as elevated, not as positive. Connect to wellness
+  context if available ("Drift höher als üblich — passt zur
+  HRV-Senkung / GI-Belastung / heißem Wetter").
+- If today's drift is **lower than baseline** → may praise as cleaner
+  than usual.
+- Forbidden formulations regardless of value: "**nur** X% Drift" or
+  "lag bei knapp X%" without baseline reference. The "nur" qualifier
+  hardcodes "low is good" — wrong when X is above baseline.
+- If the type-history is unavailable for this query, **omit the drift
+  number entirely** rather than guess the framing — the line is
+  optional.
+
 ### Athlete-feedback lessons — data sources & wording (MANDATORY)
 4. **Elevation comes from Strava, not from FIT / intervals.icu.** The
    FIT-derived `total_elevation_gain` (which `fetch_activity.py` returns)
@@ -262,9 +332,11 @@ Strava sync: X pushed (Y titles, Z insights), W skipped
 
 - **Use the athlete's configured language** (per `config/athlete_preferences.md` → `Coach response language`, default English).
 - **Tone:** lightly fancy — instead of "the HR drift was 3.2%" prefer
-  "HR stayed practically constant across the second half (3% drift)".
-  Example for a coupled session: "after 65 min of Z2 on the bike this
-  morning came a run with surprisingly fresh legs."
+  a comparative phrasing that includes the baseline context ("HR drift
+  in line with the usual sub-3% on these Z2 days", or, when drift is
+  above baseline: "HR drift higher than the usual sub-3% — coherent
+  with [trigger]"). Do not use "fresh legs" / "überraschend frisch" as
+  a default coupled-session opener — see the stock-phrase ban above.
 - **No coaching recommendations** ("next time", "more cadence") — you
   write observations, not homework.
 - **No hashtags**, no marketing phrases, no "let's go", no
