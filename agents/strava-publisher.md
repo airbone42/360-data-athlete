@@ -205,6 +205,27 @@ rules:
    from the head coach seeds an "elevation-as-bonus" finding without a
    route-baseline justification, treat it as a measurement artifact and
    re-frame on HR / GAP / effort instead.
+9. **Pace and HR claims must exclude warm-up, drills, and cool-down.**
+   The `total_*` / `average_*` values on the activity (intervals.icu
+   `icu_average_pace_run`, Strava `average_speed`, full-activity avg HR)
+   include the press-lap warm-up, stationary drill laps (A-Skips,
+   Beinpendel, Hip-Flexor — paces like 66:40/km are mechanical
+   artifacts at lap durations of 30 s, distances of 2–30 m), and the
+   easy cool-down. Quoting those raw averages produces misleading
+   numbers like "5:38/km auf welligem Profil" when the actual running
+   portion ran 5:23/km — a 15 sec/km misrepresentation.
+   **Rule:** Pace/HR claims for the running portion of insights must be
+   computed over the **training portion** only (Main + Strides /
+   Intervals, excluding press-lap warm-up, stationary drill laps with
+   avg speed < 1.5 m/s OR distance < 100 m, and the cool-down lap).
+   Use the FIT lap data from `parse_fit.py` / `build_sub_laps.py`
+   output — filter the laps, then weight pace/HR by lap duration.
+   If no FIT lap structure is available (e.g. manually logged or
+   stream-only run): fall back to a Strava-GAP-only framing
+   ("solider Z2-Pace auf welligem Heim-Loop") without quoting
+   raw averages. NEVER cite the full-activity avg pace alongside a
+   GAP claim if the activity contains drills — the GAP correction
+   does not strip the stationary drill laps.
 
 ### Pace anchor on hilly sessions (≥30 m/km)
 
@@ -257,6 +278,16 @@ elevation_m = sv_detail.get("total_elevation_gain")
 ```
 Use that number. If it's missing or 0, describe qualitatively
 ("rolling forest path", "easy profile") and omit the number entirely.
+
+**Push-time enforcement:** `strava_apply.py` runs an elevation-drift
+check against Strava's `total_elevation_gain` before pushing the
+description (regex-extracts any "260 Höhenmeter" / "117 m positiver
+Anstieg" / "388 m D+" / "260 m insgesamt" citations and refuses the
+push when drift exceeds 30 m absolute AND 20 % relative). If the
+push is refused: either re-author the description with Strava's
+actual value, or drop the elevation citation. Override via
+`--skip-elevation-check` is reserved for explicit emergencies and
+should be documented.
 
 ### Step 3 — optional video tie-in
 Read `config/exercise_log.md`. If there is a log entry whose date matches
