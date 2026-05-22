@@ -8,6 +8,7 @@ from app.graphs.main_daily_planner.workout_parser import (
     VALID_TAGS,
     VALID_TYPES,
     parse_workouts,
+    prepare_workout_events,
 )
 
 _MINIMAL = {
@@ -104,3 +105,61 @@ def test_missing_required_field_raises(missing_field: str) -> None:
 def test_invalid_type_raises() -> None:
     with pytest.raises(ValueError, match="invalid type"):
         parse_workouts([_full(type="Swim")])
+
+
+# ---------------------------------------------------------------------------
+# prepare_workout_events — workout_doc payload shape
+# ---------------------------------------------------------------------------
+
+
+def test_endurance_event_has_no_workout_doc() -> None:
+    """Run/Ride events must not carry workout_doc.
+
+    intervals.icu parses the description (intervals_icu syntax) server-side
+    and writes the resulting structured steps into workout_doc itself —
+    Garmin sync then reads those steps. A pre-populated workout_doc
+    (even just {"locales": []}) is treated as authoritative and suppresses
+    the parsing, leaving Garmin with a single "Run Until Lap Press" step.
+    Regression guard for the 2026-05-19 → 2026-05-22 incident.
+    """
+    for endurance_type in ("Run", "Ride"):
+        events = prepare_workout_events(
+            [
+                {
+                    "type": endurance_type,
+                    "name": "Testlauf",
+                    "duration_min": 45,
+                    "workout_type": "EASY",
+                    "intensity": "Z2",
+                    "intervals_icu": "Warmup\n- Easy 5m press lap\n\nMain\n- 30m 76-84% LTHR\n\nCool-down\n- Cool-down 5m press lap",
+                }
+            ],
+            date="2026-01-01",
+        )
+        assert len(events) == 1
+        assert "workout_doc" not in events[0], (
+            f"{endurance_type} event must not pre-populate workout_doc"
+        )
+
+
+def test_non_endurance_event_has_workout_doc_with_locales() -> None:
+    """WeightTraining / Workout events keep explicit workout_doc with locales=[]
+    to suppress intervals.icu's language-detection heuristic (Tss! → ja)."""
+    events = prepare_workout_events(
+        [
+            {
+                "type": "WeightTraining",
+                "name": "Ninja",
+                "duration_min": 45,
+                "workout_type": "WORKOUT",
+                "intensity": "medium",
+                "structure": [],
+                "description": "Some text",
+            }
+        ],
+        date="2026-01-01",
+    )
+    assert len(events) == 1
+    doc = events[0].get("workout_doc")
+    assert doc is not None
+    assert doc.get("locales") == []

@@ -206,12 +206,13 @@ def prepare_workout_events(workouts: list[dict], date: str) -> list[dict]:
         extra: dict = {}
         if is_endurance:
             description = (intervals_icu or structure_text) or ""
-            # Same defensive locales=[] for endurance — protects against a
-            # future heuristic change on intervals.icu mis-flagging the
-            # German description / intervals_icu text. The server still
-            # parses our intervals_icu syntax to build the steps; we just
-            # override the locales hint.
-            extra["workout_doc"] = {"locales": []}
+            # Do NOT set workout_doc for endurance. intervals.icu parses the
+            # description text (intervals_icu syntax) server-side and writes
+            # the resulting structured steps into workout_doc itself — which
+            # the Garmin sync then reads. Sending even a minimal
+            # workout_doc={"locales": []} suppresses that parsing (server
+            # treats our doc as authoritative) and Garmin ends up with a
+            # single "Run Until Lap Press" step.
         else:
             structure = w.get("structure") or []
             if structure:
