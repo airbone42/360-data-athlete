@@ -80,16 +80,29 @@ def _extract_elevation_citations(desc: str) -> list[int]:
 # lesson 2) requires zone language only, not absolute BPM. The
 # validator refuses pushes that quote raw HR numbers regardless of
 # whether they came from the agent or a re-authored block.
+#
+# Drift incident pattern that motivated the v2 patterns (2026-05-23):
+# the leaky description carried "HR zwischen 124 und 132" and
+# "(+0,5 bpm)". The v1 patterns missed both — "zwischen" sits between
+# `HR` and the digit, and "0,5 bpm" carries a decimal/comma the
+# integer-only delta pattern didn't accept. v2 closes both gaps by
+# allowing up to 3 connector words between the HR keyword and the
+# digit, and by tolerating decimal/comma forms before the `bpm` suffix.
 _HR_PATTERNS: list[re.Pattern[str]] = [
-    # "132 bpm", "132bpm"
-    re.compile(r"\b(\d{2,3})\s*bpm\b", re.IGNORECASE),
-    # "HR 132", "max HR 137", "avg HR 132", "Herzfrequenz 132"
+    # Any number (int or decimal, optional sign) adjacent to `bpm`:
+    # "132 bpm", "132bpm", "+2 bpm", "−5 bpm", "+0,5 bpm", "0.5bpm"
+    re.compile(r"[+\-−]?\s*\d+(?:[.,]\d+)?\s*bpm\b", re.IGNORECASE),
+    # HR / HF / Herzfrequenz / heart rate keyword followed by a 2-3
+    # digit number — directly, with `:`/`=`, or with up to 3 connector
+    # words ("HR zwischen 124", "HR um die 132", "HR von 124", "max HR
+    # 137 of 139", "avg HR 132", "Herzfrequenz 132", "HR-Bereich 130").
     re.compile(
-        r"\b(?:max\s*|avg\s*|durchschnittliche?\s*|average\s*)?(?:HR|HF|Herzfrequenz|heart\s*rate)\s*[:=]?\s*(\d{2,3})\b",
+        r"\b(?:max\s*|avg\s*|durchschnittliche?\s*|average\s*)?"
+        r"(?:HR|HF|Herzfrequenz|heart\s*rate)"
+        r"(?:\s*[:=\-]\s*|\s+(?:\w+\s+){0,3})"
+        r"(\d{2,3})\b",
         re.IGNORECASE,
     ),
-    # "+2 bpm" / "−5 bpm" delta citations
-    re.compile(r"[+\-−]\s*(\d{1,3})\s*bpm\b", re.IGNORECASE),
 ]
 
 
@@ -207,10 +220,35 @@ def _validate_description(desc: str) -> None:
             file=sys.stderr,
         )
         sys.exit(2)
-    if desc.count(INSIGHTS_ANCHOR) > 1:
+    anchor_count = desc.count(INSIGHTS_ANCHOR)
+    if anchor_count > 1:
         print(
             f"error: description contains '{INSIGHTS_ANCHOR}' more than once — "
             "would duplicate the insights block",
+            file=sys.stderr,
+        )
+        sys.exit(2)
+    # Footer-integrity check (added 2026-05-23): the canonical footer
+    # suffix carries the brand line + project URL and serves as the
+    # idempotency anchor for re-pushes. A push that drops it (e.g.
+    # because the briefing or agent collapsed the footer to just
+    # "by 360° Data Athlete" without the URL) breaks brand attribution
+    # AND idempotency. The boundary check enforces the canonical
+    # suffix's presence whenever the description is non-empty.
+    #
+    # Drift incident pattern: a re-push briefing carried the
+    # abbreviated footer "by 360° Data Athlete" — the agent followed
+    # the briefing and published without the project URL. Followers
+    # lost the attribution; next re-push lost its idempotency anchor.
+    if desc.strip() and anchor_count == 0:
+        print(
+            f"error: description missing canonical footer suffix "
+            f"'{INSIGHTS_ANCHOR}'. Strava-Publisher footers carry brand "
+            f"attribution + idempotency anchor — composing the body "
+            f"without the configured suffix (settings."
+            f"strava_publisher_footer_suffix) breaks both. Re-author "
+            f"with the canonical footer or set "
+            f"STRAVA_PUBLISHER_FOOTER_ENABLED=false explicitly.",
             file=sys.stderr,
         )
         sys.exit(2)
