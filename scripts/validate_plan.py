@@ -907,6 +907,87 @@ def check_intervals_repeat_block_adjacency(workouts: list[dict], ctx: Context) -
     return findings
 
 
+def check_intervals_repeat_press_lap(workouts: list[dict], ctx: Context) -> list[Finding]:
+    """R015 — Interval-recovery steps inside a repeat block may not be press_lap.
+
+    `press lap` makes a step athlete-controlled (athlete presses the lap
+    button to advance). That is the correct pattern for **warm-up** and
+    **cool-down** (HF-Drift / kalter Start, athlete decides when to start
+    the main set), but NOT for **interval-recovery** between repeats
+    (e.g. Trab-Pause zwischen Threshold-Reps oder Stride-Recoveries).
+
+    Inside a repeat block, every step needs a defined duration so the
+    timer advances deterministically; otherwise the recovery becomes a
+    lottery and the entire repeat structure loses its prescribed
+    spacing.
+
+    Drift incident pattern: A Long-Z2 plan had `Optional Surges 3x`
+    followed by `- Stride 25s 80%` and `- Easy 90s press lap`. The
+    `press lap` on the recovery caused the timer to wait for a manual
+    lap-press between strides, instead of running the prescribed 90s
+    Z1-Trab. The athlete spotted the inconsistency before the run.
+
+    Rule: lines inside a repeat block (items starting with `- ` after a
+    `Nx` header) may not contain the case-insensitive substring
+    `press lap`.
+    """
+    REPEAT_HEADER_RE = re.compile(r"^\s*(?:[A-Za-zÄÖÜäöüß0-9 _]+\s+)?(\d+)x\s*$", re.IGNORECASE)
+    PRESS_LAP_RE = re.compile(r"press\s*lap", re.IGNORECASE)
+    findings = []
+    for w in workouts:
+        icu = w.get("intervals_icu") or ""
+        if not icu.strip():
+            continue
+        lines = icu.split("\n")
+        idx = 0
+        while idx < len(lines):
+            line = lines[idx].rstrip()
+            m = REPEAT_HEADER_RE.match(line)
+            if not m:
+                idx += 1
+                continue
+            # Found a repeat header — walk subsequent `-` items until a blank
+            # line or non-dash line.
+            header_text = line.strip()
+            body_idx = idx + 1
+            # Skip a single blank line right after the header — R013 catches
+            # that as a parser bug separately; here we still want to detect
+            # press_lap if items follow further down.
+            while body_idx < len(lines) and lines[body_idx].strip() == "":
+                body_idx += 1
+            while body_idx < len(lines):
+                body_line = lines[body_idx].rstrip()
+                stripped = body_line.strip()
+                if not stripped:
+                    break  # blank line ends the repeat body
+                if not stripped.startswith("-"):
+                    break  # non-dash line ends the repeat body
+                if PRESS_LAP_RE.search(stripped):
+                    findings.append(Finding(
+                        rule_id="R015",
+                        severity=SEVERITY_ERROR,
+                        workout=_workout_name(w),
+                        message=(
+                            f"`press lap` inside repeat block `{header_text}` — "
+                            f"item: `{stripped}`. Interval-recovery must have a "
+                            f"defined duration; press_lap turns the timer into "
+                            f"an athlete-controlled wait and breaks repeat "
+                            f"spacing."
+                        ),
+                        suggestion=(
+                            "Replace `press lap` with a deterministic recovery "
+                            "spec: `Easy {N}s Z1 HR` (locker traben) for a "
+                            "fixed-duration trab between Strides/intervals, or "
+                            "an explicit zone target. `press lap` is reserved "
+                            "for warm-up/cool-down (athlete-controlled start of "
+                            "the next block, OK due to HF-Drift)."
+                        ),
+                    ))
+                body_idx += 1
+            idx = body_idx
+    return findings
+
+
 def check_easy_run_conservatism(workouts: list[dict], ctx: Context) -> list[Finding]:
     """R014 — Easy/Z2-Run Conservatism Guard.
 
@@ -1136,6 +1217,7 @@ RULES: list[Callable[[list[dict], Context], list[Finding]]] = [
     check_intervals_repeat_block_adjacency,
     check_easy_run_conservatism,
     check_weekly_hardreize_cap,
+    check_intervals_repeat_press_lap,
 ]
 
 
