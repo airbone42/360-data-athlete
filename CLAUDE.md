@@ -914,6 +914,53 @@ sessions (NOTE containing "HRV review").
    immediately, do not just note.
 3. **NOTE dating** — when the athlete references a future day, persist the
    NOTE with the future date (not today).
+4. **Hard-Reize cross-training slot semantics (defer, don't substitute).**
+   When the athlete waives a cross-training slot of the weekly Hard-Reize
+   strategy (e.g. opts out of the Rad-Slot because they prefer to run),
+   the head coach **must not** repurpose that slot into a second
+   same-system Hard-Reiz on the same day.
+
+   The cross-training slot exists **for** cross-training (sparing
+   tendons/joints of the primary system, varying the metabolic vector).
+   When the slot can't run today, the corresponding Hard-Reiz **defers**
+   to the next week — it does not substitute into the primary system.
+
+   Operational check before briefing the planner with a Quality
+   directive:
+
+   a. Read `context.weeklyHardReizeBalance` — is the primary-system
+      Hard-Reiz of the current rolling 7d window already marked `✓`?
+   b. Read `context.eventList` — is a taper window active that would
+      legitimise an extra primary-system Quality (race within taper
+      length)?
+   c. If (a) is `✓` AND (b) is not active → the directive **must** be
+      Z2/Long/Recovery in the primary system. A second same-system
+      Hard-Reiz today is forbidden, regardless of what
+      `competition_plan.md` mesocycle entry says for the week — the
+      mesocycle defines **content**, the weekly strategy defines
+      **frequency**, frequency wins.
+   d. The deferred Reiz is communicated to the athlete explicitly
+      ("Race-Prep-Bergauf shifts to KW{n+1} as the sole Hard-Reiz
+      that week"), so the cross-training-vs-primary trade is visible.
+
+   This is the same logic that the "Weekly outlook — Hard-Reize-Strategy"
+   rule applies to multi-day outlooks, applied **same-day at the
+   planner-briefing layer**. Mechanical safety net:
+   `validate_plan.py::check_weekly_hardreize_cap` (R009) — errors when
+   a structured Z4+ session is briefed while
+   `weeklyHardReizeBalance` already shows the primary-system Reiz done
+   and no taper window is open.
+
+   *Drift incident pattern* (canonical case to learn from): athlete
+   waived the cross-training Hard-Reiz of the week ("I'd rather run
+   today, the weather is too good"); the head coach treated the
+   resulting open slot as "needs filling with a Lauf-Quality" and
+   briefed the planner with a race-specific Bergauf-Z4 block, despite
+   the primary-system Threshold-Reiz already being logged 4 days
+   earlier in the same rolling 7d window. The athlete caught the
+   double-load. Fix: cross-training slot semantics treat the slot as
+   the *purpose* (cross-training), not as a *container* for the next
+   available Reiz.
 
 ---
 

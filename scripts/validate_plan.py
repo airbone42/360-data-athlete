@@ -60,6 +60,7 @@ class Context:
     recent_activities: list[dict] = field(default_factory=list)
     sport_settings: list[dict] = field(default_factory=list)
     injury_locks: dict[str, list[str]] = field(default_factory=dict)
+    weekly_hard_reize_balance: str = ""
 
 
 # ─────────────────────────── Helpers ───────────────────────────
@@ -991,6 +992,133 @@ def check_easy_run_conservatism(workouts: list[dict], ctx: Context) -> list[Find
     return findings
 
 
+def check_weekly_hardreize_cap(workouts: list[dict], ctx: Context) -> list[Finding]:
+    """R009 — Weekly Hard-Reize cap (cross-training-slot semantics).
+
+    Errors when today's plan contains structured Z4+ intervals in a system
+    whose Hard-Reiz is already logged in the rolling 7d window per
+    `context.weeklyHardReizeBalance`, with no active taper window to
+    legitimise an extra Quality session.
+
+    Cross-training-slot semantics (CLAUDE.md Pre-planning health check §4):
+    a cross-training slot exists *for* cross-training (sparing
+    tendons/joints, varying the metabolic vector). When the athlete waives
+    the cross-training Reiz of the week, the open slot **defers** to the
+    next week — it does not substitute into the primary system as a
+    second same-system Hard-Reiz.
+
+    Trigger conditions (all must hold for ERROR):
+    1. `ctx.weekly_hard_reize_balance` is present.
+    2. That balance shows `✓` for the workout's system (Run or Ride).
+    3. The workout has a Hard-Reiz signature: `intervals` tag OR
+       intervals_icu text contains `Z4 HR`/`Z5 HR` OR `% LTHR` ≥ 95.
+    4. No active taper window detected in `athlete_status` or
+       `training_paradigms` (regex: `taper\\s+(active|aktiv|window\\s*open)`
+       OR `RACE_A\\s*in\\s*\\d+d` with `d ≤ taper_length_default`).
+
+    The rule is opt-in via the presence of `weeklyHardReizeBalance` —
+    athletes without a defined Hard-Reize-Strategy (signal absent or
+    empty) bypass this check silently.
+
+    Drift incident pattern: athlete waived cross-training Hard-Reiz of
+    the week ("rather run today, weather is too good"); head coach
+    repurposed the open slot into a second Run-Z4 Quality despite
+    Run-Threshold already logged earlier in the same rolling 7d window.
+    The athlete caught the double-load.
+    """
+    findings = []
+    balance = (ctx.weekly_hard_reize_balance or "").strip()
+    if not balance:
+        return findings  # signal absent → rule does not fire (opt-in)
+
+    # Parse the balance string for completed Hard-Reize per system.
+    run_done = False
+    ride_done = False
+    for line in balance.splitlines():
+        s = line.strip()
+        if s.startswith("✓") and "run" in s.lower():
+            run_done = True
+        elif s.startswith("✓") and ("bike" in s.lower() or "ride" in s.lower()):
+            ride_done = True
+
+    if not (run_done or ride_done):
+        return findings  # nothing in the week to cap against
+
+    # Taper-window override: if athlete_status / training_paradigms / coaching
+    # notes acknowledge an active taper, the cap is waived for race-spec work.
+    taper_re = re.compile(
+        r"\btaper\s+(?:active|aktiv|window\s*(?:open|aktiv))\b|"
+        r"\brace[-\s]?week\s+(?:active|aktiv)\b",
+        re.IGNORECASE,
+    )
+    if taper_re.search(ctx.athlete_status or "") or taper_re.search(ctx.training_paradigms or ""):
+        return findings
+
+    HARD_SIG_RE = re.compile(
+        r"\bZ4\s*HR\b|\bZ5\s*HR\b|(?<!\d)(?:9[5-9]|1\d\d)\s*%\s*LTHR\b",
+        re.IGNORECASE,
+    )
+
+    for w in workouts:
+        w_type = (w.get("type") or "")
+        tags = [str(t).lower() for t in (w.get("tags") or [])]
+        intervals_text = w.get("intervals_icu") or ""
+        coaching_notes = (w.get("coaching_notes") or "")
+
+        # Per-workout taper acknowledgment (head coach documents the override)
+        if taper_re.search(coaching_notes):
+            continue
+
+        is_intervals = "intervals" in tags
+        is_z4_plus = bool(HARD_SIG_RE.search(intervals_text))
+        if not (is_intervals or is_z4_plus):
+            continue
+
+        is_run = w_type in {"Run", "VirtualRun"}
+        is_ride = w_type in {"Ride", "VirtualRide"}
+
+        if is_run and run_done:
+            findings.append(Finding(
+                rule_id="R009",
+                severity=SEVERITY_ERROR,
+                workout=_workout_name(w),
+                message=(
+                    "Second Run Hard-Reiz in rolling 7d — primary-system "
+                    "Hard-Reiz already logged this week per "
+                    "weeklyHardReizeBalance. The cross-training-slot "
+                    "semantics rule (CLAUDE.md Pre-planning health check §4) "
+                    "says: defer, don't substitute."
+                ),
+                suggestion=(
+                    "Move structured Z4+ Run-block to next week as that "
+                    "week's Hard-Reiz. Today: replace with Z2/Long/Recovery "
+                    "in the run, or swap into a Ride-VO2max if the "
+                    "cross-training slot is what's open. If a true taper "
+                    "window is active, document it in athlete_status.md or "
+                    "the workout's coaching_notes (regex: "
+                    "`taper active`/`race-week active`)."
+                ),
+            ))
+        elif is_ride and ride_done:
+            findings.append(Finding(
+                rule_id="R009",
+                severity=SEVERITY_ERROR,
+                workout=_workout_name(w),
+                message=(
+                    "Second Ride Hard-Reiz in rolling 7d — primary-system "
+                    "Hard-Reiz already logged this week per "
+                    "weeklyHardReizeBalance."
+                ),
+                suggestion=(
+                    "Move structured Z4+ Ride-block to next week. Today: "
+                    "replace with Z2/Endurance or swap to Run-Threshold if "
+                    "that slot is open. Taper override via coaching_notes "
+                    "if applicable."
+                ),
+            ))
+    return findings
+
+
 # Plugin registry: register new rules here.
 RULES: list[Callable[[list[dict], Context], list[Finding]]] = [
     check_reps_ceiling,
@@ -1007,6 +1135,7 @@ RULES: list[Callable[[list[dict], Context], list[Finding]]] = [
     check_intervals_step_targets,
     check_intervals_repeat_block_adjacency,
     check_easy_run_conservatism,
+    check_weekly_hardreize_cap,
 ]
 
 
@@ -1059,6 +1188,19 @@ async def _fetch_recent_activities(target_date: str, days_back: int = 30) -> lis
     ]
 
 
+async def _fetch_raw_activities_for_hardreize(target_date: str) -> list[dict]:
+    """Fetch raw activities (rolling 7d) including tags + zone times for R009.
+
+    Returns the unmapped intervals.icu activity dicts (`start_date_local`,
+    `type`, `name`, `tags`, `icu_hr_zone_times`) so the shared helper
+    `_compute_weekly_hard_reize_balance` can detect Hard-Reize per system.
+    """
+    client = IntervalsClient(settings.intervals_icu_athlete_id)
+    end = datetime.fromisoformat(target_date).date()
+    start = end - timedelta(days=7)
+    return await client.get_activities(start.isoformat(), end.isoformat())
+
+
 def _load_injury_locks() -> dict[str, list[str]]:
     """Load injury lock keywords from config/injury_locks.json (or config.example/ fallback)."""
     from app.utils.paths import resolve_config
@@ -1097,6 +1239,14 @@ def load_context(target_date: str, fetch_remote: bool = True) -> Context:
             ctx.recent_activities = asyncio.run(_fetch_recent_activities(target_date))
         except Exception:
             ctx.recent_activities = []
+        try:
+            raw = asyncio.run(_fetch_raw_activities_for_hardreize(target_date))
+            from app.graphs.sub_athlete_context.context_builder import _compute_weekly_hard_reize_balance
+            ctx.weekly_hard_reize_balance = _compute_weekly_hard_reize_balance(
+                raw, datetime.fromisoformat(target_date).date()
+            )
+        except Exception:
+            ctx.weekly_hard_reize_balance = ""
     return ctx
 
 

@@ -28,3 +28,25 @@
 ## Notes
 Keep this file lean. Long-form race reports belong elsewhere (intervals.icu
 notes, training log). This file informs the planner about what's next.
+
+## Mesocycle entries — frequency-veto pattern (recommended)
+
+If you add a per-week mesocycle table that prescribes Hard-Reiz **content**
+(e.g. "Bergauf-Z4 4–5×5–6 min", "Threshold consolidation", "VO2max block"),
+place a one-line frequency-veto reminder next to or beneath the table so
+the head coach can't apply a content row in isolation:
+
+> Frequency-veto: Each mesocycle row above defines **content** of the
+> week's Hard-Reiz, not its **frequency**. Before applying a row, the head
+> coach checks `context.weeklyHardReizeBalance` (rolling 7d, your weekly
+> stimulus strategy from `training_paradigms.md`). If the primary-system
+> Hard-Reiz of the current rolling 7d is already logged AND no cross-
+> training Reiz is still open, the row **defers** to the next week — it
+> does not substitute into the primary system. Mechanical safety net:
+> `validate_plan.py` R009. Rule rationale:
+> `framework/CLAUDE.md` Pre-planning health check §4 (cross-training-slot
+> semantics).
+
+This pattern keeps the "content vs. frequency" distinction visible at the
+point of use and avoids the drift where an open cross-training slot is
+silently turned into a second same-system Hard-Reiz.
