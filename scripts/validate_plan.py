@@ -56,6 +56,7 @@ class Context:
     athlete_static: str = ""
     athlete_status: str = ""
     training_paradigms: str = ""
+    exercise_progressions: str = ""
     recent_notes: list[dict] = field(default_factory=list)
     recent_activities: list[dict] = field(default_factory=list)
     sport_settings: list[dict] = field(default_factory=list)
@@ -907,6 +908,253 @@ def check_intervals_repeat_block_adjacency(workouts: list[dict], ctx: Context) -
     return findings
 
 
+def _parse_exercise_progressions(text: str) -> dict[str, dict]:
+    """Parse ``exercise_progressions.md`` into {name → current-state dict}.
+
+    Returns a mapping where each value carries the documented numeric
+    anchors derived from the most recent ``- **Aktueller Stand**`` line
+    under a ``### <Exercise Name>`` heading:
+
+    - ``hold_s``  — first ``\\d+s Hold`` (or ``\\d+ s Hold``) match
+    - ``weight_kg`` — first ``\\d+(?:[.,]\\d+)? kg`` match
+    - ``reps``    — second integer in a ``\\d+ × \\d+`` (sets × reps)
+    - ``sets``    — first integer in a ``\\d+ × \\d+``
+    - ``per_side`` — whether the ``Aktueller Stand`` line carries
+      ``je Seite`` / ``/Seite`` / ``per side``
+
+    Exercises whose Aktueller Stand reads "unbekannt"/"noch nicht
+    isoliert"/"-" produce a stub with all numeric fields = None. R016
+    skips those silently.
+    """
+    out: dict[str, dict] = {}
+    if not text:
+        return out
+    HEADING_RE = re.compile(r"^###\s+(.+?)\s*$", re.MULTILINE)
+    matches = list(HEADING_RE.finditer(text))
+    for i, m in enumerate(matches):
+        name = m.group(1).strip()
+        body_start = m.end()
+        body_end = matches[i + 1].start() if i + 1 < len(matches) else len(text)
+        body = text[body_start:body_end]
+        # Find Aktueller Stand line
+        stand_match = re.search(
+            r"^\s*-?\s*\*\*Aktueller Stand[^*]*\*\*\s*:?\s*(.*?)$",
+            body,
+            re.MULTILINE,
+        )
+        if not stand_match:
+            continue
+        stand_line = stand_match.group(1).strip()
+        if not stand_line or stand_line.lower().startswith(("unbekannt", "noch nicht", "—", "-")):
+            out[name] = {"sets": None, "reps": None, "weight_kg": None, "hold_s": None, "per_side": False, "raw": stand_line}
+            continue
+        # Parse values from stand_line
+        sets_reps = re.search(r"(\d+)\s*[×xX]\s*(\d+)", stand_line)
+        weight = re.search(r"(\d+(?:[.,]\d+)?)\s*kg\b", stand_line)
+        hold = re.search(r"(\d+)\s*s\s*Hold\b", stand_line)
+        per_side = bool(re.search(r"(?:je\s*Seite|/\s*Seite|per\s*side)", stand_line, re.IGNORECASE))
+        out[name] = {
+            "sets": int(sets_reps.group(1)) if sets_reps else None,
+            "reps": int(sets_reps.group(2)) if sets_reps else None,
+            "weight_kg": float(weight.group(1).replace(",", ".")) if weight else None,
+            "hold_s": int(hold.group(1)) if hold else None,
+            "per_side": per_side,
+            "raw": stand_line,
+        }
+    return out
+
+
+def _parse_workout_exercise_line(line: str) -> dict | None:
+    """Parse a workout-description exercise line into numeric anchors.
+
+    Recognises the conventional shape ``<Name>: <sets>x<reps>[/Seite]
+    [<weight>kg] [Xs Hold] | <rest>``. Returns ``None`` when the line
+    doesn't look like an exercise (no colon, or only metadata).
+    """
+    s = line.strip()
+    if not s or s.startswith(("#", "[", "—", "-", "•")):
+        return None
+    # Expect a leading "<Name>:" — fall through if absent
+    head_match = re.match(r"^([A-Za-zÄÖÜäöüß0-9 ()\-'\.&+/]+?)\s*:\s+(.*)$", s)
+    if not head_match:
+        return None
+    name = head_match.group(1).strip()
+    rest = head_match.group(2)
+    if len(name) < 3 or len(name) > 80:
+        return None
+    sets_reps = re.search(r"(\d+)\s*[xX×]\s*(\d+)", rest)
+    weight = re.search(r"(\d+(?:[.,]\d+)?)\s*kg\b", rest)
+    hold = re.search(r"(\d+)\s*s\s*Hold\b", rest)
+    return {
+        "name": name,
+        "sets": int(sets_reps.group(1)) if sets_reps else None,
+        "reps": int(sets_reps.group(2)) if sets_reps else None,
+        "weight_kg": float(weight.group(1).replace(",", ".")) if weight else None,
+        "hold_s": int(hold.group(1)) if hold else None,
+        "raw": s,
+    }
+
+
+_REGRESSION_EXEMPTION_RE = re.compile(
+    r"\b(?:deload|recovery\s*week|race[-\s]*week|taper|"
+    r"symptom[-\s]*(?:stop|onset)|regression|"
+    r"volumen[-\s]*(?:cut|decke)|"
+    r"rhr[-\s]*(?:drift|anstieg|\+\d|hoch|peak)|"
+    r"joint[-\s]*signal|last[-\s]*cap|cap[-\s]*aktiv|"
+    r"stop[-\s]*kriterium\s*aktiv|"
+    r"hold[-\s]*back\s+wegen|reduziert\s+wegen)\b",
+    re.IGNORECASE,
+)
+
+
+def _match_exercise_name(planned_name: str, documented_names: list[str]) -> str | None:
+    """Match a workout-line name against documented progression headings.
+
+    The plan free-text may carry variants ("Farmer's Hold KB einarmig"
+    vs the heading "Farmer's Hold (KB, einarmig)"). Strategy: exact
+    case-insensitive substring in either direction, then a token-jaccard
+    fallback for variant punctuation.
+    """
+    planned_norm = re.sub(r"[\s,'()\-]+", " ", planned_name).strip().lower()
+    if not planned_norm:
+        return None
+    best = None
+    best_score = 0.0
+    for doc in documented_names:
+        doc_norm = re.sub(r"[\s,'()\-]+", " ", doc).strip().lower()
+        if not doc_norm:
+            continue
+        if planned_norm == doc_norm:
+            return doc
+        if doc_norm in planned_norm or planned_norm in doc_norm:
+            score = min(len(doc_norm), len(planned_norm)) / max(
+                len(doc_norm), len(planned_norm)
+            )
+            if score > best_score:
+                best, best_score = doc, score
+            continue
+        # token-jaccard fallback
+        a = set(planned_norm.split())
+        b = set(doc_norm.split())
+        if not a or not b:
+            continue
+        jacc = len(a & b) / len(a | b)
+        if jacc >= 0.6 and jacc > best_score:
+            best, best_score = doc, jacc
+    return best
+
+
+def check_exercise_regression(workouts: list[dict], ctx: Context) -> list[Finding]:
+    """R016 — Hold-time / load regression on rotation-cadence exercises.
+
+    Catches the silent regression class where today's plan drops a
+    numeric anchor (Hold-Seconds, Weight-kg, Reps) **below** the value
+    documented as ``- **Aktueller Stand**`` in
+    ``config/exercise_progressions.md``, without an explicit
+    regression-justifying keyword in the exercise line or the workout's
+    coaching_notes.
+
+    Anchor for the canonical case: McGill Curl-up was at 8 s Hold per
+    21.05. (athlete-confirmed schmerzfrei RPE 6-7). Today's plan
+    proposed 7 s — silent regression that landed in the pushed event
+    until the athlete spotted it. Root cause was a type-history
+    tag-filter coverage gap: the 21.05.-session was tagged
+    ``legs, plyo, core`` and didn't appear in the
+    ``--tags ninja,grip`` history fetch the specialist relied on.
+
+    Trigger conditions (per exercise line in each workout's
+    description):
+
+    1. A documented Aktueller Stand exists in ``exercise_progressions``
+       for an exercise name matched by ``_match_exercise_name``.
+    2. The planned numeric anchor (hold_s OR weight_kg OR reps) is
+       strictly less than the documented value.
+    3. Neither the line itself nor the workout's coaching_notes
+       contain a regression-exempting keyword (deload / recovery week /
+       taper / symptom / regression / Volumen-Cut / RHR-Drift /
+       joint-signal / last-cap / cap aktiv / monitoring / stop-
+       kriterium / on-cadence halten).
+
+    The "exempt by keyword" path keeps legitimate volume-cuts and
+    joint-cap holds out of the error stream — they must be visible in
+    the plan to be respected.
+    """
+    documented = _parse_exercise_progressions(ctx.exercise_progressions or "")
+    if not documented:
+        return []
+    doc_names = list(documented.keys())
+    findings: list[Finding] = []
+    for w in workouts:
+        desc = w.get("description") or ""
+        if not desc:
+            continue
+        coaching_notes = w.get("coaching_notes") or ""
+        notes_exempt = bool(_REGRESSION_EXEMPTION_RE.search(coaching_notes))
+        for raw_line in desc.split("\n"):
+            parsed = _parse_workout_exercise_line(raw_line)
+            if not parsed:
+                continue
+            match_name = _match_exercise_name(parsed["name"], doc_names)
+            if not match_name:
+                continue
+            doc = documented[match_name]
+            # Check each numeric anchor for a regression
+            regressions: list[tuple[str, float, float]] = []
+            for key in ("hold_s", "weight_kg", "reps"):
+                doc_val = doc.get(key)
+                planned_val = parsed.get(key)
+                if doc_val is None or planned_val is None:
+                    continue
+                if planned_val < doc_val:
+                    regressions.append((key, planned_val, doc_val))
+            if not regressions:
+                continue
+            # Line-level exemption check (e.g. "Last-Cap @ 9 kg", "Cap aktiv")
+            line_exempt = bool(_REGRESSION_EXEMPTION_RE.search(parsed["raw"]))
+            if notes_exempt or line_exempt:
+                # Document as INFO so the regression is still visible
+                # in the audit trail without blocking the push.
+                tags_msg = ", ".join(
+                    f"{k} {planned}<{doc_val}" for k, planned, doc_val in regressions
+                )
+                findings.append(Finding(
+                    rule_id="R016",
+                    severity=SEVERITY_INFO,
+                    workout=_workout_name(w),
+                    message=(
+                        f"Documented regression on '{match_name}' "
+                        f"({tags_msg}) accepted via exemption keyword "
+                        f"({'workout coaching_notes' if notes_exempt else 'exercise line'})."
+                    ),
+                    suggestion="No action required — keep the exemption phrase visible.",
+                ))
+                continue
+            tags_msg = ", ".join(
+                f"{k} {planned}<{doc_val}" for k, planned, doc_val in regressions
+            )
+            findings.append(Finding(
+                rule_id="R016",
+                severity=SEVERITY_ERROR,
+                workout=_workout_name(w),
+                message=(
+                    f"Silent regression on '{match_name}': "
+                    f"{tags_msg} (documented Aktueller Stand: "
+                    f"{doc.get('raw') or '?'}). The plan drops a value "
+                    f"below the documented current state without a "
+                    f"regression-justifying keyword."
+                ),
+                suggestion=(
+                    "Either (a) raise the planned value to the documented "
+                    "Aktueller Stand, or (b) add an explicit reason to "
+                    "the exercise line / workout coaching_notes — "
+                    "e.g. 'Last-Cap aktiv', 'RHR-Drift +X bpm', "
+                    "'Volumen-Cut wegen Y', 'Symptom-Stop seit Datum', "
+                    "'Deload', 'Recovery week active', 'Taper window'."
+                ),
+            ))
+    return findings
+
+
 def check_intervals_repeat_press_lap(workouts: list[dict], ctx: Context) -> list[Finding]:
     """R015 — Interval-recovery steps inside a repeat block may not be press_lap.
 
@@ -1218,6 +1466,7 @@ RULES: list[Callable[[list[dict], Context], list[Finding]]] = [
     check_easy_run_conservatism,
     check_weekly_hardreize_cap,
     check_intervals_repeat_press_lap,
+    check_exercise_regression,
 ]
 
 
@@ -1306,6 +1555,7 @@ def load_context(target_date: str, fetch_remote: bool = True) -> Context:
         athlete_static=_read_config("athlete_static.md"),
         athlete_status=_read_config("athlete_status.md"),
         training_paradigms=_read_config("training_paradigms.md"),
+        exercise_progressions=_read_config("exercise_progressions.md"),
         injury_locks=_load_injury_locks(),
     )
     if fetch_remote:
