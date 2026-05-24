@@ -114,6 +114,33 @@ When the plan contains multiple sessions and one is plyo or strength
 This order is non-negotiable, regardless of HRV, intensity or other
 factors.
 
+## Complementary split — one workout per focus (preference-gated)
+When `config/athlete_preferences.md` requests per-focus tracking of
+complementary work, **do not bundle** the day's complementary training
+into a single `WeightTraining`/`Workout` directive. Instead emit **one
+directive per independent focus** (e.g. shoulder, core, grip), each with:
+- a distinct, descriptive `name` (the focus is the anchor for tracking,
+  so two splits never share a `name`),
+- the single matching focus tag (`grip` / `core` / `upperbody` / …),
+- its own short `coaching_notes` for the specialist.
+
+Rationale (generic): when an athlete squeezes complementary work into a
+short slot, a single bundled session is logged as "not done" the moment
+one part is missed — splitting lets partial completion track cleanly and
+the unfinished focus stays visible for a later slot.
+
+**Two guards:**
+1. **Only split independent foci.** A focus the athlete files as an
+   **atomic block** in `athlete_static.md` ("ALLE Übungen zusammen" /
+   "atomar") stays **one** directive — the split separates independent
+   foci, never the exercises inside an atomic block.
+2. **Only split when multiple foci are actually planned today.** A
+   single-focus complementary day stays one directive.
+
+The per-focus directives are scheduled back-to-back (no interference
+gap between non-endurance blocks), so they read as one slot the athlete
+can work through or partially complete.
+
 Decide WHAT is trained — a workout specialist will produce the detailed
 structure afterwards.
 

@@ -159,6 +159,12 @@ def _interference_gap_min(prev: dict, curr: dict) -> int:
     WeightTraining/Workout → Run/Ride:
       - leg-focused (legs/beine/plyo tags): 360 min (6h)
       - other: 180 min (3h)
+    WeightTraining/Workout → WeightTraining/Workout: 0 min (adjacent).
+      Complementary sub-blocks (e.g. a per-focus split into shoulder /
+      core / grip) carry no metabolic or neuromuscular interference that
+      would justify spacing them apart — they are meant to be done in one
+      slot, back-to-back. The 2h default exists for endurance interactions,
+      not for stacking complementary blocks across the day.
     All other transitions: 120 min (2h default).
     """
     if prev.get("type") in _STRENGTH_TYPES and curr.get("type") in _ENDURANCE_TYPES:
@@ -166,6 +172,8 @@ def _interference_gap_min(prev: dict, curr: dict) -> int:
         if prev_tags & _LEG_TAGS:
             return 360
         return 180
+    if prev.get("type") in _STRENGTH_TYPES and curr.get("type") in _STRENGTH_TYPES:
+        return 0
     return 120
 
 

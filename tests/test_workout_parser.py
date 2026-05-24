@@ -163,3 +163,44 @@ def test_non_endurance_event_has_workout_doc_with_locales() -> None:
     doc = events[0].get("workout_doc")
     assert doc is not None
     assert doc.get("locales") == []
+
+
+def test_complementary_split_blocks_are_adjacent() -> None:
+    """A per-focus complementary split (e.g. shoulder / core / grip) carries
+    no interference gap — the blocks are scheduled back-to-back so they read
+    as one slot the athlete can work through or partially complete."""
+    events = prepare_workout_events(
+        [
+            {"type": "Workout", "name": "Schulter", "duration_min": 15,
+             "workout_type": "WORKOUT", "tags": ["upperbody"]},
+            {"type": "Workout", "name": "Core", "duration_min": 15,
+             "workout_type": "WORKOUT", "tags": ["core"]},
+            {"type": "Workout", "name": "Grip", "duration_min": 10,
+             "workout_type": "WORKOUT", "tags": ["grip"]},
+        ],
+        date="2026-01-01",
+    )
+    starts = [e["start_date_local"] for e in events]
+    # 06:00 → +15m → 06:15 → +15m → 06:30 (no 2h interference gap stacked in)
+    assert starts == [
+        "2026-01-01T06:00:00",
+        "2026-01-01T06:15:00",
+        "2026-01-01T06:30:00",
+    ]
+
+
+def test_strength_to_run_keeps_interference_gap() -> None:
+    """Strength → Run still gets the 3h (no leg tags) interference gap —
+    the adjacency rule only applies between two non-endurance blocks."""
+    events = prepare_workout_events(
+        [
+            {"type": "Workout", "name": "Grip", "duration_min": 20,
+             "workout_type": "WORKOUT", "tags": ["grip"]},
+            {"type": "Run", "name": "Easy", "duration_min": 40,
+             "workout_type": "EASY", "intensity": "Z2"},
+        ],
+        date="2026-01-01",
+    )
+    starts = sorted(e["start_date_local"] for e in events)
+    # 06:00 strength → +20m +180m gap → 09:20 run
+    assert starts == ["2026-01-01T06:00:00", "2026-01-01T09:20:00"]
