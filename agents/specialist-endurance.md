@@ -152,8 +152,29 @@ minutes, see athlete memory `feedback_intervals_icu_distance_format`):
 ```
 Strides 4x
 - Stride 20s 95%
-- Easy 90s Z1
+- Easy 90s Z1 HR
 ```
+
+**Within-block ordering is athlete-configurable.** When `config/`
+documents a preferred end-of-run stride-block ordering, follow it. Two
+valid patterns:
+
+- *Stride-first* (default above): `Stride` then `Easy` recovery,
+  repeated — ends on a recovery rep.
+- *Recovery-first* (when documented): `Easy` recovery then `Stride`,
+  repeated — each stride gets a short jog lead-in (mental + physiological
+  prep before every rep, incl. the first after the main set), and the
+  block **ends on the last stride**. No trailing recovery rep is added —
+  the cool-down absorbs it. Example:
+  ```
+  Strides 5x
+  - Easy 90s Z1 HR
+  - Stride 20s 90%
+  ```
+  This recovery-first / no-trailing-recovery pattern applies to
+  **end-of-run stride finishers only**, never to activation strides at
+  the *start* of a session (before intervals/tempo), where the standard
+  stride-first activation ordering stays.
 
 ---
 
