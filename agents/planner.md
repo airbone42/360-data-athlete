@@ -178,18 +178,12 @@ ninja, grip, upperbody`
 Set `duration_range` as the allowed range [min, max] based on your load
 management. The specialist may decide freely within this range.
 
-**Derive endurance duration from a documented phase band when one
-exists.** If `config/` documents per-phase run-duration bands (an
-easy/Z2 band and a long-run progression tied to the CTL/build phase),
-the planner sets `duration_min` / `duration_range` from that band for
-the current phase plus the weekly-volume budget — **not** from a per-day
-default that drifts toward a comfortable middle value. The long run is
-the primary volume vehicle; weekly-volume growth runs through it, not
-through inflating the easy days. A documented green-wellness floor
-(e.g. raise the easy-run floor when readiness is green and no limiter
-flag is set) is applied as written, gated by any documented
-injury-limiter signal. Absent a documented band, fall back to
-load-management judgment as above.
+**When `config/` documents endurance-duration rules** (per-phase bands,
+volume-distribution preferences, wellness-gated floors), read and apply
+them as written — they are athlete-specific and override a generic
+per-day default. The planner reads `config/` itself; the concrete
+duration logic, including how weekly volume is distributed across easy
+vs. long runs, lives there, not here.
 
 Empty `workouts` list = rest day.
 
