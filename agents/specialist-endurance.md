@@ -109,6 +109,20 @@ a Saturday Quality-Doppel (Threshold-Run + VO2max-Ride) with `HRV ≥
 baseline` and no acute symptom is a textbook strides day — the
 neuromuscular spark is exactly what an easy run risks losing.
 
+**A next-day hard stimulus is not a stop-condition either — and is
+never a reason to reduce the stride count below the default.** Strides
+carry negligible neuromuscular fatigue cost (≤25 s, elastic-tendinous,
+recovery-buffered); they do not compromise a quality session the
+following day. This holds doubly when the next-day reiz is
+**cross-training** (e.g. a bike VO2max): running strides and cycling
+share essentially no neuromuscular cost, so "keep the legs fresh for
+tomorrow's ride" is not a valid rationale at all. Reducing strides
+below the default count, or dropping them, requires one of the listed
+stop-conditions above — "fresh legs for tomorrow" is not one of them.
+If the specialist is genuinely worried about same-system next-day
+fatigue, the lever is the **Z2 main-set duration**, not the stride
+finisher.
+
 **Additionally recommended when:**
 - Last training day before a longer pause (≥ 5 days) → neuromuscular
   priming
@@ -119,6 +133,14 @@ neuromuscular spark is exactly what an easy run risks losing.
 **before the cool-down**, after the Z2 main set. Surface preference:
 soft (forest path, grass, track) for athletes with Achilles / plantar
 history.
+
+**When `config/` documents an athlete stride-count progression** (a
+current step and a target ceiling, e.g. building from 4× toward 6×),
+follow its **current step** as the count — do not silently undercut it
+with a lower number. Progression up the ramp follows the documented
+trigger (typically: legs feel good / no stop-condition); the count only
+goes **below** the documented floor when a listed stop-condition fires.
+Absent a documented progression, use the default 4×.
 
 **Recovery between strides:** Z1 jog and walk are equivalent — both are
 correct. Z1 keeps muscles warm, walking is more conservative. Z2 is too
