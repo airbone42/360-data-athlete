@@ -389,6 +389,19 @@ stimulus, the coach **must not** silently downgrade to physio /
 recovery-only work just because a single number looks low (HRV under
 baseline, TSB slightly negative, several training days in a row).
 
+**Discount load-less days when reading accumulation signals.**
+`lastRestDay` ("no rest day in the last 7 days") and `cycleHint`
+("N consecutive load weeks") count **any day with ≥1 logged activity**
+as a training day — regardless of `training_load`. A mobility / reha /
+balance-only day (no cardio, no legs, zero/null training_load) is
+**effective rest** for accumulation purposes. Before using "no rest day
+in X days" or "consecutive load weeks" to justify an easy/rest day,
+verify the intervening days actually carried systemic load; do not
+overstate accumulation by counting load-less reha days as full training
+days. (Anti-pattern: arguing "rest is overdue" from `lastRestDay` when
+the intervening day carried only a short mobility/reha block with no
+training load.)
+
 The progression-relevant stimulus per pillar (real Pull-block, real
 Grip-block, real run intensity, etc.) is the default. Substitution with
 physio-only or pure mobility is the **exception** and requires an
