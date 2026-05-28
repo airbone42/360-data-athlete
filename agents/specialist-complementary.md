@@ -474,6 +474,60 @@ limit named by the **athlete** (source marked in the directive). If
 yes: OK. If no (= planner estimate): rephrase to an athletic
 justification or remove it.
 
+### Duration estimation — bilateral and isometric blocks (MANDATORY)
+
+Atomic physio / stability blocks (Side Plank, McGill Curl-up,
+Stir-the-Pot, Bird Dog, Pallof Press, Dead Bug, SL RDL, Step-up,
+unilateral KB work) are typically **bilateral** (`per_side: true`)
+and many of them are **isometric with explicit hold-time** or carry
+slow tempo (e.g. 3-0-3, 2-0-2). Both factors break naive
+"reps × 2 s = work time" estimates.
+
+**Compute `duration_note` bottom-up from work time + rest time per
+exercise — never trust the planner's `duration_min` as a sanity
+check.** A 4-exercise atomic Schicht-D block with all bilateral
+holds can easily land at 25–30 min in reality while looking like
+"only 8 minutes" on the directive.
+
+**Per-exercise time formula:**
+
+| Exercise type | Work time per set | Multiplier |
+|---|---|---|
+| Isometric hold (Side Plank Abd, Bird Dog Hold, Plank, L-Sit) | `hold_s` | × `per_side` (× 2 if bilateral) |
+| Rep-based with explicit tempo (Stir-the-Pot 3-0-3, McGill 8s hold) | `reps × rep_seconds` | × `per_side` |
+| Rep-based without tempo (Side Plank Drehung 3×8/side) | `reps × 3s` (default tempo) | × `per_side` |
+| Carry / Farmer Hold (KB Suitcase, Farmer's Hold, Towel Hold) | `hold_s` | × `per_side` |
+
+**Per-set transition + rest:**
+- 30 s between sets (default)
+- 60–90 s between **exercises** for heavier iso (Farmer ≥27.5 kg,
+  L-Sit ≥30 s)
+- For Side Plank position switches add **20 s side-switch** per set
+
+**Worked example — Schicht D atomic:**
+
+```
+WU:                                                          ~2 min
+Side Plank Abd 3×35s/side:   3 × 35s × 2  = 210s + rests  ≈ 5 min
+Side Plank Drehung 3×8/side: 3 × 8 × 3s × 2 = 144s + rests ≈ 5 min
+Stir-the-Pot 3×6/dir 3-0-3:  3 × 6 × 6s × 2 = 216s + rests ≈ 5 min
+McGill 3×10/side 8s Hold:    3 × 10 × 8s × 2 = 480s + rests ≈ 11 min
+CD:                                                          ~1 min
+                                                       TOTAL ≈ 29 min
+```
+
+A directive of `duration_min: 8` for this block is **wrong** —
+specialist MUST either (a) match reality bottom-up and override
+`duration_min` with a longer figure plus a one-line `duration_note`
+("bilateral × 4 exercises with 8 s holds — realistic 28–30 min"),
+or (b) push back to the planner via the orchestrator when the gap
+exceeds factor 1.5.
+
+**Drift incident pattern:** Athlete completed a "9 min" Schicht-D
+session in ~30 min — bilateral × isometric-hold compounding was
+not modelled. The fix is bottom-up estimation per exercise, not a
+flat multiplier on the planner number.
+
 ## 📹 Video form-check recommendation (MANDATORY check)
 
 `planningConstraints` already contains the pre-computed **film-tip
