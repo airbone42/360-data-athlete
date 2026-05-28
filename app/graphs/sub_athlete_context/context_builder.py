@@ -59,6 +59,9 @@ def build_context(state: AthleteContextState) -> dict:
     hrv_baseline, hrv_deviation, hrv_context = _compute_hrv_baseline(
         wellness_history, hrv, today
     )
+    rhr_baseline, rhr_deviation, rhr_context = _compute_rhr_baseline(
+        wellness_history, rhr, today
+    )
 
     weekly_stats = _compute_weekly_stats(wellness_history, today)
     cycle_hint = _analyze_load_cycle(weekly_stats)
@@ -87,8 +90,19 @@ def build_context(state: AthleteContextState) -> dict:
 
     days_since_intense = _days_since(last_intense, today)
     hrv_cv = _compute_hrv_cv(wellness_history, today)
+
+    hrv_baseline_float_for_signal = float(hrv_baseline) if hrv_baseline != "-" else None
+    rhr_baseline_float_for_signal = float(rhr_baseline) if rhr_baseline != "-" else None
+    combined_overload_signal = _compute_combined_overload_signal(
+        wellness_history,
+        hrv_baseline_float_for_signal,
+        rhr_baseline_float_for_signal,
+        today,
+    )
+
     intensity_readiness = _compute_intensity_readiness(
-        hrv, hrv_baseline, tsb, days_since_intense, hrv_cv
+        hrv, hrv_baseline, tsb, days_since_intense, hrv_cv,
+        combined_overload_signal,
     )
 
     # HRV Forecast & Retrospective Response
@@ -188,6 +202,10 @@ def build_context(state: AthleteContextState) -> dict:
         "ctlDisplay": ctl_display,
         "hrvBaseline": hrv_baseline,
         "hrvDeviation": hrv_deviation,
+        "rhrContext": rhr_context,
+        "rhrBaseline": rhr_baseline,
+        "rhrDeviation": rhr_deviation,
+        "combinedOverloadSignal": combined_overload_signal,
         "sleepTrend": sleep_trend,
         "rhrTrend": rhr_trend,
         "ctlTrend": ctl_trend,
@@ -351,6 +369,119 @@ def _compute_hrv_baseline(
         hrv_context = f"{hrv} ms" if hrv is not None else "-"
 
     return baseline_str, deviation, hrv_context
+
+
+def _compute_rhr_baseline(
+    wellness_history: list[dict], rhr: float | None, today: date
+) -> tuple[str, str | None, str]:
+    """RHR baseline analog to HRV: 90d-median + deviation %.
+
+    Mirrors ``_compute_hrv_baseline`` semantics so RHR drift surfaces in the
+    same shape as HRV drift. Complements the short-window ``_compute_rhr_trend``
+    (3d-vs-3d) which is an early warning, while this long-window baseline is
+    the literature-anchored overload reference (RunnersConnect: +5 bpm vs
+    3-week baseline as robust overload marker — see
+    ``framework/research/hrv-rhr-baseline-methodology.md``).
+
+    Returns ``(baseline_str, deviation_str, rhr_context_str)``. ``deviation``
+    is signed integer percent; ``rhr_context_str`` is the human-readable
+    format used by the planner ("44 bpm (90d-Median: 40 bpm, +10%)").
+    """
+    cutoff = (today - timedelta(days=90)).isoformat()
+    rhr_values = [
+        d["restingHR"]
+        for d in wellness_history
+        if d.get("id", "") >= cutoff and d.get("restingHR") is not None
+    ]
+
+    if not rhr_values:
+        baseline_str = "-"
+        deviation = None
+    else:
+        baseline = median(rhr_values)
+        baseline_str = f"{baseline:.0f}"
+        if rhr is not None and baseline > 0:
+            deviation = f"{(rhr - baseline) / baseline * 100:.0f}"
+        else:
+            deviation = None
+
+    if deviation is not None and rhr is not None:
+        sign = "+" if float(deviation) > 0 else ""
+        rhr_context = (
+            f"{rhr} bpm (90d-Median: {baseline_str} bpm, {sign}{deviation}%)"
+        )
+    else:
+        rhr_context = f"{rhr} bpm" if rhr is not None else "-"
+
+    return baseline_str, deviation, rhr_context
+
+
+def _compute_combined_overload_signal(
+    wellness_history: list[dict],
+    hrv_baseline_float: float | None,
+    rhr_baseline_float: float | None,
+    today: date,
+) -> dict | None:
+    """Combined HRV+RHR overload trigger (Buchheit 2014 + RunnersConnect).
+
+    For each of the last N days, check whether **both** signals fired:
+      - HRV below 90d-median (any negative deviation counts; SWC-based
+        filtering happens elsewhere)
+      - RHR ≥ baseline + 5 bpm (literature-anchored robust overload
+        threshold, more specific than the 3-bpm 7d short-window warning)
+
+    Returns a dict ``{verdict, days, message}`` or ``None`` when neither
+    baseline is available. ``verdict``:
+
+      - ``"deload"``  — 3+ consecutive days both signals fired → deload trigger
+      - ``"watch"``   — 1–2 consecutive days both signals fired → monitor
+      - ``"clear"``   — today is symptom-free
+
+    Reference: ``framework/research/hrv-rhr-baseline-methodology.md``
+    section "RHR and HRV — together or separately?" (Buchheit 2014;
+    RunnersConnect overtraining-resting-heart-rate review).
+    """
+    if hrv_baseline_float is None or rhr_baseline_float is None:
+        return None
+
+    # Walk backward from today; count consecutive days both signals fire.
+    streak = 0
+    for offset in range(0, 7):  # check today + last 6 days
+        d_str = (today - timedelta(days=offset)).isoformat()
+        entry = next((x for x in wellness_history if x.get("id") == d_str), None)
+        if entry is None:
+            # No data for this day → stop streak (do not count gaps as hits)
+            break
+        hrv_val = entry.get("hrv")
+        rhr_val = entry.get("restingHR")
+        if hrv_val is None or rhr_val is None:
+            break
+        hrv_below = hrv_val < hrv_baseline_float
+        rhr_elevated = rhr_val >= rhr_baseline_float + 5
+        if hrv_below and rhr_elevated:
+            streak += 1
+        else:
+            break
+
+    if streak == 0:
+        return {"verdict": "clear", "days": 0, "message": "No combined HRV/RHR overload signal."}
+    if streak >= 3:
+        return {
+            "verdict": "deload",
+            "days": streak,
+            "message": (
+                f"⛔ Combined overload: HRV below baseline AND RHR ≥ +5 bpm "
+                f"for {streak} consecutive days — deload trigger active."
+            ),
+        }
+    return {
+        "verdict": "watch",
+        "days": streak,
+        "message": (
+            f"⚠️ Combined drift watch: HRV below baseline AND RHR ≥ +5 bpm "
+            f"for {streak} day(s) — monitor for deload at 3d."
+        ),
+    }
 
 
 # ── HRV Forecast & Retrospective Response ──────────────────────────
@@ -952,7 +1083,15 @@ def _compute_intensity_readiness(
     tsb: float | str,
     days_since_intense: int,
     hrv_cv: float | None = None,
+    combined_overload_signal: dict | None = None,
 ) -> str:
+    # Combined HRV+RHR overload trumps single-signal logic — when both
+    # autonomic markers fire for 3+ days the readiness is unambiguously red.
+    if combined_overload_signal is not None:
+        verdict = combined_overload_signal.get("verdict")
+        days = combined_overload_signal.get("days", 0)
+        if verdict == "deload":
+            return f"🔴 No — combined HRV/RHR overload ({days}d, deload trigger)"
     if hrv is not None and hrv_baseline != "-":
         baseline_val = float(hrv_baseline)
         if hrv_cv is not None:
@@ -968,6 +1107,14 @@ def _compute_intensity_readiness(
         return "🔴 No — TSB too negative"
     if days_since_intense < 2:
         return "🟡 Too early — last intense session <2 days ago"
+    # "watch" verdict on combined signal surfaces as a soft yellow when other
+    # gates are green — readiness moves from "yes" to "borderline".
+    if (
+        combined_overload_signal is not None
+        and combined_overload_signal.get("verdict") == "watch"
+    ):
+        days = combined_overload_signal.get("days", 0)
+        return f"🟡 Borderline — HRV/RHR drift watch ({days}d)"
     if days_since_intense >= 3:
         return f"🟢 Yes — last intense session {days_since_intense} days ago"
     return "🟡 Borderline — coach's discretion"

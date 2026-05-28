@@ -157,6 +157,16 @@ Our 90-d-median approach is neutral on this: it drifts slowly (~quarterly resolu
    - Reference this doc + the recovery-triggers doc (planned H4)
 4. **`framework/CLAUDE.md` field table** (lines 40, 157): add hint "see `framework/research/hrv-rhr-baseline-methodology.md` for methodology details".
 
+### Implemented (this commit)
+
+5. **`_compute_rhr_baseline()` — 90-d median + signed deviation %.** Mirrors `_compute_hrv_baseline` semantics. Output fields: `rhrBaseline`, `rhrDeviation`, `rhrContext` (formatted "{rhr} bpm (90d-Median: {baseline} bpm, ±{dev}%)"). Complements the short-window `_compute_rhr_trend` (3d-vs-3d) which stays as an early-warning layer with finer granularity.
+
+6. **`_compute_combined_overload_signal()` — combined HRV+RHR trigger.** Walks backward from today and counts consecutive days where **both** signals fire (HRV below 90d-median AND RHR ≥ baseline + 5 bpm, the literature-anchored robust threshold). Returns `{verdict, days, message}`:
+   - `clear` — today symptom-free
+   - `watch` — 1–2 consecutive days both signals fire
+   - `deload` — 3+ consecutive days both signals fire → readiness flips red
+7. **`_compute_intensity_readiness()` integration.** `verdict=deload` overrides single-signal logic to red. `verdict=watch` softens an otherwise-green readiness to yellow ("HRV/RHR drift watch").
+
 ### What is not changed
 
 - **No migration to ln-rMSSD.** Consistency with intervals.icu display + athlete communication (see HRV forecast doc).
@@ -170,7 +180,7 @@ Our 90-d-median approach is neutral on this: it drifts slowly (~quarterly resolu
 
 2. **Season drift of the baseline not monitored.** If the 90-d baseline HRV systematically wanders (e.g. from 38 to 45 over 3 months of aerobic build), that is from a plan view a *good* development — but is not highlighted in the current output. An additional "baseline-trend" metric (e.g. "baseline +12% over 90d") would be informative.
 
-3. **RHR 3-day comparison window is short.** An additional layer (3-d average vs. 28-d median) would be more robust against single stressor days and closer to the literature standard "3 weeks baseline". Action item: add without replacing the current 7-d comparison (different signal granularities).
+3. **RHR 3-day comparison window is short.** ~~An additional layer (3-d average vs. 28-d median) would be more robust against single stressor days and closer to the literature standard "3 weeks baseline". Action item: add without replacing the current 7-d comparison (different signal granularities).~~ **Implemented.** A 90-d median baseline now runs alongside the 7-d short-window trend — output fields `rhrBaseline` / `rhrDeviation` / `rhrContext`. The short-window 3d-vs-3d delta remains in `rhrTrend` as the early-warning layer. See "Implemented (this commit)" above.
 
 4. **Cycle effects in female athletes** are not modelled here (single-athlete repo is male) — for the generic framework application the cycle phase would be an important modulator for HRV baseline (luteal phase typically -10% HRV).
 

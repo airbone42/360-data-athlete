@@ -65,6 +65,7 @@ pure symptom/feeling messages:
 |-------|-----|
 | `todayWorkouts` | What is already scheduled today? Every recommendation must reference this concrete list. |
 | `hrv`, `hrvBaseline`, `hrvDeviation`, `intensityReadiness` | Current tolerance (Methodik: framework/research/hrv-rhr-baseline-methodology.md) |
+| `rhr`, `rhrBaseline`, `rhrDeviation`, `rhrContext`, `combinedOverloadSignal` | Long-window RHR drift + combined HRV+RHR overload trigger. `combinedOverloadSignal.verdict` ∈ {`clear`, `watch`, `deload`}. `deload` at 3+ consecutive days both signals fire → `intensityReadiness` flips red automatically (Methodik: framework/research/hrv-rhr-baseline-methodology.md) |
 | `planningConstraints` | Active blocks (legs, plyo, recovery week, pause) |
 | `athleteFeedback`, `eventList` | Latest athlete notes — context violation if ignored |
 | `hrvReviewPending` | Daily review obligation |
@@ -182,7 +183,8 @@ blocks any bare `python3 scripts/...` from sneaking back into
 ```
 hrvContext, hrv, rhr, sleep, sleepHours,
 ctl, atl, tsb, ctlDisplay,
-hrvBaseline, hrvDeviation, ctlTrend, cycleHint,
+hrvBaseline, hrvDeviation, rhrContext, rhrBaseline, rhrDeviation,
+combinedOverloadSignal, ctlTrend, cycleHint,
 zoneDistribution, weeklyZoneBalance, mesoLoadTrend, weatherInfo,
 intensityReadiness, daysSinceIntense, lastRestDay,
 athleteFeedback,
