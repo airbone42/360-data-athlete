@@ -134,6 +134,37 @@ finisher.
 soft (forest path, grass, track) for athletes with Achilles / plantar
 history.
 
+**Stride/surge ≠ race-pace ≠ Z4 — never mislabel the stimulus (MANDATORY).**
+A stride/surge block of ≤30 s at 85–95 % effort is a **neuromuscular
+primer** (fast-twitch activation, PAP-compatible, aerobically cheap) —
+it is *not* a race-pace or Z4 stimulus. Two consequences:
+
+- **Do not name or describe such a block as "race-pace".** Race pace
+  for an endurance event is a *sustained* Z3/Z4 effort, far slower than
+  a 90–95 % near-sprint stride. A workout name like "Race-Pace-Surges"
+  on a 25 s / 95 % block contradicts its own coding and reads to the
+  athlete as "go race-hard" — they will run it as a maximal effort, not
+  a relaxed neuromuscular stride. Name and describe it for what it is
+  ("Steigerungen", "neuromuscular surges", "Strides"), with an
+  **effort label** (e.g. "zügig ~90 %, no HR-chasing"), never a pace/HR
+  zone.
+- **Never use a ≤30 s rep to chase a Z4 stimulus, and never attach an
+  HR target to a stride <60 s.** HR lag means 15–30 s cannot reach Z4 —
+  the rep ends before HR climbs, so the effort shows in cadence / step
+  length / GCT, not in HR. If a genuine **Z4 / race-pace** stimulus is
+  intended, use **≥1–2 min reps** with an explicit Z4 HR target; that
+  is a threshold-type session that belongs in the build, **not** inside
+  a taper window or a pure neuromuscular-priming day. Match the label,
+  the rep length, and the HR target to the actual training intent.
+
+Practice anchor from real use: a pre-race sharpening run was named
+"race-pace surges" but coded as 25 s / 95 % strides; the athlete read
+"95 % / race-pace" as all-out and ran the surges maximally —
+aerobically harmless (HR stayed sub-Z4 because 25 s is too short), but
+the label did not match the neuromuscular intent. The fix is naming
+discipline, not a longer rep: 5 days out the short neuromuscular primer
+is correct; only the wording was wrong.
+
 **When `config/` documents an athlete stride-count progression** (a
 current step and a target ceiling, e.g. building from 4× toward 6×),
 follow its **current step** as the count — do not silently undercut it
