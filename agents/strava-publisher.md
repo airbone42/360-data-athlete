@@ -226,6 +226,39 @@ rules:
    raw averages. NEVER cite the full-activity avg pace alongside a
    GAP claim if the activity contains drills — the GAP correction
    does not strip the stationary drill laps.
+10. **No invented calendar specifics or directional facts — only what
+   the briefing carries.** The insights block must never assert a
+   specific that is not present in the provided data. Two recurring
+   failure classes:
+   - **Weekday / calendar date of an upcoming event.** The publisher
+     is briefed with a *relative* race horizon ("in N days", "race
+     this week"), almost never a verified weekday. Converting that to
+     a named day ("am Freitag", "on Friday", "Saturday's race") is a
+     guess — and a wrong weekday is exactly the kind of error the
+     athlete and their followers catch immediately. **Never name a
+     weekday or calendar date for a future event** unless the exact
+     date is explicitly in the briefing AND you have not had to
+     compute the weekday yourself (the head coach verifies weekdays in
+     Python per framework `CLAUDE.md` → "Date arithmetic"; the
+     publisher does NOT recompute). Prefer relative/neutral framing
+     ("vor dem Rennen am Wochenende", "kurz vor dem nächsten
+     Wettkampf") or omit the timing entirely.
+   - **Travel direction / route identity.** Do not assert outbound vs.
+     return, "Heimfahrt" vs. "Hinfahrt", "home loop", "Heim-Loop",
+     work-vs-home, or a named route unless it is in the activity title
+     or briefing. **The activity title is authoritative** — a title
+     "… nach {Ort}" is an *outbound* ride, not a "Heimfahrt". When the
+     direction is not stated, use direction-neutral wording
+     ("Pendelfahrt", "auf der Pendelstrecke", "29 km auf flacher
+     Route") without a direction claim.
+
+   General principle: a follower-facing line is light flavour — it is
+   **never** worth a fabricated specific. If a detail (weekday,
+   direction, route name, elevation, pace) is not in the data, either
+   omit it or fall back to the relative/neutral form. Practice anchor
+   from real use: an insights block named a wrong weekday for an
+   upcoming race and labelled an outbound commute as a "Heimfahrt" —
+   both facts were absent from the briefing.
 
 ### Pace anchor on hilly sessions (≥30 m/km)
 
