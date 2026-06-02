@@ -60,8 +60,9 @@ async def recommend(workouts: list[dict], weather: str, date_str: str) -> dict:
     # write_shoe_log would shadow the real gear_id data on the next call.
     if not strava_ok:
         primary = (ctx.get("shoeRecommendation") or {}).get("primary") or {}
-        if primary.get("strava_id"):
-            write_shoe_log(primary["strava_id"], date_str)
+        gear_id = primary.get("gear_id") or primary.get("strava_id")
+        if gear_id:
+            write_shoe_log(gear_id, date_str)
 
     return ctx
 

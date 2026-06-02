@@ -121,7 +121,15 @@ def _format_shoe_footer(shoe_ctx: dict) -> str:
 
 
 async def _enrich_with_shoes(events: list[dict], workouts: list[dict], weather: str, date_str: str) -> None:
-    """Append shoe-recommendation footer to Run event descriptions in-place."""
+    """Append shoe-recommendation footer to Run event descriptions in-place.
+
+    Legacy Strava-backend behaviour only. With the intervals.icu backend the
+    recommended shoe is assigned to the *finished* activity post-run
+    (scripts/set_activity_gear.py, /analyse step 6.55) so intervals.icu can
+    accumulate the mileage natively — no text footer on the planned event.
+    """
+    if settings.shoe_tracking_backend != "strava":
+        return
     if not any(w.get("type") == "Run" for w in workouts):
         return
     try:

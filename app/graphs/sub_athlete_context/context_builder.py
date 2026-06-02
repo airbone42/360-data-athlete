@@ -18,6 +18,7 @@ from app.analytics.recovery import (
     _extract_rpe_from_line,
     canonicalise_tags,
 )
+from app.config import settings
 from app.graphs.shoe_advisor import build_shoe_context, load_shoe_profiles
 from app.graphs.sub_athlete_context.state import AthleteContextState
 from app.schemas.context import ContextDict
@@ -159,14 +160,17 @@ def build_context(state: AthleteContextState) -> dict:
     )
     skipped_workouts = _find_skipped_workouts(activities, state["workouts"], today)
 
-    # Shoe context (optional — degrades silently if Strava not configured)
-    strava_shoes: list[dict] = state.get("strava_shoes") or []
+    # Shoe context (optional — degrades silently if no shoe backend configured).
+    # `shoes` is the backend-neutral shoe list assembled by fetch_context
+    # (`strava_shoes` key kept for back-compat); the join key is selected by
+    # `shoe_tracking_backend` (intervals → icu_gear_id, strava → strava_id).
+    shoe_list: list[dict] = state.get("shoes") or state.get("strava_shoes") or []
     shoe_profiles = load_shoe_profiles()
     shoe_ctx: dict = {}
-    if strava_shoes:
+    if shoe_list:
         try:
             shoe_ctx = build_shoe_context(
-                shoes=strava_shoes,
+                shoes=shoe_list,
                 profiles=shoe_profiles,
                 activities=activities,
                 planned_workouts=[
@@ -177,6 +181,7 @@ def build_context(state: AthleteContextState) -> dict:
                 weather_info=weather_info,
                 race_in_days=race_in_days,
                 today_str=today.isoformat(),
+                backend=settings.shoe_tracking_backend,
             )
         except Exception as e:
             logger.warning("shoe_advisor failed: %s", e)

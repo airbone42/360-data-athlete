@@ -150,8 +150,10 @@ blocks any bare `python3 scripts/...` from sneaking back into
 | `download_fit.py` | Download FIT file from Garmin |
 | `parse_fit.py` | Parse FIT (laps + records) |
 | `build_sub_laps.py` | Sub-lap windows with surface data |
-| `fetch_shoes.py` | Strava shoes + profile check against `equipment.md` |
-| `shoe_recommend.py` | Shoe recommendation after plan push |
+| `fetch_shoes.py` | Strava shoes + profile check against `equipment.md` (legacy `strava` backend) |
+| `shoe_recommend.py` | Shoe recommendation after plan push (legacy `strava` backend footer) |
+| `migrate_shoes_strava_to_intervals.py` | One-time: mirror Strava shoe fleet (status + mileage) into intervals.icu gear |
+| `set_activity_gear.py` | Assign the recommended shoe to a finished activity (intervals backend, `/analyse` 6.55) |
 | `strava_auth.py` | One-time Strava OAuth2 flow |
 | `strava_pending.py` | List Strava activities pending title/insights update (read; optional intervals.icu surface-mismatch rename) |
 | `strava_coupling.py` | Detect same-day Koppeleinheit (Rad/Beine/Doppellauf) before an activity |
@@ -793,6 +795,26 @@ Plan directive (planner output):
   tags/coaching notes (error-prone). A firm forest path = asphalt-equivalent
   for shoe choice.
 - Non-endurance: strip time patterns from descriptions
+
+### Shoe tracking backend
+
+`SHOE_TRACKING_BACKEND` (in `.env`, default `intervals`) selects where the
+shoe advisor gets gear, mileage, and active/retired status:
+
+- **`intervals`** (default) — native intervals.icu gear. Mileage is
+  accumulated by intervals.icu from each activity's `gear_id`; the coach
+  assigns the recommended shoe to the *finished* activity in `/analyse`
+  step 6.55 (`set_activity_gear.py`). equipment.md profiles join on
+  `icu_gear_id`. No Strava app required.
+- **`strava`** (legacy) — Strava gear API; the recommendation is appended
+  as a text footer to Run events at push time; profiles join on
+  `strava_id`; `shoe_log.json` is the offline fallback. Kept for consumers
+  who still have Strava API access.
+- **`off`** — advisor disabled.
+
+One-time migration of an existing Strava fleet into intervals.icu gear:
+`migrate_shoes_strava_to_intervals.py` (writes a `strava_id → icu_gear_id`
+mapping for the equipment.md update).
 
 ---
 
