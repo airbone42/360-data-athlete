@@ -324,20 +324,21 @@ class IntervalsClient:
         """Assign a gear (shoe) to a completed activity.
 
         intervals.icu accumulates a shoe's mileage from every activity that
-        carries its `gear_id`, so setting the gear here is what drives the
-        native km tracking. Pass `gear_id=None` to clear the assignment.
-        Uses PUT /activity/{id} with the `gear_id` field, mirroring
-        `update_activity_name`.
+        carries it, so setting the gear here is what drives the native km
+        tracking. Pass `gear_id=None` to clear the assignment.
+        Uses PUT /activity/{id} with the `gear` field — intervals.icu
+        rejects `gear_id` as an unknown custom field (422), and reads the
+        assignment back as a nested `gear` object, not a flat `gear_id`.
         """
         async with httpx.AsyncClient(auth=self._auth) as c:
             r = await c.put(
-                f"{BASE_URL}/activity/{activity_id}", json={"gear_id": gear_id}
+                f"{BASE_URL}/activity/{activity_id}", json={"gear": gear_id}
             )
             r.raise_for_status()
             data = r.json()
         set_span_io(
             input={"activity_id": activity_id, "gear_id": gear_id},
-            output=f"gear_id={data.get('gear_id', '?')}",
+            output=f"gear={(data.get('gear') or {}).get('id', '?')}",
         )
         return data
 

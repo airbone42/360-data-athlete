@@ -81,9 +81,12 @@ async def _run(activity_id: str, gear_id: str | None, auto: bool, dry_run: bool,
         print(f"– {activity_id}: keine Lauf-Aktivität ({activity.get('type')}) — übersprungen.")
         return
 
-    existing = activity.get("gear_id")
+    # intervals.icu exposes an assigned shoe as a nested `gear` object
+    # ({"id": ...}), not a flat `gear_id` — read the id from there (with a
+    # legacy flat-field fallback) so the idempotency guard actually fires.
+    existing = (activity.get("gear") or {}).get("id") or activity.get("gear_id")
     if existing and not force:
-        print(f"– {activity_id}: trägt bereits gear_id={existing} — übersprungen (--force zum Überschreiben).")
+        print(f"– {activity_id}: trägt bereits gear={existing} — übersprungen (--force zum Überschreiben).")
         return
 
     reason = ""

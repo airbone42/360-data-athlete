@@ -12,6 +12,7 @@ from scripts.migrate_shoes_strava_to_intervals import (
     shoe_to_gear_payload,
 )
 from app.graphs.shoe_advisor import (
+    _compute_last_used,
     build_shoe_context,
     gear_to_shoes,
     profile_gear_key,
@@ -123,6 +124,34 @@ def test_build_context_joins_on_icu_gear_id() -> None:
     assert primary["name"] == "Tempo Demo"
     # enriched active shoe is keyed/joined correctly → type came from the profile
     assert ctx["shoes"][0]["type"] == "tempo"
+
+
+# ── last-used reads the nested `gear` object (regression) ───────────────────
+
+def test_compute_last_used_reads_nested_gear_object() -> None:
+    """intervals.icu returns an assigned shoe as a nested `gear` object
+    ({"id": ...}), NOT a flat `gear_id`. The rotation lookup must read the
+    nested id, else every assigned activity is invisible to rotation."""
+    activities = [
+        {"start_date_local": "2025-03-01T09:00:00", "gear": {"id": "b100"}},
+        {"start_date_local": "2025-03-03T09:00:00", "gear": {"id": "b200"}},
+    ]
+    last = _compute_last_used(activities)
+    assert last["b100"] == "2025-03-01"
+    assert last["b200"] == "2025-03-03"
+
+
+def test_compute_last_used_flat_field_fallback() -> None:
+    """Legacy / Strava-synced rows may still carry a flat gear_id."""
+    activities = [
+        {"start_date_local": "2025-03-01T09:00:00", "gear_id": "g100"},
+        {"start_date_local": "2025-03-02T09:00:00", "icu_gear_id": "g200"},
+        {"start_date_local": "2025-03-04T09:00:00", "gear": None},  # no gear → skipped
+    ]
+    last = _compute_last_used(activities)
+    assert last["g100"] == "2025-03-01"
+    assert last["g200"] == "2025-03-02"
+    assert "None" not in last
 
 
 # ── parser accepts icu_gear_id entry marker ─────────────────────────────────

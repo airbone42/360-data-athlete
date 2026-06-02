@@ -177,12 +177,14 @@ def gear_to_shoes(gear_list: list[dict]) -> list[dict]:
 def _compute_last_used(activities: list[dict]) -> dict[str, str]:
     """Return {strava_id: last_used_date_str} from intervals.icu activities.
 
-    intervals.icu activities may carry gear info as 'gear_id' (Strava gear ID).
-    Falls back gracefully if field is absent.
+    intervals.icu exposes an assigned shoe as a nested `gear` object
+    ({"id": ...}); older/Strava-synced rows may carry a flat `gear_id` /
+    `icu_gear_id`. Read the nested id first, fall back to the flat fields.
+    Falls back gracefully if gear info is absent.
     """
     last: dict[str, str] = {}
     for a in sorted(activities, key=lambda x: (x.get("start_date_local") or ""), reverse=False):
-        gear_id = a.get("gear_id") or a.get("icu_gear_id") or ""
+        gear_id = (a.get("gear") or {}).get("id") or a.get("gear_id") or a.get("icu_gear_id") or ""
         if not gear_id:
             continue
         date_str = (a.get("start_date_local") or "")[:10]
