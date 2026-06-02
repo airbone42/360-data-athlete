@@ -6,6 +6,7 @@ All fixtures are synthetic (made-up gear ids / km), never real athlete data.
 from __future__ import annotations
 
 import importlib
+from datetime import date
 
 from scripts.migrate_shoes_strava_to_intervals import (
     plan_migration,
@@ -26,13 +27,24 @@ def test_payload_converts_km_to_metres() -> None:
     assert payload["type"] == "Shoes"
     assert payload["name"] == "Demo Trainer"
     assert payload["distance"] == 123400  # km → m
-    assert payload["retired"] is False
+    # intervals.icu `retired` is a date|null, never a bool — active → null
+    assert payload["retired"] is None
 
 
 def test_payload_retired_flag() -> None:
-    payload = shoe_to_gear_payload({"name": "Old Shoe", "distance_km": 0, "retired": True})
-    assert payload["retired"] is True
+    # retired Strava shoe → stamped with a date string (not a bool, which 422s)
+    payload = shoe_to_gear_payload(
+        {"name": "Old Shoe", "distance_km": 0, "retired": True}, retired_date="2025-01-01"
+    )
+    assert payload["retired"] == "2025-01-01"
     assert payload["distance"] == 0
+
+
+def test_payload_retired_defaults_to_today() -> None:
+    payload = shoe_to_gear_payload({"name": "Old Shoe", "distance_km": 0, "retired": True})
+    # default stamp is a valid ISO date string, never the boolean True
+    assert isinstance(payload["retired"], str)
+    date.fromisoformat(payload["retired"])  # parses → valid date
 
 
 # ── plan_migration ──────────────────────────────────────────────────────────

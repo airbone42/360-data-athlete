@@ -30,6 +30,7 @@ import argparse
 import asyncio
 import json
 import sys
+from datetime import date
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -42,16 +43,27 @@ from app.utils.paths import DATA_DIR
 _MAP_PATH = DATA_DIR / "shoe_gear_map.json"
 
 
-def shoe_to_gear_payload(shoe: dict) -> dict:
-    """Map a Strava shoe dict to an intervals.icu gear-create payload.
+def shoe_to_gear_payload(shoe: dict, *, retired_date: str | None = None) -> dict:
+    """Map a Strava shoe dict to an intervals.icu gear-create/update payload.
 
     Strava `distance_km` → intervals.icu `distance` in metres (intervals.icu
     gear distance is metric metres, same unit as the Strava gear API).
+
+    intervals.icu's `retired` field is a DATE string (or null), NOT a boolean
+    — sending a bool 422s ("Invalid retired: Text 'false' could not be
+    parsed"). Strava only exposes a retired *bool* with no date, so a retired
+    shoe is stamped with `retired_date` (default: today's date) and an active
+    shoe sends null. Note: an update re-stamps the retire date to
+    `retired_date`; intervals.icu has no source-of-truth retirement date to
+    preserve from Strava.
     """
+    retired_out: str | None = None
+    if shoe.get("retired"):
+        retired_out = retired_date or date.today().isoformat()
     return {
         "name": shoe.get("name") or "",
         "type": "Shoes",
-        "retired": bool(shoe.get("retired", False)),
+        "retired": retired_out,
         "distance": int(round((shoe.get("distance_km") or 0) * 1000)),
     }
 
