@@ -271,6 +271,77 @@ class IntervalsClient:
         )
         return data
 
+    # ── Gear (shoes) ──────────────────────────────────────────────────
+
+    @traced("intervals.icu · list gear", kind="tool")
+    async def list_gear(self) -> list[dict]:
+        """GET /gear — athlete gear list (shoes + bikes + components).
+
+        Each entry carries at least: id, name, type ("Shoes"/"Bike"/…),
+        retired (bool), distance (metres), time (seconds). The shoe advisor
+        filters on `type == "Shoes"`.
+        """
+        async with httpx.AsyncClient(auth=self._auth) as c:
+            r = await c.get(self._url("/gear"))
+            r.raise_for_status()
+            data = r.json()
+        shoes = sum(1 for g in data if (g.get("type") or "") == "Shoes")
+        set_span_io(input="(none)", output=f"{len(data)} gear ({shoes} shoes)")
+        return data
+
+    @traced("intervals.icu · create gear", kind="tool")
+    async def create_gear(self, payload: dict) -> dict:
+        """POST /gear — create a new gear item (e.g. a shoe).
+
+        payload keys: name, type ("Shoes"), retired (bool), distance (metres),
+        time (seconds). Returns the created Gear object incl. its `id`.
+        """
+        async with httpx.AsyncClient(auth=self._auth) as c:
+            r = await c.post(self._url("/gear"), json=payload)
+            r.raise_for_status()
+            data = r.json()
+        set_span_io(
+            input={"name": payload.get("name"), "type": payload.get("type")},
+            output=f"id={data.get('id', '?')}",
+        )
+        return data
+
+    @traced("intervals.icu · update gear", kind="tool")
+    async def update_gear(self, gear_id: str, payload: dict) -> dict:
+        """PUT /gear/{gearId} — update gear fields (name, retired, distance…)."""
+        async with httpx.AsyncClient(auth=self._auth) as c:
+            r = await c.put(self._url(f"/gear/{gear_id}"), json=payload)
+            r.raise_for_status()
+            data = r.json()
+        set_span_io(
+            input={"gear_id": gear_id, "fields": list(payload.keys())},
+            output="OK",
+        )
+        return data
+
+    @traced("intervals.icu · set activity gear", kind="tool")
+    async def set_activity_gear(self, activity_id: str, gear_id: str | None) -> dict:
+        """Assign a gear (shoe) to a completed activity.
+
+        intervals.icu accumulates a shoe's mileage from every activity that
+        carries it, so setting the gear here is what drives the native km
+        tracking. Pass `gear_id=None` to clear the assignment.
+        Uses PUT /activity/{id} with the `gear` field — intervals.icu
+        rejects `gear_id` as an unknown custom field (422), and reads the
+        assignment back as a nested `gear` object, not a flat `gear_id`.
+        """
+        async with httpx.AsyncClient(auth=self._auth) as c:
+            r = await c.put(
+                f"{BASE_URL}/activity/{activity_id}", json={"gear": gear_id}
+            )
+            r.raise_for_status()
+            data = r.json()
+        set_span_io(
+            input={"activity_id": activity_id, "gear_id": gear_id},
+            output=f"gear={(data.get('gear') or {}).get('id', '?')}",
+        )
+        return data
+
     @traced("intervals.icu · fetch activity streams", kind="tool")
     async def get_streams(
         self,

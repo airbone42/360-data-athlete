@@ -24,8 +24,10 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.api.intervals_cache import CachedIntervalsClient as IntervalsClient
+from app.api.intervals_client import IntervalsClient as RawIntervalsClient
 from app.api.strava_client import StravaClient, bust_shoes_cache
 from app.config import settings
+from app.graphs.shoe_advisor import gear_to_shoes
 from app.graphs.sub_athlete_context.context_builder import build_context
 from app.utils.logging import configure
 from app.utils.tracing import configure_tracing
@@ -99,19 +101,35 @@ async def _fetch_all(athlete_id: str, date_str: str) -> dict:
     newest_6w = (today + timedelta(days=42)).isoformat()
 
     # Fetch wellness, activities, workouts (past events), upcoming events, history, settings, notes
-    # + Strava shoes (optional, degrades gracefully if not configured) — all in parallel
+    # + shoe data (optional, degrades gracefully) — all in parallel.
+    # Shoe source is selected by SHOE_TRACKING_BACKEND:
+    #   intervals (default) — native intervals.icu gear (no Strava needed)
+    #   strava (legacy)     — Strava gear API
+    #   off                 — no shoe context
     strava_client = StravaClient()
 
     async def _fetch_shoes() -> list[dict]:
-        if not settings.strava_client_id or not settings.strava_refresh_token:
+        backend = settings.shoe_tracking_backend
+        log = logging.getLogger(__name__)
+        if backend == "off":
             return []
+        if backend == "strava":
+            if not settings.strava_client_id or not settings.strava_refresh_token:
+                return []
+            try:
+                return await strava_client.list_shoes()
+            except Exception as e:
+                log.warning("strava shoes fetch failed: %s", e)
+                return []
+        # Default: intervals.icu native gear (uncached — gear list is small).
         try:
-            return await strava_client.list_shoes()
+            gear = await RawIntervalsClient(athlete_id).list_gear()
+            return gear_to_shoes(gear)
         except Exception as e:
-            logging.getLogger(__name__).warning("strava shoes fetch failed: %s", e)
+            log.warning("intervals.icu gear fetch failed: %s", e)
             return []
 
-    wellness, activities, workouts, events, wellness_history, athlete_settings, notes, strava_shoes = (
+    wellness, activities, workouts, events, wellness_history, athlete_settings, notes, shoes = (
         await asyncio.gather(
             client.get_wellness(date_str),
             client.get_activities(oldest_4w, date_str),
@@ -151,7 +169,8 @@ async def _fetch_all(athlete_id: str, date_str: str) -> dict:
         "weather_warning": weather_warning,
         "athlete_settings": athlete_settings,
         "notes": notes,
-        "strava_shoes": strava_shoes,
+        "shoes": shoes,
+        "strava_shoes": shoes,  # back-compat alias for older readers
         "context_summary": {},
         "deload_state": deload_state,
         "deload_ctl_threshold": deload_ctl_threshold,

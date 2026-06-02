@@ -82,6 +82,23 @@ python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/log_muscle_load.py --activity-id {ID}
 
 Errors swallowed silently — this step does not block the analysis.
 
+### Step 6.55: Assign shoe gear (intervals.icu backend only)
+
+Only when `SHOE_TRACKING_BACKEND=intervals` (the default) **and** the
+activity is a `Run` / `VirtualRun`:
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/set_activity_gear.py --activity-id {ID} --auto
+```
+
+Sets the shoe-advisor's recommended shoe on the finished activity so
+intervals.icu accumulates the mileage natively. Idempotent — skips if
+the activity already carries a gear_id (the athlete may have assigned it
+themselves; they can always correct the choice in intervals.icu).
+Errors are swallowed — this step does not block the analysis. With the
+legacy `strava` backend this step is skipped (the recommendation was
+written as a footer at push time instead).
+
 ### Step 6.6: Sync Strava (title + insights)
 
 Launch the `strava-publisher` agent in a pane and pass:

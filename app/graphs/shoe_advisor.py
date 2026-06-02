@@ -55,8 +55,12 @@ _PACE_BUCKETS: dict[str, tuple[float, float]] = {
 def load_shoe_profiles() -> list[dict]:
     """Parse shoe profiles from config/equipment.md.
 
-    Profiles are YAML-like bullet lists under '## Laufschuhe':
-        - strava_id: g123
+    Profiles are YAML-like bullet lists under '## Laufschuhe'. A profile
+    entry starts with an id line — `icu_gear_id:` (intervals.icu backend,
+    the default), `strava_id:` (legacy Strava backend), or the neutral
+    `gear_id:`. A profile may carry both ids during the migration window:
+        - icu_gear_id: 'b1234567'
+          strava_id: g123          # legacy, kept for reference
           name: "..."
           type: tempo
           role: daily
@@ -82,8 +86,8 @@ def load_shoe_profiles() -> list[dict]:
     current: dict | None = None
 
     for line in section.splitlines():
-        # New profile starts with "- strava_id:"
-        if re.match(r"^\s*-\s+strava_id:", line):
+        # New profile starts with an id line: icu_gear_id / strava_id / gear_id
+        if re.match(r"^\s*-\s+(?:icu_gear_id|strava_id|gear_id):", line):
             if current:
                 profiles.append(current)
             current = {}
@@ -129,17 +133,58 @@ def _parse_kv(line: str, target: dict) -> None:
     target[k] = v
 
 
+# ── Backend-agnostic gear key ───────────────────────────────────────────────────
+
+def profile_gear_key(profile: dict, backend: str) -> str:
+    """Return the id a profile joins on for the active backend.
+
+    intervals backend → `icu_gear_id` (fallback neutral `gear_id`).
+    strava backend    → `strava_id`.
+    """
+    if backend == "strava":
+        return str(profile.get("strava_id") or profile.get("gear_id") or "")
+    return str(profile.get("icu_gear_id") or profile.get("gear_id") or "")
+
+
+def gear_to_shoes(gear_list: list[dict]) -> list[dict]:
+    """Map intervals.icu gear objects to the advisor's shoe-dict shape.
+
+    Keeps only `type == "Shoes"`. intervals.icu gear `distance` is in metres
+    (same as the Strava gear API), converted to km here. The gear `id`
+    becomes `gear_key` (the join key) — and is also mirrored to `strava_id`
+    so legacy field reads keep working in the intervals path.
+    """
+    shoes: list[dict] = []
+    for g in gear_list:
+        if (g.get("type") or "") != "Shoes":
+            continue
+        gid = str(g.get("id") or "")
+        if not gid:
+            continue
+        shoes.append({
+            "gear_key": gid,
+            "strava_id": gid,  # generic id alias for legacy field reads
+            "name": g.get("name") or "",
+            "distance_km": round((g.get("distance") or 0) / 1000, 1),
+            "retired": bool(g.get("retired", False)),
+            "primary": bool(g.get("primary", False)),
+        })
+    return shoes
+
+
 # ── Last-used lookup ──────────────────────────────────────────────────────────
 
 def _compute_last_used(activities: list[dict]) -> dict[str, str]:
     """Return {strava_id: last_used_date_str} from intervals.icu activities.
 
-    intervals.icu activities may carry gear info as 'gear_id' (Strava gear ID).
-    Falls back gracefully if field is absent.
+    intervals.icu exposes an assigned shoe as a nested `gear` object
+    ({"id": ...}); older/Strava-synced rows may carry a flat `gear_id` /
+    `icu_gear_id`. Read the nested id first, fall back to the flat fields.
+    Falls back gracefully if gear info is absent.
     """
     last: dict[str, str] = {}
     for a in sorted(activities, key=lambda x: (x.get("start_date_local") or ""), reverse=False):
-        gear_id = a.get("gear_id") or a.get("icu_gear_id") or ""
+        gear_id = (a.get("gear") or {}).get("id") or a.get("gear_id") or a.get("icu_gear_id") or ""
         if not gear_id:
             continue
         date_str = (a.get("start_date_local") or "")[:10]
@@ -279,7 +324,7 @@ def _score_shoe(
     Higher score = better recommendation.
     """
     role = profile.get("role", "daily")
-    sid = profile["strava_id"]
+    sid = profile.get("gear_key") or str(profile.get("strava_id") or "")
     threshold = float(profile.get("threshold_km", 800))
     distance_km = shoe.get("distance_km", 0)
     pct = distance_km / threshold if threshold else 0
@@ -352,20 +397,32 @@ def build_shoe_context(
     weather_info: str,
     race_in_days: int | None,
     today_str: str,
+    backend: str = "strava",
 ) -> dict:
     """Build shoe context dict for context_builder output.
+
+    `backend` selects the join key between shoe data and equipment.md
+    profiles: 'intervals' joins on `icu_gear_id`, 'strava' on `strava_id`
+    (see `profile_gear_key`). Both reduce to a per-item `gear_key`, so the
+    scoring/rotation logic below is backend-agnostic.
 
     Returns:
         shoes, shoeRecommendation, shoeWarnings, shoeFleetWarning
     """
-    profile_map = {p["strava_id"]: p for p in profiles}
-    shoe_map = {s["strava_id"]: s for s in shoes}
+    # Reduce every profile and shoe to a single join key for the backend.
+    for p in profiles:
+        p["gear_key"] = profile_gear_key(p, backend)
+    for s in shoes:
+        s.setdefault("gear_key", str(s.get("strava_id") or ""))
 
-    # Active shoes only: exclude Strava-retired + equipment.md active:false
+    profile_map = {p["gear_key"]: p for p in profiles if p.get("gear_key")}
+    shoe_map = {s["gear_key"]: s for s in shoes if s.get("gear_key")}
+
+    # Active shoes only: exclude retired + equipment.md active:false
     active_shoes = [
         s for s in shoes
         if not s.get("retired")
-        and profile_map.get(s["strava_id"], {}).get("active", "true") not in ("false", False)
+        and profile_map.get(s["gear_key"], {}).get("active", "true") not in ("false", False)
     ]
 
     last_used = _compute_last_used(activities)
@@ -375,7 +432,7 @@ def build_shoe_context(
     # Enrich active shoes with computed fields
     enriched: list[dict] = []
     for s in active_shoes:
-        sid = s["strava_id"]
+        sid = s["gear_key"]
         p = profile_map.get(sid, {})
         threshold = float(p.get("threshold_km", 800))
         dist = s.get("distance_km", 0)
@@ -423,7 +480,7 @@ def build_shoe_context(
 
         scored: list[tuple[float, dict]] = []
         for s in enriched:
-            p = profile_map.get(s["strava_id"], {})
+            p = profile_map.get(s["gear_key"], {})
             sc = _score_shoe(
                 p, s, terrain, wet, pace_bucket,
                 race_in_days, today_str, last_used,
@@ -435,7 +492,7 @@ def build_shoe_context(
         scored.sort(key=lambda x: x[0], reverse=True)
 
         def _rec_entry(score: float, s: dict) -> dict:
-            p = profile_map.get(s["strava_id"], {})
+            p = profile_map.get(s["gear_key"], {})
             reasons = []
             if s.get("days_since_used") is not None:
                 reasons.append(f"{s['days_since_used']} days unused")
@@ -444,7 +501,8 @@ def build_shoe_context(
             if not reasons:
                 reasons.append(f"type: {p.get('type', '?')}, terrain: {p.get('terrain', '?')}")
             return {
-                "strava_id": s["strava_id"],
+                "gear_id": s["gear_key"],
+                "strava_id": s.get("strava_id"),  # legacy alias
                 "name": s["name"],
                 "distance_km": s["distance_km"],
                 "pct_used": s["pct_used"],
@@ -457,7 +515,7 @@ def build_shoe_context(
             recommendation["alternative"] = _rec_entry(*scored[1])
 
     # ── Fleet gap detection ───────────────────────────────────────────
-    active_types = {profile_map.get(s["strava_id"], {}).get("type", "") for s in enriched}
+    active_types = {profile_map.get(s["gear_key"], {}).get("type", "") for s in enriched}
     active_types.discard("")
 
     all_types = {"tempo", "easy", "long", "trail", "recovery"}
@@ -466,7 +524,7 @@ def build_shoe_context(
     # Soon-missing: sole shoe of its type and > 80 %
     type_counts: dict[str, list[dict]] = {}
     for s in enriched:
-        t = profile_map.get(s["strava_id"], {}).get("type", "")
+        t = profile_map.get(s["gear_key"], {}).get("type", "")
         if t:
             type_counts.setdefault(t, []).append(s)
 

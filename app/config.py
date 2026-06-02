@@ -31,6 +31,21 @@ class Settings(BaseSettings):
     strava_client_id: str = ""
     strava_client_secret: str = ""
     strava_refresh_token: str = ""
+    # Source of truth for shoe data (gear list, mileage, active/retired,
+    # last-used rotation) feeding the shoe advisor.
+    #   intervals (default) — read native intervals.icu gear; mileage is
+    #     accumulated by intervals.icu itself from each activity's gear_id.
+    #     No Strava calls. The coach sets the recommended shoe on the
+    #     finished activity (see scripts/set_activity_gear.py).
+    #   strava (legacy) — read shoes from the Strava gear API, append a
+    #     text recommendation footer to Run events, fall back to the local
+    #     shoe_log.json. Requires the STRAVA_* credentials above. Kept for
+    #     consumers who still have Strava API access.
+    #   off — shoe advisor disabled (empty shoe list).
+    # The Strava API moves behind a paid tier; `intervals` is the default
+    # so a fresh consumer needs no Strava app at all. One-time migration of
+    # an existing Strava gear fleet: scripts/migrate_shoes_strava_to_intervals.py
+    shoe_tracking_backend: str = "intervals"
     # Insights-Block on/off toggle for the strava-publisher agent.
     # Default on: every endurance push gets the 2–4 line block + footer.
     # Set `STRAVA_PUBLISHER_FOOTER_ENABLED=false` to opt out — the agent
