@@ -6,8 +6,10 @@ the coach sets the recommended shoe on the *completed* activity, and
 intervals.icu accumulates that shoe's mileage natively.
 
 The athlete corrects the choice in intervals.icu if they wore something
-else. Idempotent: an activity that already carries a gear_id is left
-untouched (unless --force).
+else. Idempotent: an activity that already carries an *active* shoe is
+left untouched (unless --force). A retired / non-shoe / unknown gear id
+(a stale auto-default "phantom") does NOT count as an assignment and is
+overwritten so the analysis self-corrects.
 
 Usage:
     # explicit shoe
@@ -43,13 +45,28 @@ async def _recommend_gear_for_activity(icu: IntervalsClient, activity: dict) -> 
     entry ({gear_id, name, ...}) or None.
     """
     today_str = (activity.get("start_date_local") or date.today().isoformat())[:10]
+    # The completed activity carries no `surface` and usually an empty
+    # `description`, so terrain detection would default to asphalt and the
+    # analysis-time pick would diverge from the push-time pick (which scored
+    # against the planned workout's surface/notes). Prefer the linked planned
+    # event: its description holds the specialist's terrain wording
+    # ("Trail …", "Forstweg …"), which drives the same terrain classification
+    # the push-time recommendation used. Fall back to the activity fields when
+    # no planned event is paired.
+    plan: dict = {}
+    paired_event_id = activity.get("paired_event_id")
+    if paired_event_id:
+        try:
+            plan = await icu.get_event(str(paired_event_id)) or {}
+        except Exception:
+            plan = {}
     planned = [{
         "type": activity.get("type"),
-        "surface": activity.get("surface") or "",
-        "tags": activity.get("tags") or [],
-        "workout_type": activity.get("workout_type") or "",
-        "intensity": activity.get("intensity") or "",
-        "coaching_notes": activity.get("description") or "",
+        "surface": plan.get("surface") or activity.get("surface") or "",
+        "tags": plan.get("tags") or activity.get("tags") or [],
+        "workout_type": plan.get("workout_type") or activity.get("workout_type") or "",
+        "intensity": plan.get("intensity") or activity.get("intensity") or "",
+        "coaching_notes": plan.get("description") or activity.get("description") or "",
     }]
     gear = await icu.list_gear()
     shoes = gear_to_shoes(gear)
@@ -86,8 +103,23 @@ async def _run(activity_id: str, gear_id: str | None, auto: bool, dry_run: bool,
     # legacy flat-field fallback) so the idempotency guard actually fires.
     existing = (activity.get("gear") or {}).get("id") or activity.get("gear_id")
     if existing and not force:
-        print(f"– {activity_id}: trägt bereits gear={existing} — übersprungen (--force zum Überschreiben).")
-        return
+        # A retired or non-shoe gear id is a stale auto-default ("phantom" —
+        # e.g. an old default shoe Garmin/intervals.icu stamps onto every
+        # imported activity). That is NOT a real assignment and must not block
+        # auto-correction. Only an active Shoes-type gear counts as a genuine
+        # existing assignment worth preserving.
+        gear_list = await icu.list_gear()
+        entry = next((g for g in gear_list if g.get("id") == existing), None)
+        is_active_shoe = (
+            entry is not None
+            and (entry.get("type") or "") == "Shoes"
+            and not entry.get("retired")
+        )
+        if is_active_shoe:
+            print(f"– {activity_id}: trägt bereits aktiven Schuh gear={existing} — übersprungen (--force zum Überschreiben).")
+            return
+        label = f"{entry.get('name')} " if entry and entry.get("name") else ""
+        print(f"  {activity_id}: vorhandenes gear={existing} {label}ist retired/kein aktiver Schuh (Phantom) — wird ersetzt.")
 
     reason = ""
     if auto and not gear_id:
