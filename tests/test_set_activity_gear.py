@@ -88,6 +88,57 @@ def test_unknown_gear_id_is_overwritten():
     assert icu.set_calls == [("i1", "g_new")], "unknown gear id must be replaced"
 
 
+def test_gear_from_planned_marker():
+    """The machine [coach-gear:<id>] marker is read directly."""
+    plan = {"description": "Main\n- Trail 30m\n\nShoe recommendation: On Cloudeclipse (323 km)\n[coach-gear:g_on]"}
+    gear = [{"id": "g_on", "type": "Shoes", "name": "On Cloudeclipse", "retired": None}]
+    gid, _ = sag._gear_from_planned_event(plan, gear)
+    assert gid == "g_on"
+
+
+def test_gear_from_planned_marker_retired_falls_through():
+    """A marker pointing at a retired shoe is ignored (→ re-derive)."""
+    plan = {"description": "Shoe recommendation: Old Shoe (900 km)\n[coach-gear:g_old]"}
+    gear = [{"id": "g_old", "type": "Shoes", "name": "Old Shoe", "retired": "2026-06-02"}]
+    gid, _ = sag._gear_from_planned_event(plan, gear)
+    assert gid is None
+
+
+def test_gear_from_planned_name_fallback():
+    """Legacy footer without a marker → resolve via the shoe name."""
+    plan = {"description": "Shoe recommendation: On Cloudeclipse (323 km) — 11 days unused"}
+    gear = [{"id": "g_on", "type": "Shoes", "name": "On Cloudeclipse", "retired": None}]
+    gid, _ = sag._gear_from_planned_event(plan, gear)
+    assert gid == "g_on"
+
+
+def test_gear_from_planned_none():
+    """No recommendation in the description → None (caller re-derives)."""
+    plan = {"description": "Warmup\n- Easy 6m press lap\n\nMain\n- Trail 30m Z2 HR"}
+    gear = [{"id": "g_on", "type": "Shoes", "name": "On Cloudeclipse", "retired": None}]
+    gid, _ = sag._gear_from_planned_event(plan, gear)
+    assert gid is None
+
+
+def test_auto_uses_persisted_marker_not_rederive(monkeypatch):
+    """--auto must use the persisted push-time pick and skip re-derivation."""
+    called = {"rederive": False}
+
+    async def _no_rederive(*a, **k):
+        called["rederive"] = True
+        return {"gear_id": "g_wrong", "name": "Wrong"}
+
+    monkeypatch.setattr(sag, "_recommend_gear_for_activity", _no_rederive)
+    icu = _FakeIcu(
+        activity={"type": "Run", "gear": None, "paired_event_id": 1},
+        gear=[{"id": "g_on", "type": "Shoes", "name": "On Cloudeclipse", "retired": None}],
+        event={"description": "Shoe recommendation: On Cloudeclipse (323 km)\n[coach-gear:g_on]"},
+    )
+    _run_with(icu, activity_id="i1", gear_id=None, auto=True, dry_run=False, force=False)
+    assert icu.set_calls == [("i1", "g_on")]
+    assert called["rederive"] is False, "must not re-derive when a persisted pick exists"
+
+
 def test_recommendation_reads_paired_event_terrain(monkeypatch):
     """_recommend_gear_for_activity must feed the advisor the planned event's
     description (terrain keywords), not the empty completed-activity fields."""

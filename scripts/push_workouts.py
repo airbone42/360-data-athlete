@@ -92,11 +92,20 @@ async def _push(athlete_id: str, events: list[dict], dry_run: bool, date_str: st
     return created
 
 
-def _format_shoe_footer(shoe_ctx: dict) -> str:
+def _format_shoe_footer(shoe_ctx: dict, include_gear_marker: bool = False) -> str:
     """Render a shoe-recommendation footer for run/ride descriptions.
 
     Uses the primary shoe name, km, and the advisor's reason string (which
     includes type/terrain or rotation hints).
+
+    When ``include_gear_marker`` is set (intervals.icu backend), a trailing
+    machine-readable ``[coach-gear:<gear_id>]`` marker is appended. This makes
+    the push-time recommendation the single source of truth: ``/analyse`` step
+    6.55 (set_activity_gear) reads the marker back and assigns *exactly* that
+    shoe to the finished activity — deterministically matching the push pick
+    (which already weighed surface, pace, preferences, mileage, rotation,
+    weather), instead of re-deriving it from the completed activity's partial
+    data.
     """
     rec = (shoe_ctx or {}).get("shoeRecommendation") or {}
     primary = rec.get("primary") or {}
@@ -117,18 +126,23 @@ def _format_shoe_footer(shoe_ctx: dict) -> str:
     for w in warnings:
         if w.get("msg"):
             line += f"\n{w['msg']}"
+    if include_gear_marker and primary.get("gear_id"):
+        line += f"\n[coach-gear:{primary['gear_id']}]"
     return line
 
 
 async def _enrich_with_shoes(events: list[dict], workouts: list[dict], weather: str, date_str: str) -> None:
     """Append shoe-recommendation footer to Run event descriptions in-place.
 
-    Legacy Strava-backend behaviour only. With the intervals.icu backend the
-    recommended shoe is assigned to the *finished* activity post-run
-    (scripts/set_activity_gear.py, /analyse step 6.55) so intervals.icu can
-    accumulate the mileage natively — no text footer on the planned event.
+    Both backends write the footer onto the planned event:
+    - **strava**: human-readable recommendation only (mileage tracked in Strava).
+    - **intervals**: recommendation **plus** a ``[coach-gear:<id>]`` marker, so
+      ``/analyse`` step 6.55 assigns *exactly* the push-time pick to the
+      finished activity (deterministic, full-context) instead of re-deriving it.
+      The native mileage still accrues on the finished activity, not the plan.
     """
-    if settings.shoe_tracking_backend != "strava":
+    backend = settings.shoe_tracking_backend
+    if backend not in ("strava", "intervals"):
         return
     if not any(w.get("type") == "Run" for w in workouts):
         return
@@ -137,7 +151,7 @@ async def _enrich_with_shoes(events: list[dict], workouts: list[dict], weather: 
     except Exception as exc:
         logger.warning("Shoe recommendation failed: %s — workouts pushed without shoe footer", exc)
         return
-    footer = _format_shoe_footer(shoe_ctx)
+    footer = _format_shoe_footer(shoe_ctx, include_gear_marker=(backend == "intervals"))
     if not footer:
         return
     for ev in events:

@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import re
 import sys
 from datetime import date, timedelta
 from pathlib import Path
@@ -36,13 +37,65 @@ from app.api.intervals_client import IntervalsClient
 from app.config import settings
 from app.graphs.shoe_advisor import build_shoe_context, gear_to_shoes, load_shoe_profiles
 
+# Markers written by push_workouts._format_shoe_footer onto the planned event
+# (intervals backend). The machine marker carries the gear id directly; the
+# human line is the legacy/strava fallback (name → gear id lookup).
+_GEAR_MARKER_RE = re.compile(r"\[coach-gear:\s*(g\w+)\]")
+_SHOE_REC_RE = re.compile(r"Shoe recommendation:\s*([^\n(—]+)")
 
-async def _recommend_gear_for_activity(icu: IntervalsClient, activity: dict) -> dict | None:
+
+async def _fetch_paired_event(icu: IntervalsClient, activity: dict) -> dict:
+    """Return the planned event paired with a finished activity (or {})."""
+    pid = activity.get("paired_event_id")
+    if not pid:
+        return {}
+    try:
+        return await icu.get_event(str(pid)) or {}
+    except Exception:
+        return {}
+
+
+def _gear_from_planned_event(plan: dict, gear_list: list[dict]) -> tuple[str | None, str]:
+    """Read the push-time shoe pick persisted on the planned event.
+
+    The push-time recommendation already weighed every factor (surface, pace,
+    preferences, mileage, rotation, weather), so reading it back is exact and
+    avoids re-deriving from the finished activity's partial data. Priority:
+    the machine ``[coach-gear:<id>]`` marker, then the human
+    "Shoe recommendation: <name>" line mapped to a gear id. Only an *active*
+    Shoes-type gear is returned; anything stale falls through to ``None`` so the
+    caller re-derives.
+    """
+    desc = (plan or {}).get("description") or ""
+    active = {
+        g.get("id"): g
+        for g in gear_list
+        if (g.get("type") or "") == "Shoes" and not g.get("retired")
+    }
+    m = _GEAR_MARKER_RE.search(desc)
+    if m and m.group(1) in active:
+        return m.group(1), f"Plan-Empfehlung: {active[m.group(1)].get('name')}"
+    m = _SHOE_REC_RE.search(desc)
+    if m:
+        name = m.group(1).strip().lower()
+        for gid, g in active.items():
+            if (g.get("name") or "").strip().lower() == name:
+                return gid, f"Plan-Empfehlung: {g.get('name')}"
+    return None, ""
+
+
+async def _recommend_gear_for_activity(
+    icu: IntervalsClient,
+    activity: dict,
+    plan: dict | None = None,
+    gear_list: list[dict] | None = None,
+) -> dict | None:
     """Return the advisor's primary shoe recommendation for a finished activity.
 
-    Treats the activity as the 'planned run' so the existing scoring
-    (terrain, pace, rotation, mileage) applies. Returns the recommendation
-    entry ({gear_id, name, ...}) or None.
+    Fallback path only — used when the planned event carries no persisted
+    push-time pick (legacy / non-coach activities). Treats the activity as the
+    'planned run' so the existing scoring (terrain, pace, rotation, mileage)
+    applies. Returns the recommendation entry ({gear_id, name, ...}) or None.
     """
     today_str = (activity.get("start_date_local") or date.today().isoformat())[:10]
     # The completed activity carries no `surface` and usually an empty
@@ -53,13 +106,8 @@ async def _recommend_gear_for_activity(icu: IntervalsClient, activity: dict) -> 
     # ("Trail …", "Forstweg …"), which drives the same terrain classification
     # the push-time recommendation used. Fall back to the activity fields when
     # no planned event is paired.
-    plan: dict = {}
-    paired_event_id = activity.get("paired_event_id")
-    if paired_event_id:
-        try:
-            plan = await icu.get_event(str(paired_event_id)) or {}
-        except Exception:
-            plan = {}
+    if plan is None:
+        plan = await _fetch_paired_event(icu, activity)
     planned = [{
         "type": activity.get("type"),
         "surface": plan.get("surface") or activity.get("surface") or "",
@@ -68,7 +116,7 @@ async def _recommend_gear_for_activity(icu: IntervalsClient, activity: dict) -> 
         "intensity": plan.get("intensity") or activity.get("intensity") or "",
         "coaching_notes": plan.get("description") or activity.get("description") or "",
     }]
-    gear = await icu.list_gear()
+    gear = gear_list if gear_list is not None else await icu.list_gear()
     shoes = gear_to_shoes(gear)
     profiles = load_shoe_profiles()
     # Recent activities for rotation context (gear_id already set on past runs).
@@ -98,6 +146,9 @@ async def _run(activity_id: str, gear_id: str | None, auto: bool, dry_run: bool,
         print(f"– {activity_id}: keine Lauf-Aktivität ({activity.get('type')}) — übersprungen.")
         return
 
+    # Fetched once and reused by the idempotency guard and the --auto path.
+    gear_list = await icu.list_gear()
+
     # intervals.icu exposes an assigned shoe as a nested `gear` object
     # ({"id": ...}), not a flat `gear_id` — read the id from there (with a
     # legacy flat-field fallback) so the idempotency guard actually fires.
@@ -108,7 +159,6 @@ async def _run(activity_id: str, gear_id: str | None, auto: bool, dry_run: bool,
         # imported activity). That is NOT a real assignment and must not block
         # auto-correction. Only an active Shoes-type gear counts as a genuine
         # existing assignment worth preserving.
-        gear_list = await icu.list_gear()
         entry = next((g for g in gear_list if g.get("id") == existing), None)
         is_active_shoe = (
             entry is not None
@@ -123,12 +173,22 @@ async def _run(activity_id: str, gear_id: str | None, auto: bool, dry_run: bool,
 
     reason = ""
     if auto and not gear_id:
-        primary = await _recommend_gear_for_activity(icu, activity)
-        if not primary or not primary.get("gear_id"):
-            print(f"– {activity_id}: keine Schuh-Empfehlung ermittelt — nichts gesetzt.")
-            return
-        gear_id = primary["gear_id"]
-        reason = f" ({primary.get('name')} — {primary.get('reason', '')})".rstrip()
+        plan = await _fetch_paired_event(icu, activity)
+        # 1. Deterministic: use the push-time recommendation persisted on the
+        #    planned event (full-context pick). This matches push and analysis
+        #    by construction.
+        gear_id, why = _gear_from_planned_event(plan, gear_list)
+        if gear_id:
+            reason = f" ({why})"
+        else:
+            # 2. Fallback (legacy / non-coach runs without a persisted pick):
+            #    re-derive from the planned context.
+            primary = await _recommend_gear_for_activity(icu, activity, plan=plan, gear_list=gear_list)
+            if not primary or not primary.get("gear_id"):
+                print(f"– {activity_id}: keine Schuh-Empfehlung ermittelt — nichts gesetzt.")
+                return
+            gear_id = primary["gear_id"]
+            reason = f" ({primary.get('name')} — {primary.get('reason', '')})".rstrip()
 
     if not gear_id:
         print("⚠ Weder --gear-id noch --auto angegeben.", file=sys.stderr)
