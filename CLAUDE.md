@@ -442,7 +442,51 @@ Activity-NOTE recommendations that should become permanent rules must
 be explicitly migrated to `config/athlete_status.md` or
 `config/training_paradigms.md`. Until then: do NOT generalise.
 
-*Enforcement: mechanical validator hook `validate_plan.py::check_easy_run_conservatism` (R014) — surfaces easy runs below 70% of 30d easy median without a documented recovery reason. Plus head-coach judgment for the other drift classes.*
+**Conservatism applies to pacing & race-strategy recommendations too, not
+just daily stimulus.** The same no-silent-downgrade discipline governs
+any **effort target, race pace, or race-strategy** the coach proposes.
+Two anchoring errors are forbidden:
+
+1. **Do not anchor short-race pacing on CTL / recent-load.** CTL (and
+   ATL/TSB) is a *recent-load / durability* signal — it matters most for
+   long efforts where glycogen depletion and time-on-feet durability are
+   the limiter (≳ half-marathon, multi-hour). For shorter races
+   (≈ ≤ HM, ≤ ~90 min) the performance limiter is threshold / VO2 /
+   running economy, which a trained athlete **retains at modest CTL**.
+   Telling an athlete to hold back in a short race "because your CTL/base
+   is low" is a metric-misuse: it confuses recent training volume with
+   performance ceiling. Anchor short-race pacing on **event demands + the
+   athlete's race history + quality base** (PRs, recent race results,
+   type-history quality sessions — sources in `config/athlete_static.md`
+   and the activity history). CTL enters only as a *durability caveat for
+   long efforts*.
+
+2. **Athlete empirical evidence outranks a single-metric heuristic.**
+   When the athlete challenges a recommendation with **concrete
+   past-performance evidence** ("I ran race X at lower fitness and
+   sustained effort Y"), that evidence outranks the heuristic — the coach
+   **adjusts and concedes explicitly, does not defend**. Re-derive the
+   recommendation from the cited evidence.
+
+A *more conservative* effort/pacing recommendation than the athlete's
+evidence supports requires a **concrete, named trigger** — name it or do
+not downgrade:
+
+- Red-flag wellness (`intensityReadiness 🔴` AND forecast verdict
+  ≠ "expected")
+- An **injury limiter on the specific race demand** — constrain *that
+  demand*, not the whole effort. The limiter is *tissue tolerance on the
+  demand* (e.g. tendon/joint eccentric-load tolerance on a technical
+  descent), NOT cardiovascular pacing. Cap the demand (downhill load,
+  surface) and leave the rest of the effort to the athlete's capability.
+- Active taper with a documented TSB target
+- Athlete-reported acute symptom in this conversation
+
+Absent such a trigger, match the recommendation to the athlete's
+demonstrated capability. Sport-science backing:
+[race-pacing-and-load-metrics.md](research/race-pacing-and-load-metrics.md).
+
+*Enforcement: mechanical validator hook `validate_plan.py::check_easy_run_conservatism` (R014) — surfaces easy runs below 70% of 30d easy median without a documented recovery reason. Plus head-coach judgment for the other drift classes, including pacing / race-strategy conservatism (not mechanizable — race strategy is not a pushed-workout artifact).*
 
 ### Never silently drop or replace standing prescriptions (mandatory)
 
