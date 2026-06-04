@@ -13,30 +13,73 @@ import json
 import logging
 import sys
 import time
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from app.config import settings
 from app.api.strava_client import StravaClient
-from app.graphs.shoe_advisor import build_shoe_context, load_shoe_profiles, write_shoe_log
+from app.api.intervals_client import IntervalsClient
+from app.graphs.shoe_advisor import (
+    build_shoe_context,
+    gear_to_shoes,
+    load_shoe_profiles,
+    write_shoe_log,
+)
 
 logger = logging.getLogger(__name__)
 
 
 async def recommend(workouts: list[dict], weather: str, date_str: str) -> dict:
-    """Library function: return shoe context dict (importable by training_flow.py)."""
+    """Library function: return shoe context dict (importable by training_flow.py).
+
+    The wear-history source MUST follow ``SHOE_TRACKING_BACKEND`` — otherwise the
+    rotation signal goes blind after an athlete migrates from Strava to native
+    intervals.icu gear. With the ``intervals`` backend the advisor reads gear +
+    last-used straight from intervals.icu activities (nested ``gear.id``); the
+    legacy ``strava`` backend keeps the Strava API path with a ``shoe_log.json``
+    fallback. ``off`` disables the footer entirely.
+    """
     run_workouts = [w for w in workouts if w.get("type") == "Run"]
     if not run_workouts:
         return {}
 
-    client = StravaClient()
-    shoes = await client.list_shoes()
+    backend = settings.shoe_tracking_backend
+    if backend == "off":
+        return {}
+
     profiles = load_shoe_profiles()
 
+    if backend == "intervals":
+        client = IntervalsClient()
+        gear = await client.list_gear()
+        shoes = gear_to_shoes(gear)
+        # Pull last 30d intervals.icu activities so the advisor sees real wear
+        # (gear assigned to finished activities via /analyse step 6.55).
+        try:
+            oldest = (date.fromisoformat(date_str) - timedelta(days=30)).isoformat()
+            recent_activities = await client.get_activities(oldest, date_str)
+        except Exception as exc:
+            logger.warning("intervals.icu activities fetch failed (rotation degraded): %s", exc)
+            recent_activities = []
+        return build_shoe_context(
+            shoes=shoes,
+            profiles=profiles,
+            activities=recent_activities,
+            planned_workouts=run_workouts,
+            weather_info=weather,
+            race_in_days=None,
+            today_str=date_str,
+            backend="intervals",
+        )
+
+    # Legacy Strava backend.
+    client = StravaClient()
+    shoes = await client.list_shoes()
+
     # Pull last 30d Strava activities so the advisor sees real gear_id usage
-    # (intervals.icu activities don't carry gear_id reliably; the local
-    # shoe_log.json only tracks what was *recommended*, not what was *worn*).
+    # (the local shoe_log.json only tracks what was *recommended*, not *worn*).
     strava_ok = True
     try:
         after_epoch = int(time.time()) - 30 * 86400
@@ -54,6 +97,7 @@ async def recommend(workouts: list[dict], weather: str, date_str: str) -> dict:
         weather_info=weather,
         race_in_days=None,
         today_str=date_str,
+        backend="strava",
     )
 
     # Persist recommendation only as fallback when Strava is down — otherwise
