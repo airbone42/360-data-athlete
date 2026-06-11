@@ -1157,6 +1157,22 @@ When the athlete sends a video via the Telegram plugin
    injuries / sport profile from `config/athlete_static.md` through
    `--context` so they reach the analysis. Without `--context` the
    Challenge layer has no athlete-specific grounding.
+
+   **Neutral prompting (mandatory) — no leading questions.** Pass
+   injuries/restrictions/sport profile as *state*, but do NOT seed a
+   prior form finding as a yes/no leading question (e.g. "is the
+   hollow-back from last time still there?"). An LLM video analysis
+   tends to **confirm a finding it was handed**, even when the footage
+   contradicts it (confirmation bias). Frame the focus neutrally —
+   "assess pelvis / lumbar-spine position through the forward circle" —
+   and reconcile against any prior finding *after* the model has
+   reported, not before. When the athlete **disputes** a finding, do
+   not defend the model: extract the cited frames yourself
+   (`ffmpeg`/`imageio-ffmpeg` at the named timestamps, fine-sample the
+   critical window) and adjudicate from the footage. The athlete's view
+   of their own video outranks a single automated read; correct any
+   already-persisted finding before it drives a (wrong) progression
+   change.
 4. Send feedback via Telegram.
 5. Persist the analysis in `config/exercise_log.md` — specialists read this
    file and feed findings into future coaching notes.
