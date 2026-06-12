@@ -690,6 +690,19 @@ def check_intervals_step_targets(workouts: list[dict], ctx: Context) -> list[Fin
     TARGET_PATTERNS_RIDE = TARGET_PATTERNS_COMMON + [
         r"\bZ\d(?:-Z\d)?\b",                 # Z2 (bare) is power zone on bike — valid
     ]
+    # Power-bearing targets for a Ride. A Ride step needs at least ONE of
+    # these — an HR-only target (`Z1 HR`, `% LTHR`, `% HR`) passes the
+    # generic has_target check but Wahoo's smart-trainer plan upload rejects
+    # it with the same 422. Bare `%` defaults to %FTP (power); `% LTHR/HR/
+    # Pace` are explicitly NOT power.
+    POWER_PATTERNS_RIDE = [
+        r"\d+(?:-\d+)?w\b",                          # 220w, 200-240w
+        r"\d+(?:-\d+)?%\s*(?:ftp|map|mmp)\b",        # 95% FTP, 105% MAP
+        r"\d+(?:-\d+)?%(?!\s*(?:ftp|map|mmp|lthr|hr|pace))",  # bare 75% = %FTP power
+        r"\bZ\d(?:-Z\d)?\b(?!\s+(?:HR|Pace))",       # bare Zn = power zone
+        r"\bramp\s+\d+",
+        r"\bfreeride\b",
+    ]
     BARE_ZONE_RE = re.compile(r"\bZ\d(?:-Z\d)?\b(?!\s+(?:HR|Pace))", re.IGNORECASE)
     BAD_BPM_RE = re.compile(r"\b\d+(?:-\d+)?\s*bpm\b", re.IGNORECASE)
     LAP_PRESS_RE = re.compile(r"\bpress\s+lap\b", re.IGNORECASE)
@@ -779,6 +792,39 @@ def check_intervals_step_targets(workouts: list[dict], ctx: Context) -> list[Fin
                             "Append the explicit suffix: `Z2 HR`, `Z1-Z2 HR`, "
                             "`Z4 HR`. Or use `% LTHR` / `% HR` notation. "
                             "Bare `Zn` is valid only on Ride/VirtualRide (Power zone)."
+                        ),
+                    ))
+                    continue
+
+            # Ride-specific: a step whose ONLY target is HR/pace (no power)
+            # passes intervals.icu but Wahoo's smart-trainer plan upload
+            # rejects it with the same 422 (`valid 'targets' array`) — a Ride
+            # step needs a POWER target. Recurrence pattern: warm-up / set-rest
+            # / cool-down written as `Z1 HR` on an indoor Ride — validator
+            # passed (HR counts as a target), Wahoo 422'd. After a hard
+            # interval an HR-Z1 target is physiologically pointless anyway
+            # (HR lags the effort by 5-10 min). Details in
+            # `framework/research/intervals-icu-workout-syntax.md` Trap B.
+            if is_ride and has_target:
+                has_power = any(
+                    re.search(p, content, re.IGNORECASE) for p in POWER_PATTERNS_RIDE
+                )
+                if not has_power:
+                    findings.append(Finding(
+                        rule_id="R012",
+                        severity=SEVERITY_ERROR,
+                        workout=_workout_name(w),
+                        message=(
+                            f"intervals_icu step `{content[:80]}` (Ride) carries "
+                            f"only an HR/pace target (no watts, no %FTP, no power "
+                            f"zone). Wahoo plan upload rejects HR-only targets on a "
+                            f"smart-trainer ride with the same 422."
+                        ),
+                        suggestion=(
+                            "Give every Ride step a POWER target. Convert HR steps "
+                            "to watts: warm-up/recovery/cool-down → e.g. `9m 150W "
+                            "90rpm`, `3m 150W`, `8m 130W`. Cadence/HR may stay as "
+                            "secondary, but watts must lead on an indoor ride."
                         ),
                     ))
                     continue

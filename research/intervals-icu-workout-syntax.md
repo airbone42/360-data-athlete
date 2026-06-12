@@ -133,7 +133,9 @@ At LTHR 160 this corresponds to 122-130 bpm (Z2 lower half). The step now carrie
 422: Plan validation error: each interval that is not of type 'repeat' must have a valid 'targets' array
 ```
 
-Cadence alone is not a target. Wahoo accepts steps only with power/HR/pace.
+Cadence alone is not a target. On a smart-trainer **Ride**, Wahoo needs a
+**power** target specifically (see Trap B-bis) — cadence-only or HR-only is
+not enough.
 
 **Fix:**
 ```
@@ -141,6 +143,41 @@ Cadence alone is not a target. Wahoo accepts steps only with power/HR/pace.
 ```
 
 Watt anchor for the spin-up phase (~80% FTP at FTP 250 W) — the athlete cranks the frequency up AND drives a minimum power, which is also the intended goal.
+
+### Trap B-bis: HR-only target on a Ride — same Wahoo 422 (recurrence)
+
+**Push attempt** (indoor Ride warm-up / set-rest / cool-down written with HR
+zones, the way a Run would be):
+```
+- Warmup 9m Z1 HR 90-100rpm
+- Recovery 3m Z1 HR
+- Cool-down 8m Z1 HR 85-90rpm
+```
+
+**Wahoo plan-upload response:** the identical
+`422: ... each interval that is not of type 'repeat' must have a valid 'targets' array`.
+
+intervals.icu happily accepts `Z1 HR` on a Ride (it counts as a target), so
+this is **invisible to a naive target-presence check** — the failure only
+surfaces downstream at the Wahoo smart-trainer sync, which expects a **power**
+target on a ride and treats an HR-only target as no target. (After a hard
+30/15 interval an HR-Z1 target is physiologically pointless anyway — HR lags
+the effort by 5-10 min.)
+
+**Fix:** every Ride step carries watts; HR/cadence may ride along as
+secondary but never alone.
+```
+- Warmup 9m 150W 90-100rpm
+- Recovery 3m 150W
+- Cool-down 8m 130W 85-90rpm
+```
+
+**Validator enforcement (R012, since this recurred):** `validate_plan.py`
+now distinguishes *any* target from a *power* target on Ride/VirtualRide
+steps. A Ride step whose only target is HR/pace (`Zn HR`, `% LTHR`,
+`% HR`) is flagged **ERROR** (`POWER_PATTERNS_RIDE` check) — it blocks the
+push before the workout can reach the Wahoo sync. Regression test:
+`tests/test_validate_plan_r012_ride_power.py`.
 
 ### Trap C-bis: blank line inside the repeat block — reps=1 instead of reps=N
 
