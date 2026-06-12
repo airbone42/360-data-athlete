@@ -624,6 +624,47 @@ Physio-Routine, Core-Accessory") — not with cherry-picked exercises
 that may not survive the specialist's review of
 `config/exercise_progressions.md` + type-history.
 
+### Surface gated-but-ready stimuli in the plan (mandatory)
+
+When a stimulus is **due or overdue** (pillar rotation cadence exceeded,
+weekly Hard-Reiz open, last-seen older than the rotation window) but the
+only thing holding it back is an **injury gate awaiting the athlete's
+explicit confirmation** (an active restriction that can only be cleared
+by the athlete, never by inference — see "Never silently drop or replace
+standing prescriptions"), the coach **presents it in the plan as
+gated-pending-confirmation** — never silently omits it.
+
+The athlete should see that the stimulus is queued and what single
+condition unlocks it, in the **same** proposal — not discover it only
+after asking. Omitting a ready, overdue stimulus and adding it
+reactively once the athlete prompts reads as "the coach forgot it",
+even when the omission was a defensible conservative default.
+
+**Operational rule:**
+
+- The conservative default still holds: do **not** push a workout that
+  loads an actively-gated area without the athlete's explicit OK
+  (restrictions clear by confirmation, not inference).
+- But the gated stimulus is **named in the proposal** with its single
+  unlock condition, e.g.: "Grip is the furthest-back pillar and overdue
+  — ready to go in today; the only blocker is your {zone}. If it's
+  clear, it's in." This replaces a bare yes/no health-check question
+  that hides the queued stimulus behind it.
+- When the athlete confirms the gate is clear, the stimulus moves into
+  the concrete plan without re-deriving "should we even do this" — the
+  due-ness already established it.
+
+**Pattern anchor (from real use):** a coach held an overdue pillar back
+behind an acute injury gate (correct, conservative) but presented a
+plan that simply *omitted* it and asked a separate yes/no question
+about the injury. The athlete had to ask twice why the obviously-due
+stimulus wasn't in the plan. The fix is transparency, not a looser
+gate: show the queued stimulus and its unlock condition in the first
+proposal.
+
+*Enforcement: head-coach judgment — plan-presentation discipline, not a
+mechanizable code path.*
+
 ### Active-block discipline (mandatory)
 
 Every entry in the "ACTIVE BLOCKS" / "active_blocks" list at the top of
