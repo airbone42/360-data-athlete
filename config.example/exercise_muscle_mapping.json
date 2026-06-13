@@ -311,6 +311,68 @@
     "eccentric_dominant": false,
     "tendon_dominant": true
   },
+  "towel_farmers_hold": {
+    "aliases": [
+      "towel farmer hold",
+      "towel farmer's hold",
+      "towel farmer hold kb",
+      "towel farmers hold",
+      "handtuch farmer hold"
+    ],
+    "primary": [
+      {
+        "muscle": "flexor_digitorum_superficialis",
+        "intensity": 1.0
+      },
+      {
+        "muscle": "flexor_digitorum_profundus",
+        "intensity": 1.0
+      },
+      {
+        "muscle": "flexor_pollicis_longus",
+        "intensity": 0.6
+      }
+    ],
+    "secondary": [
+      {
+        "muscle": "flexor_carpi_radialis",
+        "intensity": 0.6
+      },
+      {
+        "muscle": "flexor_carpi_ulnaris",
+        "intensity": 0.6
+      },
+      {
+        "muscle": "brachioradialis",
+        "intensity": 0.4
+      }
+    ],
+    "stabilizer": [
+      {
+        "muscle": "trapezius_upper",
+        "intensity": 0.15
+      },
+      {
+        "muscle": "erector_spinae",
+        "intensity": 0.15
+      },
+      {
+        "muscle": "quadratus_lumborum",
+        "intensity": 0.15
+      },
+      {
+        "muscle": "trapezius_mid",
+        "intensity": 0.15
+      },
+      {
+        "muscle": "gluteus_medius",
+        "intensity": 0.15
+      }
+    ],
+    "load_mode": "isometric",
+    "eccentric_dominant": false,
+    "tendon_dominant": true
+  },
   "kb_horn_pinch": {
     "aliases": [
       "kb horn pinch",

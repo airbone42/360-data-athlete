@@ -114,7 +114,7 @@ _LINE_RE = re.compile(
     )
     (?:\s*(?:je\s*seite|per\s*side|/\s*seite|beidseitig))?  # optional per-side
     (?:\s*,\s*|\s+@?\s*)?
-    (?:(?P<weight>\d+(?:\.\d+)?)\s*kg)?   # optional weight
+    (?:(?P<weight>\d+(?:[.,]\d+)?)\s*kg)?  # optional weight (dot OR German comma decimal)
     (?:[^/\n]{0,80}?                       # anything in between
      RPE\s*(?P<rpe>\d+(?:[,.\-–]\d+)?))?  # optional RPE or range
     """,
@@ -132,7 +132,7 @@ _NAME_COLON_RE = re.compile(
 )
 
 _RPE_ONLY_RE = re.compile(r"RPE\s*(\d+(?:[,.\-–]\d+)?)", re.IGNORECASE)
-_WEIGHT_ONLY_RE = re.compile(r"(\d+(?:\.\d+)?)\s*kg", re.IGNORECASE)
+_WEIGHT_ONLY_RE = re.compile(r"(\d+(?:[.,]\d+)?)\s*kg", re.IGNORECASE)
 _PER_SIDE_RE = re.compile(r"je\s*seite|per\s*side|/\s*seite|beidseitig", re.IGNORECASE)
 # Isometric hold-time within a rep — e.g. "3s Hold at the contact point", "7s Hold",
 # "Hold 5s", "2 s Halt", "3-s-Hold". German "halten" / "halt" / "halte" remain in
@@ -383,13 +383,13 @@ def parse_line(line: str) -> ParsedExercise | None:
         name_raw = m.group("name_pre") or _extract_name_from_line(stripped, m.start())
     name_normalised = normalise_exercise_name(name_raw) if name_raw else None
 
-    # Weight
+    # Weight — normalise German comma decimal ("5,75" → 5.75) before float()
     weight_raw = m.group("weight")
-    weight_kg: float | None = float(weight_raw) if weight_raw else None
+    weight_kg: float | None = float(weight_raw.replace(",", ".")) if weight_raw else None
     if weight_kg is None:
         wm = _WEIGHT_ONLY_RE.search(stripped)
         if wm:
-            weight_kg = float(wm.group(1))
+            weight_kg = float(wm.group(1).replace(",", "."))
 
     # RPE
     rpe_raw = m.group("rpe")
@@ -458,7 +458,7 @@ def _extract_name_from_line(line: str, match_start: int) -> str | None:
     suffix = line[match_start:].strip()
     # Remove the number pattern
     suffix = re.sub(r"^\d+\s*[x×*]\s*\d+(?:\.\d+)?\s*(?:s|sec|min)?\s*,?\s*", "", suffix, flags=re.I)
-    suffix = re.sub(r"^\d+(?:\.\d+)?\s*kg\s*", "", suffix, flags=re.I)
+    suffix = re.sub(r"^\d+(?:[.,]\d+)?\s*kg\s*", "", suffix, flags=re.I)
     suffix = re.sub(r"RPE.*", "", suffix, flags=re.I).strip().rstrip("—-,")
     # Reject suffix if it reads like parameter text rather than an exercise name
     if len(suffix) >= 3 and not _PARAM_SUFFIX_WORDS.search(suffix):
