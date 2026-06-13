@@ -65,6 +65,20 @@ python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/fetch_type_history.py \
   --date {DATE} --type {type} --tags {tags} --max-sessions {3 for endurance, 5 otherwise}
 ```
 
+**Widen the window for a LONG / volume directive (MANDATORY).** The
+default 3-session endurance window is *systematically unrepresentative*
+right after a race, during a rebuild, in a taper, or on return from
+illness — the last 3 runs are short, so the long-run anchor collapses to
+"the longest of those three" and the plan comes out too conservative.
+For a `workout_type: LONG` (or any volume-anchored) Run/Ride, pass
+`--max-sessions 12` and anchor on the athlete's **demonstrated longest
+comparable run** (sort by `duration_min`), not the most recent session —
+cross-checked against the phase target in `config/competition_plan.md`.
+Down-anchor below demonstrated capability only with a concrete trigger
+(see CLAUDE.md "No silent conservatism"). This mirrors the Quality
+tags-filter rule below: both prevent a short, unrepresentative window
+from silently shrinking the stimulus.
+
 **Tags filter is MANDATORY when the directive carries them.** For a
 Quality Run (`tags: ["run", "intervals"]` or contains "intervals"), pass
 `--tags run,intervals` — otherwise the unfiltered call returns whatever

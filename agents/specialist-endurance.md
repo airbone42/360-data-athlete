@@ -225,6 +225,48 @@ valid patterns:
 - At compliance <80 % or feedback "too hard": volume −15 % or pace +10
   s/km
 
+## Long-run / volume anchoring (MANDATORY)
+
+**Briefing-window check for LONG / volume directives.** The head-coach
+briefing typically passes the last 3 runs. Right after a race, during a
+rebuild, in a taper, or on return from illness, those recent runs are
+**systematically shorter** than the athlete's demonstrated long-run
+capability. Anchoring the long-run duration on "the longest of the last
+3 runs" then understates capability and produces a too-conservative
+plan.
+
+**Rule:** For a `LONG` (or any volume-anchored) directive, do NOT anchor
+duration on the most recent session. Pull a wider window and anchor on
+the athlete's **demonstrated longest comparable run** (same intensity
+class, comparable surface) within a representative look-back (≈ 4–6
+weeks):
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/fetch_type_history.py \
+  --date {DATE} --type Run --max-sessions 12 \
+  | jq 'sort_by(.duration_min) | reverse | .[0:5]'
+```
+
+Set the long-run duration as a sensible step from that demonstrated
+longest comparable run, cross-checked against the phase target in
+`config/competition_plan.md`. A recent short rebuild/taper run is **not**
+the ceiling.
+
+**Down-anchor below demonstrated capability only with a concrete, named
+trigger** (per the head-coach "No silent conservatism" rule): red-flag
+wellness, an active injury limiter on the volume itself, an active taper
+with a documented TSB target, or an athlete-reported acute symptom.
+"The last few runs were short" is **not** a trigger — surface the
+demonstrated capability in `focus` and step up toward it.
+
+**Drift incident pattern:** post-race rebuild, the last 3 runs were
+short re-entry sessions; the long-run anchor defaulted to the longest of
+those three and proposed a long run well below the athlete's
+demonstrated capability from a few weeks earlier (which sat just outside
+the 3-session briefing window). The athlete had to challenge the
+conservatism. The demonstrated longest comparable run within a
+representative window is the anchor, not the most recent session.
+
 ## Compliance check before repeating a structured workout (MANDATORY)
 
 Before prescribing **any structured high-intensity format** that has

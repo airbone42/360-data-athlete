@@ -486,7 +486,42 @@ Absent such a trigger, match the recommendation to the athlete's
 demonstrated capability. Sport-science backing:
 [race-pacing-and-load-metrics.md](research/race-pacing-and-load-metrics.md).
 
-*Enforcement: mechanical validator hook `validate_plan.py::check_easy_run_conservatism` (R014) — surfaces easy runs below 70% of 30d easy median without a documented recovery reason. Plus head-coach judgment for the other drift classes, including pacing / race-strategy conservatism (not mechanizable — race strategy is not a pushed-workout artifact).*
+**The same discipline governs volume / long-run duration — anchor on
+demonstrated capability, not on the most recent sessions.** The
+briefing window (last 3 endurance sessions by default) is
+*systematically unrepresentative* right after a race, during a rebuild,
+in a taper, or on return from illness — those recent runs are shorter
+than the athlete's real long-run ceiling. Anchoring a `LONG` directive
+on "the longest of the last 3 runs" in those contexts silently shrinks
+the plan below what the athlete demonstrably handled a few weeks
+earlier.
+
+- The long-run / volume anchor is the athlete's **demonstrated longest
+  comparable run** (same intensity class, comparable surface) within a
+  representative look-back (≈ 4–6 weeks), cross-checked against the
+  phase target in `config/competition_plan.md` — **not** the most
+  recent rebuild/taper session.
+- Before briefing a `LONG` directive, the head coach widens the
+  endurance type-history window (`fetch_type_history.py … --max-sessions
+  12`, sorted by duration) so the demonstrated longest run is actually
+  in scope — a 3-session window hides it.
+- Down-anchor below demonstrated capability only with a concrete, named
+  trigger from the list above (red-flag wellness, an injury limiter on
+  the volume itself, active taper with a documented TSB target,
+  athlete-reported acute symptom). "The last few runs were short" is
+  **not** a trigger.
+
+**Drift incident pattern** (canonical case to learn from): post-race
+rebuild, the last 3 runs were short re-entry sessions; the long-run
+anchor defaulted to the longest of those three and the plan proposed a
+long run well below the athlete's demonstrated capability from a few
+weeks earlier — which sat just *outside* the 3-session briefing window.
+The athlete had to challenge the conservatism. Fix: representative
+look-back + demonstrated-capability anchoring at both the head-coach
+briefing layer and in `specialist-endurance` ("Long-run / volume
+anchoring").
+
+*Enforcement: mechanical validator hook `validate_plan.py::check_easy_run_conservatism` (R014) — surfaces easy runs below 70% of 30d easy median without a documented recovery reason. Plus head-coach judgment for the other drift classes, including pacing / race-strategy conservatism and long-run/volume anchoring (not fully mechanizable — the demonstrated-longest-run anchor depends on a representative history window the coach must request).*
 
 ### Never silently drop or replace standing prescriptions (mandatory)
 
