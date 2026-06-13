@@ -3,9 +3,10 @@
 Mirrors the intervals.icu workout name to Strava (all activity types) and
 writes a follower-friendly 3–5 line insights block plus a random-gerund
 footer for endurance activities (`Run`, `VirtualRun`, `Ride`,
-`VirtualRide`). Idempotent: re-running on an activity that already
-carries the `🔬 360° Insights` anchor skips the description, the title
-update stays available.
+`VirtualRide`). Idempotent: re-running on an activity whose description
+already carries the configured footer suffix (`INSIGHTS_ANCHOR`, set
+via `STRAVA_PUBLISHER_FOOTER_SUFFIX` — see `app/config.py`) skips the
+description, the title update stays available.
 
 ## Arguments
 $ARGUMENTS

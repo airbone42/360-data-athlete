@@ -43,7 +43,7 @@ the head coach can't apply a content row in isolation:
 > Hard-Reiz of the current rolling 7d is already logged AND no cross-
 > training Reiz is still open, the row **defers** to the next week — it
 > does not substitute into the primary system. Mechanical safety net:
-> `validate_plan.py` R009. Rule rationale:
+> `validate_plan.py` R017 (weekly hard-reize cap). Rule rationale:
 > `framework/CLAUDE.md` Pre-planning health check §4 (cross-training-slot
 > semantics).
 

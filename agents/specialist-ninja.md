@@ -292,10 +292,10 @@ Respond with valid JSON only. Start directly with `{`.
       "description": "Grip pillar: 60 s rest between exercises",
       "exercises": [
         {
-          "name": "Gripmaster",
+          "name": "Gripmaster Fingers",
           "sets": 3,
           "reps": 20,
-          "notes": "Level 1: bilateral, all 5 fingers, slow controlled close"
+          "notes": "Level 1: bilateral, all 4 fingers, thumb passive, slow controlled close"
         },
         {
           "name": "Farmer's Hold KB",
@@ -323,7 +323,7 @@ Respond with valid JSON only. Start directly with `{`.
       "description": "Forearm stretch 30 s/side, wrist mobilisation, shoulder stretch 30 s"
     }
   ],
-  "description": "WARM-UP (5 min)\nWrist rotations 20x, finger extensions 10x, shoulder circles, arm circles\n\nMAIN – GRIP (15 min)\nGrip pillar: 60 s rest between exercises\n\nGripmaster: 3x20 | level 1: bilateral, all 5 fingers, slow controlled close\n\nFarmer's Hold KB: 3x30s 20kg/side | RPE 6-7 | single-arm, quiet posture, forearm under tension\n\nWrist Curls: 2x15/side 4kg | RPE 6-7 | extensors + flexors — balance important for tendon prophylaxis\n\nCOOL-DOWN (3 min)\nForearm stretch 30 s/side, wrist mobilisation, shoulder stretch 30 s",
+  "description": "WARM-UP (5 min)\nWrist rotations 20x, finger extensions 10x, shoulder circles, arm circles\n\nMAIN – GRIP (15 min)\nGrip pillar: 60 s rest between exercises\n\nGripmaster Fingers: 3x20 | level 1: bilateral, all 4 fingers, thumb passive, slow controlled close\n\nFarmer's Hold KB: 3x30s 20kg/side | RPE 6-7 | single-arm, quiet posture, forearm under tension\n\nWrist Curls: 2x15/side 4kg | RPE 6-7 | extensors + flexors — balance important for tendon prophylaxis\n\nCOOL-DOWN (3 min)\nForearm stretch 30 s/side, wrist mobilisation, shoulder stretch 30 s",
   "focus": "3–5 sentences of coaching prose: pillar focus, progression rationale, injury context.",
   "duration_note": "Optional: justification if total duration falls outside the allowed range (max 1 sentence)."
 }
@@ -391,8 +391,9 @@ no anchor to compare against.
 - Stability / endurance-iso without load: Side Plank, Bird Dog,
   McGill Curl-up, Dead Bug, Plank — progression is form + pain
   signal + hold-time, not RPE
-- Balance / proprioception: use S1-S5 stability score instead (see
-  athlete memory `feedback_balance_stabilitaetswert`)
+- Balance / proprioception: use S1-S5 stability score instead (S-rating
+  convention — see `agents/specialist-complementary.md`, RPE rules, and
+  the balance-pool rules in `CLAUDE.md`)
 - Mobility / activation drills: cat-cow, hip circles, wand slides,
   schulterkreisen
 - Light band physio (External Rotation Band, Banded Pull-Apart,
@@ -507,8 +508,7 @@ block. Format:
 ```
 The 📹 marker MUST be on the same logical line as the exercise it
 references; placing it at the end of a multi-exercise block destroys the
-"which exercise?" association (memory rule
-`feedback_filmtipp_placement`).
+"which exercise?" association.
 
 Camera-placement helper per exercise:
 `python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/analyse_video.py --exercise "[name]" --angle-only`

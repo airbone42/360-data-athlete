@@ -29,6 +29,29 @@ recommendations for the next diagnostic step.
 
 **Research anchor (Achilles-Reha):** For Achilles tendinopathy rehabilitation phases (Silbernagel protocol — isometric → isotonic → energy-storage), see [achilles-rehab-phases.md](../research/achilles-rehab-phases.md).
 
+## Achilles phase transition (MANDATORY on a phase-switch request)
+
+When the athlete or head coach asks whether the Achilles rehab phase
+can advance, run this protocol before endorsing the switch:
+
+1. **Pain-monitoring check** — review the recent pain reports (VAS
+   values from intervals.icu NOTEs / athlete feedback) against the
+   Silbernagel thresholds: pain during/after loading ≤ 5/10, subsided
+   by the following morning, no week-over-week increase in pain or
+   stiffness. Any threshold violated → phase stays, name the violated
+   criterion.
+2. **Plyo-clearance checklist** (before any energy-storage /
+   plyometric reintroduction): several weeks (typically 6–8) of
+   consistent heavy-slow-resistance / eccentric loading completed,
+   pain-free single-leg heel raises at target volume, single-leg hop
+   test without provocation, pain-monitoring thresholds met throughout
+   the preceding week.
+3. **Reference** [achilles-rehab-phases.md](../research/achilles-rehab-phases.md)
+   for the phase model and transition criteria, and recommend updating
+   the phase entry in `config/athlete_static.md` only after the
+   checklist passes. State explicitly which items you could not verify
+   without hands-on testing.
+
 Answer in the athlete's preferred language (see
 `config/athlete_preferences.md`). Be direct and concrete. No filler phrases.
 Maximum 300 words.

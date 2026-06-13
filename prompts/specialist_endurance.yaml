@@ -1,5 +1,5 @@
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
   model: "google/gemini-3.1-pro-preview"
   temperature: 0.3
   response_format: "json_object"
@@ -50,14 +50,10 @@ template: |
 
   ---
 
-  ## Shoe recommendation (MANDATORY in every run description)
+  ## Surface field (MANDATORY for every Run/Ride workout)
 
-  Always provide a shoe tip at the end of the description — matched to the surface and any active restrictions from {athlete_static}:
-  - **Trail / forest path:** prefer trail shoe (grip + cushioning).
-  - **Asphalt / track:** type-matched from the fleet (easy- vs. tempo-oriented).
-  - **Active lower-extremity restrictions:** shoe choice follows the recommendations in {athlete_static} (e.g. higher cushioning, trail shoe also on mixed surface).
-  - Concrete shoe selection from {equipment}; the `shoe-advisor` resolves the fleet dynamically.
-  - Format: `👟 Shoe: [Name] — [short rationale]`
+  Set the `surface` field — allowed values: `asphalt | forest-path | trail | track | treadmill`. The shoe advisor reads this field directly; without it, it falls back to tags / coaching notes (error-prone). On mixed routes, pick the dominant surface (>60%); if truly 50/50, mention in `focus` and pick trail if trail share >= 40% (safety bias).
+  Do NOT write a shoe name into the description — the shoe recommendation comes from `context.shoeRecommendation` / the configured gear backend, not from this prompt.
 
   ---
 
@@ -73,7 +69,7 @@ template: |
   **Analysis of the last 3 sessions:**
   - Compare planned vs. executed (compliance, pace deviation, HR zones)
   - Evaluate athlete feedback: "too easy" / "perfect" / "too hard"
-  - **Compliance:** All steps including Warm-up have a duration → intervals.icu counts them fully. Use direct compliance (actual_time / planned_duration) for progression decisions.
+  - **Compliance:** All steps including Warm-up have a duration → intervals.icu counts them fully. Use direct compliance (actual_time / planned_duration, computed by you) for progression decisions — the precomputed intervals.icu compliance property is never cited and never used as a gate.
 
   **Pace progression:**
   - If the last 2 sessions had compliance >= 95% AND positive feedback: pace -5s/km or +1 repetition
@@ -117,8 +113,8 @@ template: |
   - **Cool-down — Indoor Ride:** NO `press lap`, fixed time step with Z1 HR target. Format: `- Cool-down Xm Z1 HR`. Example: `- Cool-down 5m Z1 HR`.
   - Time format: minutes as `Xm` (e.g. `4m`), seconds as `Xs` (e.g. `30s`)
   - Prefer HR zones over pace (surface changes affect pace)
-  - **Running cadence — DEFAULT: NO target.** Experienced athletes regulate cadence physiologically correctly with pace. Omit cadence in Warm-up, Z2 steps, tempo and interval steps. Exceptions: (1) strides / cadence drills as the training purpose, (2) acute knee/hip rehab (+5% cadence), (3) observed cadence drop <160 spm. If needed: `Xspm` or `X-Yspm` after the HR target — example: `- 4m Z2 HR 175-185spm`.
+  - **Running cadence — DEFAULT: NO target.** Experienced athletes regulate cadence physiologically correctly with pace. Omit cadence in Warm-up, Z2 steps, tempo and interval steps. Exceptions: (1) strides / cadence drills as the training purpose, (2) acute knee/hip rehab (+5% cadence), (3) observed cadence drop <160 spm. Format when needed: `cadence Xrpm` or `cadence X-Yrpm` after the HR target (intervals.icu parses only `rpm`, no space before `rpm`) — example: `- 4m Z2 HR cadence 175-185rpm`.
   - **Cycling cadence:** If a cadence target makes sense, append `Xrpm` or `X-Yrpm` after the target. Example: `- 10m Z3 HR 88-92rpm`.
 
   For interval sessions in the main set: state concrete repetition count, pace and rest. Briefly explain (1 sentence) why this progression was chosen based on history.
-  The total duration of all steps MUST lie within the duration_range from the planner directive. The total duration in the intervals_icu text MUST match the sum of the structure steps exactly. If you deviate, you MUST include a `duration_note` field with a short sport-scientific rationale (max 1 sentence).
+  The total duration in the intervals_icu text MUST match the sum of the structure steps exactly. The duration_range from the planner directive is a volume estimate, not a hard time cap: when the athletically meaningful stimulus needs more time (or less suffices), deviate from the range — but then you MUST include a `duration_note` field with a short sport-scientific rationale (max 1 sentence).

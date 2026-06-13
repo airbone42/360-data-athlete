@@ -176,10 +176,6 @@ async def _fetch_all(athlete_id: str, date_str: str) -> dict:
         "deload_ctl_threshold": deload_ctl_threshold,
     }
 
-    if not wellness.get("restingHR"):
-        state.setdefault("dataWarnings", [])
-        state["dataWarnings"] = ["RHR nicht verfügbar – Garmin noch nicht synchronisiert"]
-
     context = build_context(state)
     if weather_warning:
         context.setdefault("dataWarnings", [])

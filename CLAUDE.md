@@ -177,7 +177,12 @@ blocks any bare `python3 scripts/...` from sneaking back into
 - `app/utils/` — FIT parser, Garmin download, prompt loader, HR zones,
   windowing, **path resolution (`paths.py`)**, **prompt sanitization (`sanitize.py`)**
 - `app/graphs/` — context builder, type-history fetcher, workout parser
-- Prompts: `prompts/*.yaml` (template + model + temperature)
+- Prompts: `prompts/*.yaml` (template + model + temperature).
+  `agents/<name>.md` is the authoritative agent definition; the
+  `prompts/*.yaml` files are their code-path counterparts (manually
+  renderable as reference prompts via `scripts/load_prompt.py --name
+  <prompt>`) and are kept content-identical — drift is checked by the
+  test suite and `/audit`.
 - Config: `config/*.md` (auto-injected as placeholders into prompts)
 
 **`fetch_context.py` output schema (key fields):**
@@ -319,7 +324,7 @@ talking points:
    baseline.** Phrasings like "today was hilly", "wellig statt flach",
    "unerwartete Höhenmeter", "Race-Prep-Höhenmeter-Anker", or any
    comparison of today's ascent against the **planner's surface tag**
-   (`forstweg`, `trail`, etc.) are forbidden. The surface field is a
+   (`forest-path`, `trail`, etc.) are forbidden. The surface field is a
    routing default for the shoe advisor, **not** an elevation oath —
    it does NOT carry a "flat" claim. Athletes typically have a small
    set of home routes that they re-run weekly; the elevation profile
@@ -344,8 +349,8 @@ the data is understood, never as athlete error) is documented in
 `strava-publisher.md`.
 
 **Drift incident pattern** (canonical case to learn from): an Easy-Z2
-plan listed `surface: forstweg` for routing/shoe purposes; the head
-coach briefed the analyst with "Plan said 'forstweg flach', actual was
+plan listed `surface: forest-path` for routing/shoe purposes; the head
+coach briefed the analyst with "Plan said 'forest-path flat', actual was
 259 m ascent on 6 km — race-prep bonus elevation". The athlete
 corrected: the route in question is the regular home-loop, that ascent
 profile is the **default**, not a deviation — and the actual race-prep
@@ -893,7 +898,7 @@ Plan directive (planner output):
       "duration_min": 65,
       "duration_range": [55, 75],
       "intensity": "Z4|Z2|low|medium|high",
-      "workout_type": "WORKOUT|EASY|LONG|RACE|RECOVERY",
+      "workout_type": "EASY|LONG|INTERVALS|STRENGTH|RECOVERY|RACE",
       "indoor": false,
       "coaching_notes": "Short directive for the specialist"
     }
@@ -994,8 +999,9 @@ python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/get_balance_rotation.py --date YYYY-M
 **Pool-content rules (MANDATORY):**
 - **Every rotation entry MUST carry an S-rating column** (S1–S5,
   S1=stabil/easy, S5=umgefallen). Balance/proprioception sessions
-  replace RPE with the stability rating per memory rule
-  `feedback_balance_stabilitaetswert`. A rotation without explicit
+  replace RPE with the stability rating — see the S-rating convention
+  in `agents/specialist-complementary.md` (RPE-vs-S-rating rules).
+  A rotation without explicit
   `Ziel: S{n}-S{m}` per exercise fails the convention and must be
   patched before the next push.
 - **Leg-strength conflict awareness:** When today's plan already
@@ -1103,7 +1109,7 @@ sessions (NOTE containing "HRV review").
    This is the same logic that the "Weekly outlook — Hard-Reize-Strategy"
    rule applies to multi-day outlooks, applied **same-day at the
    planner-briefing layer**. Mechanical safety net:
-   `validate_plan.py::check_weekly_hardreize_cap` (R009) — errors when
+   `validate_plan.py::check_weekly_hardreize_cap` (R017) — errors when
    a structured Z4+ session is briefed while
    `weeklyHardReizeBalance` already shows the primary-system Reiz done
    and no taper window is open.

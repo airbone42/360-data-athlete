@@ -152,10 +152,11 @@ YYYY-MM-DD`.
 ```bash
 echo '{workouts_json_array}' | python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/validate_plan.py --date {DATE} --json
 ```
-Output: findings with severity ERROR/WARNING/INFO. Rule IDs (R001 reps
-cap, R002 shoulder block, R003 surface field, R004 glute DOMS, R005
-achilles+plyo+surface, R006 LTHR drift, R007 pillar duplication, R008
-%lthr plausibility).
+Output: findings with severity ERROR/WARNING/INFO, each carrying a rule
+ID. The current rule inventory is the `RULES` registry in
+`scripts/validate_plan.py` (also reflected in the `--json` output) —
+everything with an R-ID is mechanically covered, do not re-derive those
+checks manually.
 
 **ERRORs must be addressed** — either adjust the plan or explicitly
 justify ignoring. Presenting the plan to the athlete without addressing

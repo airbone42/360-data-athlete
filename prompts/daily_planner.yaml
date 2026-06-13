@@ -1,5 +1,5 @@
 metadata:
-  version: "1.2.2"
+  version: "1.3.0"
   model: "anthropic/claude-opus-4-6"
   temperature: 0.4
   max_tokens: 16384
@@ -65,11 +65,11 @@ template: |
         "duration_min": 60,
         "duration_range": [50, 70],
         "intensity": "low|medium|high",
-        "workout_type": "EASY|LONG|INTERVALS|STRENGTH|RECOVERY",
+        "workout_type": "EASY|LONG|INTERVALS|STRENGTH|RECOVERY|RACE",
         "indoor": false,
-        "tags": ["beine", "plyo"]
+        "tags": ["legs", "plyo"]
       }}
     ]
   }}
-  [ONLY these tags allowed: run, ride, core, beine, plyo, balance, mobility, intervals, ninja, grip, upperbody]
+  [ONLY these tags allowed: run, ride, core, legs, plyo, balance, mobility, intervals, ninja, grip, upperbody]
   Set `duration_range` as an allowed range [min, max] based on your load steering. The specialist may decide freely within this range.

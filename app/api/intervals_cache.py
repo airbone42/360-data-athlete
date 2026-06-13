@@ -20,6 +20,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+from collections.abc import Callable
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -491,13 +492,28 @@ class CachedIntervalsClient:
             self._cache.write_day(subdir, day, day_items)
 
     @staticmethod
-    def _merge_by_id(cached: list[dict], fresh: list[dict], id_key: str = "id") -> list[dict]:
-        """Merge two lists, fresh wins on duplicate IDs, sorted by start_date_local."""
+    def _merge_by_id(
+        cached: list[dict],
+        fresh: list[dict],
+        id_key: str = "id",
+        sort_key: Callable[[dict], str] | None = None,
+    ) -> list[dict]:
+        """Merge two lists, fresh wins on duplicate IDs, sorted chronologically.
+
+        Default sort key is start_date_local/start_date (activities, events,
+        notes). Wellness records carry their date in ``id`` and have no
+        start_date field — without an explicit ``sort_key`` every wellness
+        key would be "" and late-fetched gap days would land at the end of
+        the list, corrupting consumers that slice ``[-7:]`` / ``[-90:]``.
+        """
         merged: dict[str, dict] = {str(a[id_key]): a for a in cached if id_key in a}
         for a in fresh:
             if id_key in a:
                 merged[str(a[id_key])] = a
-        return sorted(merged.values(), key=lambda a: a.get("start_date_local") or a.get("start_date") or "")
+        if sort_key is None:
+            def sort_key(a: dict) -> str:
+                return a.get("start_date_local") or a.get("start_date") or ""
+        return sorted(merged.values(), key=sort_key)
 
     # --- Activities ---------------------------------------------------------
 
@@ -635,7 +651,12 @@ class CachedIntervalsClient:
                     day = record.get("id", "")[:10]
                     if day and day < today:
                         self._cache.write_day("wellness", day, [record])
-                return self._merge_by_id(cached, fresh, id_key="id")
+                # Wellness records carry their date in `id` — sort by it so
+                # back-filled gap days land in chronological position.
+                return self._merge_by_id(
+                    cached, fresh, id_key="id",
+                    sort_key=lambda r: r.get("id") or "",
+                )
             except Exception as e:
                 logger.warning("cache: wellness_history API failed: %s", e)
                 if _is_day_cache_stale("wellness", _today()):

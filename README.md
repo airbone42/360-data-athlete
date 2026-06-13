@@ -110,7 +110,7 @@ session — silent over-conservatism.
 The framework fits a per-athlete linear regression on the last 6 months
 of `(daily_load, next-morning ΔHRV%)` pairs (`hrv_forecast.py`,
 methodology in
-[docs/architecture.md → HRV forecast](docs/architecture.md)). For every
+[research/hrv-forecast-model.md](research/hrv-forecast-model.md)). For every
 training day, the model predicts the expected ΔHRV% based on that day's
 load. The next morning, the actual HRV is compared:
 
@@ -321,8 +321,11 @@ modes are mostly visible at the right stage.
   stable enough for biomechanical analysis). Any drone with a working
   follow-me works; phone-on-tripod gives you only one angle and no
   fresh-vs-fatigued comparison.
-- **Strava account** for the shoe advisor (reads gear distances) and
-  the title sync (mirrors intervals.icu names to Strava).
+- **Strava account (optional)** — only needed for the legacy `strava`
+  gear backend and for the title/insights sync (`/strava`, mirrors
+  intervals.icu names to Strava). The default shoe backend `intervals`
+  (`SHOE_TRACKING_BACKEND` in `.env.example`) uses native intervals.icu
+  gear and needs no Strava access at all.
 - **Telegram bot** if you want to talk to the coach from your phone.
 - **OpenRouter API key** — required for the video form check
   (`scripts/analyse_video.py` calls Gemini through OpenRouter) and used
@@ -352,16 +355,25 @@ which accounts to have ready.
 /plugin install aicoach-framework@360-data-athlete
 ```
 
-Then in your project root:
-```bash
-pip install -e .          # Python deps for the helper scripts
-cp .env.example .env      # fill in keys you have (Alex Demo runs without)
+The plugin code now lives under
+`~/.claude/plugins/marketplaces/360-data-athlete/aicoach-framework/`.
+Then, in your project root:
 
-# Optional: scaffold a wrapper layout from the plugin's template
-cp -r ~/.claude/plugins/marketplaces/360-data-athlete/aicoach-framework/wrapper.example/. ./
+```bash
+# 1. Scaffold a wrapper layout from the plugin's template
+PLUGIN=~/.claude/plugins/marketplaces/360-data-athlete/aicoach-framework
+cp -r "$PLUGIN"/wrapper.example/. ./
+
+# 2. Install the Python deps from the plugin path
+pip install -e "$PLUGIN"
+
+# 3. Credentials template (fill in keys you have — Alex Demo runs without)
+cp "$PLUGIN"/.env.example .env
 ```
 
-See [Plugin layout — what lives where](#plugin-layout--what-lives-where)
+The canonical 4-step setup walkthrough lives in
+[wrapper.example/README.md](wrapper.example/README.md). See
+[Plugin layout — what lives where](#plugin-layout--what-lives-where)
 below for what should end up in your project root vs. inside the plugin
 install directory.
 
@@ -423,7 +435,7 @@ cp -r ~/.claude/plugins/marketplaces/360-data-athlete/aicoach-framework/wrapper.
 ```
 
 See [wrapper.example/README.md](wrapper.example/README.md) for the
-3-step setup walkthrough.
+4-step setup walkthrough.
 
 **Contribution path.** Generic improvements (new validator rule, new
 agent, paradigm fix, doc clarification, bug fix with reproduction) go
@@ -536,6 +548,15 @@ descriptions back into `config/exercise_progressions.md`, so a 2s→3s
 hold progression doesn't sit silently in the activity stream while the
 spec still says 2s.
 
+### `/aicoach-framework:strava` — Sync titles + insights to Strava
+
+Mirrors intervals.icu workout names to Strava (all activity types) and
+writes the follower-facing insights block on endurance activities via
+the `strava-publisher` agent. Idempotent — re-runs skip activities that
+already carry the configured footer suffix. Runs automatically as step
+6.6 of `/analyse`; manual forms: `/strava`, `/strava --days 7`,
+`/strava --activity-id i...`, `/strava --dry-run`.
+
 ### `/aicoach-framework:pull` — Fetch git remote
 
 Fast-forward pull on the configured default branch. Generic — works
@@ -619,6 +640,7 @@ outputs, and applies cross-workout consistency rules before pushing.
 | `config-fixer` | Implements one audit finding at a time, with approval log | `/audit` after auditor handoff | one finding YAML + audit report path | diff applied + approval log entry + report mark |
 | `physio-consultant` | Physiotherapy consultation on injuries / symptoms | athlete invokes manually | symptoms, training history, athlete_static | rehab / load / red-flag assessment (≤ 300 words, with disclaimer) |
 | `sports-ortho-consultant` | Orthopaedic consultation, imaging indication | athlete invokes manually | symptoms, training history, athlete_static | differential diagnoses + imaging + return-to-sport (≤ 300 words, with disclaimer) |
+| `strava-publisher` | Mirrors intervals.icu titles to Strava + follower-facing insights block on endurance activities | `/strava`, or automatically as `/analyse` step 6.6 | `strava_pending.py` candidates, `fetch_activity.py`, `strava_coupling.py` | title update + 2–4 line insights block + gerund footer |
 
 **Specialization without inheritance.** Plugin agents are generic and
 read all athlete-specific facts (PRs, HR zones, injury restrictions,

@@ -7,6 +7,7 @@ from app.graphs.main_daily_planner.workout_parser import (
     REQUIRED_FIELDS,
     VALID_TAGS,
     VALID_TYPES,
+    VALID_WORKOUT_TYPES,
     parse_workouts,
     prepare_workout_events,
 )
@@ -105,6 +106,40 @@ def test_missing_required_field_raises(missing_field: str) -> None:
 def test_invalid_type_raises() -> None:
     with pytest.raises(ValueError, match="invalid type"):
         parse_workouts([_full(type="Swim")])
+
+
+# ---------------------------------------------------------------------------
+# workout_type — soft validation (warn, never reject)
+# ---------------------------------------------------------------------------
+
+
+def test_workout_type_enum_complete() -> None:
+    assert VALID_WORKOUT_TYPES == {
+        "EASY", "LONG", "INTERVALS", "STRENGTH", "RECOVERY", "RACE",
+    }
+
+
+@pytest.mark.parametrize("wt", sorted(VALID_WORKOUT_TYPES))
+def test_known_workout_types_pass_silently(
+    wt: str, caplog: pytest.LogCaptureFixture
+) -> None:
+    import logging
+    with caplog.at_level(logging.WARNING):
+        _, ws = parse_workouts([_full(workout_type=wt)])
+    assert ws[0]["workout_type"] == wt
+    assert "unknown workout_type" not in caplog.text
+
+
+def test_unknown_workout_type_warns_but_keeps(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Legacy values (e.g. "WORKOUT") must not be rejected — soft validation
+    only logs a warning and the value is passed through unchanged."""
+    import logging
+    with caplog.at_level(logging.WARNING):
+        _, ws = parse_workouts([_full(workout_type="WORKOUT")])
+    assert ws[0]["workout_type"] == "WORKOUT"
+    assert "unknown workout_type" in caplog.text
 
 
 # ---------------------------------------------------------------------------

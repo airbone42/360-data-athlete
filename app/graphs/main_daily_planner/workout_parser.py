@@ -34,6 +34,15 @@ _STRETCH_DURATION_RE = re.compile(r"\b([4-9]\d|[1-9]\d{2,})\s*s\b")  # ≥40s
 
 VALID_TYPES = ["Run", "Ride", "WeightTraining", "Workout"]
 REQUIRED_FIELDS = ["type", "name", "duration_min", "workout_type"]
+# Canonical workout_type enum — documented identically in CLAUDE.md,
+# agents/planner.md and prompts/daily_planner.yaml. RACE is part of the
+# enum because downstream consumers gate on it (mental-coach pre-race
+# trigger in push_workouts.py, race-shoe unlock in shoe_advisor.py).
+# Validation is soft: unknown values only log a warning (historic data
+# and ad-hoc plans may carry legacy values like "WORKOUT").
+VALID_WORKOUT_TYPES: set[str] = {
+    "EASY", "LONG", "INTERVALS", "STRENGTH", "RECOVERY", "RACE",
+}
 VALID_TAGS: set[str] = {
     "run", "ride", "core", "legs", "plyo", "balance", "mobility",
     "intervals", "ninja", "grip", "upperbody",
@@ -95,6 +104,12 @@ def parse_workouts(llm_output: dict | list) -> tuple[str, list[dict]]:
         dropped = [t for t in raw_tags if t not in VALID_TAGS]
         if dropped:
             logger.warning("Workout %d '%s': tags dropped %s", i + 1, w.get("name"), dropped)
+        workout_type = str(w.get("workout_type") or "")
+        if workout_type and workout_type.upper() not in VALID_WORKOUT_TYPES:
+            logger.warning(
+                "Workout %d '%s': unknown workout_type %r (expected one of %s) — kept as-is",
+                i + 1, w.get("name"), workout_type, ", ".join(sorted(VALID_WORKOUT_TYPES)),
+            )
         _validate_structure(w, i + 1)
         _lint_intervals_icu(w, i + 1)
         result.append({**w, "tags": filtered_tags, "structureText": structure_text, "index": i + 1})

@@ -62,6 +62,10 @@ class Context:
     sport_settings: list[dict] = field(default_factory=list)
     injury_locks: dict[str, list[str]] = field(default_factory=dict)
     weekly_hard_reize_balance: str = ""
+    # WARNING findings from failed remote fetches in load_context() —
+    # surfaced by run_validation() so rules that silently self-deactivate
+    # on missing context (R004/R006/R014/R017) are visible as degraded.
+    load_warnings: list[Finding] = field(default_factory=list)
 
 
 # ─────────────────────────── Helpers ───────────────────────────
@@ -106,7 +110,7 @@ HYPERTROPHY_REPS_CAP_OVERRIDES = [
     r"\brdl\b", r"\bromanian\s*deadlift",
     r"\bhip\s*thrust", r"\bglute\s*bridge",
     r"\bstep-?up",
-    r"\bovermlyhead\s*press", r"\bschulterpress",
+    r"\boverhead\s*press", r"\bschulterpress",
     r"\bbench\s*press", r"\bbankdrück",
     r"\bdeadlift",
     r"\bpull-?up", r"\bklimmzug",
@@ -121,14 +125,60 @@ SHOULDER_LOCK_PATTERNS = [
     r"\bbar\s*traverse",
     r"\bcampus\s*board",
     r"\bmuscle-?up",
+    r"\bdead\s*hang",
+    # Bare "hang"/"hanging" (e.g. "Bar Hang 30s", "Hanging Leg Raise") — but
+    # NOT hang-position lift variants ("hang power clean", "hang snatch"),
+    # which start from a hang position and are no bar hangs. "overhang" is
+    # excluded by the leading \b.
+    r"\bhang(?:ing)?\b(?!\s*(?:power\s+)?(?:clean|snatch))",
 ]
 
-# Heavy overhead push (exception: KB OHP 4kg = rehab)
-HEAVY_OVERHEAD_PATTERNS = [
-    r"\b(barbell|langhantel)\s*overhead",
-    r"\bschulterpress\s*\d{2,}\s*kg",
-    r"\bovermhead\s*press\s*\d{2,}\s*kg",
-]
+# Heavy overhead push — barbell overhead is heavy by construction; named
+# overhead-press variants count as heavy from HEAVY_OVERHEAD_MIN_KG
+# (exception: light KB OHP at rehab loads, e.g. 4 kg). The weight-bound
+# pattern follows the canonical specialist inline format
+# `Name: SxR Wkg | RPE` — the load may sit anywhere after the exercise
+# name on the line (but not past a `|` separator or a line break).
+HEAVY_OVERHEAD_BARBELL_RE = re.compile(
+    r"\b(?:barbell|langhantel)\s*overhead", re.IGNORECASE
+)
+HEAVY_OVERHEAD_WEIGHTED_RE = re.compile(
+    r"\b(?:overhead\s*press|schulterpress\w*|military\s*press)\b"
+    r"[^|\n]*?\b(\d{1,3}(?:[.,]\d+)?)\s*kg\b",
+    re.IGNORECASE,
+)
+HEAVY_OVERHEAD_MIN_KG = 10.0
+
+
+def _is_heavy_overhead(line: str) -> bool:
+    """True when the line prescribes a heavy overhead push (R002)."""
+    if HEAVY_OVERHEAD_BARBELL_RE.search(line):
+        return True
+    m = HEAVY_OVERHEAD_WEIGHTED_RE.search(line)
+    if m:
+        return float(m.group(1).replace(",", ".")) >= HEAVY_OVERHEAD_MIN_KG
+    return False
+
+
+# Dead-hang exception (R002): holds of 2-5 s are rehab-tier and allowed.
+_DEAD_HANG_RE = re.compile(r"\bdead\s*hang\b", re.IGNORECASE)
+_HOLD_SECONDS_RE = re.compile(r"(\d+(?:[.,]\d+)?)\s*s(?:ec|ek)?\b", re.IGNORECASE)
+
+
+def _dead_hang_allowed(line: str) -> bool:
+    """True when the line is a dead hang whose hold times are all 2-5 s.
+
+    The seconds are parsed numerically — substring matches like the `5s`
+    inside `15s`/`45s` must NOT pass as allowed holds.
+    """
+    m = _DEAD_HANG_RE.search(line)
+    if not m:
+        return False
+    secs = [
+        float(x.replace(",", "."))
+        for x in _HOLD_SECONDS_RE.findall(line[m.end():])
+    ]
+    return bool(secs) and all(2 <= s <= 5 for s in secs)
 
 # Hard glute exercises (for DOMS check)
 HARD_GLUTE_PATTERNS = [
@@ -226,7 +276,10 @@ def check_injury_locks_shoulder(workouts: list[dict], ctx: Context) -> list[Find
     keyword is found in `athlete_static.md`, the corresponding lock is active.
 
     Exceptions:
-    - Dead Hang 2-5s is explicitly allowed (see athlete_static.md).
+    - Dead Hang with hold times of 2-5 s is explicitly allowed (rehab-tier
+      decompression hold); longer holds (e.g. 15 s, 45 s) stay blocked.
+    - Hang-position lift variants (hang power clean, hang snatch) are not
+      bar hangs and are not matched by the hang lock.
     - Scapular Pullups (scapular depression, no elbow flexion) are rehab-tier
       and belong to the shoulder rehab repertoire — not a prohibited pull-up.
     Hard stop (ERROR) on clear injury violations.
@@ -242,7 +295,7 @@ def check_injury_locks_shoulder(workouts: list[dict], ctx: Context) -> list[Find
         name = _workout_name(w)
         for line in _exercise_lines(_description(w)):
             if _matches_any(line, SHOULDER_LOCK_PATTERNS):
-                if re.search(r"dead\s*hang.*[2-5]\s*s", line, flags=re.IGNORECASE):
+                if _dead_hang_allowed(line):
                     continue
                 if re.search(r"\b(scapular?|skapula(r|re|ren)?)\s*pull[-\s]?ups?", line, flags=re.IGNORECASE):
                     continue
@@ -253,7 +306,7 @@ def check_injury_locks_shoulder(workouts: list[dict], ctx: Context) -> list[Find
                     message=f"Shoulder lock violated — blocked exercise: «{line[:80]}»",
                     suggestion="Replace with allowed variant (TRX Row instead of Pull-up, Face Pull instead of Hang, etc.) or remove.",
                 ))
-            if _matches_any(line, HEAVY_OVERHEAD_PATTERNS):
+            if _is_heavy_overhead(line):
                 findings.append(Finding(
                     rule_id="R002",
                     severity=SEVERITY_ERROR,
@@ -265,9 +318,15 @@ def check_injury_locks_shoulder(workouts: list[dict], ctx: Context) -> list[Find
 
 
 def check_surface_required(workouts: list[dict], ctx: Context) -> list[Finding]:
-    """R003 — Run/Ride must have a surface field (shoe advisor depends on it)."""
+    """R003 — Run/Ride must have a surface field (shoe advisor depends on it).
+
+    Valid values are the canonical tokens from `app.utils.surface`
+    (`asphalt | forest-path | trail | track | treadmill`); legacy spellings
+    (e.g. `forstweg`) stay accepted as read-aliases.
+    """
+    from app.utils.surface import CANONICAL_SURFACES, normalize_surface
+
     findings = []
-    valid_surfaces = {"asphalt", "forstweg", "trail", "track", "treadmill"}
     for w in workouts:
         if w.get("type") not in ("Run", "Ride"):
             continue
@@ -280,15 +339,15 @@ def check_surface_required(workouts: list[dict], ctx: Context) -> list[Finding]:
                 severity=SEVERITY_ERROR,
                 workout=_workout_name(w),
                 message="Run/Ride missing surface field — shoe advisor cannot reliably recommend.",
-                suggestion=f"Set surface: one of {sorted(valid_surfaces)}",
+                suggestion=f"Set surface: one of {sorted(CANONICAL_SURFACES)}",
             ))
-        elif surface.lower() not in valid_surfaces:
+        elif normalize_surface(surface) is None:
             findings.append(Finding(
                 rule_id="R003",
                 severity=SEVERITY_WARNING,
                 workout=_workout_name(w),
                 message=f"surface='{surface}' not in standard set — shoe advisor uses heuristic.",
-                suggestion=f"Standardize: {sorted(valid_surfaces)}",
+                suggestion=f"Standardize: {sorted(CANONICAL_SURFACES)}",
             ))
     return findings
 
@@ -511,8 +570,12 @@ def check_hr_range_consistency(workouts: list[dict], ctx: Context) -> list[Findi
                         f"zone on the watch, not the specific BPM range."
                     ),
                     suggestion=(
-                        f"Replace 'Z<n> HR' in intervals_icu code with an explicit "
-                        f"BPM range, e.g. 'XXm HR {lo}-{hi}'."
+                        f"Replace '{zone_only_matches[0].group(0)}' in "
+                        f"intervals_icu code with the explicit range in "
+                        f"allowed grammar: convert {lo}-{hi} bpm to %LTHR "
+                        f"and write 'XXm YY-ZZ% LTHR' (YY/ZZ = bound ÷ LTHR "
+                        f"× 100). Arbitrary BPM suffixes are silently "
+                        f"dropped by intervals.icu (see R012)."
                     ),
                 ))
                 break  # ein Treffer pro Workout reicht
@@ -526,6 +589,14 @@ def check_easy_hr_ceiling(workouts: list[dict], ctx: Context) -> list[Finding]:
     set in intervals_icu code or description exceeds the Z2 upper bound from
     athlete_status.md. Z3 territory = tempo/threshold, does not belong in
     recovery workouts.
+
+    Detected ceiling notations:
+    - explicit BPM ranges: `120-145 bpm` and `HR 120-145` (no `bpm` literal)
+    - %LTHR / %HR ranges: `84-90% LTHR` — the upper bound is converted via
+      the LTHR from athlete_status.md; when no LTHR is available, a WARNING
+      surfaces instead of silently skipping the check
+    - zone targets in intervals_icu steps: `Z3 HR` (or higher, or a
+      cross-zone range ending Z3+) on an easy/recovery run → direct ERROR
 
     Historical bug: recovery run with HR 110-145 — 145 was mid-Z3
     (Z2 upper bound 139). Athlete corrected it manually; validator had
@@ -543,24 +614,46 @@ def check_easy_hr_ceiling(workouts: list[dict], ctx: Context) -> list[Finding]:
     if not m:
         return findings
     z2_upper = int(m.group(2))
-    bpm_range_pattern = re.compile(r"\b(\d{2,3})\s*[-–—]\s*(\d{2,3})\s*bpm\b", flags=re.IGNORECASE)
+    lthr_match = re.search(
+        r"LTHR\s*(?:aktuell|current)[:\*\s]*?(\d{2,3})\s*bpm", ctx.athlete_status
+    )
+    lthr = int(lthr_match.group(1)) if lthr_match else None
+
+    bpm_range_pattern = re.compile(
+        r"\b(\d{2,3})\s*[-–—]\s*(\d{2,3})\s*bpm\b"
+        r"|\bHR\s*(\d{2,3})\s*[-–—]\s*(\d{2,3})\b",
+        flags=re.IGNORECASE,
+    )
+    pct_range_pattern = re.compile(
+        r"\b(\d{2,3})\s*[-–—]\s*(\d{2,3})\s*%\s*(?:LTHR|HR)\b",
+        flags=re.IGNORECASE,
+    )
+    zone_hr_pattern = re.compile(
+        r"\bZ(\d)(?:\s*[-–]\s*Z?(\d))?\s*HR\b", flags=re.IGNORECASE
+    )
+
     for w in workouts:
         if (w.get("type") or "").lower() != "run":
             continue
         wt = (w.get("workout_type") or "").upper()
         if wt not in ("EASY", "RECOVERY"):
             continue
-        # Search for BPM ranges in both intervals_icu code and description
+        # Search both intervals_icu code and description; at most one
+        # finding per source (first violating notation wins). Use the raw
+        # description field here — _description() falls back to
+        # intervals_icu when description is empty, which would re-scan the
+        # same text and double-count a single ceiling violation.
         sources = [
             ("intervals_icu", w.get("intervals_icu") or ""),
-            ("description", _description(w)),
+            ("description", (w.get("description") or "").strip()),
         ]
         for source_name, text in sources:
+            finding: Finding | None = None
+            # (a) explicit BPM ceilings — `120-145 bpm` or `HR 120-145`
             for match in bpm_range_pattern.finditer(text):
-                lo = int(match.group(1))
-                hi = int(match.group(2))
+                hi = int(match.group(2) or match.group(4))
                 if hi > z2_upper:
-                    findings.append(Finding(
+                    finding = Finding(
                         rule_id="R010",
                         severity=SEVERITY_ERROR,
                         workout=_workout_name(w),
@@ -574,8 +667,76 @@ def check_easy_hr_ceiling(workouts: list[dict], ctx: Context) -> list[Finding]:
                             f"Set HR ceiling to max {z2_upper} bpm — "
                             f"for recovery character prefer 5-10 bpm buffer below."
                         ),
-                    ))
-                    break  # ein Treffer pro Source reicht
+                    )
+                    break
+            # (b) %LTHR / %HR ranges — convert the upper bound via LTHR
+            if finding is None:
+                for match in pct_range_pattern.finditer(text):
+                    hi_pct = int(match.group(2))
+                    if lthr is None:
+                        finding = Finding(
+                            rule_id="R010",
+                            severity=SEVERITY_WARNING,
+                            workout=_workout_name(w),
+                            message=(
+                                f"{wt} run uses %LTHR/%HR range "
+                                f"'{match.group(0)}' in {source_name}, but no "
+                                f"LTHR was found in athlete_status.md — cannot "
+                                f"verify the ceiling against the Z2 upper bound "
+                                f"({z2_upper} bpm)."
+                            ),
+                            suggestion=(
+                                "Add 'LTHR current: NNN bpm' to athlete_status.md "
+                                "so easy-run ceilings in %LTHR can be verified."
+                            ),
+                        )
+                        break
+                    hi_bpm = lthr * hi_pct / 100
+                    if hi_bpm > z2_upper:
+                        finding = Finding(
+                            rule_id="R010",
+                            severity=SEVERITY_ERROR,
+                            workout=_workout_name(w),
+                            message=(
+                                f"{wt} run has HR ceiling {hi_pct}% LTHR "
+                                f"≈ {hi_bpm:.0f} bpm in {source_name} — "
+                                f"exceeds Z2 upper bound ({z2_upper} bpm) "
+                                f"and creeps into Z3 (tempo). Easy/recovery "
+                                f"workouts must never push into Z3+."
+                            ),
+                            suggestion=(
+                                f"Cap the range at {z2_upper / lthr * 100:.0f}% LTHR "
+                                f"(= Z2 upper bound {z2_upper} bpm) — for recovery "
+                                f"character prefer a buffer below."
+                            ),
+                        )
+                        break
+            # (c) zone targets Z3+ on intervals_icu steps → direct ERROR
+            # (intervals_icu only — description prose may legitimately say
+            # "stay below Z3 HR")
+            if finding is None and source_name == "intervals_icu":
+                for match in zone_hr_pattern.finditer(text):
+                    zmax = max(int(g) for g in match.groups() if g)
+                    if zmax >= 3:
+                        finding = Finding(
+                            rule_id="R010",
+                            severity=SEVERITY_ERROR,
+                            workout=_workout_name(w),
+                            message=(
+                                f"{wt} run step targets '{match.group(0)}' in "
+                                f"intervals_icu — Z3+ is tempo/threshold "
+                                f"territory. Easy/recovery workouts must never "
+                                f"push into Z3+."
+                            ),
+                            suggestion=(
+                                f"Use 'Z1 HR'/'Z2 HR' (or a %LTHR range whose "
+                                f"ceiling stays at or below the Z2 upper bound, "
+                                f"{z2_upper} bpm) on easy/recovery steps."
+                            ),
+                        )
+                        break
+            if finding is not None:
+                findings.append(finding)
     return findings
 
 
@@ -704,7 +865,12 @@ def check_intervals_step_targets(workouts: list[dict], ctx: Context) -> list[Fin
         r"\bfreeride\b",
     ]
     BARE_ZONE_RE = re.compile(r"\bZ\d(?:-Z\d)?\b(?!\s+(?:HR|Pace))", re.IGNORECASE)
-    BAD_BPM_RE = re.compile(r"\b\d+(?:-\d+)?\s*bpm\b", re.IGNORECASE)
+    # Arbitrary BPM targets — with literal `bpm` suffix, or as `HR lo-hi`
+    # without the literal (both silently dropped by intervals.icu).
+    BAD_BPM_RE = re.compile(
+        r"\b\d+(?:-\d+)?\s*bpm\b|\bHR\s*\d{2,3}\s*[-–]\s*\d{2,3}\b",
+        re.IGNORECASE,
+    )
     LAP_PRESS_RE = re.compile(r"\bpress\s+lap\b", re.IGNORECASE)
     LOOP_HEADER_RE = re.compile(r"\b\d+x\b", re.IGNORECASE)
     # Duration parsers
@@ -1368,7 +1534,7 @@ def check_easy_run_conservatism(workouts: list[dict], ctx: Context) -> list[Find
 
 
 def check_weekly_hardreize_cap(workouts: list[dict], ctx: Context) -> list[Finding]:
-    """R009 — Weekly Hard-Reize cap (cross-training-slot semantics).
+    """R017 — Weekly Hard-Reize cap (cross-training-slot semantics).
 
     Errors when today's plan contains structured Z4+ intervals in a system
     whose Hard-Reiz is already logged in the rolling 7d window per
@@ -1454,7 +1620,7 @@ def check_weekly_hardreize_cap(workouts: list[dict], ctx: Context) -> list[Findi
 
         if is_run and run_done:
             findings.append(Finding(
-                rule_id="R009",
+                rule_id="R017",
                 severity=SEVERITY_ERROR,
                 workout=_workout_name(w),
                 message=(
@@ -1476,7 +1642,7 @@ def check_weekly_hardreize_cap(workouts: list[dict], ctx: Context) -> list[Findi
             ))
         elif is_ride and ride_done:
             findings.append(Finding(
-                rule_id="R009",
+                rule_id="R017",
                 severity=SEVERITY_ERROR,
                 workout=_workout_name(w),
                 message=(
@@ -1494,25 +1660,27 @@ def check_weekly_hardreize_cap(workouts: list[dict], ctx: Context) -> list[Findi
     return findings
 
 
-# Plugin registry: register new rules here.
-RULES: list[Callable[[list[dict], Context], list[Finding]]] = [
-    check_reps_ceiling,
-    check_injury_locks_shoulder,
-    check_surface_required,
-    check_glute_doms,
-    check_achilles_plyo_surface,
-    check_lthr_settings_drift,
-    check_pillar_rotation,
-    check_intervals_lthr_format,
-    check_hr_range_consistency,
-    check_easy_hr_ceiling,
-    check_intervals_duration_sanity,
-    check_intervals_step_targets,
-    check_intervals_repeat_block_adjacency,
-    check_easy_run_conservatism,
-    check_weekly_hardreize_cap,
-    check_intervals_repeat_press_lap,
-    check_exercise_regression,
+# Plugin registry: register new rules here as explicit (rule_id, check_fn)
+# pairs. `--rule` selection matches on the rule_id, not on docstring
+# substrings — keep ids unique (enforced by tests/test_validate_plan_registry.py).
+RULES: list[tuple[str, Callable[[list[dict], Context], list[Finding]]]] = [
+    ("R001", check_reps_ceiling),
+    ("R002", check_injury_locks_shoulder),
+    ("R003", check_surface_required),
+    ("R004", check_glute_doms),
+    ("R005", check_achilles_plyo_surface),
+    ("R006", check_lthr_settings_drift),
+    ("R007", check_pillar_rotation),
+    ("R008", check_intervals_lthr_format),
+    ("R009", check_hr_range_consistency),
+    ("R010", check_easy_hr_ceiling),
+    ("R011", check_intervals_duration_sanity),
+    ("R012", check_intervals_step_targets),
+    ("R013", check_intervals_repeat_block_adjacency),
+    ("R014", check_easy_run_conservatism),
+    ("R015", check_intervals_repeat_press_lap),
+    ("R016", check_exercise_regression),
+    ("R017", check_weekly_hardreize_cap),
 ]
 
 
@@ -1566,7 +1734,7 @@ async def _fetch_recent_activities(target_date: str, days_back: int = 30) -> lis
 
 
 async def _fetch_raw_activities_for_hardreize(target_date: str) -> list[dict]:
-    """Fetch raw activities (rolling 7d) including tags + zone times for R009.
+    """Fetch raw activities (rolling 7d) including tags + zone times for R017.
 
     Returns the unmapped intervals.icu activity dicts (`start_date_local`,
     `type`, `name`, `tags`, `icu_hr_zone_times`) so the shared helper
@@ -1605,39 +1773,59 @@ def load_context(target_date: str, fetch_remote: bool = True) -> Context:
         injury_locks=_load_injury_locks(),
     )
     if fetch_remote:
+        # Fail-soft per source: a failed fetch never crashes the validator,
+        # but it MUST surface as a WARNING finding — otherwise the rules
+        # depending on that source silently self-deactivate.
+        def _degraded(source: str, impact: str, exc: Exception) -> None:
+            ctx.load_warnings.append(Finding(
+                rule_id="VALIDATOR",
+                severity=SEVERITY_WARNING,
+                workout="(global)",
+                message=f"{impact} inactive: {source} fetch failed: {exc}",
+                suggestion=(
+                    "Validator runs degraded (fail-soft) — the listed rule "
+                    "silently passes. Check intervals.icu connectivity/"
+                    "credentials, or run with --no-remote to acknowledge "
+                    "offline mode."
+                ),
+            ))
+
         try:
             ctx.recent_notes = asyncio.run(_fetch_recent_notes(target_date))
-        except Exception:
+        except Exception as exc:  # noqa: BLE001
             ctx.recent_notes = []
+            _degraded("recent-notes", "R004 (glute DOMS)", exc)
         try:
             ctx.sport_settings = asyncio.run(_fetch_sport_settings())
-        except Exception:
+        except Exception as exc:  # noqa: BLE001
             ctx.sport_settings = []
+            _degraded("sport-settings", "R006 (LTHR drift)", exc)
         try:
             ctx.recent_activities = asyncio.run(_fetch_recent_activities(target_date))
-        except Exception:
+        except Exception as exc:  # noqa: BLE001
             ctx.recent_activities = []
+            _degraded("recent-activities", "R014 (easy-run conservatism)", exc)
         try:
             raw = asyncio.run(_fetch_raw_activities_for_hardreize(target_date))
             from app.graphs.sub_athlete_context.context_builder import _compute_weekly_hard_reize_balance
             ctx.weekly_hard_reize_balance = _compute_weekly_hard_reize_balance(
                 raw, datetime.fromisoformat(target_date).date()
             )
-        except Exception:
+        except Exception as exc:  # noqa: BLE001
             ctx.weekly_hard_reize_balance = ""
+            _degraded("hard-reize activities", "R017 (weekly hard-reize cap)", exc)
     return ctx
 
 
 # ─────────────────────────── Main ───────────────────────────
 
 def run_validation(workouts: list[dict], ctx: Context, only_rule: str = "") -> list[Finding]:
-    findings = []
-    for rule in RULES:
-        if only_rule:
-            # Match by rule_id token in docstring (e.g. "R001")
-            doc = (rule.__doc__ or "")
-            if only_rule not in doc:
-                continue
+    # Degraded-context warnings (failed remote fetches) always surface,
+    # so silently self-deactivated rules are visible in the output.
+    findings = list(ctx.load_warnings)
+    for rule_id, rule in RULES:
+        if only_rule and only_rule.strip().upper() != rule_id:
+            continue
         try:
             findings.extend(rule(workouts, ctx))
         except Exception as exc:  # noqa: BLE001
@@ -1645,7 +1833,7 @@ def run_validation(workouts: list[dict], ctx: Context, only_rule: str = "") -> l
                 rule_id="VALIDATOR",
                 severity=SEVERITY_WARNING,
                 workout="(global)",
-                message=f"Rule {rule.__name__} crashed: {exc}",
+                message=f"Rule {rule_id} ({rule.__name__}) crashed: {exc}",
             ))
     return findings
 
@@ -1676,7 +1864,6 @@ def main() -> int:
     parser.add_argument("--json", action="store_true", help="JSON output instead of plain text")
     parser.add_argument("--rule", default="", help="Run only one rule (e.g. R001)")
     parser.add_argument("--no-remote", action="store_true", help="Skip intervals.icu fetches (offline mode)")
-    parser.add_argument("--warnings-ok", action="store_true", help="Exit 0 even if WARNINGs (only ERRORs block)")
     args = parser.parse_args()
 
     if args.file:

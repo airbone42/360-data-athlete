@@ -1,6 +1,6 @@
 """Consistency scanner for the coach knowledge base.
 
-Mechanical drift checks between `config/`, `.claude/agents/`, `prompts/`,
+Mechanical drift checks between `config/`, `agents/`, `prompts/`,
 `exercise_muscle_mapping.json` and external sources (intervals.icu, Strava).
 
 Output: JSON to stdout — consumed by the config-auditor agent.
@@ -22,13 +22,14 @@ import os
 import re
 import subprocess
 import sys
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT))
 
+from app.utils.date_parse import parse_config_date  # noqa: E402
 from app.utils.paths import (  # noqa: E402
     CONFIG_DIR,
     CONFIG_FALLBACK,
@@ -95,15 +96,15 @@ RESTRICTION_PATTERNS: dict[str, list[str]] = {
 
 # Files scanned for hardcoded values
 HARDCODE_SCAN_GLOBS = [
-    ".claude/agents/*.md",
+    "agents/*.md",
     "prompts/*.yaml",
     "config/equipment.md",
 ]
 
 # Files excluded from hardcode scan (meta-files about the audit itself)
 HARDCODE_SCAN_EXCLUDE = {
-    ".claude/agents/config-auditor.md",
-    ".claude/agents/config-fixer.md",
+    "agents/config-auditor.md",
+    "agents/config-fixer.md",
 }
 
 
@@ -404,42 +405,52 @@ def check_strava_shoes(strava_shoes: list[dict] | None) -> list[dict]:
 # ── Check 6: Hardcoded Restrictions ──────────────────────────────────
 
 
+def _hardcode_scan_paths() -> list[tuple[Path, str]]:
+    """Resolves HARDCODE_SCAN_GLOBS to concrete files, excludes applied.
+
+    Framework globs (agents/, prompts/) scan FRAMEWORK_ROOT; athlete globs
+    (config/) scan COACH_HOME. Returns (path, rel) pairs with posix-style
+    relative paths.
+    """
+    paths: list[tuple[Path, str]] = []
+    for glob in HARDCODE_SCAN_GLOBS:
+        scan_root = COACH_HOME if glob.startswith("config/") else FRAMEWORK_ROOT
+        for path in sorted(scan_root.glob(glob)):
+            rel = path.relative_to(scan_root).as_posix()
+            if rel in HARDCODE_SCAN_EXCLUDE:
+                continue
+            paths.append((path, rel))
+    return paths
+
+
 def check_hardcoded_restrictions() -> list[dict]:
     """Findet hartkodierte Restriction-Strings in Agenten/Prompts/Equipment.
 
     Severity initial MEDIUM — der Auditor-Agent hebt bei stale-Status auf HIGH.
     """
     findings: list[dict] = []
-    # TODO(public-split): when framework/ becomes a submodule, framework globs
-    # (.claude/agents/, prompts/) must scan FRAMEWORK_ROOT and athlete globs
-    # (config/) must scan COACH_HOME. For now FRAMEWORK_ROOT == COACH_HOME.
-    for glob in HARDCODE_SCAN_GLOBS:
-        scan_root = COACH_HOME if glob.startswith("config/") else FRAMEWORK_ROOT
-        for path in sorted(scan_root.glob(glob)):
-            rel = str(path.relative_to(scan_root))
-            if rel in HARDCODE_SCAN_EXCLUDE:
-                continue
-            text = _read(path)
-            for cat, patterns in RESTRICTION_PATTERNS.items():
-                for pattern in patterns:
-                    for m in re.finditer(pattern, text, re.IGNORECASE):
-                        line = text[: m.start()].count("\n") + 1
-                        line_text = text.splitlines()[line - 1] if line - 1 < len(text.splitlines()) else ""
-                        findings.append(_finding(
-                            MEDIUM,
-                            "hardcoded_restriction",
-                            rel,
-                            source_line=line,
-                            evidence=f"[{cat}] {line_text.strip()[:160]}",
-                            canonical_source="config/athlete_static.md (risk zones + breakdown)",
-                            suggested_action="verify_against_athlete_static",
-                            fix_hint=(
-                                "Auditor agent: compare restriction string against current status "
-                                f"in athlete_static.md. If status 'aktiv' → OK. If resolved → "
-                                "remove the reference or replace with a pointer to athlete_static."
-                            ),
-                            description=f"Hardcoded {cat} restriction in {rel}:{line}",
-                        ))
+    for path, rel in _hardcode_scan_paths():
+        text = _read(path)
+        for cat, patterns in RESTRICTION_PATTERNS.items():
+            for pattern in patterns:
+                for m in re.finditer(pattern, text, re.IGNORECASE):
+                    line = text[: m.start()].count("\n") + 1
+                    line_text = text.splitlines()[line - 1] if line - 1 < len(text.splitlines()) else ""
+                    findings.append(_finding(
+                        MEDIUM,
+                        "hardcoded_restriction",
+                        rel,
+                        source_line=line,
+                        evidence=f"[{cat}] {line_text.strip()[:160]}",
+                        canonical_source="config/athlete_static.md (risk zones + breakdown)",
+                        suggested_action="verify_against_athlete_static",
+                        fix_hint=(
+                            "Auditor agent: compare restriction string against current status "
+                            f"in athlete_static.md. If status 'aktiv' → OK. If resolved → "
+                            "remove the reference or replace with a pointer to athlete_static."
+                        ),
+                        description=f"Hardcoded {cat} restriction in {rel}:{line}",
+                    ))
     return findings
 
 
@@ -776,23 +787,34 @@ def check_deload_consistency() -> list[dict]:
     aktiv_val = aktiv.group(1).strip().lower()
     ende_val = ende.group(1).strip()
     findings: list[dict] = []
-    if aktiv_val == "ja" and re.match(r"\d{4}-\d{2}-\d{2}", ende_val):
-        from datetime import date as _date
-        try:
-            ende_date = _date.fromisoformat(ende_val)
-            if ende_date < _date.today():
-                findings.append(_finding(
-                    MEDIUM,
-                    "deload_expired",
-                    "config/athlete_status.md",
-                    evidence=f"aktiv: ja, ende_geplant: {ende_val} (past)",
-                    canonical_source="Today",
-                    suggested_action="reset_deload",
-                    fix_hint="Reset recovery-week status to aktiv: nein",
-                    description="Recovery-week flag is 'aktiv: ja' but ende_geplant is in the past",
-                ))
-        except ValueError:
-            pass
+    if aktiv_val != "ja":
+        return findings
+    ende_date = parse_config_date(ende_val)
+    if ende_date is None:
+        findings.append(_finding(
+            MEDIUM,
+            "deload_end_unparseable",
+            "config/athlete_status.md",
+            evidence=f"aktiv: ja, ende_geplant: {ende_val} (unparseable)",
+            canonical_source="config/athlete_status.md",
+            suggested_action="fix_deload_end_date",
+            fix_hint="Set ende_geplant to a parseable date (YYYY-MM-DD or DD.MM.YYYY)",
+            description=(
+                "Recovery-week flag is 'aktiv: ja' but ende_geplant is not a "
+                "parseable date — automatic expiry can never trigger"
+            ),
+        ))
+    elif ende_date < date.today():
+        findings.append(_finding(
+            MEDIUM,
+            "deload_expired",
+            "config/athlete_status.md",
+            evidence=f"aktiv: ja, ende_geplant: {ende_val} (past)",
+            canonical_source="Today",
+            suggested_action="reset_deload",
+            fix_hint="Reset recovery-week status to aktiv: nein",
+            description="Recovery-week flag is 'aktiv: ja' but ende_geplant is in the past",
+        ))
     return findings
 
 

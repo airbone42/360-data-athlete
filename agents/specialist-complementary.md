@@ -413,8 +413,9 @@ the progression loop.
 - Stability / endurance-iso without load: Side Plank, Bird Dog,
   McGill Curl-up, Dead Bug, Plank — progression is form + pain
   signal + hold-time, not RPE
-- Balance / proprioception: use S1-S5 stability score instead (see
-  athlete memory `feedback_balance_stabilitaetswert`)
+- Balance / proprioception: use S1-S5 stability score instead
+  (S1 = stable/easy … S5 = fell off; this S-rating replaces RPE on
+  balance work — see also the balance-pool rules in `CLAUDE.md`)
 - Mobility / activation drills: cat-cow, hip circles, wand slides
 - Light band physio (External Rotation Band, Banded Pull-Apart,
   Finger Extensors with light band): RPE may be given as an upper
@@ -577,8 +578,7 @@ block. Format:
 ```
 The 📹 marker MUST be on the same logical line as the exercise it
 references; placing it at the end of a multi-exercise block destroys the
-"which exercise?" association (memory rule
-`feedback_filmtipp_placement`).
+"which exercise?" association.
 
 Camera-placement helper per exercise:
 `python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/analyse_video.py --exercise "[name]" --angle-only`

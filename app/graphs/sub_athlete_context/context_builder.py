@@ -143,7 +143,11 @@ def build_context(state: AthleteContextState) -> dict:
     event_list = _format_events(events, today)
     race_in_days = _days_to_next_race(events, today)
     deload_state = state.get("deload_state") or {}
-    planning_constraints = _compute_planning_constraints(events, activities_with_workout, today, deload_state)
+    planning_warnings: list[str] = []
+    planning_constraints = _compute_planning_constraints(
+        events, activities_with_workout, today, deload_state,
+        warnings_out=planning_warnings,
+    )
 
     date_str = today.strftime("%A, %d. %B %Y")
 
@@ -158,6 +162,7 @@ def build_context(state: AthleteContextState) -> dict:
         hrv, rhr, sleep_score, ctl, atl, hr_zones_text, athlete_settings, weather_warning,
         sleep_trend, rhr_trend_delta,
     )
+    warnings.extend(planning_warnings)
     skipped_workouts = _find_skipped_workouts(activities, state["workouts"], today)
 
     # Shoe context (optional — degrades silently if no shoe backend configured).
@@ -525,6 +530,14 @@ def _build_hrv_sensitivity(
     Returns (intercept, slope, residual_stddev) for the linear model:
         expected_hrv_delta_pct = intercept + slope * training_load
     Returns None if fewer than 10 data points available.
+
+    The pair-building date range is constrained to the span actually covered
+    by activity data: the wellness history may reach further back than the
+    activities window (e.g. 90d wellness vs. 4w activities in fetch_context).
+    Days before the earliest activity are "unknown", NOT rest days — letting
+    them enter the regression with load=0 dilutes the slope and inflates the
+    residual stddev, widening the ±1.5σ review band until real deviations
+    classify as "expected".
     """
     wellness_lookup: dict[str, float] = {
         d["id"]: d["hrv"]
@@ -540,12 +553,19 @@ def _build_hrv_sensitivity(
         if d:
             daily_loads[d] = daily_loads.get(d, 0) + load
 
-    # Build (load, hrv_delta_pct) pairs
+    if not daily_loads:
+        return None
+    earliest_activity = min(daily_loads)
+
+    # Build (load, hrv_delta_pct) pairs — only for dates covered by activity
+    # data (days without coverage are unknown, not rest)
     pairs: list[tuple[float, float]] = []
     all_dates = sorted(set(daily_loads.keys()) | {
         d["id"] for d in wellness_history if d.get("id")
     })
     for d_str in all_dates:
+        if d_str < earliest_activity:
+            continue  # outside the activities window — phantom rest day
         try:
             next_day = (date.fromisoformat(d_str) + timedelta(days=1)).isoformat()
         except (ValueError, TypeError):
@@ -867,6 +887,41 @@ def _compute_zone_distribution(activities: list[dict]) -> str:
     return result
 
 
+# Default Z4+Z5 threshold for hard-stimulus detection (8 min)
+HARD_STIMULUS_MIN_Z4_Z5_SECS = 8 * 60
+
+
+def _z4_z5_secs(activity: dict) -> float:
+    """Total seconds spent in Z4+Z5 according to icu_hr_zone_times."""
+    zone_times = list(activity.get("icu_hr_zone_times") or [])[:5]
+    return (zone_times[3] if len(zone_times) > 3 else 0) + (
+        zone_times[4] if len(zone_times) > 4 else 0
+    )
+
+
+def is_hard_stimulus(
+    activity: dict, min_z4_z5_secs: float = HARD_STIMULUS_MIN_Z4_Z5_SECS
+) -> bool:
+    """Shared hard-session detection used by every intensity consumer.
+
+    An activity counts as a hard stimulus when ANY of:
+      - tag "intervals" present
+      - Z4+Z5 time ≥ ``min_z4_z5_secs``
+      - ``workout_type == "RACE"``
+
+    The checks are independent — a tagged activity without an "intervals"
+    tag still qualifies via its Z4/Z5 time or RACE workout_type (previously
+    the tag check short-circuited and made the zone fallback unreachable
+    for tagged activities).
+    """
+    tags = [str(t).lower() for t in (activity.get("tags") or [])]
+    if "intervals" in tags:
+        return True
+    if str(activity.get("workout_type") or "").upper() == "RACE":
+        return True
+    return _z4_z5_secs(activity) >= min_z4_z5_secs
+
+
 def _compute_weekly_hard_reize_balance(activities: list[dict], today: date) -> str:
     """Audit the rolling-7-day hard-stimulus balance against the 2-stimulus weekly strategy.
 
@@ -881,16 +936,16 @@ def _compute_weekly_hard_reize_balance(activities: list[dict], today: date) -> s
     hard cut at the week boundary (a Saturday bike-VO2max would silently
     disappear from view on the following Monday).
 
-    Hard-stimulus detection (per activity):
-      - Run/VirtualRun → "run hard": tag "intervals" OR Z4+Z5 time ≥ 8 min
-      - Ride/VirtualRide → "ride hard": tag "intervals" OR Z4+Z5 time ≥ 8 min
+    Hard-stimulus detection (per activity) — shared helper is_hard_stimulus:
+      - Run/VirtualRun → "run hard": tag "intervals" OR Z4+Z5 ≥ 8 min OR RACE
+      - Ride/VirtualRide → "ride hard": tag "intervals" OR Z4+Z5 ≥ 8 min OR RACE
     """
     window_start = today - timedelta(days=6)
     window_end = today
 
     run_hard: list[dict] = []
     ride_hard: list[dict] = []
-    MIN_Z4_Z5_SECS = 8 * 60
+    MIN_Z4_Z5_SECS = HARD_STIMULUS_MIN_Z4_Z5_SECS
 
     for a in activities:
         d_str = (a.get("start_date_local") or "")[:10]
@@ -902,13 +957,8 @@ def _compute_weekly_hard_reize_balance(activities: list[dict], today: date) -> s
             continue
 
         a_type = a.get("type")
-        tags = [str(t).lower() for t in (a.get("tags") or [])]
-        zone_times = list(a.get("icu_hr_zone_times") or [])[:5]
-        z4_z5 = (zone_times[3] if len(zone_times) > 3 else 0) + (zone_times[4] if len(zone_times) > 4 else 0)
-        is_intervals = "intervals" in tags
-        is_hard = is_intervals or z4_z5 >= MIN_Z4_Z5_SECS
-
-        if not is_hard:
+        z4_z5 = _z4_z5_secs(a)
+        if not is_hard_stimulus(a, min_z4_z5_secs=MIN_Z4_Z5_SECS):
             continue
 
         descriptor = {
@@ -1037,23 +1087,14 @@ def _compute_meso_load_trend(
 def _find_last_intense_session(activities: list[dict]) -> dict | None:
     # activities is sorted oldest-first — iterate newest-first to find the
     # most recent intense session, not the first one ever recorded.
+    # Detection is shared with _compute_weekly_hard_reize_balance via
+    # is_hard_stimulus (tag OR Z4/Z5 time OR RACE) — a tagged activity with
+    # high Z4/Z5 time but no "intervals" tag still counts as intense.
     for a in reversed(activities):
         moving_min = round(a.get("moving_time", 0) / 60)
         if moving_min < 25:
             continue
-
-        tags = a.get("tags")
-        if isinstance(tags, list) and tags:
-            tag_lower = [str(t).lower() for t in tags]
-            if "intervals" in tag_lower:
-                return a
-            continue
-
-        hr_zones = a.get("icu_hr_zone_times") or []
-        z4_secs = (hr_zones[3] if len(hr_zones) > 3 else 0) + (
-            hr_zones[4] if len(hr_zones) > 4 else 0
-        )
-        if z4_secs > 120:
+        if is_hard_stimulus(a, min_z4_z5_secs=120):
             return a
 
     return None
@@ -1431,6 +1472,37 @@ _COMPLEMENTARY_DUE: list[tuple[list[str], int, int, str, int]] = [
 ]
 
 
+# Config files already warned about as missing — warn once per process, not
+# on every context build.
+_missing_config_warned: set[str] = set()
+
+
+def _read_optional_config(filename: str) -> str | None:
+    """Read a config file via the standard CONFIG_DIR/CONFIG_FALLBACK resolution.
+
+    Returns None (with a one-time logger.warning) when the file exists in
+    neither location — callers degrade to their feature-off default. Path
+    resolution goes through app.utils.paths so wrapper setups (COACH_HOME /
+    CONFIG_DIR env) are honoured; a path derived from __file__ would point
+    inside the framework checkout and silently disable the feature for every
+    wrapper consumer.
+    """
+    from app.utils.paths import resolve_config
+
+    try:
+        path = resolve_config(filename)
+        return path.read_text(encoding="utf-8")
+    except (FileNotFoundError, OSError):
+        if filename not in _missing_config_warned:
+            _missing_config_warned.add(filename)
+            logger.warning(
+                "config %s not found in CONFIG_DIR or CONFIG_FALLBACK — "
+                "dependent context feature disabled",
+                filename,
+            )
+        return None
+
+
 def _achilles_plyo_locked() -> bool:
     """Check if the Achilles rehab protocol still locks plyometrics (phase 1 or 2 active).
 
@@ -1443,18 +1515,10 @@ def _achilles_plyo_locked() -> bool:
     In phase 3 (cleared) the function returns False, plyo is marked due
     normally. Re-engages on reactivation of phase 1/2.
     """
-    import os
     import re as _re
 
-    config_path = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))),
-        "config",
-        "athlete_static.md",
-    )
-    try:
-        with open(config_path, encoding="utf-8") as f:
-            content = f.read()
-    except (OSError, FileNotFoundError):
+    content = _read_optional_config("athlete_static.md")
+    if content is None:
         return False
     return bool(_re.search(r"Achillessehne.*Phase\s*[12]\s*aktiv", content, _re.IGNORECASE))
 
@@ -1583,18 +1647,9 @@ def _compute_filmtipp_status(today: date) -> str:
     This pre-computes the decision so agents never have to do date arithmetic.
     """
     import re
-    import os
 
-    # context_builder.py is at app/graphs/sub_athlete_context/ — 4 levels up to repo root
-    config_path = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))),
-        "config",
-        "exercise_log.md",
-    )
-    try:
-        with open(config_path, encoding="utf-8") as f:
-            content = f.read()
-    except OSError:
+    content = _read_optional_config("exercise_log.md")
+    if content is None:
         return ""
 
     VIDEO_LOCK_DAYS = 7
@@ -1823,11 +1878,16 @@ def _compute_planning_constraints(
     activities: list[dict],
     today: date,
     deload_state: dict | None = None,
+    warnings_out: list[str] | None = None,
 ) -> str:
     """Pre-compute key temporal planning facts from upcoming events.
 
     Detects upcoming breaks/vacations (NOTE events with break keywords) and
     computes absolute dates so agents never have to resolve relative references.
+
+    ``warnings_out`` (optional) collects dataWarnings raised while parsing —
+    e.g. an active recovery week whose planned end date cannot be parsed
+    (the auto-expiry would silently never fire).
     """
     import re
 
@@ -1882,13 +1942,23 @@ def _compute_planning_constraints(
                 or deload_state.get("rationale")
                 or "—"
             )
-            # Auto-expiry: deactivate if planned end is in the past
-            try:
-                ende_date = date.fromisoformat(ende)
+            # Auto-expiry: deactivate if planned end is in the past.
+            # parse_config_date accepts ISO and DD.MM.YYYY — an ISO-only
+            # parse would never expire a German-formatted end date and the
+            # recovery week would stay active forever.
+            from app.utils.date_parse import parse_config_date
+
+            ende_date = parse_config_date(ende)
+            if ende_date is not None:
                 if ende_date < today:
                     aktiv = "expired"
-            except (ValueError, TypeError):
-                pass
+            elif warnings_out is not None:
+                warnings_out.append(
+                    f"Recovery week active but planned end date {ende!r} is "
+                    f"not parseable (expected YYYY-MM-DD or DD.MM.YYYY) — "
+                    f"auto-expiry disabled, fix the recovery-week block in "
+                    f"athlete_status.md"
+                )
             if aktiv in ("ja", "yes", "true"):
                 constraints.append(
                     f"⛔ RECOVERY WEEK ACTIVE ({start} – {ende}): "
@@ -1928,7 +1998,21 @@ def _compute_planning_constraints(
                 month = int(end_match.group(2))
                 year = int(end_match.group(3)) if end_match.group(3) else break_start.year
                 break_end = date(year, month, day)
-                first_after = (break_end + timedelta(days=1)).isoformat()
+                # Year wrap: "28.12.–03.01." carries no year — the end date
+                # defaults to break_start.year and lands BEFORE the start.
+                # Roll it into the following year.
+                if break_end < break_start:
+                    break_end = date(year + 1, month, day)
+                # Plausibility guard: still-inverted range or a break longer
+                # than 90 days indicates a parse mismatch → ignore end date.
+                if break_end < break_start or (break_end - break_start).days > 90:
+                    logger.warning(
+                        "break end %s implausible relative to start %s — ignoring end date",
+                        break_end.isoformat(),
+                        break_start.isoformat(),
+                    )
+                else:
+                    first_after = (break_end + timedelta(days=1)).isoformat()
             except (ValueError, IndexError):
                 pass
 
@@ -2094,7 +2178,7 @@ def _collect_warnings(
     if hrv is None:
         warnings.append("HRV not available — recovery assessment limited")
     if rhr is None:
-        warnings.append("RHR not available")
+        warnings.append("RHR not available — wearable possibly not synced yet")
     if sleep_score is None:
         warnings.append("Sleep score missing")
     if ctl is None or atl is None:

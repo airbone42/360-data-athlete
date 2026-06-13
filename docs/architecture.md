@@ -41,6 +41,7 @@ athlete" is therefore to edit `config/`, not to fork the agent.
 │    plan-validator (semantic)                                      │
 │    config-auditor / config-fixer                                  │
 │    physio-consultant / sports-ortho-consultant                    │
+│    strava-publisher (title mirror + insights block)               │
 ├──────────────────────────────────────────────────────────────────┤
 │  Prompts (prompts/*.yaml)                                         │
 │    model + temperature + template                                 │
@@ -51,7 +52,9 @@ athlete" is therefore to edit `config/`, not to fork the agent.
 │    api/         — intervals.icu / Strava / Garmin clients         │
 │    analytics/   — exercise parser, recovery rules                 │
 │    graphs/      — context builder, type-history, workout parser   │
+│    schemas/     — pydantic models for plans / context payloads    │
 │    utils/       — paths, config loader, prompt loader, sanitize   │
+│    data/        — bundled static assets (e.g. gerunds wordlist)   │
 ├──────────────────────────────────────────────────────────────────┤
 │  Scripts (scripts/*.py)                                           │
 │    fetch_context, fetch_type_history, push_workouts,              │
@@ -60,8 +63,9 @@ athlete" is therefore to edit `config/`, not to fork the agent.
 │    analyse_video, ...                                             │
 ├──────────────────────────────────────────────────────────────────┤
 │  External services                                                │
-│    intervals.icu (source of truth for activities + NOTEs)         │
-│    Strava (gear, mirror of activities)                            │
+│    intervals.icu (source of truth for activities + NOTEs,         │
+│                   + gear — default shoe backend)                  │
+│    Strava (legacy gear backend, activity mirror)                  │
 │    Garmin (FIT files, running dynamics)                           │
 │    Telegram (chat channel for athlete)                            │
 │    Gemini API (video analysis)                                    │
@@ -99,12 +103,12 @@ aicoach-private/                          ← private repo (Gitea / similar)
 │   ├── settings.json                      enabledPlugins + extraKnownMarketplaces
 │   ├── agents/                            (optional) project-level overrides
 │   └── commands/                          (optional) athlete-specific commands
-├── framework/                              public plugin (later: submodule)
+├── framework/                              public plugin (git submodule)
 │   ├── .claude-plugin/
 │   │   ├── plugin.json
 │   │   └── marketplace.json
-│   ├── agents/                            13 generic sub-agents
-│   ├── commands/                          6 slash commands
+│   ├── agents/                            generic sub-agents
+│   ├── commands/                          slash commands
 │   ├── app/, scripts/, prompts/, …
 │   ├── config.example/                    defaults (Alex Demo)
 │   └── CLAUDE.md                          generic, English
@@ -147,7 +151,7 @@ set `COACH_HOME=/wrapper-dir`. The framework code then reads configs
 from `$COACH_HOME/config` and falls back to
 `$COACH_HOME/framework/config.example` for anything missing. The
 plugin registration in `.claude/settings.json` is independent of this
-and stays unchanged when `framework/` later becomes a git submodule.
+and works the same with `framework/` as a git submodule.
 
 ## Pane model
 

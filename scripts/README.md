@@ -92,7 +92,7 @@ through `app/utils/paths.py` — set `COACH_HOME`, `CONFIG_DIR`,
 | `shoe_recommend.py` | Shoe recommendation given today's workouts | `--date YYYY-MM-DD` | shoe state + workouts | stdout JSON |
 | `save_feedback.py` | Persist athlete feedback to intervals.icu NOTE | `--date YYYY-MM-DD --note "..."` | — | intervals.icu API |
 | `training_flow.py` | End-to-end training flow orchestration (debug / batch) | `--date YYYY-MM-DD` | full context | full plan push |
-| `load_prompt.py` | Render a `prompts/*.yaml` template with config substitution | `--prompt daily_planner` | `prompts/`, `config/` | stdout |
+| `load_prompt.py` | Render a `prompts/*.yaml` template with config substitution (the YAMLs are manually renderable reference prompts; `agents/*.md` are the active definitions) | `--name daily_planner` | `prompts/`, `config/` | stdout |
 | `validate_dfa_vs_nolds.py` | Sanity-check internal DFA-α1 against `nolds` reference | (no args) | RR fixture | stdout report |
 
 ---
@@ -106,8 +106,9 @@ through `app/utils/paths.py` — set `COACH_HOME`, `CONFIG_DIR`,
   any API keys against the bundled `config.example/` demo profile —
   it returns a static context, no live data.
 - **Idempotence.** `log_muscle_load.py --backfill`, `strava_apply.py`
-  (via the `🔬 360° Insights` anchor and the duplicate-anchor refusal),
-  and `push_workouts.py` are idempotent by design. Re-running them does
+  (via the configured footer suffix `INSIGHTS_ANCHOR` — see
+  `app/config.py` — and the duplicate-anchor refusal), and
+  `push_workouts.py` are idempotent by design. Re-running them does
   not produce duplicates.
 - **Exit codes.** `validate_plan.py` exits `2` on a hard ERROR finding;
   `push_workouts.py` propagates that to block the push. Override with
