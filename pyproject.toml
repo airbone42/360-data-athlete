@@ -50,7 +50,7 @@ ignore = ["E501"]
 python_version = "3.11"
 strict = true
 ignore_missing_imports = true
-exclude = ["scripts/", "vendor/"]
+exclude = ["scripts/"]
 
 [[tool.mypy.overrides]]
 module = "scripts.*"

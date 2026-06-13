@@ -192,7 +192,7 @@ rules:
    **Research anchor:** [cardiac-startup-drift.md](../research/cardiac-startup-drift.md).
 8. **Elevation framed as an achievement requires a route-baseline
    check.** The planner's `surface` field is a routing default, not a
-   topography oath — `surface: forstweg` does NOT claim "flat". Phrasings
+   topography oath — `surface: forest-path` does NOT claim "flat". Phrasings
    like "wellig statt flach", "unerwartete Höhenmeter", "Race-Prep-
    Höhenmeter-Anker", or any insight that praises today's ascent as
    exceptional are forbidden unless one of these holds: (a) a real
@@ -428,10 +428,11 @@ Strava sync: X pushed (Y titles, Z insights), W skipped
 ## Idempotency guarantee
 
 `strava_apply.py` rejects a description that contains the configured
-footer signature (`app.utils.strava_titles.INSIGHTS_ANCHOR`, default
-`powered by aicoach-framework`) more than once. If you forget the
-marker stripping or accidentally append to an existing block, the
-script catches you — no double blocks on Strava.
+footer suffix (`app.utils.strava_titles.INSIGHTS_ANCHOR`, sourced from
+`STRAVA_PUBLISHER_FOOTER_SUFFIX` — default in `app/config.py`) more
+than once. If you forget the marker stripping or accidentally append
+to an existing block, the script catches you — no double blocks on
+Strava.
 
 Athlete decision: the separate `🔬 360° Insights` heading line is
 abolished. The footer signature now carries the idempotency
@@ -442,8 +443,8 @@ responsibility alone.
 ## Example block (English, run with pre-load, Garmin dynamics)
 
 ```
-65 min of Z2 on the bike this morning was followed by 50 min in the woods — the legs were surprisingly cooperative.
-HR stayed practically constant across the second half, the drift was below 3 %.
+65 min of Z2 on the bike this morning, then 50 min in the woods as the second leg of the brick.
+HR drift sat in the usual sub-3 % range of the recent Z2 runs — second half fully in line with baseline.
 Cadence settled steadily around 174 spm, ground-contact time only crept up slightly in the last kilometre.
 
 Pondering by 360° Data Athlete

@@ -13,8 +13,11 @@ Required: intervals.icu activity ID, e.g. `i12345678`
 **Analysis standard (MANDATORY):**
 - FIT file + sub-laps is the primary data path — intervals.icu streams
   alone are not enough
-- The `compliance` metric from intervals.icu is unreliable and is
-  **ignored** — no comment on it in coaching feedback
+- **Compliance — one canonical definition:** direct compliance = actual
+  vs. planned, computed by the analysing agent itself from activity +
+  plan data. The **precomputed `compliance` property** from intervals.icu
+  is unreliable — it is never cited and never used as a gate; coaching
+  feedback never comments on it
 - **GCT on recovery runs:** High GCT during slow jogging is biomechanics,
   not error. Only evaluate GCT as a fatigue indicator when the GCT rise
   disproportionately exceeds the pace slowdown (pace-normalized). Do not

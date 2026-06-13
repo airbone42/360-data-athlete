@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Any
 
 from app.utils.paths import resolve_config
+from app.utils.surface import normalize_surface
 
 logger = logging.getLogger(__name__)
 
@@ -246,17 +247,20 @@ def _detect_terrain_from_context(workout: dict, weather_info: str) -> str:
 
     Priority order:
       1. Explicit `surface` field on the workout (set by specialist-endurance):
-         asphalt | forstweg | trail | track | treadmill
+         asphalt | forest-path | trail | track | treadmill
+         (legacy aliases, e.g. `forstweg`, accepted via app.utils.surface)
       2. Tags ('trail' or 'track')
       3. Coaching-notes keyword scan (fallback only — explicit field preferred)
     """
     surface = (workout.get("surface") or "").lower().strip()
     if surface:
-        if surface in ("trail", "weichboden"):
+        canonical = normalize_surface(surface)
+        if canonical == "trail":
             return "trail"
-        if surface in ("track", "bahn"):
+        if canonical == "track":
             return "track"
-        # asphalt, forstweg (fest gepackt), treadmill → asphalt-equivalent
+        # asphalt, forest-path (firm), treadmill — and unknown tokens —
+        # → asphalt-equivalent
         return "asphalt"
 
     tags = [t.lower() for t in (workout.get("tags") or [])]

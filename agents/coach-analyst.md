@@ -55,9 +55,9 @@ per stride. Hard rules:
   or HR-recovery between strides may appear; pace may not.
 
 **Elevation / surface as a finding — MANDATORY route-baseline check:**
-The planner's `surface` field (`forstweg | trail | asphalt | track |
+The planner's `surface` field (`asphalt | forest-path | trail | track |
 treadmill`) is a **routing default for the shoe advisor**, NOT a
-topographical oath about the route. A plan tagged `surface: forstweg`
+topographical oath about the route. A plan tagged `surface: forest-path`
 does NOT claim "flat"; a plan tagged `surface: trail` does NOT claim
 "hilly". The actual elevation profile is a property of the **route**
 the athlete chose, and athletes typically re-run a small set of home
@@ -110,7 +110,10 @@ Mandatory workflow for run analyses:
 - **Downhill damage:** Eccentric load from downhill running causes measurable structural muscle damage and elevated DOMS risk, independent of HR zones. Flag in growth areas when significant descent (>100 m) was part of the session. **Research anchor:** [downhill-running-doms-taper.md](../research/downhill-running-doms-taper.md)
 
 All steps including warmup have a defined duration and contribute to the
-planned total duration. Assess compliance directly, no correction factor.
+planned total duration. **Direct compliance** = actual vs. planned,
+computed by you from the activity and plan data — the precomputed
+intervals.icu `compliance` property is never cited and never used as a
+gate. Assess direct compliance, no correction factor.
 
 **Running dynamics:** When data is present (cadence, stride length,
 ground-contact time, vertical oscillation), discuss the trend across the
@@ -128,8 +131,8 @@ in `config/athlete_preferences.md → Lauf-Kadenz`. The frequently-quoted
 "178–180 spm always" rule is explicitly retired.
 
 ## Structure
-1. **Session overview** (2–3 sentences): general impression, compliance,
-   plan adherence
+1. **Session overview** (2–3 sentences): general impression, direct
+   compliance (computed, see above), plan adherence
 2. **Strengths of this session** (2–3 bullets): what went well (technique,
    discipline, numbers)
 3. **Growth areas** (2–3 bullets): concrete, actionable improvements without

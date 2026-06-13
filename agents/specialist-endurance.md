@@ -179,7 +179,8 @@ much (adds unnecessary load).
 
 **intervals.icu syntax** (strides <60 s → no HR target, only pace/effort,
 seconds-format only — never `100m` which the parser misreads as 100
-minutes, see athlete memory `feedback_intervals_icu_distance_format`):
+minutes; see the time-format rule under "Rules for the `intervals_icu`
+field" below — validator R011 catches the distance-format trap):
 ```
 Strides 4x
 - Stride 20s 95%
@@ -262,13 +263,13 @@ The fields to inspect once the matching session is in hand:
 | Field | Source | What it means |
 |-------|--------|--------------|
 | `interval_summary` | intervals.icu activity | e.g. "19x 28s 388w" — actual completed reps × duration × avg-watts |
-| `compliance` | intervals.icu activity | Planned vs executed (percentage) |
+| direct compliance | computed by you: actual vs. planned (time / reps / watts) from `interval_summary` + lap data vs. the planned workout | The precomputed intervals.icu `compliance` property is never cited and never used as a gate |
 | `decoupling` | intervals.icu activity | Aerobic-decoupling % over the session (>10 % = over-pacing or volume-overshoot) |
 
 **Decision matrix:**
 
-| Compliance | Decoupling | Action |
-|------------|-----------|--------|
+| Direct compliance (computed) | Decoupling | Action |
+|------------------------------|-----------|--------|
 | ≥ 95 % | ≤ 10 % | Hold or +1 rep / +5 W |
 | 80–94 % | ≤ 10 % | Hold volume, validate watt anchor; do NOT progress |
 | 80–94 % | > 10 % | Reduce volume by ~20 % AND consider lowering intensity if watt anchor was extrapolated rather than session-validated |

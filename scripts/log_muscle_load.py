@@ -43,8 +43,9 @@ ZONE_TO_MAPPING: dict[str, dict[str, str]] = {
     "run":  {"Z1": "run_z1_z2", "Z2": "run_z1_z2", "Z3": "run_z3", "Z4": "run_z4_z5", "Z5": "run_z4_z5"},
     "ride": {"Z1": "ride_z1_z2", "Z2": "ride_z1_z2", "Z3": "ride_z3", "Z4": "ride_z4_z5", "Z5": "ride_z4_z5"},
 }
-ENDURANCE_ACTIVITY_TYPES = {"Run", "Ride"}
+ENDURANCE_ACTIVITY_TYPES = {"Run", "Ride", "VirtualRun", "VirtualRide"}
 STRENGTH_ACTIVITY_TYPES = {"WeightTraining", "Workout"}
+HANDLED_ACTIVITY_TYPES = ENDURANCE_ACTIVITY_TYPES | STRENGTH_ACTIVITY_TYPES
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -103,11 +104,31 @@ def _append_unmapped(exercise_name: str, raw_line: str, activity_id: str, date_s
 
 
 def _modality_from_type(activity_type: str) -> str | None:
-    if activity_type == "Run":
+    # Virtual variants load the same muscles as their outdoor counterpart.
+    if activity_type in ("Run", "VirtualRun"):
         return "run"
-    if activity_type == "Ride":
+    if activity_type in ("Ride", "VirtualRide"):
         return "ride"
     return None
+
+
+def _report_skipped(skipped: list[dict]) -> None:
+    """One-line stderr summary of activities dropped for unhandled types.
+
+    Printed even with --silent (the analyse flow always runs silent) so a
+    missing data/muscles/YYYY-MM-DD.json reliably means "rest day", not
+    "activity type silently dropped".
+    """
+    if not skipped:
+        return
+    type_counts: dict[str, int] = {}
+    for a in skipped:
+        t = a.get("type") or "?"
+        type_counts[t] = type_counts.get(t, 0) + 1
+    print(
+        f"skipped {len(skipped)} activities with unhandled types: {type_counts}",
+        file=sys.stderr,
+    )
 
 
 def _zone_minutes_from_activity(activity: dict) -> dict[str, float]:
@@ -356,6 +377,8 @@ async def _log_single(activity_id: str, silent: bool) -> None:
         if not silent:
             print(f"  → wrote data/muscles/{date_str}.json")
     else:
+        # Surface the drop even in silent mode — "no file" must mean rest day.
+        _report_skipped([activity])
         if not silent:
             print(f"  → skipped (unsupported type)")
 
@@ -374,11 +397,10 @@ async def _backfill(days: int, silent: bool, force: bool = False) -> None:
         oldest=oldest.isoformat(), newest=today.isoformat()
     )
 
-    # Filter to strength/endurance only
-    relevant = [
-        a for a in activities
-        if a.get("type") in (ENDURANCE_ACTIVITY_TYPES | STRENGTH_ACTIVITY_TYPES)
-    ]
+    # Filter to strength/endurance only — and surface the drop even in
+    # silent mode, so unhandled types never disappear without trace.
+    relevant = [a for a in activities if a.get("type") in HANDLED_ACTIVITY_TYPES]
+    _report_skipped([a for a in activities if a.get("type") not in HANDLED_ACTIVITY_TYPES])
     if not silent:
         print(f"Found {len(relevant)} relevant activities (of {len(activities)} total)")
 

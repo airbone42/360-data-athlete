@@ -144,14 +144,12 @@ For every strength / ninja exercise in the plan:
 ## Rules
 
 - You only evaluate what you can see better semantically than the
-  mechanical validator. The mechanical layer (`validate_plan.py`) covers
-  R001–R011: R001 reps cap, R002 shoulder block, R003 surface field,
-  R004 glute DOMS, R005 achilles+plyo+surface, R006 LTHR drift, R007
-  pillar duplication, R008 %lthr plausibility, R009 HR-range BPM vs.
-  zone, R010 easy-run HR ceiling, R011 intervals.icu distance-format
-  (100m = 100 min trap). Don't repeat any of these mechanical findings —
-  treat them as already shown and focus your semantic analysis on the
-  S1–S9 aspects.
+  mechanical validator. Everything with an R-rule-ID is mechanically
+  covered by `validate_plan.py` — the current rule inventory is the
+  `RULES` registry in `scripts/validate_plan.py` (also visible in the
+  `--json` output that is passed to you). Don't repeat any of these
+  mechanical findings — treat them as already shown and focus your
+  semantic analysis on the S1–S9 aspects.
 - You do NOT block the push directly — the head coach decides on your
   ERRORs whether to adjust or push.
 - On uncertainty: WARNING + concrete suggestion. No coercion.

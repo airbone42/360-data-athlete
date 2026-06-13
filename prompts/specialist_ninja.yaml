@@ -1,5 +1,5 @@
 metadata:
-  version: "1.0.0"
+  version: "1.0.1"
   model: "google/gemini-3.1-pro-preview"
   temperature: 0.3
   response_format: "json_object"
@@ -107,10 +107,10 @@ template: |
         "description": "Grip pillar: 60s rest between exercises",
         "exercises": [
           {{
-            "name": "Gripmaster",
+            "name": "Gripmaster Fingers",
             "sets": 3,
             "reps": 20,
-            "notes": "Level 1: bilateral, all 5 fingers, slow controlled close"
+            "notes": "Level 1: bilateral, all 4 fingers, thumb passive, slow controlled close"
           }},
           {{
             "name": "Farmer's Hold KB",

@@ -163,7 +163,7 @@ based on your coaching_notes.
       "duration_min": 60,
       "duration_range": [50, 70],
       "intensity": "low|medium|high",
-      "workout_type": "EASY|LONG|INTERVALS|STRENGTH|RECOVERY",
+      "workout_type": "EASY|LONG|INTERVALS|STRENGTH|RECOVERY|RACE",
       "indoor": false,
       "tags": ["legs", "plyo"],
       "coaching_notes": "Short directive for the specialist (1–2 sentences)"
