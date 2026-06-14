@@ -524,6 +524,15 @@ specialist MUST either (a) match reality bottom-up and override
 or (b) push back to the planner via the orchestrator when the gap
 exceeds factor 1.5.
 
+**Mechanical net (R018):** `validate_plan.py::check_duration_plausibility`
+re-derives this estimate from the pushed description (per-Seite/Richtung
+doubled, holds summed) and emits a WARNING when the declared
+`duration_min` is below 60 % of the structure estimate. The WARNING is a
+backstop, not a substitute — the specialist still owns the bottom-up
+figure. The canonical failure it guards against: a bilateral hold-heavy
+block whose holds were counted once instead of `sets × hold × 2`, landing
+at half the real time.
+
 **Drift incident pattern:** Athlete completed a "9 min" Schicht-D
 session in ~30 min — bilateral × isometric-hold compounding was
 not modelled. The fix is bottom-up estimation per exercise, not a

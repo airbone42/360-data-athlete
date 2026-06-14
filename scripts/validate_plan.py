@@ -1207,6 +1207,67 @@ def _parse_workout_exercise_line(line: str) -> dict | None:
     }
 
 
+def _estimate_session_seconds(description: str) -> tuple[int, int] | None:
+    """Estimate the realistic duration (s) of a non-endurance session from
+    its description exercise lines, for the R018 plausibility check.
+
+    Handles the conventional shapes the specialists emit:
+      ``3x35s/Seite``            → 3 sets × 35 s hold, bilateral (×2)
+      ``3x8/Seite``              → 3 sets × 8 reps, bilateral
+      ``3x7/Richtung Tempo 3-0-3`` → bilateral (per Richtung), 6 s/rep
+      ``3x10/Seite 9s Hold``     → 3 sets × 10 reps × 9 s hold, bilateral
+
+    The two error classes this catches are the ones that produced a
+    half-length estimate in real use: (a) per-side / per-direction work
+    not doubled, (b) isometric hold-time × reps × sets not summed.
+
+    Conservative by design — work time plus a modest inter-set rest, so the
+    R018 threshold (declared < 0.6 × estimate) only trips on gross
+    underestimates, not ±20 % noise. Returns ``(seconds, exercise_count)``
+    or ``None`` when no exercise line parsed.
+    """
+    if not description:
+        return None
+    DEFAULT_REP_S = 4          # a controlled rep with no tempo/hold given
+    REST_PER_SET_S = 25        # inter-set reset + setup, conservative
+    total = 0
+    n_ex = 0
+    for raw in description.split("\n"):
+        line = raw.strip()
+        # sets × N, capturing whether N is a timed hold ("35s") vs reps
+        m = re.search(r"(\d+)\s*[xX×]\s*(\d+)\s*(s)?", line)
+        if not m:
+            continue
+        sets = int(m.group(1))
+        n = int(m.group(2))
+        timed = m.group(3) == "s"
+        if sets < 1 or sets > 20:
+            continue
+        per_side = bool(re.search(
+            r"(?:je\s*(?:Seite|Richtung)|/\s*(?:Seite|Richtung)|per\s*side)",
+            line, re.IGNORECASE))
+        sides = 2 if per_side else 1
+        if timed:
+            # N is the hold duration in seconds; one hold per set
+            set_work = n
+        else:
+            reps = n
+            tempo = re.search(r"Tempo\s*(\d+)\s*-\s*(\d+)\s*-\s*(\d+)", line)
+            hold = re.search(r"(\d+)\s*s\s*Hold\b", line)
+            if tempo:
+                rep_s = sum(int(tempo.group(i)) for i in (1, 2, 3))
+            elif hold:
+                rep_s = int(hold.group(1)) + 2  # hold + lift/lower
+            else:
+                rep_s = DEFAULT_REP_S
+            set_work = reps * rep_s
+        total += sets * set_work * sides + sets * REST_PER_SET_S
+        n_ex += 1
+    if n_ex == 0:
+        return None
+    return total, n_ex
+
+
 _REGRESSION_EXEMPTION_RE = re.compile(
     r"\b(?:deload|recovery\s*week|race[-\s]*week|taper|"
     r"symptom[-\s]*(?:stop|onset)|regression|"
@@ -1663,6 +1724,57 @@ def check_weekly_hardreize_cap(workouts: list[dict], ctx: Context) -> list[Findi
 # Plugin registry: register new rules here as explicit (rule_id, check_fn)
 # pairs. `--rule` selection matches on the rule_id, not on docstring
 # substrings — keep ids unique (enforced by tests/test_validate_plan_registry.py).
+def check_duration_plausibility(workouts: list[dict], ctx: Context) -> list[Finding]:
+    """R018 — Non-endurance duration_min must roughly match the structure.
+
+    Endurance sessions are duration-checked by R011 (intervals_icu total).
+    Strength / core / reha sessions had no equivalent guard, so an
+    eyeballed ``duration_min`` could land at half the real time — the
+    intervals.icu time block then lies, and the athlete plans the day
+    around a wrong number.
+
+    The estimator (``_estimate_session_seconds``) sums sets × reps ×
+    (tempo|hold seconds) with explicit ×2 for per-Seite / per-Richtung
+    work plus inter-set rest. WARNING (not ERROR) when the declared time
+    is below 60 % of the estimate — it is an estimate, the athlete may
+    train faster, but a 2× gap is a planning bug worth surfacing.
+    """
+    findings: list[Finding] = []
+    for w in workouts:
+        if (w.get("type") or "") in ("Run", "Ride", "VirtualRun", "VirtualRide"):
+            continue  # covered by R011 + intervals_icu carries its own duration
+        declared_min = w.get("duration_min") or 0
+        if not declared_min:
+            continue  # rest day / no time block
+        est = _estimate_session_seconds(w.get("description") or "")
+        if not est:
+            continue
+        est_s, n_ex = est
+        if n_ex < 2 or est_s < 12 * 60:
+            continue  # too small / too little structure to estimate reliably
+        if declared_min * 60 < 0.6 * est_s:
+            est_min = round(est_s / 60)
+            findings.append(Finding(
+                rule_id="R018",
+                severity=SEVERITY_WARNING,
+                workout=_workout_name(w),
+                message=(
+                    f"Declared duration {declared_min} min is implausibly short vs "
+                    f"the structure estimate ~{est_min} min ({n_ex} exercises, "
+                    f"per-Seite/Richtung doubled + holds summed). intervals.icu "
+                    f"will display a too-short time block."
+                ),
+                suggestion=(
+                    f"Set duration_min ≈ {est_min}. Compute bottom-up: per exercise "
+                    f"sets × reps × (Tempo- or Hold-Sekunden), ×2 for /Seite or "
+                    f"/Richtung, plus inter-set rest. Isometric holds and bilateral "
+                    f"doubling dominate core/reha sessions — they are the usual cause "
+                    f"of a half-length estimate."
+                ),
+            ))
+    return findings
+
+
 RULES: list[tuple[str, Callable[[list[dict], Context], list[Finding]]]] = [
     ("R001", check_reps_ceiling),
     ("R002", check_injury_locks_shoulder),
@@ -1681,6 +1793,7 @@ RULES: list[tuple[str, Callable[[list[dict], Context], list[Finding]]]] = [
     ("R015", check_intervals_repeat_press_lap),
     ("R016", check_exercise_regression),
     ("R017", check_weekly_hardreize_cap),
+    ("R018", check_duration_plausibility),
 ]
 
 
