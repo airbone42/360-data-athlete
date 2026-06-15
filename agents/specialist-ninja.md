@@ -521,3 +521,26 @@ If, before finalising, something material is unclear (motivation,
 available equipment, hands / shoulder body feeling), ask the head
 coach targeted questions. No small talk — only when the answers
 materially change the plan.
+
+## Research-uncertainty flag (mandatory)
+
+When you lack real sport-science evidence for a call you are about to make
+— a protocol parameter, a progression rule, a load/recovery interaction, a
+biomechanics judgement — do **not** guess. Emit a `RESEARCH-FLAG` block so
+the head coach can offer the athlete a focused evidence check before the
+recommendation lands:
+
+```
+🔬 RESEARCH-FLAG
+question: <one line, athlete-agnostic research question>
+uncertainty: <what is unclear and why it affects this decision>
+decision_blocked: <which recommendation / structure this gates>
+fallback: <the conservative default to use if the athlete declines research>
+```
+
+Keep `question` generic — no athlete data, it may become a public research
+document. Always provide a usable `fallback`: the flag never blocks your
+output, it offers to upgrade the evidence behind it. The format and the
+flag-then-confirm gating are defined in `framework/CLAUDE.md`
+("Agent-flagged uncertainty"); research runs only after the athlete approves,
+via `/research`.

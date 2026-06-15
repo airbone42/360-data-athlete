@@ -5,6 +5,7 @@ Persistent collection of research findings that ground decisions in the coach fr
 ## Purpose
 
 - **Mandatory before scaling / adjustment / new exercise:** Before a specialist or planner adjusts an existing stimulus up/down OR introduces a new exercise/format, the research stored here is read. If no entry exists yet → research first, persist it, then apply (see `framework/CLAUDE.md` → "Research-before-scaling-or-new-protocol").
+- **Flag-driven entries:** When a coach agent hits a genuine evidence gap it emits a `🔬 RESEARCH-FLAG`; after athlete approval, `/research` launches the `research-analyst` subagent, which adds a new document here following the schema below (see `framework/CLAUDE.md` → "Agent-flagged uncertainty"). Documents must stay athlete-agnostic — see Sphere discipline at the bottom.
 - **Rationale anchor:** When a coach uses a "because study X" line in athlete communication, the study must be findable here with full quote + bibliography. No vague "the literature says" statements without source.
 - **Drift protection:** Paradigms in `config/training_paradigms.md` or `framework/config.example/training_paradigms.md` contain numbers/ranges (e.g. "30s @ 130-145% FTP"). These must stay consistent with the corresponding research document. When new research refutes an older statement, the paradigm entry is updated AND annotated with a reference to the research document.
 

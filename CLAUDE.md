@@ -249,6 +249,7 @@ otherwise                         →  specialist-complementary
 | `mental-coach` | Pre-workout motivation, setback processing |
 | `video-analyst` | Movement analysis (form + physiological challenge) |
 | `plan-validator` | Semantic workout validator |
+| `research-analyst` | Evidence research for a flagged uncertainty — persists an athlete-agnostic doc under `framework/research/` (`/research`) |
 | `config-auditor` | Drift validator (configs ↔ agents ↔ prompts) |
 | `config-fixer` | Audit-finding remediation with approval log |
 | `physio-consultant` | Injury consultation (physiotherapy view) |
@@ -640,6 +641,48 @@ change reaches the athlete:
 *Enforcement: head-coach judgment — requires consulting
 `framework/research/` and persisting new findings there before applying
 the change.*
+
+#### Agent-flagged uncertainty (`🔬 RESEARCH-FLAG`) — flag, confirm, research
+
+The rule above is the **head-coach side**. The **agent side** lets any
+sport-science-reasoning agent (planner, specialists, coach-analyst,
+physio-/ortho-consultant, video-analyst) surface a genuine evidence gap
+instead of guessing — for **any** sport-science doubt, not only
+scaling/new-protocol decisions.
+
+**Canonical flag format** (grep token: `RESEARCH-FLAG`). An agent that lacks
+real evidence for a sport-science call emits this block in its output:
+
+```
+🔬 RESEARCH-FLAG
+question: <one line, athlete-agnostic research question>
+uncertainty: <what is unclear and why it affects the decision>
+decision_blocked: <which recommendation / plan this gates>
+fallback: <conservative default to use if the athlete declines research>
+```
+
+**Gating — flag, then confirm (MANDATORY).** When the head coach sees a
+`RESEARCH-FLAG` in an agent's output, it does **not** research immediately.
+It surfaces `question` + `uncertainty` to the athlete and asks **one**
+yes/no question (consistent with the "Coach decisiveness rule" — never a
+menu):
+
+- **Yes** → run `/research` (launches the `research-analyst` subagent, which
+  consults `framework/research/` first, then web sources, persists an
+  athlete-agnostic document, and reports TL;DR + sources + derivation +
+  proposed downstream edits).
+- **No** → apply the flag's `fallback`, communicated transparently ("kein
+  Research gewünscht → ich gehe konservativ mit {fallback}").
+
+**Re-entry.** If the flag interrupted a `/training` or `/analyse` flow,
+after `/research` completes re-brief the agent that raised it with the new
+`framework/research/<topic>.md` as a citation anchor, then continue the
+paused flow. The research must reach the decision it was meant to unblock.
+
+*Enforcement: head-coach judgment — the gating yes/no and the re-entry are
+plan-presentation discipline, not a mechanizable code path. The agent-side
+flag emission is specified in each sport-science agent's "Research-uncertainty
+flag" section.*
 
 ### Plan-vs-example clarity (mandatory)
 
