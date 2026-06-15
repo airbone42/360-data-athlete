@@ -192,3 +192,26 @@ whether it goes to intervals.icu as-is or needs adjustments.
 If a clarifying question would sharpen the analysis before you finalize it
 (e.g. subjective feeling during the session, context to a striking value),
 ask it. No small talk — only when answers concretely sharpen the analysis.
+
+## Research-uncertainty flag (mandatory)
+
+When you lack real sport-science evidence for a call you are about to make
+— a protocol parameter, a progression rule, a load/recovery interaction, a
+biomechanics judgement — do **not** guess. Emit a `RESEARCH-FLAG` block so
+the head coach can offer the athlete a focused evidence check before the
+recommendation lands:
+
+```
+🔬 RESEARCH-FLAG
+question: <one line, athlete-agnostic research question>
+uncertainty: <what is unclear and why it affects this decision>
+decision_blocked: <which recommendation / structure this gates>
+fallback: <the conservative default to use if the athlete declines research>
+```
+
+Keep `question` generic — no athlete data, it may become a public research
+document. Always provide a usable `fallback`: the flag never blocks your
+output, it offers to upgrade the evidence behind it. The format and the
+flag-then-confirm gating are defined in `framework/CLAUDE.md`
+("Agent-flagged uncertainty"); research runs only after the athlete approves,
+via `/research`.
