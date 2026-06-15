@@ -139,6 +139,12 @@ available equipment. Examples:
 new (from research or rotation) and why it fits now. Do not silently
 repeat.
 
+**Re-evaluation flag takes precedence over ad-hoc rotation.** When the
+briefing carries the `🔄 Exercise re-evaluation due` flag (or the head
+coach passes confirmed `exercise-reviewer` outcomes), let those
+keep/progress/swap/retire decisions drive pillar-exercise selection
+rather than improvising a separate rotation on top.
+
 ---
 
 ## Gripmaster — correct usage (MANDATORY)
