@@ -249,6 +249,7 @@ otherwise                         →  specialist-complementary
 | `mental-coach` | Pre-workout motivation, setback processing |
 | `video-analyst` | Movement analysis (form + physiological challenge) |
 | `plan-validator` | Semantic workout validator |
+| `exercise-reviewer` | Periodic exercise-selection review against current goals — runs only when the re-evaluation trigger fires (recovery week / phase change / staleness) |
 | `research-analyst` | Evidence research for a flagged uncertainty — persists an athlete-agnostic doc under `framework/research/` (`/research`) |
 | `config-auditor` | Drift validator (configs ↔ agents ↔ prompts) |
 | `config-fixer` | Audit-finding remediation with approval log |
@@ -1092,6 +1093,49 @@ To start: set the recovery-week status block in `config/athlete_status.md`
 (active/start/planned-end/reason). To end: clear the block or let the
 planned-end date expire — `_compute_planning_constraints` ignores expired
 flags automatically.
+
+---
+
+## Exercise re-evaluation cadence
+
+Daily planning does **micro-progression** well (more reps / hold time /
+load via `exercise_progressions.md` + type history) but never steps back
+to ask whether an exercise still serves the athlete's **current goals and
+fitness level**. Goals shift across periodization, and variety is a real
+stimulus — so exercise selection is re-challenged at **natural
+boundaries**, not every session (which would reinvent the plan daily).
+
+**Trigger.** `context_builder._compute_reeval_trigger` emits a single
+advisory line into `planningConstraints`
+(`🔄 Exercise re-evaluation due …`) when any of three conditions hold:
+
+1. **Recovery week active** (`deload_state`) — a natural deload boundary.
+2. **Periodization phase change** — today's phase (from the machine-
+   readable phase plan in `config/athlete_status.md`) differs from
+   `last_reeval_phase`.
+3. **Staleness** — an exercise's `letzte-Re-Eval` in
+   `exercise_progressions.md` is older than `staleness_weeks`
+   (`config/athlete_status.md`, default 6).
+
+When no trigger fires the line is absent and the daily flow is unchanged
+(cheap — one optional string, no extra LLM/API work).
+
+**Flow.** When the flag is present, `/training` step 1.5 runs the
+`exercise-reviewer` agent (fresh context) which judges each exercise on
+goal-fit + staleness and proposes **keep / progress / swap / retire** —
+advisory only. The athlete confirms; **never a silent swap** (see "Never
+silently drop or replace standing prescriptions"). On confirmation the
+head coach writes `Status=` + `letzte-Re-Eval={today}` back into
+`config/exercise_progressions.md`, which resets the staleness clock so the
+flag clears. `plan-validator` S10 surfaces the same flag at validation
+time (advisory INFO/WARNING, never blocks).
+
+**Config (athlete-specific, in `config/`).** Per-exercise `Re-Eval:`
+blocks in `exercise_progressions.md` (`dient=` / `eingeführt=` /
+`letzte-Re-Eval=` / `Status=`) and the `staleness_weeks` +
+`last_reeval_phase` + phase plan in `athlete_status.md`. The mechanic
+(trigger computation, reviewer agent, S10) is generic; schema defaults
+live in `config.example/`.
 
 ---
 

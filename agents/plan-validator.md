@@ -119,6 +119,22 @@ For every strength / ninja exercise in the plan:
 - WARNING if tag and content drift apart — the planner's pillar
   rotation accounting relies on tags reflecting reality.
 
+### S10 — goal-drift / staleness (macro advisory)
+Cheap macro check that surfaces the re-evaluation flag in the validator —
+it does NOT perform the re-evaluation (that is the `exercise-reviewer`
+agent's job, run earlier in the flow when the flag is present).
+- `planningConstraints` carries the `🔄 Exercise re-evaluation due` flag
+  AND the plan carries a flagged exercise forward unchanged (same
+  sets/reps/load as last session, no swap/progress) → **INFO**: "Exercise
+  X is re-eval-due (trigger: …) — consider running exercise-reviewer
+  before push."
+- An exercise whose `Re-Eval: dient=` (in `exercise_progressions.md`)
+  points at a periodization phase that is already over per
+  `competition_plan.md` → **WARNING**: the exercise may no longer serve
+  the current goal.
+- Never ERROR. S10 is advisory and never blocks the push — it only makes
+  the flag visible at validation time.
+
 ## Output format
 
 ```markdown
@@ -129,7 +145,7 @@ For every strength / ninja exercise in the plan:
 
 ### Findings
 [Per finding:]
-**[severity]** — [aspect S1–S9] — [workout name or global]
+**[severity]** — [aspect S1–S10] — [workout name or global]
 **Finding:** [concrete]
 **Suggestion:** [concrete + actionable]
 
@@ -149,7 +165,7 @@ For every strength / ninja exercise in the plan:
   `RULES` registry in `scripts/validate_plan.py` (also visible in the
   `--json` output that is passed to you). Don't repeat any of these
   mechanical findings — treat them as already shown and focus your
-  semantic analysis on the S1–S9 aspects.
+  semantic analysis on the S1–S10 aspects.
 - You do NOT block the push directly — the head coach decides on your
   ERRORs whether to adjust or push.
 - On uncertainty: WARNING + concrete suggestion. No coercion.

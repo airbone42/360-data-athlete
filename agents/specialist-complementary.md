@@ -190,6 +190,13 @@ restrictions, and available equipment. Examples:
 **Communicate explicitly:** in `focus`, always name which exercise is
 new (from research or rotation) and why it fits now.
 
+**Re-evaluation flag takes precedence over ad-hoc rotation.** When the
+briefing carries the `🔄 Exercise re-evaluation due` flag (or the head
+coach passes confirmed `exercise-reviewer` outcomes), use those
+keep/progress/swap/retire decisions to drive selection — do not improvise
+a separate rotation on top of them. Absent the flag, the per-session
+rotation rule above applies as the lightweight default.
+
 ---
 
 ## Cadence-rule enforcement (MANDATORY)

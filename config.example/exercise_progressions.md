@@ -35,6 +35,36 @@ Wenn eine Übung eine biomechanisch schwächere Variante einer Basisübung ist, 
 
 ---
 
+## Re-Eval-Feld (WHY-Persistenz für die Re-Evaluations-Kadenz)
+
+Damit die Übungsauswahl nicht „blind" Session für Session übernommen,
+sondern an natürlichen Grenzen (Erholungswoche, Phasenwechsel, Staleness)
+gegen die aktuellen Ziele **gechallengt** wird, kann jede aktive Übung im
+**Wrapper** (`config/exercise_progressions.md`) eine maschinenlesbare
+Re-Eval-Zeile tragen:
+
+```
+- **Re-Eval:** dient=<Ziel/Phase> | eingeführt=YYYY-MM-DD | letzte-Re-Eval=YYYY-MM-DD | Status=keep
+```
+
+- `dient=` — welchem Ziel / welcher Phase (`competition_plan.md`) die Übung dient.
+- `eingeführt=` — wann die Übung in die Rotation kam.
+- `letzte-Re-Eval=` — wann zuletzt bewusst hinterfragt. **Steuert Trigger C**
+  (`context_builder._parse_stale_exercises`): liegt das Datum weiter zurück
+  als `athlete_status.md → staleness_weeks`, flaggt der Coach die Übung
+  in `planningConstraints`, und der `/training`-Flow startet den
+  `exercise-reviewer`-Agenten.
+- `Status=` ∈ `keep | progress | swap | retire | pending`. `retire` nimmt
+  die Übung aus der Staleness-Prüfung (nicht mehr in Rotation).
+
+Die konkreten Re-Eval-Zeilen sind **athleten-spezifisch** und gehören in
+den Wrapper, nicht in diese Framework-Defaults. Phasen-Plan und
+`staleness_weeks` werden in `athlete_status.md` gepflegt (siehe dort die
+Re-Eval-Trigger-Sektion). Nach einer bestätigten Re-Evaluation `Status=`
+und `letzte-Re-Eval=<heute>` zurückschreiben (Staleness-Reset).
+
+---
+
 ## Grip
 
 ### KB Horn Pinch
