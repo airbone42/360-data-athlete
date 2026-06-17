@@ -122,3 +122,33 @@ def test_r002_silent_when_lock_inactive():
     """No activation keyword in athlete_static → lock off, nothing fires."""
     ctx = _ctx(athlete_static="All clear, no restrictions.")
     assert check_injury_locks_shoulder([_workout("Dead Hang 45s")], ctx) == []
+
+
+# ─── Config-driven allow_patterns (physio-cleared exercises) ─────────────
+
+def _ctx_allow(patterns: list[str]) -> Context:
+    ctx = _ctx()
+    ctx.injury_lock_allows = {"shoulder": patterns}
+    return ctx
+
+
+def test_r002_dead_hang_long_hold_allowed_via_allow_pattern():
+    """With a configured allow_pattern, a 15s/45s Dead Hang is cleared."""
+    ctx = _ctx_allow([r"dead\s*hang"])
+    assert check_injury_locks_shoulder([_workout("Dead Hang 15s")], ctx) == []
+    assert check_injury_locks_shoulder([_workout("Dead Hang: 3x20s")], ctx) == []
+
+
+def test_r002_allow_pattern_does_not_unlock_pullups():
+    """A dead-hang allow_pattern must NOT clear active pull-ups / klimmzug."""
+    ctx = _ctx_allow([r"dead\s*hang"])
+    findings = check_injury_locks_shoulder([_workout("Pull-up: 3x5")], ctx)
+    assert len(findings) == 1
+    assert findings[0].severity == "ERROR"
+
+
+def test_r002_dead_hang_still_blocked_without_allow_pattern():
+    """Framework default (no allow_patterns) keeps the 2-5s cap — 15s blocked."""
+    findings = check_injury_locks_shoulder([_workout("Dead Hang 15s")], _ctx())
+    assert len(findings) == 1
+    assert findings[0].severity == "ERROR"

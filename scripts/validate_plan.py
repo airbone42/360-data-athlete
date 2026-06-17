@@ -62,6 +62,12 @@ class Context:
     recent_activities: list[dict] = field(default_factory=list)
     sport_settings: list[dict] = field(default_factory=list)
     injury_locks: dict[str, list[str]] = field(default_factory=dict)
+    # Per-zone allow-patterns (regex strings) that exempt a matching exercise
+    # line from the zone's lock — athlete-specific clearances documented in
+    # config/injury_locks.json (e.g. a cleared passive Dead Hang). The
+    # framework default (config.example) keeps these empty so a fresh user
+    # starts fully locked.
+    injury_lock_allows: dict[str, list[str]] = field(default_factory=dict)
     weekly_hard_reize_balance: str = ""
     # Current fitness (CTL) — fetched fail-soft from intervals.icu wellness;
     # None when offline / fetch failed. Used by R014 to map onto the
@@ -281,8 +287,14 @@ def check_injury_locks_shoulder(workouts: list[dict], ctx: Context) -> list[Find
     keyword is found in `athlete_static.md`, the corresponding lock is active.
 
     Exceptions:
-    - Dead Hang with hold times of 2-5 s is explicitly allowed (rehab-tier
-      decompression hold); longer holds (e.g. 15 s, 45 s) stay blocked.
+    - Config-driven clearance: `injury_locks.json` may list `allow_patterns`
+      per zone (regex) that exempt a cleared exercise at any dosage — e.g. a
+      physio-cleared passive Dead Hang. The framework default
+      (config.example) keeps these empty so a fresh user starts fully locked;
+      an athlete documents the clearance in their own config/injury_locks.json.
+    - Dead Hang with hold times of 2-5 s is allowed framework-wide as a
+      rehab-tier decompression hold even without an allow_pattern; longer
+      holds (15 s, 45 s) stay blocked unless an allow_pattern clears them.
     - Hang-position lift variants (hang power clean, hang snatch) are not
       bar hangs and are not matched by the hang lock.
     - Scapular Pullups (scapular depression, no elbow flexion) are rehab-tier
@@ -296,10 +308,17 @@ def check_injury_locks_shoulder(workouts: list[dict], ctx: Context) -> list[Find
     static_lower = ctx.athlete_static.lower()
     if not any(kw.lower() in static_lower for kw in shoulder_keywords):
         return findings
+    shoulder_allows = ctx.injury_lock_allows.get("shoulder", [])
     for w in workouts:
         name = _workout_name(w)
         for line in _exercise_lines(_description(w)):
             if _matches_any(line, SHOULDER_LOCK_PATTERNS):
+                # Config-driven clearance (config/injury_locks.json allow_patterns)
+                # — e.g. an athlete whose passive Dead Hang is physio-cleared at
+                # any hold time. Pull-up/rope/traverse/campus patterns are separate
+                # and stay blocked unless their own allow-pattern is configured.
+                if shoulder_allows and _matches_any(line, shoulder_allows):
+                    continue
                 if _dead_hang_allowed(line):
                     continue
                 if re.search(r"\b(scapular?|skapula(r|re|ren)?)\s*pull[-\s]?ups?", line, flags=re.IGNORECASE):
@@ -1979,6 +1998,25 @@ def _load_injury_locks() -> dict[str, list[str]]:
     return result
 
 
+def _load_injury_lock_allows() -> dict[str, list[str]]:
+    """Load per-zone allow_patterns from config/injury_locks.json.
+
+    Optional schema key — a zone may carry `allow_patterns: [regex, ...]`
+    listing exercise patterns that are explicitly cleared and must NOT trip
+    the lock (athlete-specific clearance). Absent/empty by default."""
+    from app.utils.paths import resolve_config
+    try:
+        path = resolve_config("injury_locks.json")
+        data = json.loads(path.read_text())
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+    result: dict[str, list[str]] = {}
+    for zone, cfg in data.items():
+        if isinstance(cfg, dict) and cfg.get("allow_patterns"):
+            result[zone] = cfg["allow_patterns"]
+    return result
+
+
 def load_context(target_date: str, fetch_remote: bool = True) -> Context:
     ctx = Context(
         target_date=target_date,
@@ -1988,6 +2026,7 @@ def load_context(target_date: str, fetch_remote: bool = True) -> Context:
         exercise_progressions=_read_config("exercise_progressions.md"),
         competition_plan=_read_config("competition_plan.md"),
         injury_locks=_load_injury_locks(),
+        injury_lock_allows=_load_injury_lock_allows(),
     )
     if fetch_remote:
         # Fail-soft per source: a failed fetch never crashes the validator,
