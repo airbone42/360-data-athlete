@@ -87,6 +87,32 @@ Before producing the plan:
    session is also not sufficient — only the explicit exceptions above
    apply.
 
+   **A due complementary / pillar stimulus is ADDITIVE to the primary
+   sport, never a substitute for it (MANDATORY).** An overdue
+   complementary, balance, or athletic-pillar session (rule 9) is the
+   day's *headline* stimulus, but it does **not** discharge the day's
+   primary-sport aerobic session. When the primary sport is feasible
+   (not ⛔-blocked, readiness not a red flag), the day plan **must still
+   contain a primary-sport endurance session** alongside the pillar work
+   — the pillar is layered on top, not swapped in. Omitting the primary
+   sport entirely on a feasible day requires one of the **same named
+   triggers** that justify a downgrade under "No silent conservatism":
+   - `intensityReadiness 🔴` AND `hrvForecastLatest.verdict ≠ "expected"`,
+   - the primary sport is blocked (⛔ in `planningConstraints`, active
+     injury, recovery-week / taper rule),
+   - a deliberate full rest day chosen for a documented reason, OR
+   - a sibling-session volume cap on a double-session day.
+
+   If none of these fire, build the primary-sport session in (an easy /
+   recovery aerobic dose is the floor — see "No silent conservatism";
+   both weekly Hard-Reize already done only caps the *intensity* to
+   Z2/easy, it does not remove the session). "Pillar X is overdue" and
+   "the legs trained yesterday" are **not** triggers to drop the primary
+   sport — a blocked *strength/plyo* system does not block easy aerobic
+   work in the primary sport. State in `coaching_notes` that the pillar
+   is additive to the primary-sport session, or — if the primary sport is
+   genuinely omitted — name which trigger above applies.
+
 9. **Pillar rotation (MANDATORY for multi-pillar athletic systems like
    ninja warrior / parkour):** `planningConstraints` contains the
    "pillar history" with the most recently trained pillars. Read the
