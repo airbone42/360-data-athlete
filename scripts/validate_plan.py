@@ -100,6 +100,11 @@ HIGH_REP_WHITELIST = [
     r"\btowel\s*(pinch|wrap)", r"\bgripmaster",
     r"\bwand-?slide", r"\bwall\s*slide",
     r"\bscapula",
+    # Rotator-cuff internal-rotation band work is a low-load endurance/
+    # fatigue protocol (high reps by design, e.g. a physio-prescribed 3x25
+    # to fatigue the internal rotators) — not a hypertrophy lift. External
+    # rotation stays in the override cap list (typically prescribed ≤15).
+    r"\binnenrotat", r"\binternal\s*rotat",
     r"\bbalance\s*board",
     r"\beinbeinstand", r"\bsingle.?leg\s*stand",
     r"\bdehnung", r"\bstretch",
