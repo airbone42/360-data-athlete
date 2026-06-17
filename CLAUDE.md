@@ -526,7 +526,7 @@ look-back + demonstrated-capability anchoring at both the head-coach
 briefing layer and in `specialist-endurance` ("Long-run / volume
 anchoring").
 
-*Enforcement: mechanical validator hook `validate_plan.py::check_easy_run_conservatism` (R014) — surfaces easy runs below 70% of 30d easy median without a documented recovery reason. Plus head-coach judgment for the other drift classes, including pacing / race-strategy conservatism and long-run/volume anchoring (not fully mechanizable — the demonstrated-longest-run anchor depends on a representative history window the coach must request).*
+*Enforcement: mechanical validator hook `validate_plan.py::check_easy_run_conservatism` (R014). Primary anchor — when `competition_plan.md` documents a per-phase easy-run band keyed by CTL ("Lauf-Dauer-Logik pro Phase"), an easy run below the phase-band floor (mapped via current CTL) with no documented recovery trigger is a hard ERROR; heat is a reason to run slower (HR-capped), not shorter, and indoor/brick runs are exempt. Fallback anchor — without a phase-band table or when CTL is offline, easy runs below 70% of the 30d easy median without a documented recovery reason surface as a WARNING. Plus head-coach judgment for the other drift classes, including pacing / race-strategy conservatism and long-run/volume anchoring (not fully mechanizable — the demonstrated-longest-run anchor depends on a representative history window the coach must request).*
 
 ### Never silently drop or replace standing prescriptions (mandatory)
 
