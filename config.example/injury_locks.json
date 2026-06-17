@@ -1,8 +1,9 @@
 {
   "_schema": "injury_locks.json — configurable injury-lock activation keywords",
-  "_usage": "Used by validate_plan.py rule R002 (shoulder lock). Each top-level key is a body zone. The 'activation_keywords' list contains case-insensitive substrings matched against athlete_static.md. If ANY keyword matches, the corresponding lock rule activates. Override this file in config/injury_locks.json with athlete-specific keywords.",
+  "_usage": "Used by validate_plan.py rule R002 (shoulder lock). Each top-level key is a body zone. The 'activation_keywords' list contains case-insensitive substrings matched against athlete_static.md. If ANY keyword matches, the corresponding lock rule activates. The optional 'allow_patterns' list (regex strings) exempts specific exercise lines from the lock even when active — used for physio-cleared exercises (e.g. a passive Dead Hang). Leave it empty/absent for a fully-locked default. Override this file in config/injury_locks.json with athlete-specific keywords and clearances.",
   "shoulder": {
     "activation_keywords": ["shoulder lock", "shoulder restricted"],
-    "note": "Override in config/injury_locks.json with athlete-specific keywords (e.g. language-specific terms)"
+    "allow_patterns": [],
+    "note": "Override in config/injury_locks.json with athlete-specific keywords (e.g. language-specific terms) and allow_patterns for physio-cleared exercises"
   }
 }
