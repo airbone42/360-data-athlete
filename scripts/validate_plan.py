@@ -57,11 +57,16 @@ class Context:
     athlete_status: str = ""
     training_paradigms: str = ""
     exercise_progressions: str = ""
+    competition_plan: str = ""
     recent_notes: list[dict] = field(default_factory=list)
     recent_activities: list[dict] = field(default_factory=list)
     sport_settings: list[dict] = field(default_factory=list)
     injury_locks: dict[str, list[str]] = field(default_factory=dict)
     weekly_hard_reize_balance: str = ""
+    # Current fitness (CTL) — fetched fail-soft from intervals.icu wellness;
+    # None when offline / fetch failed. Used by R014 to map onto the
+    # per-phase easy-run band in competition_plan.md.
+    ctl: float | None = None
     # WARNING findings from failed remote fetches in load_context() —
     # surfaced by run_validation() so rules that silently self-deactivate
     # on missing context (R004/R006/R014/R017) are visible as degraded.
@@ -1509,18 +1514,67 @@ def check_intervals_repeat_press_lap(workouts: list[dict], ctx: Context) -> list
     return findings
 
 
+# ── Phase-band anchor for R014 (competition_plan.md "Lauf-Dauer-Logik pro Phase") ──
+# Canonical easy-run-duration anchor: the per-phase band keyed by CTL, NOT a
+# rolling-median heuristic. A markdown table whose rows carry a `CTL lo–hi`
+# label and an easy-run `lo–hi min` cell defines the band; the first
+# `lo–hi min` cell in the row is the Easy/Z2 column (the Long-Run column that
+# follows uses larger numbers and frequently an arrow `→`, not a dash). The
+# floor (band lower bound) is the threshold below which an easy run is
+# over-conservative unless a documented recovery trigger applies.
+_PHASE_CTL_RANGE_RE = re.compile(r"CTL\s*(\d+)\s*[–\-]\s*(\d+)", re.IGNORECASE)
+_EASY_BAND_MIN_RE = re.compile(r"(\d+)\s*[–\-]\s*(\d+)\s*min", re.IGNORECASE)
+
+
+def _easy_run_phase_floor(ctx: Context) -> int | None:
+    """Lower bound (min) of the current phase's easy-run band, or None.
+
+    Returns None when competition_plan.md carries no parseable phase-band
+    table, or when CTL is unavailable (offline / fetch failed) — in which
+    case R014 falls back to the rolling-median heuristic. Opt-in: athletes
+    without a documented phase-band table are unaffected.
+    """
+    if ctx.ctl is None or not ctx.competition_plan:
+        return None
+    best: tuple[int, int, int] | None = None  # (lo, hi, easy_floor)
+    last: tuple[int, int, int] | None = None
+    for line in ctx.competition_plan.splitlines():
+        if "|" not in line:
+            continue
+        m_ctl = _PHASE_CTL_RANGE_RE.search(line)
+        if not m_ctl:
+            continue
+        m_easy = _EASY_BAND_MIN_RE.search(line)
+        if not m_easy:
+            continue
+        lo, hi = int(m_ctl.group(1)), int(m_ctl.group(2))
+        easy_floor = int(m_easy.group(1))
+        last = (lo, hi, easy_floor)
+        if lo <= ctx.ctl < hi:
+            best = (lo, hi, easy_floor)
+            break
+    chosen = best or (last if (last and ctx.ctl >= last[1]) else None)
+    return chosen[2] if chosen else None
+
+
 def check_easy_run_conservatism(workouts: list[dict], ctx: Context) -> list[Finding]:
     """R014 — Easy/Z2-Run Conservatism Guard.
 
-    Surfaces when an Easy/EASY run in the plan is significantly shorter than
-    the rolling easy-run baseline of the last ~3 weeks AND coaching_notes /
-    description contain no explicit recovery/symptom trigger.
-    Potentially violates the `No silent conservatism` rule (CLAUDE.md).
+    Primary anchor (when available): the per-phase easy-run band in
+    `competition_plan.md` keyed by current CTL ("Lauf-Dauer-Logik pro
+    Phase"). An easy run shorter than the phase-band floor with no
+    documented recovery/symptom trigger is an ERROR (the canonical anchor
+    per the `No silent conservatism` rule — duration is derived from the
+    phase band, not a per-day default or a recent-session median).
 
-    Drift incident pattern: an easy run was set well below the baseline
-    despite green wellness signals and no documented recovery trigger. The
-    cut came from an activity-NOTE cap (workout-type-specific) that was
-    erroneously applied as a general run cap.
+    Fallback anchor (no phase-band table or CTL offline): the rolling
+    easy-run median of the last ~30 days; an easy run below 70 % of it
+    with no documented trigger is a WARNING.
+
+    Drift incident pattern: an easy run was set well below the documented
+    Aufbau-II phase floor (60 min) on a green-physiology day; the
+    median-only guard computed 86 % of the recent median and stayed
+    silent, so a sub-phase-floor run passed unflagged.
     """
     findings = []
     easy_runs = [
@@ -1534,6 +1588,57 @@ def check_easy_run_conservatism(workouts: list[dict], ctx: Context) -> list[Find
     if not easy_runs:
         return findings
 
+    RECOVERY_REASON_RE = re.compile(
+        r"\b(recovery\s*week|deload|taper|active\s*injury|symptom|"
+        r"acute\s*fatigue|abandoned|🔴|red\s*flag|reha\s*phase|"
+        r"phase\s*[123]\s*aufbau|achilles[-\s]*schutz|"
+        r"hrv.*🔴|intensityreadiness.*🔴|"
+        r"morgensteifigkeit|nach\s*quality|post[-\s]*quality)\b",
+        re.IGNORECASE,
+    )
+
+    def _is_exempt(w: dict) -> bool:
+        """Indoor / brick / recovery runs have their own duration roles
+        (competition_plan.md) and are exempt from the easy-run floor."""
+        if w.get("indoor"):
+            return True
+        name = (w.get("name") or "").lower()
+        notes = (w.get("description") or "") + " " + (w.get("coaching_notes") or "")
+        if "brick" in name or "brick" in notes.lower():
+            return True
+        return bool(RECOVERY_REASON_RE.search(notes))
+
+    # ── Primary anchor: per-phase band floor (ERROR) ──
+    phase_floor = _easy_run_phase_floor(ctx)
+    if phase_floor is not None:
+        for w in easy_runs:
+            planned = w.get("duration_min") or 0
+            if planned <= 0 or _is_exempt(w):
+                continue
+            if planned < phase_floor:
+                findings.append(Finding(
+                    rule_id="R014",
+                    severity=SEVERITY_ERROR,
+                    workout=_workout_name(w),
+                    message=(
+                        f"Easy run {planned} min is below the phase floor "
+                        f"({phase_floor} min, current CTL {ctx.ctl:.1f}) — "
+                        f"competition_plan.md derives easy-run duration from "
+                        f"the per-phase band, not a per-day default."
+                    ),
+                    suggestion=(
+                        "Raise the easy run to at least the phase-band floor "
+                        "(CLAUDE.md §No silent conservatism). Heat is a reason "
+                        "to run slower (HR-capped), not shorter. Shorten below "
+                        "the floor only with a documented trigger in "
+                        "coaching_notes/description (recovery week, red-flag "
+                        "wellness, achilles morning stiffness, acute symptom) "
+                        "or mark the run indoor/brick."
+                    ),
+                ))
+        return findings
+
+    # ── Fallback anchor: rolling easy-run median (WARNING) ──
     # Baseline aus den letzten 21 Tagen Easy-Runs (Long-Runs/Quality ausgeschlossen)
     recent_easy_durations = []
     for a in (ctx.recent_activities or [])[-30:]:
@@ -1554,15 +1659,6 @@ def check_easy_run_conservatism(workouts: list[dict], ctx: Context) -> list[Find
     recent_easy_durations.sort()
     median_dur = recent_easy_durations[len(recent_easy_durations) // 2]
 
-    RECOVERY_REASON_RE = re.compile(
-        r"\b(recovery\s*week|deload|taper|active\s*injury|symptom|"
-        r"acute\s*fatigue|abandoned|🔴|red\s*flag|reha\s*phase|"
-        r"phase\s*[123]\s*aufbau|achilles[-\s]*schutz|"
-        r"hrv.*🔴|intensityreadiness.*🔴|"
-        r"morgensteifigkeit|nach\s*quality|post[-\s]*quality)\b",
-        re.IGNORECASE,
-    )
-
     for w in easy_runs:
         planned = w.get("duration_min") or 0
         if planned <= 0:
@@ -1572,8 +1668,7 @@ def check_easy_run_conservatism(workouts: list[dict], ctx: Context) -> list[Find
         ratio = planned / median_dur
         if ratio >= 0.7:
             continue  # within 30% of baseline
-        notes = (w.get("description") or "") + " " + (w.get("coaching_notes") or "")
-        if RECOVERY_REASON_RE.search(notes):
+        if _is_exempt(w):
             continue
         findings.append(Finding(
             rule_id="R014",
@@ -1846,6 +1941,14 @@ async def _fetch_recent_activities(target_date: str, days_back: int = 30) -> lis
     ]
 
 
+async def _fetch_ctl(target_date: str) -> float | None:
+    """Fetch current CTL from intervals.icu wellness for R014's phase-band floor."""
+    client = IntervalsClient(settings.intervals_icu_athlete_id)
+    wellness = await client.get_wellness(target_date)
+    ctl = (wellness or {}).get("ctl")
+    return float(ctl) if ctl is not None else None
+
+
 async def _fetch_raw_activities_for_hardreize(target_date: str) -> list[dict]:
     """Fetch raw activities (rolling 7d) including tags + zone times for R017.
 
@@ -1883,6 +1986,7 @@ def load_context(target_date: str, fetch_remote: bool = True) -> Context:
         athlete_status=_read_config("athlete_status.md"),
         training_paradigms=_read_config("training_paradigms.md"),
         exercise_progressions=_read_config("exercise_progressions.md"),
+        competition_plan=_read_config("competition_plan.md"),
         injury_locks=_load_injury_locks(),
     )
     if fetch_remote:
@@ -1918,6 +2022,11 @@ def load_context(target_date: str, fetch_remote: bool = True) -> Context:
         except Exception as exc:  # noqa: BLE001
             ctx.recent_activities = []
             _degraded("recent-activities", "R014 (easy-run conservatism)", exc)
+        try:
+            ctx.ctl = asyncio.run(_fetch_ctl(target_date))
+        except Exception as exc:  # noqa: BLE001
+            ctx.ctl = None
+            _degraded("wellness/CTL", "R014 (phase-band easy-run floor)", exc)
         try:
             raw = asyncio.run(_fetch_raw_activities_for_hardreize(target_date))
             from app.graphs.sub_athlete_context.context_builder import _compute_weekly_hard_reize_balance
