@@ -400,6 +400,16 @@ stimulus, the coach **must not** silently downgrade to physio /
 recovery-only work just because a single number looks low (HRV under
 baseline, TSB slightly negative, several training days in a row).
 
+**`low_signal` is not a red flag.** When `hrvForecastLatest.verdict ==
+"low_signal"` (the personal load→HRV slope is not statistically
+significant — the forecast carries no load-predictive value), it is
+**not** the green-light "expected" verdict, but it is equally **not** a
+trigger for conservatism. The coach ignores the forecast for that
+decision and clears (or holds) the athlete from the *other* systematic
+signals (CTL vs `deload_ctl_threshold`, taper window, restrictions,
+`athleteFeedback`). Do not treat "verdict ≠ expected" as a reason to
+downgrade.
+
 **Discount load-less days when reading accumulation signals.**
 `lastRestDay` ("no rest day in the last 7 days") and `cycleHint`
 ("N consecutive load weeks") count **any day with ≥1 logged activity**
@@ -796,7 +806,7 @@ correct an obvious gap:
 
 | Signal | Source | Used for |
 |--------|--------|----------|
-| `hrvForecastLatest` (verdict for the last training response) | `fetch_context.py` (derived from `hrv_forecast` model) | Is a low HRV today the expected drop after yesterday's intensity, or an unexplained deviation? (Modell: [hrv-forecast-model.md](research/hrv-forecast-model.md)) |
+| `hrvForecastLatest` (verdict for the last training response) | `fetch_context.py` (derived from `hrv_forecast` model) | Is a low HRV today the expected drop after yesterday's intensity, or an unexplained deviation? `verdict == "low_signal"` means the load→HRV slope is not statistically significant — the forecast is uninformative; treat as **neither** clear **nor** flag and decide from the other signals (Modell: [hrv-forecast-model.md](research/hrv-forecast-model.md)) |
 | `deload_ctl_threshold` (athlete-specific override) | `config/athlete_status.md` → parsed into context | Don't propose a deload below the athlete's individual CTL band (Trigger-Logik: [recovery-week-triggers.md](research/recovery-week-triggers.md)) |
 | Race-taper window & rule | `config/competition_plan.md` | Inside a taper window: deload mandatory. Outside: race may explicitly waive a taper ("Rennen als Reiz") |
 

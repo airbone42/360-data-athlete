@@ -97,9 +97,11 @@ For an athlete with rMSSD CV of 15% (typical for well-trained endurance athletes
 Our script outputs a `recent_compare` block with `--json` (forecast vs. actual for the last 10 days). With it, calibration can be empirically checked:
 
 - **If model well calibrated:** ~68% of `actual_pct` lie within the CI68 (±1 res_std), ~95% within ±2 res_std. "Expected" verdicts should cover ~70% of days.
-- **If model under-fitting:** slope ≈ 0 or wrong sign → load has no predictive value for the respective athlete in this period
+- **If model under-fitting:** slope ≈ 0 or wrong sign → load has no predictive value for the respective athlete in this period. **This is now gated explicitly:** `_build_hrv_sensitivity` returns the slope's standard error and `_slope_is_significant` tests whether its 95% CI excludes 0. When the slope is not significant, the per-day verdict is `low_signal` (see below) — the model declares its own lack of signal instead of dressing noise up as "expected".
 - **If model over-fitting:** res_std very small, many "flagged" verdicts → unrealistically narrow expectations
-- **If data_points too small:** the model output should itself yield "uncertain" verdict, not "expected" (currently doesn't — TODO)
+- **If data_points too small:** the SE of the slope is large → the slope is insignificant → `low_signal` (the too-little-data case is subsumed by the significance gate; the old "uncertain"-verdict TODO is now implemented this way).
+
+> **Empirical note (generic):** out-of-sample testing on real athlete data can show the single-predictor next-day load→HRV slope to be statistically indistinguishable from 0 even with *adequate* data-point counts — a rolling baseline does not necessarily recover a signal (a confounding fitness trend is not the same as a masked acute signal). Decide per athlete with an out-of-sample skill test (walk-forward MAE in ms against a no-load reference), not with in-sample slope magnitude.
 
 ---
 
@@ -127,14 +129,14 @@ Our script outputs a `recent_compare` block with `--json` (forecast vs. actual f
 
 ### What should be changed / refined
 
-1. **`framework/scripts/hrv_forecast.py`** — three improvements:
-   - **Slope-sign check:** if `slope > 0` (positive correlation load→HRV), flag the output as a "model sanity warning" — personal data consistent? Phase effect? Confounder?
-   - **Document and calibrate the verdict threshold:** currently hardcoded at ±1.5 σ. Should be compared with the Plews SWC method. Make it configurable.
-   - **Output `data_quality` field:** if data_points < 20 → `verdict: "uncertain"` instead of "expected". Prevents false positives in the first 3-4 weeks of a new athlete's data history.
+1. **`framework/scripts/hrv_forecast.py`** + **`context_builder` (`_build_hrv_sensitivity`, `_compute_hrv_responses`)** — implemented:
+   - **Slope significance, not just sign:** `_build_hrv_sensitivity` returns the slope's standard error (regression dof n-2); `_slope_is_significant` tests whether the 95% CI excludes 0. The `slope > 0` sanity warning now fires only on a *significantly* positive slope — a near-zero slope routinely sits within ±1.96·SE of 0 and used to trigger a false alarm.
+   - **`low_signal` verdict:** when the slope is not significant, both the production verdict (`_compute_hrv_responses`) and the script emit `verdict: "low_signal"` instead of expected/needs_review/under_stimulus. The load term has no detectable predictive value, so the planner must not lean on it.
+   - **Still open:** the ±1.5 σ verdict threshold is hardcoded; comparing it with the Plews SWC method and making it configurable remains a TODO.
 2. **`framework/CLAUDE.md` — "Planner systematic-input rule"** — reference to this doc and clarification:
    - `hrvForecastLatest.verdict == "expected"` means: personal model sees the drop as load-induced, not as an unexplained signal
-   - `verdict == "uncertain"` (TODO) means: too little data — planner should act more conservatively, not silently assume "expected"
-   - `verdict == "flagged"` means: drop bigger than the personal model would expect — HRV-review-pending is automatically triggered (`/wellness` workflow)
+   - `verdict == "low_signal"` means: the load→HRV slope is statistically indistinguishable from 0 — the forecast is uninformative. The planner treats it as **neither** a green light nor a red flag: no manufactured conservatism, fall back to the other systematic signals (CTL, TSB, taper, restrictions, athleteFeedback).
+   - `verdict == "needs_review"`/`"under_stimulus"` means: drop/rise bigger than the (significant) personal model would expect — HRV-review-pending is triggered (`/wellness` workflow)
 3. **`framework/config.example/training_paradigms.md`** — new section "HRV forecast — methodology and model assumptions":
    - Reference to this research doc
    - Clarification: forecast is a personal regression, not a generic value

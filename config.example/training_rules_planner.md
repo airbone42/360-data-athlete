@@ -27,7 +27,7 @@ Jede Aktivität enthält optional `hrv_response` mit Forecast-basierter Belastun
 - `pct`: tatsächliche HRV-Abweichung vom 90d-Median am Folgemorgen (%)
 - `expected_pct`: erwartete Abweichung basierend auf training_load und persönlicher Sensitivity-Kurve
 - `deviation`: actual - expected (negativ = härter als erwartet)
-- `verdict`: `expected` | `under_stimulus` | `needs_review`
+- `verdict`: `expected` | `under_stimulus` | `needs_review` | `low_signal`
 
 **Felder (Fallback, <10 Datenpunkte):**
 - `pct` + `cat`: `normal` / `moderate_stress` / `high_stress` / `super_compensated`
@@ -36,6 +36,7 @@ Jede Aktivität enthält optional `hrv_response` mit Forecast-basierter Belastun
 - `expected` → Session war wie geplant, Progression fortsetzen
 - `under_stimulus` → Session hat weniger belastet als erwartet, Intensität ggf. steigern
 - `needs_review` → **NICHT automatisch als "zu hart" interpretieren** — erst Chef-Trainer-Review abwarten (externe Stressoren möglich)
+- `low_signal` → der Last→HRV-Slope ist für diesen Athleten/Zeitraum nicht signifikant: der Forecast hat keinen prädiktiven Wert. **Weder** grünes Licht **noch** Warnsignal — Forecast ignorieren, aus den anderen Signalen (CTL/TSB, Wellness, Restriktionen) entscheiden; keine künstliche Konservativität daraus ableiten.
 - Muster über 3+ Einheiten beachten, nicht Einzelwerte überinterpretieren
 - Mehrere Einheiten am selben Tag teilen denselben Response-Wert
 

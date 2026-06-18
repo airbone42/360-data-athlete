@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from datetime import date, timedelta
+from math import isfinite
 from statistics import median, stdev
 
 logger = logging.getLogger(__name__)
@@ -520,15 +521,30 @@ def _compute_hrv_cv(wellness_history: list[dict], today: date) -> float | None:
     return (sd / mean) * 100
 
 
+def _slope_is_significant(slope: float, slope_se: float) -> bool:
+    """True iff the load→HRV slope's 95% CI excludes 0 (|slope| > 1.96·SE).
+
+    An insignificant slope means the load predictor carries no detectable
+    next-day HRV signal for this athlete/period — the forecast then has no
+    discriminative value and callers should not emit confident verdicts off it
+    (see framework/research/hrv-forecast-model.md, "low_signal").
+    """
+    if not isfinite(slope_se):
+        return False
+    return abs(slope) > 1.96 * slope_se
+
+
 def _build_hrv_sensitivity(
     activities: list[dict],
     wellness_history: list[dict],
     hrv_baseline: float,
-) -> tuple[float, float, float] | None:
+) -> tuple[float, float, float, float] | None:
     """Compute personal HRV sensitivity from historical load→HRV-response pairs.
 
-    Returns (intercept, slope, residual_stddev) for the linear model:
+    Returns (intercept, slope, residual_stddev, slope_se) for the linear model:
         expected_hrv_delta_pct = intercept + slope * training_load
+    `slope_se` is the standard error of the slope (regression dof n-2); callers
+    use `_slope_is_significant` to decide whether the load term is real or noise.
     Returns None if fewer than 10 data points available.
 
     The pair-building date range is constrained to the span actually covered
@@ -600,7 +616,17 @@ def _build_hrv_sensitivity(
         return None
     res_std = stdev(residuals)
 
-    return intercept, slope, res_std
+    # Standard error of the slope (regression dof n-2). Lets callers test
+    # whether the load→HRV slope is statistically distinguishable from 0; a
+    # flat/insignificant slope means the model has no load-predictive signal.
+    sxx_centered = sum_x2 - sum_x ** 2 / n
+    sse = sum(r * r for r in residuals)
+    if n > 2 and sxx_centered > 0:
+        slope_se = (sse / (n - 2) / sxx_centered) ** 0.5
+    else:
+        slope_se = float("inf")
+
+    return intercept, slope, res_std, slope_se
 
 
 _HRV_REVIEW_PREFIX = "HRV-Review"
@@ -648,11 +674,17 @@ def _compute_hrv_responses(
         actual_pct = round((next_hrv - hrv_baseline) / hrv_baseline * 100)
 
         if sensitivity is not None:
-            intercept, slope, res_std = sensitivity
+            intercept, slope, res_std, slope_se = sensitivity
             expected_pct = round(intercept + slope * load)
             deviation = actual_pct - expected_pct
-            # Classify: within 1 stddev = expected, beyond 1.5 = flagged
-            if res_std > 0 and abs(deviation) > 1.5 * res_std:
+            # Classify: within 1 stddev = expected, beyond 1.5 = flagged.
+            # But first gate on signal: if the load→HRV slope is not
+            # statistically distinguishable from 0, the model carries no
+            # load-predictive value — emit "low_signal" instead of a confident
+            # verdict the planner would otherwise lean on.
+            if not _slope_is_significant(slope, slope_se):
+                verdict = "low_signal"
+            elif res_std > 0 and abs(deviation) > 1.5 * res_std:
                 if deviation > 0:
                     verdict = "under_stimulus"
                 else:

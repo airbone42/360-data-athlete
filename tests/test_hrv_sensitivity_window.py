@@ -45,10 +45,11 @@ def test_perfect_fit_inside_activity_window() -> None:
     activities, wellness = _window_data()
     sens = _build_hrv_sensitivity(activities, wellness, BASELINE)
     assert sens is not None
-    intercept, slope, res_std = sens
+    intercept, slope, res_std, slope_se = sens
     assert intercept == pytest.approx(0.0, abs=1e-9)
     assert slope == pytest.approx(-0.1, abs=1e-9)
     assert res_std == pytest.approx(0.0, abs=1e-9)
+    assert slope_se == pytest.approx(0.0, abs=1e-9)  # perfect fit → zero SE
 
 
 def test_wellness_outside_activity_window_is_not_a_rest_day() -> None:
@@ -65,7 +66,7 @@ def test_wellness_outside_activity_window_is_not_a_rest_day() -> None:
 
     assert sens_with_phantom == sens_window_only
     assert sens_with_phantom is not None
-    intercept, _slope, res_std = sens_with_phantom
+    intercept, _slope, res_std, _slope_se = sens_with_phantom
     assert intercept == pytest.approx(0.0, abs=1e-9)
     assert res_std == pytest.approx(0.0, abs=1e-9)
 

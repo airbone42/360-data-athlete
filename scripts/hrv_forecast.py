@@ -34,6 +34,7 @@ from app.api.intervals_client import IntervalsClient
 from app.graphs.sub_athlete_context.context_builder import (
     _build_hrv_sensitivity,
     _compute_hrv_responses,
+    _slope_is_significant,
 )
 from app.utils.logging import configure
 
@@ -94,7 +95,7 @@ def main() -> int:
         sys.stderr.write("Insufficient data (need ≥10 load→hrv pairs).\n")
         return 2
 
-    intercept, slope, res_std = sensitivity
+    intercept, slope, res_std, slope_se = sensitivity
     load = args.load if args.load is not None else _today_load(acts, target)
 
     expected_pct = intercept + slope * load
@@ -131,7 +132,10 @@ def main() -> int:
         "residual_stddev_pct": round(res_std, 2),
         "data_points": data_points,
     }
-    if slope > 0:
+    slope_significant = _slope_is_significant(slope, slope_se)
+    model_info["slope_se"] = round(slope_se, 4) if slope_se != float("inf") else None
+    model_info["slope_significant"] = slope_significant
+    if slope > 0 and slope_significant:
         model_info["sanity_warning"] = (
             "Positive slope detected (load->HRV positiv korreliert) — "
             "bei intaktem Athlet ungewöhnlich; prüfe Daten auf Konfounder "
@@ -152,7 +156,11 @@ def main() -> int:
             "ci68_hi": round(ci_hi, 1),
             "review_trigger_lo": round(trigger_lo, 1),
             "review_trigger_hi": round(trigger_hi, 1),
-            "verdict": "uncertain" if data_quality == "insufficient" else None,
+            "verdict": (
+                "uncertain" if data_quality == "insufficient"
+                else "low_signal" if not slope_significant
+                else None
+            ),
         },
         "recent_compare": recent_compare,
     }
@@ -169,6 +177,9 @@ def main() -> int:
         print(f"Datenqualität: {data_quality} ({data_points} Datenpunkte)")
         if data_quality == "insufficient":
             print("  ⚠️  Zu wenig Daten (<20) — Forecast-Verdict: uncertain")
+        elif not slope_significant:
+            print("  ⚠️  Last→HRV-Slope nicht signifikant (95%-CI schließt 0 ein) — "
+                  "Forecast-Verdict: low_signal (Last erklärt die HRV nicht)")
         print()
         print(f"HRV-Forecast für {out['forecast_for']} (basierend auf Load {out['load']} am {out['target_date']})")
         print()

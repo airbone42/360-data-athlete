@@ -123,7 +123,7 @@ load assessment.
 - `expected_pct`: expected deviation based on `training_load` and the
   athlete's personal sensitivity curve
 - `deviation`: actual − expected (negative = harder than expected)
-- `verdict`: `expected` | `under_stimulus` | `needs_review`
+- `verdict`: `expected` | `under_stimulus` | `needs_review` | `low_signal`
 
 **Fields (fallback, <10 data points):**
 - `pct` + `cat`: `normal` / `moderate_stress` / `high_stress` / `super_compensated`
@@ -134,6 +134,11 @@ load assessment.
   if appropriate
 - `needs_review` → **do NOT auto-interpret as "too hard"** — wait for
   head-coach review (external stressors possible)
+- `low_signal` → the load→HRV slope is not statistically significant for this
+  athlete/period: the forecast carries no load-predictive value. Treat as
+  **neither** green light nor red flag — ignore the forecast and decide from the
+  other signals (CTL/TSB, wellness, restrictions). Do not manufacture
+  conservatism off it.
 - Look at patterns across 3+ sessions, do not overinterpret single
   values
 - Multiple sessions on the same day share the same response value
