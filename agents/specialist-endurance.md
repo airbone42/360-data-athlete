@@ -128,11 +128,27 @@ finisher.
   priming
 - Speedwork gap (>14 days without strides/intervals)
 
-**Format:** 4–6× strides (default 4×), each 15–25 s at ~85–95 % effort
-(not a sprint), 60–90 s Z1 jog or walk recovery between. Inserted
-**before the cool-down**, after the Z2 main set. Surface preference:
-soft (forest path, grass, track) for athletes with Achilles / plantar
-history.
+**Format:** 4–6× strides (default 4×), each 15–25 s at **Mile / 1500 m
+race-pace effort** (Daniels' Repetition pace ≈ the athlete's 1 km race
+pace, a touch quicker — controlled, ~85–95 % effort, *not* a sprint),
+60–90 s Z1 jog or walk recovery between. Inserted **before the
+cool-down**, after the Z2 main set. Surface preference: soft (forest
+path, grass, track) for athletes with Achilles / plantar history.
+
+**Pace reference, not a bare percent (mandatory).** Communicate stride
+intensity as a **concrete pace anchor the athlete can feel** — "Mile- /
+1 km-Renntempo, schnelle Füße" — never as a lone `90 %`/`95 %`. A bare
+percent is ambiguous (percent of *what?*) and, worse, is silently
+mis-encoded by intervals.icu as `%FTP` on a run step (see the syntax
+rule below). Daniels' R-pace is the textbook anchor; the athlete's own
+1 km race pace is the operational cue (`framework/research/strides-protocol.md`).
+
+**Judge stride execution by dynamics, not GPS pace.** On reps ≤30 s,
+GPS pace lags the real effort by 10–40 s/km — a crisp Mile-pace stride
+can read 40–60 s/km too slow on the watch. Read stride quality from
+**cadence, step length and GCT** (a real stride shows a step-length
+spike + cadence lift + GCT drop), never from the GPS-pace number. Do not
+tell an athlete their stride was "too slow" off GPS pace.
 
 **Stride/surge ≠ race-pace ≠ Z4 — never mislabel the stimulus (MANDATORY).**
 A stride/surge block of ≤30 s at 85–95 % effort is a **neuromuscular
@@ -145,9 +161,9 @@ it is *not* a race-pace or Z4 stimulus. Two consequences:
   on a 25 s / 95 % block contradicts its own coding and reads to the
   athlete as "go race-hard" — they will run it as a maximal effort, not
   a relaxed neuromuscular stride. Name and describe it for what it is
-  ("Steigerungen", "neuromuscular surges", "Strides"), with an
-  **effort label** (e.g. "zügig ~90 %, no HR-chasing"), never a pace/HR
-  zone.
+  ("Steigerungen", "neuromuscular surges", "Strides"), with a
+  **concrete pace-anchor cue** (e.g. "Mile- / 1 km-Renntempo, schnelle
+  Füße, kein HR-Jagen"), never a lone percent or an HR zone.
 - **Never use a ≤30 s rep to chase a Z4 stimulus, and never attach an
   HR target to a stride <60 s.** HR lag means 15–30 s cannot reach Z4 —
   the rep ends before HR climbs, so the effort shows in cadence / step
@@ -177,13 +193,18 @@ Absent a documented progression, use the default 4×.
 correct. Z1 keeps muscles warm, walking is more conservative. Z2 is too
 much (adds unnecessary load).
 
-**intervals.icu syntax** (strides <60 s → no HR target, only pace/effort,
-seconds-format only — never `100m` which the parser misreads as 100
-minutes; see the time-format rule under "Rules for the `intervals_icu`
-field" below — validator R011 catches the distance-format trap):
+**intervals.icu syntax** (strides <60 s → no HR target; **no bare
+percent either** — a `90%`/`95%` token on a run step is silently parsed
+by intervals.icu as `%FTP` (power) and lands on the athlete's Garmin as
+a meaningless power target. Write the stride as a plain timed step and
+put the effort cue ("Mile- / 1 km-Renntempo, schnelle Füße") in the
+workout's prose `description` instead. Seconds-format only — never
+`100m` which the parser misreads as 100 minutes; see the time-format
+rule under "Rules for the `intervals_icu` field" below — validator R011
+catches the distance-format trap):
 ```
 Strides 4x
-- Stride 20s 95%
+- Stride 20s
 - Easy 90s Z1 HR
 ```
 
@@ -201,7 +222,7 @@ valid patterns:
   ```
   Strides 5x
   - Easy 90s Z1 HR
-  - Stride 20s 90%
+  - Stride 20s
   ```
   This recovery-first / no-trailing-recovery pattern applies to
   **end-of-run stride finishers only**, never to activation strides at
