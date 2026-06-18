@@ -43,5 +43,7 @@ class ContextDict(BaseModel):
     date_str: Any = Field(None, alias="dateStr")
     hr_zones: Any = Field(None, alias="hrZones")
     hrv_review_pending: Any = Field(None, alias="hrvReviewPending")
+    hrv_readiness: Any = Field(None, alias="hrvReadiness")
+    hrv_cv_trend: Any = Field(None, alias="hrvCvTrend")
     skipped_workouts: list[Any] = Field(default_factory=list, alias="skippedWorkouts")
     data_warnings: list[Any] = Field(default_factory=list, alias="dataWarnings")

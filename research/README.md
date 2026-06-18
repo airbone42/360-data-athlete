@@ -50,7 +50,7 @@ What the research did NOT clarify — and what should be checked next.
 | 2026-05-21 | VO2max long intervals (Norwegian 4×4 etc.) — intensity, volume, scaling | [vo2max-long-intervals.md](vo2max-long-intervals.md) | active |
 | 2026-05-16 | Intervals.icu workout-builder syntax — step targets, repeats, cadence | [intervals-icu-workout-syntax.md](intervals-icu-workout-syntax.md) | active |
 | 2026-05-16 | Hill repeats — gradient, duration, intensity, typology (run) | [hill-repeats.md](hill-repeats.md) | active |
-| 2026-05-16 | HRV forecast model — load→HRV regression, methodology, verdict zones | [hrv-forecast-model.md](hrv-forecast-model.md) | active (rebuild proposed → [hrv-prediction-vs-readiness-modeling.md](hrv-prediction-vs-readiness-modeling.md)) |
+| 2026-05-16 | HRV forecast model — load→HRV regression, methodology, verdict zones | [hrv-forecast-model.md](hrv-forecast-model.md) | superseded (→ [hrv-prediction-vs-readiness-modeling.md](hrv-prediction-vs-readiness-modeling.md)) |
 | 2026-05-16 | HRV and RHR baseline methodology — window, statistics, trigger thresholds | [hrv-rhr-baseline-methodology.md](hrv-rhr-baseline-methodology.md) | active |
 | 2026-05-16 | Recovery-week triggers — 3-gate logic against Issurin/Meeusen/Coggan standards | [recovery-week-triggers.md](recovery-week-triggers.md) | active |
 | 2026-05-16 | Cross-sport HR differential — Run vs. Bike vs. Swim (HRmax + LTHR) | [cross-sport-hr-differential.md](cross-sport-hr-differential.md) | active |

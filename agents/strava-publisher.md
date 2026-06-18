@@ -97,7 +97,7 @@ data anomaly that explains the session character**, not the
 coupling-default. Priority order before composing the body:
 
 1. **Wellness anomaly:** HRV deviation ≥10% from baseline, TSB outlier,
-   `intensityReadiness 🔴`, `hrvForecastLatest.verdict ≠ expected`,
+   `intensityReadiness 🔴`, `hrvReadiness.verdict ∈ {watch, hold}`,
    sleep score outlier, athlete-reported symptom (GI, illness, soreness).
    → Headline is the wellness story + how training was adjusted
    ("HRV-Tief war heute der Anlass für die abgespeckte Z2-Variante",

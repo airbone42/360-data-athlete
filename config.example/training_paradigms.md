@@ -113,41 +113,40 @@ than a naive pace × elevation mix.
 
 **Research anchor:** [Strava vs. intervals.icu GAP — algorithm differences & canonicity](../research/strava-vs-intervals-gap.md)
 
-## Retrospective HRV analysis (`hrv_response` in `activities[]`)
+## HRV readiness (`hrvReadiness` — 7d-rolling ln-rMSSD vs 60d normal band)
 
-Every activity optionally carries `hrv_response` with a forecast-based
-load assessment.
+`fetch_context.py` provides the top-level field `hrvReadiness`: the 7-day
+rolling mean of ln-rMSSD classified against a 60-day normal band (mean ±
+0.5·SD of the daily values). Replaces the retired load→HRV forecast — load
+is no longer a predictor, only a parallel CTL/TSB stream.
 
-**Fields (with forecast, ≥10 data points):**
-- `pct`: actual HRV deviation from the 90-day median on the next morning (%)
-- `expected_pct`: expected deviation based on `training_load` and the
-  athlete's personal sensitivity curve
-- `deviation`: actual − expected (negative = harder than expected)
-- `verdict`: `expected` | `under_stimulus` | `needs_review` | `low_signal`
-
-**Fields (fallback, <10 data points):**
-- `pct` + `cat`: `normal` / `moderate_stress` / `high_stress` / `super_compensated`
+**Fields:**
+- `verdict`: `clear` | `above` | `watch` | `hold` | `insufficient_data`
+- `days_below`: consecutive days the rolling mean is below the band
+- `rolling_mean_ms`, `band_low_ms`, `band_high_ms`: 7d mean + band (back-transformed)
+- `cv`, `n_ref`: within-athlete CV + valid daily values in the 60-day window
 
 **Rules for planner / specialists:**
-- `expected` → session went as planned, continue progression
-- `under_stimulus` → session loaded less than expected, raise intensity
-  if appropriate
-- `needs_review` → **do NOT auto-interpret as "too hard"** — wait for
-  head-coach review (external stressors possible)
-- `low_signal` → the load→HRV slope is not statistically significant for this
-  athlete/period: the forecast carries no load-predictive value. Treat as
-  **neither** green light nor red flag — ignore the forecast and decide from the
-  other signals (CTL/TSB, wellness, restrictions). Do not manufacture
-  conservatism off it.
-- Look at patterns across 3+ sessions, do not overinterpret single
-  values
-- Multiple sessions on the same day share the same response value
+- `clear` → rolling mean inside the normal band, continue the planned stimulus
+- `above` → above the band, good recovery/adaptation; a slight bump is fine
+  if other signals agree
+- `watch` → 1–2 days below band, soft signal: proceed, note it in
+  `coaching_notes`, ask about confounders
+- `hold` → 3+ consecutive days below band, hard signal: recovery is the
+  default (aligned with the combined HRV+RHR overload trigger)
+- `insufficient_data` → <30 valid daily values in the 60-day window: band
+  not computable, fall back to the 90d-median+5% logic; **neither** green
+  light **nor** red flag
+- Look at multi-day patterns, do not overinterpret single values
 
-**Top-level field `hrvReviewPending`:** Holds the most recent activity
-with an open `needs_review` / `high_stress`. Head coach clarifies with
-the athlete during `/wellness` or `/training` (once per day). Search
-runs backwards until the most recent un-reviewed training — even across
-training breaks.
+**Advisory field `hrvCvTrend`:** day-to-day CV trend
+(`rising`/`stable`/`falling`) as an early non-functional-overreaching hint
+(Plews 2012) — informational only, **not** a hard trigger.
+
+**Top-level field `hrvReviewPending`:** set when `hrvReadiness.verdict` is
+`watch`/`hold` and no `HRV-Review` NOTE yet covers the below-band window.
+Head coach asks the athlete during `/wellness` or `/training` (once per
+day) about external factors.
 
 ## Cool-down after intense sessions
 

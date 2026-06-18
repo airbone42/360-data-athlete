@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import logging
+import math
 from datetime import date, timedelta
-from math import isfinite
 from statistics import median, stdev
 
 logger = logging.getLogger(__name__)
@@ -32,6 +32,20 @@ DELOAD_PCT = 0.20
 MIN_CTL = 20
 
 CARDIO_TYPES = {"Run", "Ride", "VirtualRide", "VirtualRun"}
+
+# ── HRV readiness classifier (7d-rolling ln-rMSSD vs 60d normal band) ──
+# Framework defaults; athlete-overridable later via config. The band is
+# mean ± k·SD of daily ln-rMSSD over the reference window (Vesterinen /
+# HRV4Training default, k=0.5). See
+# framework/research/hrv-prediction-vs-readiness-modeling.md.
+HRV_BAND_K = 0.5
+HRV_BAND_REF_DAYS = 60
+HRV_BAND_ROLL_DAYS = 7
+HRV_BAND_HOLD_DAYS = 3
+HRV_BAND_MIN_REF = 30  # < N valid daily values in 60d window → insufficient_data
+HRV_BAND_MIN_ROLL = 4  # Plews plateau: ≥3-4 valid measurements/week
+HRV_CVTREND_MIN_PTS = 4
+HRV_CVTREND_DEADBAND_PCT = 10.0
 
 
 def build_context(state: AthleteContextState) -> dict:
@@ -102,39 +116,20 @@ def build_context(state: AthleteContextState) -> dict:
         today,
     )
 
+    # HRV readiness classifier (7d-rolling ln-rMSSD vs 60d normal band) —
+    # replaces the retired load→HRV regression forecast. Wellness-only; the
+    # 90d wellness window from fetch_context covers the 60d band + 7d rolling
+    # + the consecutive walk-back.
+    hrv_readiness = _compute_hrv_readiness_band(wellness_history, today)
+    hrv_cv_trend = hrv_readiness.get("cv_trend")
+
     intensity_readiness = _compute_intensity_readiness(
         hrv, hrv_baseline, tsb, days_since_intense, hrv_cv,
-        combined_overload_signal,
+        combined_overload_signal, hrv_readiness,
     )
-
-    # HRV Forecast & Retrospective Response
-    hrv_baseline_float = float(hrv_baseline) if hrv_baseline != "-" else None
-    hrv_sensitivity = None
-    if hrv_baseline_float is not None:
-        hrv_sensitivity = _build_hrv_sensitivity(
-            activities_with_workout, wellness_history, hrv_baseline_float
-        )
-    hrv_responses = _compute_hrv_responses(
-        activities_with_workout, wellness_history, hrv_baseline_float, hrv_sensitivity
-    )
-
-    hrv_forecast_latest: dict | None = None
-    if hrv_responses:
-        latest_date = max(hrv_responses.keys())
-        latest = hrv_responses[latest_date]
-        if "expected_pct" in latest:
-            hrv_forecast_latest = {
-                "date": latest_date,
-                "actual_pct": latest.get("pct"),
-                "expected_pct": latest.get("expected_pct"),
-                "deviation": latest.get("deviation"),
-                "verdict": latest.get("verdict"),
-            }
 
     notes = state.get("notes") or []
-    hrv_review_pending = _find_pending_hrv_review(
-        activities_with_workout, hrv_responses, notes, today
-    )
+    hrv_review_pending = _find_pending_hrv_review(hrv_readiness, notes, today)
     athlete_feedback = _format_notes(notes)
 
     sleep_trend = _compute_sleep_trend(wellness_history, today)
@@ -204,8 +199,7 @@ def build_context(state: AthleteContextState) -> dict:
         "sleep": sleep_score if sleep_score is not None else "-",
         "sleepHours": sleep_hours,
         "activities": [
-            _summarize_activity(a, hrv_responses.get((a.get("start_date_local") or "")[:10]))
-            for a in activities_with_workout
+            _summarize_activity(a) for a in activities_with_workout
         ],
         "ctl": ctl if ctl is not None else "-",
         "atl": atl if atl is not None else "-",
@@ -236,7 +230,8 @@ def build_context(state: AthleteContextState) -> dict:
         "dateStr": date_str,
         "hrZones": hr_zones_text,
         "hrvReviewPending": hrv_review_pending,
-        "hrvForecastLatest": hrv_forecast_latest,
+        "hrvReadiness": hrv_readiness,
+        "hrvCvTrend": hrv_cv_trend,
         "skippedWorkouts": skipped_workouts,
         "systemPrompt": system_prompt,
         "dataWarnings": warnings,
@@ -261,7 +256,7 @@ def build_context(state: AthleteContextState) -> dict:
 # ── Helper functions ────────────────────────────────────────────────
 
 
-def _summarize_activity(a: dict, hrv_response: dict | None = None) -> dict:
+def _summarize_activity(a: dict) -> dict:
     """Reduce a full activity object to the fields the planner actually needs.
 
     `name` and `event_description` are athlete-/Strava-roundtrip-controlled
@@ -280,8 +275,6 @@ def _summarize_activity(a: dict, hrv_response: dict | None = None) -> dict:
         "training_load": a.get("icu_training_load"),
         "duration_min": round(a.get("moving_time", 0) / 60) or None,
     }
-    if hrv_response:
-        result["hrv_response"] = hrv_response
     if a.get("event_description"):
         result["coaching_notes"] = escape_for_prompt(a["event_description"], max_len=500)
     return result
@@ -495,7 +488,7 @@ def _compute_combined_overload_signal(
     }
 
 
-# ── HRV Forecast & Retrospective Response ──────────────────────────
+# ── HRV Readiness (7d-rolling ln-rMSSD vs 60d band) ────────────────
 
 
 def _compute_hrv_cv(wellness_history: list[dict], today: date) -> float | None:
@@ -521,234 +514,232 @@ def _compute_hrv_cv(wellness_history: list[dict], today: date) -> float | None:
     return (sd / mean) * 100
 
 
-def _slope_is_significant(slope: float, slope_se: float) -> bool:
-    """True iff the load→HRV slope's 95% CI excludes 0 (|slope| > 1.96·SE).
+def _compute_hrv_cv_trend(wellness_history: list[dict], today: date) -> dict:
+    """Advisory day-to-day CV trend of ln-rMSSD: trailing-7d CV vs prior-7d CV.
 
-    An insignificant slope means the load predictor carries no detectable
-    next-day HRV signal for this athlete/period — the forecast then has no
-    discriminative value and callers should not emit confident verdicts off it
-    (see framework/research/hrv-forecast-model.md, "low_signal").
+    Rising day-to-day CV (without a drop in the rolling mean) is an early
+    non-functional-overreaching indicator (Plews 2012). ADVISORY ONLY — never
+    feeds intensity_readiness or hrvReviewPending; promote to a trigger only
+    after per-athlete calibration. A ±deadband keeps noise from flipping the
+    label. Returns ``{trend, cv_recent, cv_prior}`` with
+    ``trend ∈ {rising, falling, stable, insufficient_data}``.
     """
-    if not isfinite(slope_se):
-        return False
-    return abs(slope) > 1.96 * slope_se
-
-
-def _build_hrv_sensitivity(
-    activities: list[dict],
-    wellness_history: list[dict],
-    hrv_baseline: float,
-) -> tuple[float, float, float, float] | None:
-    """Compute personal HRV sensitivity from historical load→HRV-response pairs.
-
-    Returns (intercept, slope, residual_stddev, slope_se) for the linear model:
-        expected_hrv_delta_pct = intercept + slope * training_load
-    `slope_se` is the standard error of the slope (regression dof n-2); callers
-    use `_slope_is_significant` to decide whether the load term is real or noise.
-    Returns None if fewer than 10 data points available.
-
-    The pair-building date range is constrained to the span actually covered
-    by activity data: the wellness history may reach further back than the
-    activities window (e.g. 90d wellness vs. 4w activities in fetch_context).
-    Days before the earliest activity are "unknown", NOT rest days — letting
-    them enter the regression with load=0 dilutes the slope and inflates the
-    residual stddev, widening the ±1.5σ review band until real deviations
-    classify as "expected".
-    """
-    wellness_lookup: dict[str, float] = {
-        d["id"]: d["hrv"]
+    ln_map: dict[str, float] = {
+        d["id"]: math.log(d["hrv"])
         for d in wellness_history
-        if d.get("hrv") is not None
+        if d.get("id") and d.get("hrv") is not None and d["hrv"] > 0
     }
 
-    # Group training loads by date (sum if multiple activities per day)
-    daily_loads: dict[str, float] = {}
-    for a in activities:
-        d = (a.get("start_date_local") or "")[:10]
-        load = a.get("icu_training_load") or 0
-        if d:
-            daily_loads[d] = daily_loads.get(d, 0) + load
+    def _cv_over(lo: int, hi: int) -> float | None:
+        vals = [
+            ln_map[(today - timedelta(days=o)).isoformat()]
+            for o in range(lo, hi + 1)
+            if (today - timedelta(days=o)).isoformat() in ln_map
+        ]
+        if len(vals) < HRV_CVTREND_MIN_PTS:
+            return None
+        mean = sum(vals) / len(vals)
+        if mean == 0:
+            return None
+        return stdev(vals) / abs(mean) * 100
 
-    if not daily_loads:
-        return None
-    earliest_activity = min(daily_loads)
-
-    # Build (load, hrv_delta_pct) pairs — only for dates covered by activity
-    # data (days without coverage are unknown, not rest)
-    pairs: list[tuple[float, float]] = []
-    all_dates = sorted(set(daily_loads.keys()) | {
-        d["id"] for d in wellness_history if d.get("id")
-    })
-    for d_str in all_dates:
-        if d_str < earliest_activity:
-            continue  # outside the activities window — phantom rest day
-        try:
-            next_day = (date.fromisoformat(d_str) + timedelta(days=1)).isoformat()
-        except (ValueError, TypeError):
-            continue
-        next_hrv = wellness_lookup.get(next_day)
-        if next_hrv is None or hrv_baseline == 0:
-            continue
-        load = daily_loads.get(d_str, 0)  # 0 for rest days
-        delta_pct = (next_hrv - hrv_baseline) / hrv_baseline * 100
-        pairs.append((load, delta_pct))
-
-    if len(pairs) < 10:
-        return None
-
-    # Simple linear regression: delta_pct = intercept + slope * load
-    n = len(pairs)
-    sum_x = sum(p[0] for p in pairs)
-    sum_y = sum(p[1] for p in pairs)
-    sum_xy = sum(p[0] * p[1] for p in pairs)
-    sum_x2 = sum(p[0] ** 2 for p in pairs)
-
-    denom = n * sum_x2 - sum_x ** 2
-    if denom == 0:
-        return None
-
-    slope = (n * sum_xy - sum_x * sum_y) / denom
-    intercept = (sum_y - slope * sum_x) / n
-
-    # Residual standard deviation
-    residuals = [p[1] - (intercept + slope * p[0]) for p in pairs]
-    if len(residuals) < 3:
-        return None
-    res_std = stdev(residuals)
-
-    # Standard error of the slope (regression dof n-2). Lets callers test
-    # whether the load→HRV slope is statistically distinguishable from 0; a
-    # flat/insignificant slope means the model has no load-predictive signal.
-    sxx_centered = sum_x2 - sum_x ** 2 / n
-    sse = sum(r * r for r in residuals)
-    if n > 2 and sxx_centered > 0:
-        slope_se = (sse / (n - 2) / sxx_centered) ** 0.5
+    cv_recent = _cv_over(0, 6)
+    cv_prior = _cv_over(7, 13)
+    if cv_recent is None or cv_prior is None:
+        return {"trend": "insufficient_data", "cv_recent": cv_recent, "cv_prior": cv_prior}
+    rel = (cv_recent - cv_prior) / cv_prior * 100 if cv_prior else 0.0
+    if rel > HRV_CVTREND_DEADBAND_PCT:
+        trend = "rising"
+    elif rel < -HRV_CVTREND_DEADBAND_PCT:
+        trend = "falling"
     else:
-        slope_se = float("inf")
+        trend = "stable"
+    return {"trend": trend, "cv_recent": round(cv_recent, 1), "cv_prior": round(cv_prior, 1)}
 
-    return intercept, slope, res_std, slope_se
+
+def _compute_hrv_readiness_band(
+    wellness_history: list[dict],
+    today: date,
+    *,
+    k: float = HRV_BAND_K,
+    ref_days: int = HRV_BAND_REF_DAYS,
+    roll_days: int = HRV_BAND_ROLL_DAYS,
+    hold_days: int = HRV_BAND_HOLD_DAYS,
+    min_coverage_band: int = HRV_BAND_MIN_REF,
+    min_coverage_roll: int = HRV_BAND_MIN_ROLL,
+) -> dict:
+    """Readiness classifier: 7-day rolling ln-rMSSD vs a 60-day normal band.
+
+    The literature-canonical HRV-guided-training method (Plews/Buchheit,
+    Vesterinen, Altini): track the 7-day rolling mean of ln-rMSSD and classify
+    it against a normal-range band built from a 60-day reference window
+    (mean ± k·SD of daily ln-rMSSD, default k=0.5). A sustained departure below
+    the band (``hold_days``+ consecutive days) is the actionable fatigue signal —
+    not a single day's value. Replaces the retired load→HRV regression forecast
+    (see framework/research/hrv-prediction-vs-readiness-modeling.md).
+
+    intervals.icu ``wellness[].hrv`` is rMSSD in ms → ``ln_rmssd = ln(hrv)``.
+    The ``*_ms`` fields are ``exp()`` back-transforms — geometric means in the
+    ln domain (the modelling space), NOT arithmetic means of raw ms; do not
+    "fix" them to raw means.
+
+    Causal / NO look-ahead: classifying day d uses only data ≤ d. The rolling
+    mean reads ``[d-6..d]`` (trailing, never centred); the band reads
+    ``[d-59..d]``; the consecutive walk-back recomputes BOTH the rolling mean and
+    the band as of each historical day (it never reuses today's band to judge a
+    past day). An OOS walk-forward test would otherwise leak via a single fixed
+    band reused for all days, a centred rolling window, or interpolating gaps
+    from later values.
+
+    Verdicts: ``clear`` (inside band) / ``above`` (above band) / ``watch`` (1-2
+    consecutive days below) / ``hold`` (≥``hold_days`` below) / ``insufficient_data``
+    (< ``min_coverage_band`` valid daily values in the reference window → caller
+    falls back to the existing 90d-median+5% logic in _compute_intensity_readiness).
+
+    Structural twin of ``_compute_combined_overload_signal`` (same walk-back: a
+    gap/None day stops the streak).
+
+    Not cycle-aware: luteal-phase HRV runs ~5-10% lower, which can drift a
+    cycle-spanning rolling mean below band for endocrine, not training, reasons.
+    Out of scope for the male-configured single-athlete setup; see the research
+    doc's "Open questions" for the female-athlete generalisation.
+    """
+    ln_map: dict[str, float] = {
+        d["id"]: math.log(d["hrv"])
+        for d in wellness_history
+        if d.get("id") and d.get("hrv") is not None and d["hrv"] > 0
+    }
+
+    def _rolling_mean_as_of(d: date) -> float | None:
+        vals = [
+            ln_map[(d - timedelta(days=o)).isoformat()]
+            for o in range(0, roll_days)
+            if (d - timedelta(days=o)).isoformat() in ln_map
+        ]
+        if len(vals) < min_coverage_roll:
+            return None
+        return sum(vals) / len(vals)
+
+    def _band_as_of(d: date) -> tuple[float, float, float, float, int] | None:
+        vals = [
+            ln_map[(d - timedelta(days=o)).isoformat()]
+            for o in range(0, ref_days)
+            if (d - timedelta(days=o)).isoformat() in ln_map
+        ]
+        n = len(vals)
+        if n < min_coverage_band:
+            return None
+        mean = sum(vals) / n
+        sd = stdev(vals)
+        return mean - k * sd, mean + k * sd, mean, sd, n
+
+    cv_trend = _compute_hrv_cv_trend(wellness_history, today)
+    band_today = _band_as_of(today)
+
+    if band_today is None:
+        n_valid = sum(
+            1
+            for o in range(0, ref_days)
+            if (today - timedelta(days=o)).isoformat() in ln_map
+        )
+        return {
+            "verdict": "insufficient_data",
+            "days_below": 0,
+            "rolling_mean_ln": None,
+            "rolling_mean_ms": None,
+            "band_low_ln": None,
+            "band_high_ln": None,
+            "band_low_ms": None,
+            "band_high_ms": None,
+            "cv": None,
+            "n_ref": n_valid,
+            "cv_trend": cv_trend,
+        }
+
+    band_low, band_high, mean_ln, sd_ln, n_ref = band_today
+    cv = (sd_ln / mean_ln * 100) if mean_ln else None
+    roll_today = _rolling_mean_as_of(today)
+
+    if roll_today is None:
+        verdict, days_below = "clear", 0
+    elif roll_today > band_high:
+        verdict, days_below = "above", 0
+    elif roll_today >= band_low:
+        verdict, days_below = "clear", 0
+    else:
+        # Below band → count consecutive below-band days, each judged against
+        # ITS OWN causal rolling mean + band. A gap/None or the first
+        # in-band/above day stops the streak (mirrors
+        # _compute_combined_overload_signal).
+        streak = 0
+        for offset in range(0, ref_days):
+            d = today - timedelta(days=offset)
+            r = _rolling_mean_as_of(d)
+            b = _band_as_of(d)
+            if r is None or b is None:
+                break
+            if r < b[0]:
+                streak += 1
+            else:
+                break
+        days_below = streak
+        verdict = "hold" if streak >= hold_days else "watch"
+
+    return {
+        "verdict": verdict,
+        "days_below": days_below,
+        "rolling_mean_ln": round(roll_today, 4),
+        "rolling_mean_ms": round(math.exp(roll_today), 1),
+        "band_low_ln": round(band_low, 4),
+        "band_high_ln": round(band_high, 4),
+        "band_low_ms": round(math.exp(band_low), 1),
+        "band_high_ms": round(math.exp(band_high), 1),
+        "cv": round(cv, 1) if cv is not None else None,
+        "n_ref": n_ref,
+        "cv_trend": cv_trend,
+    }
 
 
 _HRV_REVIEW_PREFIX = "HRV-Review"
 
 
-def _compute_hrv_responses(
-    activities: list[dict],
-    wellness_history: list[dict],
-    hrv_baseline: float | None,
-    sensitivity: tuple[float, float, float] | None,
-) -> dict[str, dict]:
-    """Compute per-activity HRV response with optional forecast.
-
-    Returns dict keyed by activity date → response dict.
-    """
-    if hrv_baseline is None or hrv_baseline == 0:
-        return {}
-
-    wellness_lookup: dict[str, float] = {
-        d["id"]: d["hrv"]
-        for d in wellness_history
-        if d.get("hrv") is not None
-    }
-
-    # Sum loads per day for multi-activity days
-    daily_loads: dict[str, float] = {}
-    for a in activities:
-        d = (a.get("start_date_local") or "")[:10]
-        load = a.get("icu_training_load") or 0
-        if d:
-            daily_loads[d] = daily_loads.get(d, 0) + load
-
-    responses: dict[str, dict] = {}
-    for act_date, load in daily_loads.items():
-        if load == 0:
-            continue  # rest days don't get annotated
-        try:
-            next_day = (date.fromisoformat(act_date) + timedelta(days=1)).isoformat()
-        except (ValueError, TypeError):
-            continue
-        next_hrv = wellness_lookup.get(next_day)
-        if next_hrv is None:
-            continue
-
-        actual_pct = round((next_hrv - hrv_baseline) / hrv_baseline * 100)
-
-        if sensitivity is not None:
-            intercept, slope, res_std, slope_se = sensitivity
-            expected_pct = round(intercept + slope * load)
-            deviation = actual_pct - expected_pct
-            # Classify: within 1 stddev = expected, beyond 1.5 = flagged.
-            # But first gate on signal: if the load→HRV slope is not
-            # statistically distinguishable from 0, the model carries no
-            # load-predictive value — emit "low_signal" instead of a confident
-            # verdict the planner would otherwise lean on.
-            if not _slope_is_significant(slope, slope_se):
-                verdict = "low_signal"
-            elif res_std > 0 and abs(deviation) > 1.5 * res_std:
-                if deviation > 0:
-                    verdict = "under_stimulus"
-                else:
-                    verdict = "needs_review"
-            else:
-                verdict = "expected"
-            responses[act_date] = {
-                "pct": actual_pct,
-                "expected_pct": expected_pct,
-                "deviation": round(deviation),
-                "verdict": verdict,
-            }
-        else:
-            # Fallback: simple categorization without forecast
-            if actual_pct > 5:
-                cat = "super_compensated"
-            elif actual_pct >= -5:
-                cat = "normal"
-            elif actual_pct >= -15:
-                cat = "moderate_stress"
-            else:
-                cat = "high_stress"
-            responses[act_date] = {
-                "pct": actual_pct,
-                "cat": cat,
-                "confidence": "low_data",
-            }
-
-    return responses
-
-
 def _find_pending_hrv_review(
-    activities: list[dict],
-    hrv_responses: dict[str, dict],
+    hrv_readiness: dict | None,
     notes: list[dict],
     today: date,
 ) -> dict | None:
-    """Find most recent activity with needs_review/high_stress that hasn't been reviewed yet.
+    """Surface a pending HRV review when the readiness band is below normal.
 
-    Searches backwards from today through all activities until finding one
-    with a pending review. Skips activities that already have an HRV-Review note.
+    Replaces the retired regression-residual trigger: a review is pending when
+    the 7d-rolling ln-rMSSD is below the 60d band (verdict ``watch`` or ``hold``,
+    i.e. 1+ consecutive day below) and the athlete has not yet logged an
+    ``HRV-Review`` NOTE covering the below-band window. The head coach asks once
+    per day for external factors (sleep, stress, alcohol, illness, travel);
+    confounder auto-annotation from arbitrary NOTEs is a documented follow-on.
     """
-    reviewed_dates: set[str] = set()
+    if not hrv_readiness or hrv_readiness.get("verdict") not in ("watch", "hold"):
+        return None
+
+    days_below = hrv_readiness.get("days_below", 0)
+    window = {
+        (today - timedelta(days=o)).isoformat()
+        for o in range(0, max(days_below, 1))
+    }
     for note in notes:
         text = (note.get("description") or "") + " " + (note.get("name") or "")
         if _HRV_REVIEW_PREFIX in text:
             d = (note.get("start_date_local") or "")[:10]
-            if d:
-                reviewed_dates.add(d)
+            if d in window:
+                return None  # already reviewed within the below-band window
 
-    # Sort activity dates newest-first
-    activity_dates = sorted(hrv_responses.keys(), reverse=True)
-    for act_date in activity_dates:
-        resp = hrv_responses[act_date]
-        verdict = resp.get("verdict") or resp.get("cat", "")
-        if verdict not in ("needs_review", "high_stress"):
-            continue
-        if act_date in reviewed_dates:
-            continue
-        if act_date >= today.isoformat():
-            continue  # today's activity — no next-morning data yet
-        return {"date": act_date, **resp}
-
-    return None
+    return {
+        "date": today.isoformat(),
+        "verdict": hrv_readiness["verdict"],
+        "days_below": days_below,
+        "rolling_mean_ms": hrv_readiness.get("rolling_mean_ms"),
+        "band_low_ms": hrv_readiness.get("band_low_ms"),
+        "band_high_ms": hrv_readiness.get("band_high_ms"),
+    }
 
 
 def _compute_weekly_stats(
@@ -1162,6 +1153,7 @@ def _compute_intensity_readiness(
     days_since_intense: int,
     hrv_cv: float | None = None,
     combined_overload_signal: dict | None = None,
+    hrv_readiness: dict | None = None,
 ) -> str:
     # Combined HRV+RHR overload trumps single-signal logic — when both
     # autonomic markers fire for 3+ days the readiness is unambiguously red.
@@ -1170,6 +1162,13 @@ def _compute_intensity_readiness(
         days = combined_overload_signal.get("days", 0)
         if verdict == "deload":
             return f"🔴 No — combined HRV/RHR overload ({days}d, deload trigger)"
+    # Band `hold` (7d-rolling ln-rMSSD below the 60d band for 3+ consecutive
+    # days) is the sustained HRV-only fatigue signal — red, second only to the
+    # combined HRV+RHR dual signal above. The single-day SWC/5% check below
+    # stays as the early-warning layer.
+    if hrv_readiness is not None and hrv_readiness.get("verdict") == "hold":
+        days = hrv_readiness.get("days_below", 0)
+        return f"🔴 No — HRV 7d-rolling below band ({days}d, hold)"
     if hrv is not None and hrv_baseline != "-":
         baseline_val = float(hrv_baseline)
         if hrv_cv is not None:
@@ -1185,6 +1184,10 @@ def _compute_intensity_readiness(
         return "🔴 No — TSB too negative"
     if days_since_intense < 2:
         return "🟡 Too early — last intense session <2 days ago"
+    # Band `watch` (1-2 days below band) is a soft yellow when other gates are green.
+    if hrv_readiness is not None and hrv_readiness.get("verdict") == "watch":
+        days = hrv_readiness.get("days_below", 0)
+        return f"🟡 Borderline — HRV 7d-rolling below band ({days}d, watch)"
     # "watch" verdict on combined signal surfaces as a soft yellow when other
     # gates are green — readiness moves from "yes" to "borderline".
     if (

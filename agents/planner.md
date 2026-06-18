@@ -97,7 +97,7 @@ Before producing the plan:
    — the pillar is layered on top, not swapped in. Omitting the primary
    sport entirely on a feasible day requires one of the **same named
    triggers** that justify a downgrade under "No silent conservatism":
-   - `intensityReadiness 🔴` AND `hrvForecastLatest.verdict ≠ "expected"`,
+   - `intensityReadiness 🔴` AND `hrvReadiness.verdict ∈ {watch, hold}`,
    - the primary sport is blocked (⛔ in `planningConstraints`, active
      injury, recovery-week / taper rule),
    - a deliberate full rest day chosen for a documented reason, OR

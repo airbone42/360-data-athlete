@@ -167,7 +167,7 @@ blocks any bare `python3 scripts/...` from sneaking back into
 | `muscle_overview.py` | Muscle fatigue overview (30-day window) |
 | `audit_consistency.py` | Drift scanner across configs/agents/prompts |
 | `get_balance_rotation.py` | Daily balance rotation (A/B/C/D) |
-| `hrv_forecast.py` | HRV forecast from personalised load→HRV regression |
+| `hrv_readiness.py` | HRV readiness classification (7d-rolling ln-rMSSD vs 60d normal band) |
 
 ---
 
@@ -196,7 +196,8 @@ zoneDistribution, weeklyZoneBalance, mesoLoadTrend, weatherInfo,
 intensityReadiness, daysSinceIntense, lastRestDay,
 athleteFeedback,
 eventList, raceInDays, dateStr,
-hrZones, hrvReviewPending, skippedWorkouts[], activities[], dataWarnings[],
+hrZones, hrvReviewPending, hrvReadiness, hrvCvTrend,
+skippedWorkouts[], activities[], dataWarnings[],
 configDrift[]
 ```
 
@@ -393,22 +394,24 @@ history.
 
 ### No silent conservatism (mandatory)
 
-When the systematic signals — `hrvForecastLatest.verdict == "expected"`,
+When the systematic signals — `hrvReadiness.verdict` is `clear` or `above`,
 CTL ≥ `deload_ctl_threshold` not crossed, no active taper window, no
 hard restriction in `planningConstraints` — clear the athlete for
 stimulus, the coach **must not** silently downgrade to physio /
 recovery-only work just because a single number looks low (HRV under
 baseline, TSB slightly negative, several training days in a row).
 
-**`low_signal` is not a red flag.** When `hrvForecastLatest.verdict ==
-"low_signal"` (the personal load→HRV slope is not statistically
-significant — the forecast carries no load-predictive value), it is
-**not** the green-light "expected" verdict, but it is equally **not** a
-trigger for conservatism. The coach ignores the forecast for that
-decision and clears (or holds) the athlete from the *other* systematic
-signals (CTL vs `deload_ctl_threshold`, taper window, restrictions,
-`athleteFeedback`). Do not treat "verdict ≠ expected" as a reason to
-downgrade.
+**`insufficient_data` is not a red flag.** When `hrvReadiness.verdict ==
+"insufficient_data"` (fewer than 30 valid daily HRV values in the 60-day
+reference window — the normal band cannot be computed yet), the readiness
+classifier is uninformative. It is **not** the green-light `clear` verdict,
+but it is equally **not** a trigger for conservatism: the coach falls back
+to the *other* systematic signals (the 90d-median+5% `intensityReadiness`
+check, CTL vs `deload_ctl_threshold`, taper window, restrictions,
+`athleteFeedback`). A `watch` verdict (7d-rolling HRV 1–2 days below band)
+is a soft flag, not a stop; only a `hold` verdict (3+ consecutive days
+below band) defaults to recovery. Do not treat "verdict ≠ clear" as a
+reason to downgrade.
 
 **Discount load-less days when reading accumulation signals.**
 `lastRestDay` ("no rest day in the last 7 days") and `cycleHint`
@@ -428,8 +431,8 @@ Grip-block, real run intensity, etc.) is the default. Substitution with
 physio-only or pure mobility is the **exception** and requires an
 explicit reason logged in `coaching_notes`:
 
-- Genuine red flag (`intensityReadiness 🔴` AND forecast verdict
-  ≠ "expected", active injury block, recovery-week active, race within
+- Genuine red flag (`intensityReadiness 🔴` AND `hrvReadiness.verdict ∈
+  {watch, hold}`, active injury block, recovery-week active, race within
   taper window)
 - Athlete reported acute fatigue / symptom in this conversation
 - Volume cap from a sibling workout (double-session day)
@@ -489,8 +492,8 @@ A *more conservative* effort/pacing recommendation than the athlete's
 evidence supports requires a **concrete, named trigger** — name it or do
 not downgrade:
 
-- Red-flag wellness (`intensityReadiness 🔴` AND forecast verdict
-  ≠ "expected")
+- Red-flag wellness (`intensityReadiness 🔴` AND `hrvReadiness.verdict ∈
+  {watch, hold}`)
 - An **injury limiter on the specific race demand** — constrain *that
   demand*, not the whole effort. The limiter is *tissue tolerance on the
   demand* (e.g. tendon/joint eccentric-load tolerance on a technical
@@ -806,7 +809,7 @@ correct an obvious gap:
 
 | Signal | Source | Used for |
 |--------|--------|----------|
-| `hrvForecastLatest` (verdict for the last training response) | `fetch_context.py` (derived from `hrv_forecast` model) | Is a low HRV today the expected drop after yesterday's intensity, or an unexplained deviation? `verdict == "low_signal"` means the load→HRV slope is not statistically significant — the forecast is uninformative; treat as **neither** clear **nor** flag and decide from the other signals (Modell: [hrv-forecast-model.md](research/hrv-forecast-model.md)) |
+| `hrvReadiness` (7d-rolling ln-rMSSD vs 60d normal band) | `fetch_context.py` (derived from the `hrv_readiness` classifier) | A readiness classification read like `intensityReadiness` (not a forecast residual): `clear`/`above` = proceed, `watch` (1–2 days below band) = soft flag, `hold` (3+ consecutive days below band) = recovery default, `insufficient_data` (<30 valid daily values) = band not computable yet → fall back to the other signals (Methodik: [hrv-prediction-vs-readiness-modeling.md](research/hrv-prediction-vs-readiness-modeling.md)) |
 | `deload_ctl_threshold` (athlete-specific override) | `config/athlete_status.md` → parsed into context | Don't propose a deload below the athlete's individual CTL band (Trigger-Logik: [recovery-week-triggers.md](research/recovery-week-triggers.md)) |
 | Race-taper window & rule | `config/competition_plan.md` | Inside a taper window: deload mandatory. Outside: race may explicitly waive a taper ("Rennen als Reiz") |
 
@@ -1149,19 +1152,22 @@ live in `config.example/`.
 
 ---
 
-## HRV-response review (`/wellness`, `/training`)
+## HRV readiness review (`/wellness`, `/training`)
 
-After `fetch_context.py`, check `hrvReviewPending`. If a value is present,
-ask the athlete (once per day):
+After `fetch_context.py`, check `hrvReviewPending`. It is populated when
+`hrvReadiness.verdict` is `watch` or `hold` (the 7d-rolling ln-rMSSD is
+below the 60d normal band) and no `HRV-Review` NOTE yet covers the
+below-band window. If a value is present, ask the athlete (once per day):
 
-> Your HRV on [date+1] was significantly lower than expected after
-> [session on date] (actual: {pct}%, expected: {expected_pct}%). Were
-> there external factors — bad sleep, stress, alcohol, illness?
+> Your 7-day-rolling HRV has been below your 60-day normal band for
+> {days_below} day(s) (rolling {rolling_mean_ms} ms vs band
+> {band_low_ms}–{band_high_ms} ms). Were there external factors — bad
+> sleep, stress, alcohol, illness, travel?
 
 Persist the answer as a NOTE via
-`post_message.py --date {date} --note "HRV review {date}: …"`. The system
-searches backwards to the last unchecked training, skipping already-reviewed
-sessions (NOTE containing "HRV review").
+`post_message.py --date {date} --note "HRV-Review {date}: …"`. A
+`HRV-Review` NOTE on any day inside the below-band window clears the
+pending flag.
 
 ---
 

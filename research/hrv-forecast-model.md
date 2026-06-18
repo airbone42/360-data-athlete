@@ -2,6 +2,14 @@
 
 **Created:** 2026-05-16
 
+> **Status: SUPERSEDED.** The load→HRV regression forecast described here has
+> been retired. An out-of-sample walk-forward test found the load term had no
+> predictive value for next-morning HRV. It is replaced by a 7-day-rolling
+> ln-rMSSD readiness classifier against a 60-day normal band — see
+> [hrv-prediction-vs-readiness-modeling.md](hrv-prediction-vs-readiness-modeling.md)
+> for the rebuild rationale and design. This document is kept as the audit
+> trail of why the regression was retired.
+
 ---
 
 ## TL;DR

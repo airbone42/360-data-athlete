@@ -44,6 +44,8 @@ REQUIRED_CONTEXT_KEYS = {
     "dateStr",
     "hrZones",
     "hrvReviewPending",
+    "hrvReadiness",
+    "hrvCvTrend",
     "skippedWorkouts",
     "dataWarnings",
 }

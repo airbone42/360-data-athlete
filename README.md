@@ -99,31 +99,45 @@ The athlete config in `config/*.md` is merged over the framework defaults
 in `config.example/*.md`, so each athlete sees their own zones,
 priorities, restrictions, and language.
 
-### 2. HRV forecast — why it matters
+### 2. HRV readiness — why it matters
 
-A naive HRV-gated coach reads "HRV under baseline → block intensity".
-That works on rest days but fails the day after a hard session: HRV
-*should* drop after Z4 intervals, that's the autonomic system doing its
-job. Without context, the coach panics and downgrades the planned
-session — silent over-conservatism.
+A naive HRV-gated coach reads "HRV below normal → block intensity". That
+works on rest days but fails the day after a hard session: HRV *should*
+drop after Z4 intervals — that's the autonomic nervous system doing its
+job. Without context the coach downgrades the planned session needlessly
+(silent over-conservatism).
 
-The framework fits a per-athlete linear regression on the last 6 months
-of `(daily_load, next-morning ΔHRV%)` pairs (`hrv_forecast.py`,
-methodology in
-[research/hrv-forecast-model.md](research/hrv-forecast-model.md)). For every
-training day, the model predicts the expected ΔHRV% based on that day's
-load. The next morning, the actual HRV is compared:
+The framework used to try to *predict* tomorrow's HRV from today's
+training load (a personal regression). An out-of-sample test on real data
+showed that, for a single-input daily model, training load has **no
+reliable predictive value** for next-morning HRV — day-to-day HRV is
+dominated by sleep, stress, alcohol, and measurement noise, not by load.
+The literature agrees: no established protocol forecasts HRV from load;
+they all compare the *current* HRV against a personal normal range. (See
+[research/hrv-prediction-vs-readiness-modeling.md](research/hrv-prediction-vs-readiness-modeling.md).)
 
-| Outcome | Verdict | Coach reaction |
-|--------|---------|----------------|
-| Inside the 1 σ band | `expected` | Today's "low HRV" is the predicted drop — no intensity downgrade |
-| Outside ±1.5 σ but training day was intense | `expected-large` | Still within normal autonomic response — flag, don't gate |
-| Outside ±1.5 σ on a rest day, or far below model | `unexpected` | Surface for HRV-response review, ask the athlete for context (sleep, stress, alcohol, illness) before planning |
+So the coach now runs a **readiness check** instead of a forecast. Rather
+than reacting to a single noisy daily value, it tracks the **7-day average
+of ln-rMSSD** (a smoothed HRV measure) and asks whether it sits inside the
+athlete's **personal normal range** — a band built from the last 60 days
+(mean ± 0.5·SD), in the spirit of "normal is good", not "higher is
+better". One bad day is noise; several days in a row below the band is a
+real fatigue signal (`hrv_readiness.py`).
 
-The latest verdict is now a top-level field (`hrvForecastLatest`) in
-the context — the planner doesn't have to call a separate script. A 🔴
-intensity-readiness signal paired with verdict `expected` no longer
-silently triggers a deload; it's a flag, not a stop.
+| Where the 7-day average sits | Verdict | Coach reaction |
+|------------------------------|---------|----------------|
+| Inside the normal band | `clear` | Planned stimulus proceeds — no HRV downgrade |
+| Above the band | `above` | Good recovery/adaptation — a small bump is fine if other signals agree |
+| Below the band 1–2 days | `watch` | Soft signal — proceed but note it; ask about external factors |
+| Below the band 3+ days | `hold` | Hard signal — recovery is the default (aligns with the combined HRV+RHR overload trigger) |
+| < 30 valid days in the window | `insufficient_data` | Fall back to the simple 90-day-median rule until the reference fills in |
+
+The current verdict is a top-level field (`hrvReadiness`) in the context —
+the planner reads it like `intensityReadiness`, no separate script call. A
+🔴 readiness signal paired with verdict `clear` no longer silently triggers
+a deload; it's a flag, not a stop. An advisory `hrvCvTrend` field also
+reports whether day-to-day HRV is getting more erratic (an early warning)
+without gating anything by itself.
 
 ### 3. Planner
 

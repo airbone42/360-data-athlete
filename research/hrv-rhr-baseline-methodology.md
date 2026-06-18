@@ -176,7 +176,7 @@ Our 90-d-median approach is neutral on this: it drifts slowly (~quarterly resolu
 
 ## Open questions / Caveats
 
-1. **CV-based trigger not implemented.** The Plews-conformant SWC method (trigger at 0.5-1.0 × CV) is methodologically cleaner than fixed 5% — but computationally more involved and needs an architecture extension. Action item: prototype in a follow-up commit.
+1. **Band-based trigger — implemented.** ~~The Plews-conformant SWC method (trigger at 0.5-1.0 × CV) is methodologically cleaner than fixed 5% — but computationally more involved and needs an architecture extension. Action item: prototype in a follow-up commit.~~ **Implemented** as the 7-day-rolling ln-rMSSD readiness classifier (`_compute_hrv_readiness_band`): the daily decision variable is the 7d rolling mean, classified against a 60-day normal band (mean ± 0.5·SD of daily ln-rMSSD). The fixed-5% / SWC single-day check remains as the early-warning layer when the band is silent or `insufficient_data`. See [hrv-prediction-vs-readiness-modeling.md](hrv-prediction-vs-readiness-modeling.md).
 
 2. **Season drift of the baseline not monitored.** If the 90-d baseline HRV systematically wanders (e.g. from 38 to 45 over 3 months of aerobic build), that is from a plan view a *good* development — but is not highlighted in the current output. An additional "baseline-trend" metric (e.g. "baseline +12% over 90d") would be informative.
 

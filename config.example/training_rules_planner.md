@@ -19,28 +19,30 @@
 - TSB < −20: Sofortige Reduktion auf Z1 oder Ruhetag (zwingend, auch wenn Plan anderes vorsieht)
 - TSB > 0 + HRV ≥ Baseline: Grünes Licht für Intensität
 
-## Retrospektive HRV-Analyse (hrv_response in activities[])
+## HRV-Readiness (hrvReadiness — 7d-rollender ln-rMSSD vs 60d-Normalband)
 
-Jede Aktivität enthält optional `hrv_response` mit Forecast-basierter Belastungsbewertung.
+`fetch_context.py` liefert das Top-Level-Feld `hrvReadiness`: der 7-Tage-rollende
+Mittelwert des ln-rMSSD wird gegen ein 60-Tage-Normalband klassifiziert
+(mean ± 0,5·SD der Tageswerte). Ersetzt den retired Last→HRV-Forecast — Last ist
+kein Prädiktor mehr, nur paralleler CTL/TSB-Strom.
 
-**Felder (mit Forecast, ≥10 Datenpunkte):**
-- `pct`: tatsächliche HRV-Abweichung vom 90d-Median am Folgemorgen (%)
-- `expected_pct`: erwartete Abweichung basierend auf training_load und persönlicher Sensitivity-Kurve
-- `deviation`: actual - expected (negativ = härter als erwartet)
-- `verdict`: `expected` | `under_stimulus` | `needs_review` | `low_signal`
-
-**Felder (Fallback, <10 Datenpunkte):**
-- `pct` + `cat`: `normal` / `moderate_stress` / `high_stress` / `super_compensated`
+**Felder:**
+- `verdict`: `clear` | `above` | `watch` | `hold` | `insufficient_data`
+- `days_below`: aufeinanderfolgende Tage, an denen der 7d-Schnitt unter dem Band liegt
+- `rolling_mean_ms`, `band_low_ms`, `band_high_ms`: 7d-Schnitt + Band (rücktransformiert)
+- `cv`, `n_ref`: Variationskoeffizient + valide Tageswerte im 60d-Fenster
 
 **Planungsregeln:**
-- `expected` → Session war wie geplant, Progression fortsetzen
-- `under_stimulus` → Session hat weniger belastet als erwartet, Intensität ggf. steigern
-- `needs_review` → **NICHT automatisch als "zu hart" interpretieren** — erst Chef-Trainer-Review abwarten (externe Stressoren möglich)
-- `low_signal` → der Last→HRV-Slope ist für diesen Athleten/Zeitraum nicht signifikant: der Forecast hat keinen prädiktiven Wert. **Weder** grünes Licht **noch** Warnsignal — Forecast ignorieren, aus den anderen Signalen (CTL/TSB, Wellness, Restriktionen) entscheiden; keine künstliche Konservativität daraus ableiten.
-- Muster über 3+ Einheiten beachten, nicht Einzelwerte überinterpretieren
-- Mehrere Einheiten am selben Tag teilen denselben Response-Wert
+- `clear` → 7d-Schnitt im Normalbereich, geplanten Reiz fortsetzen
+- `above` → über dem Band, gute Erholung/Anpassung; leichter Aufbau möglich, wenn andere Signale passen
+- `watch` → 1–2 Tage unter Band, weiches Signal: fortfahren, in `coaching_notes` vermerken, Confounder erfragen
+- `hold` → 3+ Tage unter Band, hartes Signal: Erholung ist Default (an den combined HRV+RHR-Overload-Trigger angelehnt)
+- `insufficient_data` → <30 valide Tageswerte im 60d-Fenster: Band nicht berechenbar, Rückfall auf die 90d-Median+5%-Logik; **weder** grünes Licht **noch** Warnsignal
+- Muster über mehrere Tage beachten, Einzelwerte nicht überinterpretieren
 
-**Top-Level-Feld `hrvReviewPending`:** Enthält die jüngste Aktivität mit offenem `needs_review`/`high_stress`. Chef-Trainer klärt mit Athlet bei /wellness oder /training (1x pro Tag).
+**Advisory-Feld `hrvCvTrend`:** Tag-zu-Tag-CV-Trend (`rising`/`stable`/`falling`) als Früh-NFOR-Hinweis (Plews 2012) — nur informativ, **kein** harter Trigger.
+
+**Top-Level-Feld `hrvReviewPending`:** gesetzt, wenn `hrvReadiness.verdict` `watch`/`hold` ist und noch keine `HRV-Review`-NOTE das Below-Band-Fenster abdeckt. Chef-Trainer fragt Athlet bei /wellness oder /training (1x pro Tag) nach externen Faktoren.
 
 ## Chronischer Schlafmangel (sleepTrend)
 - `sleepTrend` enthält den 7-Tage-Schnitt der Schlafdauer + Score

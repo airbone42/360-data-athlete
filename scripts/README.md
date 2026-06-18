@@ -63,7 +63,7 @@ through `app/utils/paths.py` — set `COACH_HOME`, `CONFIG_DIR`,
 |--------|---------|--------------------|-------|--------|
 | `analyse_hrv_dfa.py` | DFA-α1 coefficient from RR-interval data | `--rr-path data/heartbeat/...` | RR data file | stdout JSON |
 | `analyse_dfa_staged.py` | Staged DFA-α1 analysis for a zone-validation protocol | `--rr-path ... --steps ...` | RR data + step protocol | stdout JSON |
-| `hrv_forecast.py` | HRV forecast from personalised load → HRV regression | `--date YYYY-MM-DD` | activity history + HRV history | stdout JSON |
+| `hrv_readiness.py` | HRV readiness classification (7d-rolling ln-rMSSD vs 60d normal band) | `--date YYYY-MM-DD` | HRV history | stdout JSON |
 | `check_heartbeat.py` | Heartbeat sanity check (Polar/H10 sources) | `--rr-path ...` | RR data file | stdout |
 | `get_balance_rotation.py` | Daily balance-rotation pick (A/B/C/D) | `--date YYYY-MM-DD [--show]` | `config/balance_pool.json` | stdout JSON / push input |
 

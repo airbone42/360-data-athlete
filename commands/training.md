@@ -27,7 +27,7 @@ athlete (1 line) and make sure to pass it to the planner.
 Check `skippedWorkouts`. If present → inform the athlete and clean up:
 `python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/delete_workouts.py --event-ids {IDs}`
 Check `hrvReviewPending`. If present → **before the planner** ask the
-athlete (see CLAUDE.md "HRV-response review"). Persist answer as NOTE,
+athlete (see CLAUDE.md "HRV readiness review"). Persist answer as NOTE,
 then continue with step 1.5.
 
 ### Step 1.5: Exercise re-evaluation (CONDITIONAL — only when flagged)

@@ -39,7 +39,7 @@ If `skippedWorkouts` is present → inform athlete: "[name] on [date] was
 planned but not executed — deleting."
 → `python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/delete_workouts.py --event-ids {comma-separated IDs}`
 
-**HRV-response review:**
+**HRV readiness review:**
 If `hrvReviewPending` is present → ask the athlete (see CLAUDE.md
-"HRV-response review"). After the answer, persist as NOTE on
+"HRV readiness review"). After the answer, persist as NOTE on
 intervals.icu.

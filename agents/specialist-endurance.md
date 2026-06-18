@@ -98,7 +98,7 @@ stop-conditions applies:
 | Stop-condition | Reason |
 |----------------|--------|
 | Lower-extremity injury / active restriction (Achilles acute, plantar fasciitis flare, IT-band acute, hamstring strain) | Stride pace stress on healing tissue |
-| HRV >10 % below baseline AND `hrvForecastLatest.verdict ≠ "expected"` | Unexplained autonomic stress — skip neuromuscular reactivation |
+| HRV >10 % below baseline AND `hrvReadiness.verdict ∈ {watch, hold}` | Unexplained autonomic stress — skip neuromuscular reactivation |
 | TSB < −15 | Accumulated fatigue beyond the day-after-quality window |
 | Long run >90 min yesterday | Aerobic depletion still active |
 | Race within 36 h (tapered window) | Save neuromuscular spark for race day |

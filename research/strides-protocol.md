@@ -17,7 +17,7 @@
 5. **Effect evidence:** Paavolainen et al. 1999 (J Appl Physiol) — 9 weeks of explosive-strength training (including stride-like accelerations) replaced 32% of volume and significantly improved 5-km time — with UNCHANGED VO2max. Mechanism: better running economy and higher maximal anaerobic running velocity. Coach literature converges on 2-4% running-economy gain within 4-6 weeks of consistent stride practice.
 6. **Stop conditions (only these — everything else = default ON):**
    - Acute lower extremity (Achilles tendinopathy, plantar-fasciitis flare, IT-band acute, hamstring strain)
-   - HRV > 10% below baseline AND `hrvForecastLatest.verdict ≠ "expected"`
+   - HRV > 10% below baseline AND `hrvReadiness.verdict ∈ {watch, hold}`
    - TSB < −15 (accumulated fatigue beyond the day-after-quality window)
    - Long run > 90 min yesterday (aerobic depletion still active)
    - Race within 36 h (save the neuromuscular spark for race day)
@@ -132,7 +132,7 @@ The old spec said "daysSinceIntense ≥ 3 AND TSB > −10". Both are over-restri
 | Stop condition | Reason |
 |----------------|--------|
 | Acute lower extremity (Achilles tendinopathy, plantar-fascia flare, IT-band acute, hamstring strain) | Stride pace stresses healing tissue |
-| HRV > 10% below baseline **AND** `hrvForecastLatest.verdict ≠ "expected"` | Unexplained autonomic load — do not stack a neuromuscular stimulus |
+| HRV > 10% below baseline **AND** `hrvReadiness.verdict ∈ {watch, hold}` | Unexplained autonomic load — do not stack a neuromuscular stimulus |
 | TSB < −15 | Accumulated fatigue beyond day-after-quality |
 | Long run > 90 min yesterday | Aerobic depletion still active, stride form suffers |
 | Race within 36 h | Save the neuromuscular spark for race — short strides race-day-WU OK, on the day before NO new stimulus |
