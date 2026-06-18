@@ -30,7 +30,7 @@ from datetime import date, timedelta
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.api.intervals_cache import CachedIntervalsClient
+from app.api.intervals_client import IntervalsClient
 from app.graphs.sub_athlete_context.context_builder import (
     _build_hrv_sensitivity,
     _compute_hrv_responses,
@@ -41,7 +41,14 @@ configure("hrv_forecast", level="WARNING")
 
 
 async def _gather(target: date) -> tuple[list[dict], list[dict]]:
-    client = CachedIntervalsClient()
+    # The load→HRV regression needs the FULL look-back window, so fetch it
+    # from the live client — NOT the file cache. The per-day activity cache
+    # only holds days that something already touched (typically the recent
+    # weeks); cold-missing older days are not back-filled, which silently
+    # starves the regression (e.g. 16 points from one month instead of the
+    # ~90 available over 180 days). The cache stays the right tool for the
+    # daily hot path; the forecast's regression window must be complete.
+    client = IntervalsClient()
     oldest = (target - timedelta(days=180)).isoformat()
     newest = target.isoformat()
     acts = await client.get_activities(oldest=oldest, newest=newest)
