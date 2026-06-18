@@ -69,7 +69,7 @@ def load_shoe_profiles() -> list[dict]:
     """
     if not _equipment_md_path().exists():
         return []
-    raw = _equipment_md_path().read_text()
+    raw = _equipment_md_path().read_text(encoding="utf-8")
     # Strip HTML comments before parsing
     text = re.sub(r"<!--.*?-->", "", raw, flags=re.DOTALL)
 
@@ -210,7 +210,7 @@ def _merge_shoe_log(last_used: dict[str, str], today_str: str) -> dict[str, str]
         if not _SHOE_LOG.exists():
             return last_used
         import json
-        log: dict[str, str] = json.loads(_SHOE_LOG.read_text())
+        log: dict[str, str] = json.loads(_SHOE_LOG.read_text(encoding="utf-8"))
         merged = dict(last_used)
         for sid, log_date in log.items():
             if sid not in merged:
@@ -232,7 +232,7 @@ def write_shoe_log(strava_id: str, date_str: str) -> None:
         _SHOE_LOG.parent.mkdir(parents=True, exist_ok=True)
         log: dict[str, str] = {}
         if _SHOE_LOG.exists():
-            log = json.loads(_SHOE_LOG.read_text())
+            log = json.loads(_SHOE_LOG.read_text(encoding="utf-8"))
         if log.get(strava_id, "") < date_str:
             log[strava_id] = date_str
         _SHOE_LOG.write_text(json.dumps(log, indent=2, ensure_ascii=False))
@@ -560,7 +560,7 @@ def _load_preferred_models(types: list[str]) -> dict[str, str]:
     """Extract preferred model suggestions from config/equipment.md."""
     if not types or not _equipment_md_path().exists():
         return {}
-    text = _equipment_md_path().read_text()
+    text = _equipment_md_path().read_text(encoding="utf-8")
     m = re.search(
         r"## Bevorzugte Modelle pro Kategorie\b(.*?)(?=^##|\Z)", text, re.DOTALL | re.MULTILINE
     )
