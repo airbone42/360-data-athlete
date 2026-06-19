@@ -41,6 +41,7 @@ What the research did NOT clarify — and what should be checked next.
 
 | Date | Topic | File | Status |
 |------|-------|------|--------|
+| 2026-06-19 | Warm-up priming before VO2max / Threshold intervals — short heavy spikes accelerate VO2 on-kinetics in rep 1 | [warmup-priming-intervals.md](warmup-priming-intervals.md) | active |
 | 2026-06-18 | HRV prediction vs readiness classification — is "predict next-day HRV from yesterday's load" the right model form? | [hrv-prediction-vs-readiness-modeling.md](hrv-prediction-vs-readiness-modeling.md) | active |
 | 2026-06-03 | Race pacing and load metrics — why CTL/TSB are not a short-race pacing ceiling | [race-pacing-and-load-metrics.md](race-pacing-and-load-metrics.md) | active |
 | 2026-05-19 | Hard-easy microcycle around Quality — day-before / day-of / day-after design | [hard-easy-microcycle-around-quality.md](hard-easy-microcycle-around-quality.md) | active |

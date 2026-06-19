@@ -480,8 +480,12 @@ routes, pick the dominant surface (>60 %); if truly 50/50, mention in
   HR orientation may appear in the `structure` description text.
 - **Warmup — indoor ride (`type: Ride` + `indoor: true`):** NO `press
   lap` (athlete is already on the trainer, no decision moment). Fixed
-  time step with Z1 HR target. Format: `- Warmup Xm Z1 HR`. Cadence
-  optional: `- Warmup Xm Z1 HR 85-90rpm`.
+  time step with a **power (watt) target — NOT an HR-only target**. A
+  smart-trainer plan upload rejects HR-only steps on an indoor ride
+  (422); validator R012 blocks this before push. Format:
+  `- Warmup Xm <W>W` (e.g. `- Warmup 10m 140W`). Cadence optional:
+  `- Warmup Xm <W>W 85-90rpm`. A bare power zone (`Z1`) is also
+  accepted as a power target; `Z1 HR` is not.
 - **Warmup — drills:** NO `press lap` — fixed time, athlete is already
   on location. Each drill gets its own step with concrete exercise and
   duration.
@@ -503,6 +507,29 @@ routes, pick the dominant surface (>60 %); if truly 50/50, mention in
     toe, stable torso`
   - 📹 Drills are good candidates for video form check: mention in
     `focus` when a technique review would help.
+- **Warm-up priming before quality sessions (MANDATORY):** A pure
+  easy Z1–Z2 warm-up does NOT prime VO2 kinetics — the first work reps
+  run under a slow primary-VO2 response and fall below the
+  time-above-90%-VO2max window, which for short-rep formats *is* the
+  whole stimulus. Every quality warm-up therefore ends with progressive
+  heavy spikes before the first work rep. Source + evidence:
+  [warmup-priming-intervals.md](../research/warmup-priming-intervals.md).
+
+  Apply by session class (`workout_type` / `intensity`):
+
+  | Class | Priming | Spike template (after the easy build) |
+  |-------|---------|----------------------------------------|
+  | **VO2max short** (30/15, 30/30; `INTERVALS` short reps) | **MANDATORY** | 2–3 × 60–90 s heavy (Ride ~90–100% FTP / ~85% MAP; Run ~CV/threshold pace), 60–90 s easy between; optional 3–5 × 10–15 s brisk; then 3–5 min easy → Set 1 |
+  | **VO2max long** (4×4, 5×3; `INTERVALS` long reps) | **RECOMMENDED** | 2 × 60–90 s heavy + 1 short build into rep-1 pace, then 3–5 min easy |
+  | **Threshold** (`INTERVALS`/`RACE` at Z4) | **OPTIONAL** | a single submaximal 2–3 min build into threshold pace is enough; explicit short spikes not required |
+  | **Easy / Recovery / Long** (`EASY`, `RECOVERY`, `LONG`) | **NONE** | no priming — end-of-easy-run strides remain a separate tool for *the next* quality day (`strides-protocol.md`) |
+
+  Concrete recovery window between the last spike and rep 1 is **3–10 min**
+  (shorter → residual fatigue, longer → kinetic effect decays). On a bike
+  the spikes carry a **watt** target (not HR-only — R012); on a run the
+  spikes are pace/effort with NO HR target if < 60 s. Spikes are NOT
+  technique drills — they coexist with the one daily drill set (different
+  mechanism), so the warm-up-drill-overlap rule does not apply to them.
 - **Steps ≥ 60 s:** HR zone as target (`Z2 HR`, `Z3 HR`, etc.)
 - **Steps < 60 s:** NO HR target — title and duration only. Example:
   `- Stride 30s`
@@ -527,8 +554,9 @@ routes, pick the dominant surface (>60 %); if truly 50/50, mention in
   `press lap` + time suggestion as the plan-view default. Format:
   **`- Cool-down Xm press lap`**. Same Tilde-trap caveat as the
   warmup applies. HR orientation may appear in the `structure` text.
-- **Cool-down — indoor Ride:** NO `press lap`, fixed time step with
-  Z1 HR target. Format: `- Cool-down Xm Z1 HR`.
+- **Cool-down — indoor Ride:** NO `press lap`, fixed time step with a
+  **power (watt) target — NOT HR-only** (same R012 reason as the indoor
+  warmup). Format: `- Cool-down Xm <W>W` (e.g. `- Cool-down 8m 120W`).
 - **Time format MANDATORY:** minutes as `Xm`, seconds as `Xs`.
   **Distance format (`1000m`, `5km`, etc.) is FORBIDDEN** —
   intervals.icu cannot compute duration without an explicit pace target

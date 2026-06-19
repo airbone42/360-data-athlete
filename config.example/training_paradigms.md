@@ -171,6 +171,36 @@ day) about external factors.
   never as a zone target in the workout step
 - For analysis: ignore the first 10 minutes of a run in HR evaluation
 
+## Warm-up priming before quality sessions
+
+A pure easy Z1–Z2 warm-up does NOT prime VO2 on-kinetics. Without
+progressive heavy spikes the first work reps run under a slow
+primary-VO2 response and fall below the time-above-90 %-VO2max band —
+which for short-rep formats (30/15, 30/30) is the whole stimulus. Every
+quality warm-up therefore ends with priming spikes before the first work
+rep.
+
+Generic template (after the easy build):
+
+- Easy build: **10–15 min Z1–Z2**.
+- Heavy spikes: **2–3 × 60–90 s heavy** (bike ~90–100 % FTP / ~85 % MAP;
+  run ~CV / threshold pace), **60–90 s easy** between.
+- Optional neuromuscular touch: **3–5 × 10–15 s** brisk (bike sprint at
+  moderate cadence; run stride).
+- **Rest before the first work rep: 3–10 min easy** (shorter → residual
+  fatigue, longer → the VO2-kinetic effect decays).
+
+Necessity by session class: **VO2max short (30/15, 30/30) → MANDATORY**;
+**VO2max long (4×4, 5×3) → recommended**; **Threshold (Z4) → optional**
+(one submaximal 2–3 min build into threshold pace suffices); **Easy /
+Recovery / Long → none** (end-of-easy-run strides remain a separate tool
+for the *next* quality day, see `strides-protocol.md`). On the bike the
+spikes carry a **watt** target, not HR-only. Mechanical enforcement:
+`validate_plan.py::check_quality_warmup_priming` (R019) warns when a
+short-rep VO2max session has no warm-up spike.
+
+**Research anchor:** [Warm-up priming before intervals](../research/warmup-priming-intervals.md)
+
 ## Zone validation with Polar H10 (DFA-α1 method)
 
 If zones are uncertain (see triggers below), the athlete is advised at

@@ -1894,6 +1894,123 @@ def check_duration_plausibility(workouts: list[dict], ctx: Context) -> list[Find
     return findings
 
 
+def check_quality_warmup_priming(workouts: list[dict], ctx: Context) -> list[Finding]:
+    """R019 — VO2max short-interval sessions must prime the warm-up.
+
+    A pure easy warm-up does not prime VO2 on-kinetics: the first work reps
+    run under a slow primary-VO2 response and fall below the
+    time-above-90%-VO2max window — which for short-rep formats (30/15,
+    30/30) is the entire stimulus. Evidence + protocol:
+    ``framework/research/warmup-priming-intervals.md``.
+
+    Scope: only VO2max-SHORT sessions (a loop body with a work rep ≤ 45 s
+    carrying a target) — there priming is MANDATORY. Threshold / long-rep
+    interval sessions have minutes-long reps where priming is merely
+    optional, so they are skipped. The warm-up region (everything before
+    the first loop header) must contain at least one priming spike: a
+    short step (10–120 s) that carries an intensity target. Missing → a
+    WARNING (advisory, overridable via ``priming-exempt`` in
+    ``coaching_notes``), never a hard block.
+    """
+    import re
+
+    DUR_MIN = re.compile(r"\b(\d+)m\b", re.IGNORECASE)
+    DUR_SEC = re.compile(r"\b(\d+)s\b", re.IGNORECASE)
+    LOOP = re.compile(r"\b\d+x\b", re.IGNORECASE)
+    PRESS = re.compile(r"\bpress\s+lap\b", re.IGNORECASE)
+    TARGET = re.compile(
+        r"\d+(?:-\d+)?w\b"            # watts: 330w, 300-340w
+        r"|\d+(?:-\d+)?\s*%"          # any percentage: 95%, 90% FTP, 95-99% LTHR
+        r"|\bZ\d(?:-Z\d)?\b"          # zone: Z2, Z4-Z5
+        r"|\d+:\d+/(?:km|100m)",      # pace: 4:05/km
+        re.IGNORECASE,
+    )
+
+    def _dur_s(text: str) -> int:
+        secs = 0
+        m = DUR_MIN.search(text)
+        if m:
+            secs += int(m.group(1)) * 60
+        s = DUR_SEC.search(text)
+        if s:
+            secs += int(s.group(1))
+        return secs
+
+    findings: list[Finding] = []
+    for w in workouts:
+        if (w.get("type") or "") not in ("Run", "Ride", "VirtualRun", "VirtualRide"):
+            continue
+        icu = w.get("intervals_icu") or ""
+        if not icu.strip():
+            continue
+        lines = icu.split("\n")
+
+        # First standalone loop header (`Nx`) marks the start of the main set.
+        first_loop = None
+        for i, raw in enumerate(lines):
+            ls = raw.strip()
+            if ls and not ls.startswith("-") and LOOP.search(ls):
+                first_loop = i
+                break
+        if first_loop is None:
+            continue  # no rep loop → not an interval session
+
+        # VO2max-SHORT? loop body (dash lines right after the header) has a
+        # work step ≤ 45 s with a target.
+        is_short = False
+        for raw in lines[first_loop + 1:]:
+            ls = raw.strip()
+            if ls == "" or not ls.startswith("-"):
+                break  # end of the loop body
+            content = ls.lstrip("-").strip()
+            d = _dur_s(content)
+            if 0 < d <= 45 and TARGET.search(content):
+                is_short = True
+                break
+        if not is_short:
+            continue  # threshold / long-rep → priming optional, skip
+
+        notes = ((w.get("coaching_notes") or "") + " " + (w.get("description") or "")).lower()
+        if "priming-exempt" in notes:
+            continue
+
+        # Warm-up region = everything before the first loop header. Look for
+        # at least one short heavy spike (press-lap and target-free drills
+        # do not count).
+        has_spike = False
+        for raw in lines[:first_loop]:
+            ls = raw.strip()
+            if not ls.startswith("-"):
+                continue
+            content = ls.lstrip("-").strip()
+            if PRESS.search(content):
+                continue
+            d = _dur_s(content)
+            if 10 <= d <= 120 and TARGET.search(content):
+                has_spike = True
+                break
+
+        if not has_spike:
+            findings.append(Finding(
+                rule_id="R019",
+                severity=SEVERITY_WARNING,
+                workout=_workout_name(w),
+                message=(
+                    "VO2max short-interval session has no priming spike in the "
+                    "warm-up — the first work reps run under a slow primary-VO2 "
+                    "response and fall below the time-above-90%-VO2max window."
+                ),
+                suggestion=(
+                    "Add 2-3 short heavy spikes before the first work rep "
+                    "(Ride e.g. `- Spike 60s 330W`; Run e.g. `- Stride 20s 95%`), "
+                    "60-90s easy between, then 3-5 min easy into Set 1. See "
+                    "research/warmup-priming-intervals.md. Override with "
+                    "`priming-exempt` in coaching_notes if intentional."
+                ),
+            ))
+    return findings
+
+
 RULES: list[tuple[str, Callable[[list[dict], Context], list[Finding]]]] = [
     ("R001", check_reps_ceiling),
     ("R002", check_injury_locks_shoulder),
@@ -1913,6 +2030,7 @@ RULES: list[tuple[str, Callable[[list[dict], Context], list[Finding]]]] = [
     ("R016", check_exercise_regression),
     ("R017", check_weekly_hardreize_cap),
     ("R018", check_duration_plausibility),
+    ("R019", check_quality_warmup_priming),
 ]
 
 
