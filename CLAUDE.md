@@ -1501,6 +1501,49 @@ the snippet above is the canonical verification step.*
 
 ---
 
+## Due / overdue claims are computed, not inherited (mandatory)
+
+Any statement that a recurring stimulus is **due / overdue / on a given
+date** — long run, pillar rotation, physio block, weekly Hard-Reiz,
+balance, exercise cadence — must be **re-derived at claim time** from two
+verified inputs, never asserted from memory or carried forward from an
+earlier note:
+
+1. **Verified last-occurrence date** — from the activity history /
+   `exercises_seen` (see "Per-exercise last-seen verification"), NOT from
+   a session name, NOT from a prior planning NOTE.
+2. **Documented cadence interval** — the recurrence period from
+   `config/` (e.g. long-run cadence, pillar-rotation window, physio
+   cadence). If the interval is **not documented**, say so and confirm
+   with the athlete — do **not** invent one.
+
+Then compute `due = last_occurrence + interval` and compare to today
+(verify the day count in Python per "Date arithmetic" — do not eyeball
+the gap).
+
+**Never inherit a `due`/`overdue` label from an earlier NOTE.** A note
+that reads "X was due on DATE" is a snapshot of *that day's* reasoning
+and may itself have been wrong. `athleteFeedback` planning notes are
+inputs to re-derive from, not facts to repeat. When the athlete
+challenges a due-date, recompute from cadence + last-occurrence and
+**concede explicitly if the recompute disagrees** (per "No silent
+conservatism — athlete evidence outranks a single-metric heuristic").
+
+**Drift incident pattern** (canonical case to learn from): the coach
+repeated "Long Run was due on the 18th" from an `athleteFeedback`
+planning note. The athlete pointed out that was only 5 days after the
+last long run, while the long run runs ~weekly (7-day cadence). Recompute
+from last-occurrence (Sat) + 7-day cadence put the next long run exactly
+on the coming Sat — *on time, not overdue*. The error was inheriting the
+note's "due" label instead of recomputing it.
+
+*Enforcement: head-coach judgment (anti-hallucination protocol). A
+mechanical aid is warranted where a cadence is stable and machine-known
+(e.g. a `context_builder` field that surfaces `daysSinceLast` + computed
+`due` for the long run, analogous to `weeklyHardReizeBalance`).*
+
+---
+
 ## Development rules
 
 ### Git (mandatory)
