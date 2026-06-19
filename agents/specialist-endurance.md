@@ -540,13 +540,27 @@ routes, pick the dominant surface (>60 %); if truly 50/50, mention in
   intervals.icu parser** — the items below become adjacent steps, not
   loop body, and the rep count silently degrades to reps=1. Validator
   R013 catches this as ERROR.
-- **30/15 and 30/30 short-rep blocks (Rønnestad/Billat):** target
-  **130–145 % FTP** (anaerobic-capacity zone), NOT 110 % FTP — 110 % is
-  the 3–5 min VO2max-power zone for sustained 5-min intervals. Confusing
-  the two is the most common planning bug for short-rep VO2max formats
-  (`config/training_paradigms.md` documents this explicitly under
-  "VO2max-Format-Wahl"). Always check the format duration before
-  setting the intensity floor.
+- **30/15 and 30/30 short-rep blocks (Rønnestad/Billat) — intensity:**
+  target **~100 % MAP (≈ 105–120 % FTP)**, the MAP/VO2max-power zone —
+  NOT 130–145 % FTP. Pushing the work reps above MAP is the
+  "intensified short intervals" trap: it *reduces* time ≥ 90 % VO2max
+  rather than raising it (Frontiers 2024). Athlete-specific watt/MAP
+  anchors live in `config/athlete_status.md`; read them from there.
+  **Research anchor:** [vo2max-short-intervals.md](../research/vo2max-short-intervals.md).
+- **30/15 — inter-set recovery duration:** default **3 min** between
+  sets (Rønnestad baseline — the research-backed *lower bound*, not a
+  fixed rule). Extend to **4 min** when the session sits at the upper
+  end of the volume curve (**≥ 4 sets OR ≥ 9 reps/set**) OR the prior
+  same-protocol session was reported breathing/cardio-limited in the
+  last sets — extra set rest restores PCr + ventilation so the next set
+  hits MAP cleanly without blunting the stimulus (time ≥ 90 % VO2max is
+  accumulated *inside* the sets, not during the rest; the "more rest
+  hurts" finding applies only to the 15 s within-set micro-rest, never
+  to set rest). Cap at **5 min**. Progress one variable at a time —
+  don't raise volume AND tighten rest in the same step. Optional HR
+  autoregulation cue in `focus`: clear to start the next set once HR
+  drops to ~65–70 % HRmax. **Research anchor:**
+  [vo2max-short-intervals.md](../research/vo2max-short-intervals.md) §4b.
 - **Hill intervals** (tag contains "hill" or workout includes hills):
   load AND recovery steps ALWAYS with `press lap`
   **Research anchor:** [hill-repeats.md](../research/hill-repeats.md)
