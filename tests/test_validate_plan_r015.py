@@ -34,7 +34,7 @@ def test_r015_fires_on_press_lap_in_repeat_recovery():
         "- Easy 10m press lap",
         "",
         "Steigerungen 4x",
-        "- Stride 20s 90%",
+        "- Stride 20s",
         "- Easy 75s press lap",
         "",
         "Cool-down",
@@ -77,7 +77,7 @@ def test_r015_silent_when_recovery_uses_zone_target():
         "- Easy 10m press lap",
         "",
         "Steigerungen 4x",
-        "- Stride 20s 90%",
+        "- Stride 20s",
         "- Easy 75s Z1 HR",
         "",
         "Cool-down",
@@ -117,7 +117,7 @@ def test_r015_detects_press_lap_after_blank_line_between_header_and_body():
     icu = "\n".join([
         "Steigerungen 4x",
         "",
-        "- Stride 20s 90%",
+        "- Stride 20s",
         "- Easy 75s press lap",
     ])
     findings = check_intervals_repeat_press_lap([_wo(icu)], CTX)

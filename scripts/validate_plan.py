@@ -894,6 +894,15 @@ def check_intervals_step_targets(workouts: list[dict], ctx: Context) -> list[Fin
         r"\bfreeride\b",
     ]
     BARE_ZONE_RE = re.compile(r"\bZ\d(?:-Z\d)?\b(?!\s+(?:HR|Pace))", re.IGNORECASE)
+    # A bare percent (`90%`, `95%`, `80-90%`) WITHOUT a unit suffix. On a
+    # Run/VirtualRun there is no power meter, so intervals.icu reads it as a
+    # %FTP POWER target and drops a meaningless watt goal on the watch — the
+    # classic stride trap `- Stride 20s 95%`. The explicit forms (`% LTHR`,
+    # `% HR`, `% Pace`, `% FTP/MAP/MMP`) are excluded by the negative
+    # lookahead, so only the unit-less percent trips this.
+    BARE_PCT_RUN_RE = re.compile(
+        r"\d+(?:-\d+)?%(?!\s*(?:ftp|map|mmp|lthr|hr|pace))", re.IGNORECASE
+    )
     # Arbitrary BPM targets — with literal `bpm` suffix, or as `HR lo-hi`
     # without the literal (both silently dropped by intervals.icu).
     BAD_BPM_RE = re.compile(
@@ -959,6 +968,34 @@ def check_intervals_step_targets(workouts: list[dict], ctx: Context) -> list[Fin
 
             target_patterns = TARGET_PATTERNS_RIDE if is_ride else TARGET_PATTERNS_COMMON
             has_target = any(re.search(p, content, re.IGNORECASE) for p in target_patterns)
+
+            # Run/VirtualRun-specific catch: a bare percent (`90%`, `95%`) is
+            # silently parsed by intervals.icu as a %FTP POWER target — junk on
+            # a Run (no power meter), lands as a meaningless watt goal on the
+            # watch. Classic on strides written as `- Stride 20s 95%`. A stride
+            # takes NO target; the effort cue (Mile-/1km race pace) belongs in
+            # the workout description. `has_target` is True here (the bare % is
+            # matched as a target token), so this catch runs regardless of it.
+            if not is_ride and BARE_PCT_RUN_RE.search(content):
+                findings.append(Finding(
+                    rule_id="R012",
+                    severity=SEVERITY_ERROR,
+                    workout=_workout_name(w),
+                    message=(
+                        f"intervals_icu step `{content[:80]}` (Run) carries a "
+                        f"bare percent — intervals.icu reads it as %FTP power "
+                        f"and drops a junk watt target on the watch. Runs have "
+                        f"no power zone."
+                    ),
+                    suggestion=(
+                        "Strides/surges take NO target: write `- Stride 20s` "
+                        "and put the effort cue (`Mile-/1km race pace, fast "
+                        "feet, no HR chasing`) in the workout description. For a "
+                        "sustained effort use `% LTHR` / `Zn HR` / `m:ss/km "
+                        "Pace`, never a bare percent."
+                    ),
+                ))
+                continue
 
             # Run/VirtualRun-specific catch: `Zn` or `Zn-Zm` WITHOUT a `HR`/`Pace`
             # suffix is silently dropped or mis-tagged on Run. The intervals.icu
@@ -2002,7 +2039,8 @@ def check_quality_warmup_priming(workouts: list[dict], ctx: Context) -> list[Fin
                 ),
                 suggestion=(
                     "Add 2-3 short heavy spikes before the first work rep "
-                    "(Ride e.g. `- Spike 60s 330W`; Run e.g. `- Stride 20s 95%`), "
+                    "(Ride e.g. `- Spike 60s 330W`; Run e.g. `- Stride 20s` — "
+                    "fast, effort cue in the description, NO bare percent), "
                     "60-90s easy between, then 3-5 min easy into Set 1. See "
                     "research/warmup-priming-intervals.md. Override with "
                     "`priming-exempt` in coaching_notes if intentional."

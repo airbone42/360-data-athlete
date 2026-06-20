@@ -185,7 +185,7 @@ push before the workout can reach the Wahoo sync. Regression test:
 ```
 Strides 5x
 
-- Stride 20s 95%
+- Stride 20s
 
 - Easy 90s Z1
 ```
@@ -199,7 +199,7 @@ Strides 5x
 **Fix:**
 ```
 Strides 5x
-- Stride 20s 95%
+- Stride 20s
 - Easy 90s Z1
 ```
 
