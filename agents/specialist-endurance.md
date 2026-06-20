@@ -53,6 +53,39 @@ Validator rule R012 (`scripts/validate_plan.py`) blocks pushes that
 violate this. Override only via `--skip-validation` (emergency, document
 as NOTE).
 
+## HM-pace / race-pace block — pace leads, HR is a duration-band cap (mandatory)
+
+For a half-marathon-pace (or race-pace) block, **pace is the primary
+target and HR is a guardrail `cap`, never the target.** The HR ceiling is
+**duration-dependent**, because a maximal race HR is reached only through
+pre-start sympathetic arousal + accumulated cardiac drift over the full
+distance — neither of which is present on a short, fresh training rep.
+Prescribing the race-average (or race-peak) HR on a short rep is the
+**"chase race HR" anti-pattern**: the athlete runs *above* race pace to
+reach a HR they physiologically cannot hit yet.
+
+A maximal, well-paced HM runs ~93–95 % LTHR on **average**, settling at
+~88–92 % LTHR in the first third and drifting to ~95–98 % LTHR (≈ LTHR)
+in the final third (typical drift +4–6 bpm 1st→2nd half; heat amplifies).
+The event *average* is therefore **wrong as a single training cap** — too
+high for a short fresh rep (invites over-pacing), too low for a long
+continuous block (kills the race-sim stimulus when HR legitimately
+drifts). Use the band that matches the block length:
+
+| HM-pace block | HR `cap` | Rationale |
+|---|---|---|
+| 2–4 km, fresh | ~88–93 % LTHR | HR sits *below* race HR — expected, not underperformance |
+| 4–8 km | ~92–96 % LTHR | drift begins to accumulate |
+| 8–12 km continuous (race-sim, off fatigue) | ~94–98 % LTHR | converges to race-average HR |
+
+Encoding: write the block with the **pace** target (`m:ss/km Pace`) and
+the HR as the band cap (`…% LTHR`) from the table — e.g.
+`- HM-Pace 10m 4:10/km Pace 88-93% LTHR` for a short fresh rep. In heat or
+off heavy fatigue, HR drifts up for the same pace → do not force pace down
+to chase the HR band; pace + RPE lead, HR is the decoupling/drift signal.
+Athlete-specific bpm bands + current LTHR live in `config/athlete_status.md`.
+Evidence + within-race HR pattern: `framework/research/hm-race-hr-and-training-hr.md`.
+
 ## DFA-α1 zone validation — recommend when triggered
 
 On **every Z2 run**, check whether one of the following triggers applies

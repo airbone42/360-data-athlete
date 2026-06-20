@@ -54,6 +54,18 @@ per stride. Hard rules:
   **never** appear in the follower-facing block. Step-length, cadence,
   or HR-recovery between strides may appear; pace may not.
 
+**HF below race HR on a short/fresh HM-pace rep — NOT a finding
+(MANDATORY exclusion):** On a short or fresh race-pace / HM-pace block
+(esp. ≤ ~4 km), HR sits **several bpm below the athlete's race HR** at
+correct race pace — pre-start sympathetic arousal and cardiac drift only
+build over the full race distance. "HF didn't reach race HR", "only X %
+LTHR on the race-pace block", or framing the sub-race HR as
+under-effort is a **kinetics/arousal artefact, not a finding**. Judge the
+block by **pace + RPE + decoupling**, not by whether HR matched a race
+value. Reject such an input silently. The HR ceiling for HM-pace work is a
+duration-dependent guardrail, not a target — see
+[hm-race-hr-and-training-hr.md](../research/hm-race-hr-and-training-hr.md).
+
 **Elevation / surface as a finding — MANDATORY route-baseline check:**
 The planner's `surface` field (`asphalt | forest-path | trail | track |
 treadmill`) is a **routing default for the shoe advisor**, NOT a

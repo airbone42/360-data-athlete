@@ -67,6 +67,36 @@ Meter* (3rd ed.) — Performance Manager Chart, CTL/ATL/TSB framework.
 fatigue / freshness monitoring with TSB; Bellenger et al. 2016 (*Sports
 Med*) — HRV as a recovery proxy in endurance athletes.
 
+## HM-pace / race-pace HR — pace leads, HR is a duration-band cap
+
+For a half-marathon-pace (race-pace) training block, **pace is the
+target; HR is a guardrail `cap`, never the target.** Race HR runs higher
+than training HR at matched pace because of pre-start sympathetic arousal
+(elevated catecholamines/HR *before* the gun) plus cardiac drift over the
+full distance — neither present on a short, fresh training rep. So
+"chasing race HR" on a short rep is an **anti-pattern**: it forces pace
+above race pace to reach a HR the athlete cannot yet hit.
+
+A maximal, well-paced HM averages **~93–95 % LTHR (~89–92 % HRmax)**,
+settling at **~88–92 % LTHR** in the first third and drifting to
+**~95–98 % LTHR (≈ LTHR)** in the final third (typical drift +4–6 bpm
+1st→2nd half; heat amplifies). The event *average* is therefore wrong as
+a single training cap. Pick the cap by block length:
+
+| HM-pace block | HR `cap` |
+|---|---|
+| 2–4 km, fresh | ~88–93 % LTHR (HR below race HR is expected) |
+| 4–8 km | ~92–96 % LTHR |
+| 8–12 km continuous (race-sim, off fatigue) | ~94–98 % LTHR |
+
+In heat / off fatigue, HR drifts up for the same pace → do not force pace
+down to chase the band; pace + RPE lead, HR is the drift/decoupling
+signal. Athlete-specific absolute-bpm bands live in
+`config/athlete_status.md`.
+
+**Source:** [HM race HR vs. training HR](../research/hm-race-hr-and-training-hr.md)
+(Esteve-Lanao 2022, Díaz 2019, Cerutti 2018; Friel %LTHR zones).
+
 ## Pace / GAP — source hierarchy for run analysis (MANDATORY)
 
 For every run analysis with a hilly profile (>30 m elevation gain / km),
