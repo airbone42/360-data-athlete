@@ -41,6 +41,7 @@ What the research did NOT clarify — and what should be checked next.
 
 | Date | Topic | File | Status |
 |------|-------|------|--------|
+| 2026-06-23 | Lumbar core stabilization (McGill Big 3) for mild non-specific LBP — neutral isometric endurance + hip-flexor mobility + glute activation; loaded lumbar flexion contraindicated while irritated | [lumbar-core-stabilization-mcgill-big3.md](lumbar-core-stabilization-mcgill-big3.md) | active |
 | 2026-06-20 | HM race HR vs. training HR — pace-leads/HR-guardrail; duration-dependent HR ceiling; "chase race HR" anti-pattern | [hm-race-hr-and-training-hr.md](hm-race-hr-and-training-hr.md) | active |
 | 2026-06-19 | Warm-up priming before VO2max / Threshold intervals — short heavy spikes accelerate VO2 on-kinetics in rep 1 | [warmup-priming-intervals.md](warmup-priming-intervals.md) | active |
 | 2026-06-18 | HRV prediction vs readiness classification — is "predict next-day HRV from yesterday's load" the right model form? | [hrv-prediction-vs-readiness-modeling.md](hrv-prediction-vs-readiness-modeling.md) | active |
