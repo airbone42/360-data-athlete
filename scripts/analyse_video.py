@@ -95,6 +95,38 @@ def is_run_exercise(exercise: str) -> bool:
     return any(kw in key for kw in RUN_KEYWORDS)
 
 
+# Begriffe, die eine konkrete AUSFÜHRUNG beschreiben (Haltung/Tiefe/Seite/Tempo).
+# Solche Details gehören NICHT in --context: das Modell bestätigt sie sonst,
+# statt sie aus dem Video zu lesen (Confirmation Bias). Erlaubt sind
+# Verletzungen/Restriktionen/Sport-Profil; Ausführungs-Vorgaben nicht.
+_SEEDING_PATTERNS = (
+    "frontal", "goblet", "vor der brust", "gehalten", "hält die", "haelt die",
+    "kontralateral", "ipsilateral", "über kopf", "ueber kopf",
+    "bein vorne", "vorderes bein", "tempo 3", "tempo 2",
+)
+
+
+def _warn_on_seeded_context(context: str) -> list[str]:
+    """Warnt, wenn --context die Ausführung beschreibt (Seeding-Risiko).
+
+    Gibt die getroffenen Begriffe zurück (für Tests); druckt eine Warnung
+    nach stderr. Non-blocking — die Analyse läuft weiter.
+    """
+    if not context:
+        return []
+    low = context.lower()
+    hits = [p for p in _SEEDING_PATTERNS if p in low]
+    if hits:
+        print(
+            "  ⚠️  --context beschreibt evtl. die AUSFÜHRUNG "
+            f"({', '.join(hits)}) — das seedet die Analyse (Confirmation Bias). "
+            "Nur Verletzungen/Restriktionen/Sport-Profil übergeben; Haltung/Tiefe/"
+            "Seite liest das Modell selbst aus dem Video.",
+            file=sys.stderr,
+        )
+    return hits
+
+
 # ─── Checkliste ──────────────────────────────────────────────────────────────
 
 def load_checklist(exercise: str) -> str:
@@ -124,6 +156,11 @@ SYSTEM_PROMPT = """Du bist ein erfahrener Bewegungsanalyst und Sportphysiologe. 
 
 Die folgenden Bilder sind chronologisch geordnete Frames aus einem Trainings-Video. Sie zeigen eine einzelne Trainingsübung eines Athleten. Sport-Profil, aktuelle Restriktionen und Verletzungen — sofern relevant — stehen im `Athlet-Kontext`-Feld der User-Message; berücksichtige sie bei Bewertung und Dosierungs-Challenge.
 
+KRITISCH — Beobachtung vor Bewertung (gegen Confirmation Bias):
+- Der `Athlet-Kontext` und der Übungsname beschreiben NIE, WIE die Übung tatsächlich ausgeführt wird (Gewicht-Haltung, Tiefe, welches Bein vorne, Tempo). Solche Details liest du AUSSCHLIESSLICH aus den Frames — nimm sie NIEMALS aus Kontext oder Übungsname an.
+- Beginne IMMER mit einem `Was ich sehe`-Block: Kamerawinkel; welches Gerät/Gewicht und WO/WIE es gehalten wird (welche Hand, vor der Brust / seitlich / über Kopf / kein Gewicht); welche Körperseite/welches Bein vorne. Erst danach bewerten.
+- Für jedes Detail, das aus dem Winkel NICHT sicher erkennbar ist, schreibe ausdrücklich „nicht sicher erkennbar" — niemals raten, niemals mit Lehrbuch-Prosa füllen. Was du nicht in den Frames siehst, darf nicht in die Bewertung einfließen.
+
 Analysiere die Bewegungssequenz in zwei Ebenen:
 1. Ausführungsqualität — was siehst du konkret in den Frames?
 2. Challenge — ist diese Übung und Dosierung für diesen Athleten gerade optimal?
@@ -135,6 +172,8 @@ Keine Analyse durchführen wenn die Qualität nicht reicht."""
 SYSTEM_PROMPT_RUN = """Du bist ein erfahrener Lauf-Biomechanik-Experte. Du analysierst Laufvideos auf Technikqualität und Verletzungsrisiko.
 
 Die folgenden Bilder sind chronologisch geordnete Frames aus einem Laufvideo — sie zeigen einen oder mehrere Gangzyklen eines Athleten. Aktive Verletzungen, Reha-Phasen oder Restriktionen — sofern relevant — stehen im `Athlet-Kontext`-Feld der User-Message; gewichte deine Beobachtungen entsprechend.
+
+KRITISCH — Beobachtung vor Bewertung (gegen Confirmation Bias): Beginne mit einem `Was ich sehe`-Block (Perspektive, Laufrichtung, sichtbarer Bildausschnitt — ganzer Körper / nur Beine / Distanz). Lies jeden Marker AUS den Frames; nimm nichts aus Lauftyp oder Kontext an. Für jeden Marker, der aus Winkel/Bildausschnitt NICHT sicher erkennbar ist, schreibe ausdrücklich „nicht sicher erkennbar" — niemals raten oder mit Lehrbuch-Prosa füllen.
 
 Analysiere die Laufmechanik:
 1. Fußaufsatz und Bodenphase (Dorsalflexion-Winkel beim Aufprall, Aufprallposition relativ zum Körperschwerpunkt)
@@ -183,12 +222,15 @@ def _build_user_prompt(exercise: str, checklist: str, context: str, angle: str, 
         return f"""Übung/Lauftyp: {exercise}
 Kamerawinkel: {angle or get_angle_tip(exercise)}{checklist_block}{context_block}
 
-Antworte in diesem Format (maximal 8–10 Sätze):
+Antworte in diesem Format (maximal 10–12 Sätze):
 
 **{exercise} — Lauf-Formcheck**
 
+**Was ich sehe**
+[Perspektive/Kamerawinkel; Laufrichtung; sichtbarer Bildausschnitt (ganzer Körper / nur Beine / Distanz). Nicht sicher erkennbare Marker ausdrücklich „nicht sicher erkennbar" — nicht aus Lauftyp/Kontext annehmen.]
+
 **Technik**
-[2–3 konkrete Beobachtungen — nur was sichtbar ist, keine Spekulation]
+[2–3 konkrete Beobachtungen — nur was in den Frames sichtbar ist, keine Spekulation]
 
 **Priorität für nächste Session**
 [1 konkreter Korrekturpunkt — präzise und umsetzbar, mit Drill-Empfehlung]
@@ -199,12 +241,15 @@ Antworte in diesem Format (maximal 8–10 Sätze):
         return f"""Übung: {exercise}
 Kamerawinkel: {angle or get_angle_tip(exercise)}{checklist_block}{context_block}
 
-Antworte in diesem Format (maximal 8–10 Sätze):
+Antworte in diesem Format (maximal 10–12 Sätze):
 
 **{exercise} — Formcheck**
 
+**Was ich sehe**
+[Kamerawinkel; Gerät/Gewicht + WO/WIE gehalten (welche Hand, vor der Brust / seitlich / über Kopf / kein Gewicht); welches Bein/welche Seite vorne. Nicht sicher erkennbare Details ausdrücklich „nicht sicher erkennbar" — NICHT aus Übungsname/Kontext annehmen.]
+
 **Ausführung**
-[2–3 konkrete Beobachtungen — keine Spekulation]
+[2–3 konkrete Beobachtungen — nur was in den Frames sichtbar ist, keine Spekulation]
 
 **Drill für nächste Session**
 [1 konkreter Korrekturpunkt]
@@ -446,6 +491,8 @@ def _run_analysis(args: argparse.Namespace) -> None:
 
     ex_lower = args.exercise.lower()
     run_mode = is_run_exercise(ex_lower)
+
+    _warn_on_seeded_context(args.context)
 
     checklist = load_checklist(args.exercise)
 
