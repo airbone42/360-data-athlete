@@ -1948,6 +1948,14 @@ _EXCLUSION_MARKERS: tuple[str, ...] = (
     "(skip)",
     "(skipped)",
     "(omitted)",
+    # stop-criteria / warnings — never a performed exercise, but routinely
+    # name an exercise as a pain/abort trigger (e.g. "⛔ STOP … pain on Dead
+    # Hang …"). A keyword hit here is a warning reference, not a load.
+    "⛔",
+    "stop-kriterium",
+    "pain-stop",
+    "stop (",
+    "stop:",
 )
 
 
@@ -1960,6 +1968,23 @@ def _line_is_exclusion(line: str) -> bool:
     """
     lower = line.lower()
     return any(marker in lower for marker in _EXCLUSION_MARKERS)
+
+
+def _exercise_name_portion(line: str) -> str:
+    """Return the exercise-name segment of a description line.
+
+    Exercise lines follow a "Name: dose | notes" shape — the performed
+    exercise is named *before* the first ':' (which separates name from
+    dose). A keyword appearing only in the dose / notes / progression-origin
+    part (after the ':' — e.g. "Scapular Pullups: 3×8 … from passive Dead
+    Hang →") is a reference, not the performed exercise, and must not trigger
+    a recovery block. Falls back to the segment before the first '|', else the
+    whole line.
+    """
+    for sep in (":", "|"):
+        if sep in line:
+            return line.split(sep, 1)[0]
+    return line
 
 
 def _compute_muscle_overlap_blocks(activities: list[dict], today: date) -> list[str]:
@@ -1984,7 +2009,10 @@ def _compute_muscle_overlap_blocks(activities: list[dict], today: date) -> list[
             matched_line: str | None = None
             for kw in keywords:
                 for line in desc.splitlines():
-                    if kw in line and not _line_is_exclusion(line):
+                    if (
+                        kw in _exercise_name_portion(line)
+                        and not _line_is_exclusion(line)
+                    ):
                         matched_line = line
                         break
                 if matched_line is not None:
