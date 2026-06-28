@@ -1485,6 +1485,74 @@
     "load_mode": "free_weight",
     "eccentric_dominant": true
   },
+  "step_up": {
+    "aliases": [
+      "step-up",
+      "step up",
+      "stepup",
+      "step-ups",
+      "kb step-up",
+      "goblet step-up",
+      "box step-up",
+      "aufsteiger"
+    ],
+    "primary": [
+      {
+        "muscle": "vastus_lateralis",
+        "intensity": 1.0
+      },
+      {
+        "muscle": "vastus_medialis",
+        "intensity": 0.9
+      },
+      {
+        "muscle": "gluteus_maximus",
+        "intensity": 1.0
+      },
+      {
+        "muscle": "rectus_femoris",
+        "intensity": 0.7
+      }
+    ],
+    "secondary": [
+      {
+        "muscle": "gluteus_medius",
+        "intensity": 0.6
+      },
+      {
+        "muscle": "vastus_intermedius",
+        "intensity": 0.6
+      },
+      {
+        "muscle": "biceps_femoris_long",
+        "intensity": 0.5
+      },
+      {
+        "muscle": "adductor_magnus",
+        "intensity": 0.4
+      }
+    ],
+    "stabilizer": [
+      {
+        "muscle": "tensor_fasciae_latae",
+        "intensity": 0.15
+      },
+      {
+        "muscle": "erector_spinae",
+        "intensity": 0.15
+      },
+      {
+        "muscle": "soleus",
+        "intensity": 0.2
+      },
+      {
+        "muscle": "tibialis_anterior",
+        "intensity": 0.15
+      }
+    ],
+    "load_mode": "free_weight",
+    "eccentric_dominant": false
+  },
   "single_leg_rdl": {
     "aliases": [
       "single leg rdl",
