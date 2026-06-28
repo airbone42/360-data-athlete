@@ -154,7 +154,20 @@ the outside.
 | Mode | Execution | Thumb | Note |
 |------|-----------|-------|------|
 | **Fingers (4)** | All 4 fingers press at once | passive outside | = "crush" on the device, no thumb |
-| **Single Finger** | One finger isolated (index, middle, ring — pinky optional) | passive outside | Single-finger isolation |
+| **Single Finger** | One finger isolated (index, middle, ring — pinky optional) | passive outside | Single-finger isolation — **indication-gated, see below** |
+
+**Single-Finger isolation is NOT a default rotation choice (MANDATORY).**
+Whole-hand (`Fingers (4)`) holds are the time-efficient main vector; the
+multi-finger force-deficit / enslaving effect is real but does **not** make
+finger-isolation worthwhile for general grip strength (it costs ~3–4× the
+session time for equal set-volume). Schedule `Gripmaster Single Finger`
+**only** with a documented indication — (a) rehab of a single finger,
+(b) a documented finger asymmetry, or (c) mono-/cliffhanger-specific
+preparation — at a minimal effective dose (≈1×/week, 2–3 sets per
+weak-point finger, appended to an existing whole-hand session). A generic
+"variation stimulus" with no concrete indication is **not** a valid reason.
+When you do schedule it, justify the indication in `coaching_notes`.
+Evidence: [single-finger-isolation-vs-whole-hand-grip.md](../research/single-finger-isolation-vs-whole-hand-grip.md).
 
 **"Support" on the Gripmaster does NOT exist as a separate exercise.**
 Support (hook grip) only differs from crush at a free grip on a
@@ -176,8 +189,9 @@ Name Gripmaster exercises correctly:
   fingers, single-arm)
 
 ## Grip progression model
-- **Level 1 (basics):** bilateral — Gripmaster Fingers + Single
-  Finger, two-handed Farmer's Hold, Wrist Curls (2×15)
+- **Level 1 (basics):** bilateral — Gripmaster Fingers (whole-hand),
+  two-handed Farmer's Hold, Wrist Curls (2×15). (Single-Finger is
+  indication-gated, not a default — see "Gripmaster — correct usage".)
 - **Level 2 (intermediate):** unilateral — single-arm Farmer's Hold,
   KB Horn Pinch, Towel Grip
 - **Level 3 (advanced):** combined — Timed Dead Hold (when allowed),

@@ -8,7 +8,7 @@
    - **Level 1 (beginner):** bilateral, high volume, moderate load (Gripmaster fingers, two-handed Farmer's Hold, Wrist Curls 2×15)
    - **Level 2 (intermediate):** unilateral, medium volume, higher load (single-arm Farmer's Hold, KB Horn Pinch, Towel Grip)
    - **Level 3 (advanced):** combined modes (static + dynamic), low reps, highest load (timed Dead Hold, Towel Pull-up progression, fatigue sets)
-2. **Mode variation is decisive:** Crush (Captains of Crush gripper), Pinch (plate pinch), Support (Farmer's), Static-Hold (dead-hang), Open (large objects). Variation reduces cumulative single-pattern stress.
+2. **Mode variation is decisive:** Crush (Captains of Crush gripper), Pinch (plate pinch), Support (Farmer's), Static-Hold (dead-hang), Open (large objects). Variation reduces cumulative single-pattern stress. **Note — single-finger isolation is NOT a progression rung:** the level-1/2/3 ladder runs mode-independently with whole-hand engagement; whether to ever isolate single fingers is an orthogonal, indication-gated decision (rehab / documented asymmetry / mono-specific prep only), see [single-finger-isolation-vs-whole-hand-grip.md](single-finger-isolation-vs-whole-hand-grip.md).
 3. **Source status:** practice convention from the grip-athlete community (CoC periodisation, RP Strength) + OCR/ninja training literature. **No direct primary studies for the exact level-1/2/3 sequence** — the progression is expert consensus, not study-validated.
 4. **8-12 week block periodisation** for CoC gripper build-up is standard (GripStrength.com).
 
