@@ -801,6 +801,51 @@ ban without checking the trigger condition.
 the coach states the trigger in one phrase. If no trigger is
 verifiable from the listed sources, the entry is removed.
 
+### Leg-quality cross-modality DOMS spacing (mandatory)
+
+A leg-driven endurance **quality** session — bike VO2max / threshold, or a
+hard (interval or > ~30 min) run — recruits the same musculature (quads,
+hamstrings, calves) as a heavy **eccentric** leg-strength or plyometric
+session. When that strength / plyo session falls within the **24–48 h
+DOMS-peak window** *before* the endurance quality (DOMS timeline:
+[doms-peak-timing.md](research/doms-peak-timing.md)), the quality reps are
+paid on pre-fatigued legs: the power/pace target is met with a 1–2 point RPE
+inflation, the limiter flips back to local muscular endurance instead of the
+cardiovascular system, and the session is no longer a clean, comparable
+stimulus against the last fresh-legs effort of the same format.
+
+**Rule:** Do not schedule a leg-driven endurance quality inside the 24–48 h
+DOMS window of a heavy eccentric leg / plyo day. Either
+
+- **decouple the two by ≥ 48 h** (the same-muscle eccentric-spacing floor from
+  `doms-peak-timing.md`), or
+- **sequence the endurance quality first** (before the leg-strength / plyo
+  day), so the quality lands on fresh legs and the strength day absorbs the
+  residual fatigue.
+
+The bike itself is near-purely **concentric** and barely DOMS-inducing
+([concurrent-training-interference.md](research/concurrent-training-interference.md));
+the constraint is the **residual DOMS from the prior eccentric session**, not
+damage from the bike. This rule is distinct from the same-day
+concurrent-interference spacing (≥ 3 h / ≥ 6 h leg-strength → run in
+`training_paradigms.md`), which protects the *strength* adaptation — this one
+protects the *endurance quality* on the following day(s).
+
+**Override only with a named trigger.** Green wellness plus an explicit
+athlete request to run the quality anyway is a legitimate reason to proceed
+(the athlete is the principal). But then the coach **names the pre-fatigue
+cost in the plan** and applies the in-session abort criterion (cap the quality
+reps / sets the moment the target RPE inflates), rather than treating the legs
+as fresh and the result as a clean progression. A quality session cut short on
+leg pre-fatigue does **not** complete its volume step (it stays open for a
+fresh re-attempt) and is **not** a reason to down-anchor the target — the
+shortfall was context, not a capability drop (see "No silent conservatism").
+
+*Enforcement: `plan-validator` S8 surfaces it (WARNING) when a heavy
+eccentric leg / plyo session sits in the same day or prior 48 h of a
+leg-driven endurance quality; head-coach judgment for the decouple-vs-sequence
+decision at plan time.*
+
 ### Planner systematic-input rule (mandatory)
 
 Before the planner is briefed, the coach verifies the context carries

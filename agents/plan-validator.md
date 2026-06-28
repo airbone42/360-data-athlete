@@ -103,7 +103,14 @@ For every strength / ninja exercise in the plan:
 - Running drills (A-skips, leg swings, hip flexor) in multiple warmups
   → mechanical catch in `check_warmup_overlap.py`; you check that the
   rationale fits
-- Leg volume before a hard >30-min run → WARNING (legs pre-fatigued)
+- Leg-driven endurance **quality** (hard >30-min / interval run, **or bike
+  VO2max / threshold**) with a heavy **eccentric** leg-strength or plyo
+  session in the **same day or prior 24–48 h** (DOMS-peak window) → WARNING
+  (legs pre-fatigued; the bike is concentric and doesn't damage — the
+  constraint is the residual DOMS from the prior eccentric session). See
+  CLAUDE.md "Leg-quality cross-modality DOMS spacing" +
+  `research/doms-peak-timing.md`. Cut-short-on-leg-fatigue ⇒ the volume step
+  stays open (no down-anchor).
 - Shoulder physio + heavy pull block on the same day → INFO if near
   RPE ceiling
 
