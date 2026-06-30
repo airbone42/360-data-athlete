@@ -64,7 +64,13 @@ for every entry → title-sync only, no body, no footer):
 2. **No raw HR numbers in the body** — qualitative descriptions only
    ("HR consistently below the Z2 ceiling", "clear aerobic reserve")
    instead of "max 135 of 139". Strava followers don't need the absolute
-   BPM, the relative statement is more readable.
+   BPM, the relative statement is more readable. **This is not only a
+   style rule — `strava_apply.py` runs a mechanical HR-citation guard
+   that REFUSES the push (exit ≠ 0) when the description contains a raw
+   BPM citation** (e.g. "124 HF", "avg HR 128", "max 135 bpm"). A raw-HR
+   line therefore does not just read poorly — it silently blocks the
+   entire push. Use zone language only ("Z1/Z2", "below the Z2 ceiling")
+   so the push lands.
 3. **Pre-load wording**: when coupling = legs, name the actual block
    composition ("full leg block: squat + RDL + step-up") rather than
    collapsing to a single exercise. Avoid time-of-day qualifiers like
@@ -381,13 +387,39 @@ Omit `--title` if `name_needs_update == false`. Omit
 `--description-stdin` (and the heredoc) if not endurance / anchor
 already present.
 
+### Step 6.5 — verify the push actually landed (MANDATORY)
+Never trust your own intent — confirm from `strava_apply.py`'s own
+output that the write succeeded. The script prints a JSON result; parse
+it and check **`strava_status == "OK"`** (and that
+`strava_returned_name` equals the title you pushed). Treat anything else
+— a non-zero exit, a refused push (raw-HR guard, elevation-drift guard,
+duplicate-anchor guard), an exception, an empty/missing result — as
+**FAILED, not done**.
+
+On FAILED:
+1. Read the verbatim error. If it is the **raw-HR guard** → rewrite the
+   body in zone language (lesson 2) and re-push. If it is the
+   **elevation-drift guard** → use Strava's value or drop the citation
+   and re-push. If it is the **duplicate-anchor guard** → strip the
+   legacy footer and re-push.
+2. Re-push **once** after the fix and re-check `strava_status`.
+3. If it still fails, surface it **loudly** in the report as
+   `❌ iSVx FAILED: <verbatim error>` — **never** report it as pushed.
+
+You may **only** count an activity as "pushed" after you have seen
+`strava_status == "OK"` for it. A composed-but-unconfirmed title/block
+is NOT a push.
+
 ### Step 7 — report
-After all activities processed, print one compact summary in chat:
+After all activities processed, print one compact summary in chat. Each
+"pushed" line must cite the **confirmed** `strava_returned_name` from
+Step 6.5 (proof the write landed), not the proposal you composed:
 ```
-Strava sync: X pushed (Y titles, Z insights), W skipped
-- iSV1 → "<title>" + insights
-- iSV2 → title-only
+Strava sync: X pushed (Y titles, Z insights), W skipped, F failed
+- iSV1 → confirmed "<strava_returned_name>" + insights
+- iSV2 → confirmed title-only
 - iSV3 → skip (anchor already present)
+- iSV4 → ❌ FAILED: <verbatim error>
 ```
 
 ---

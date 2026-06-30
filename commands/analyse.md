@@ -119,6 +119,59 @@ the configured footer suffix: re-running on an already-enriched
 activity skips the description silently. Errors do not block the
 analysis flow.
 
+**Verify the push actually landed (MANDATORY — do not trust the agent's
+report).** A subagent can compose a title/insights block and report
+success without the write ever reaching Strava (e.g. the push was
+refused by the raw-HR / elevation-drift / duplicate-anchor guard in
+`strava_apply.py`, and the failure was not surfaced). After the agent
+returns, the head coach re-checks mechanically:
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/strava_pending.py --activity-id {iv_id}
+```
+
+The push landed only if, for this activity, the Strava `current_name`
+matches the title the agent intended to push (NOT the Strava default
+like "Nachtlauf" / "Afternoon Run") **and** (for endurance with
+`insights_eligible == true`) `has_insights_anchor == true`. The primary
+proof is `strava_apply.py`'s own `strava_status == "OK"` +
+`strava_returned_name`; `strava_pending.py` is the independent
+cross-check.
+
+> **Caveat — do NOT gate on `name_needs_update == false`.** That flag
+> compares Strava against the *canonical intervals.icu name mirror*, so
+> it stays `true` whenever an **intentional non-mirror title** is in
+> play — e.g. a wrapper rule that writes a translated / localised /
+> gag title that deliberately differs from the intervals name. Using
+> `name_needs_update == false` as the success signal would report a
+> correctly-synced override as "failed" on every run. Verify the
+> *content landed* (`current_name` is the intended title and not the
+> Strava default; `has_insights_anchor == true`), not that it matches
+> the mirror.
+
+If the content is still un-synced (Strava still shows its default name,
+or `has_insights_anchor == false`), the agent's push silently failed —
+the head coach applies it directly (deterministic fallback), using
+**zone language only, no raw HR**, and an elevation number only if it
+matches Strava's value (else omit):
+
+```bash
+printf '%s' "{zone-language insights block + footer}" | \
+python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/strava_apply.py \
+  --activity-id {sv_id} --title "{title}" --description-stdin
+```
+
+Confirm `strava_status == "OK"` in the result, then re-run
+`strava_pending.py` to verify `name_needs_update == false`. Only then is
+the Strava step complete.
+
+**Drift incident pattern** (canonical case): the publisher composed a
+Dutch title + insights with a raw-HR citation ("124 HF"); the raw-HR
+guard refused the push, the activity stayed at its Strava-default name,
+and the agent still reported the sync as done. The athlete noticed
+nothing had arrived. Fix: this mechanical post-publish verification gate
++ the agent-side Step 6.5 confirmation in `strava-publisher.md`.
+
 ### Step 6.7: Sync description drift
 
 ```bash
