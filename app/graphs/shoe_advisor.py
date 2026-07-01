@@ -125,6 +125,50 @@ def load_shoe_profiles() -> list[dict]:
     return profiles
 
 
+def load_travel_subset() -> dict | None:
+    """Parse an optional travel/vacation shoe subset from equipment.md.
+
+    During a trip only the shoes actually taken along are available. A
+    block like::
+
+        ## Reise-Schuh-Subset
+        travel_subset_until: 2025-12-31
+        travel_subset_gear:
+          - <gear-id-easy>   # easy trainer taken along
+          - <gear-id-race>   # race shoe taken along
+
+    restricts the advisor to ``travel_subset_gear`` while
+    ``today <= travel_subset_until``. The rule **auto-expires** after the
+    date — no manual reset needed. Returns
+    ``{"until": str, "gear_ids": set[str]}`` or ``None`` when no valid
+    block is present. Generic mechanism; the concrete shoes + date live in
+    the athlete's config.
+    """
+    if not _equipment_md_path().exists():
+        return None
+    raw = _equipment_md_path().read_text(encoding="utf-8")
+    text = re.sub(r"<!--.*?-->", "", raw, flags=re.DOTALL)
+    m = re.search(
+        r"## (?:Reise-Schuh-Subset|Travel\s+shoe\s+subset)\b[^\n]*\n(.*?)(?=^##|\Z)",
+        text, re.DOTALL | re.MULTILINE | re.IGNORECASE,
+    )
+    if not m:
+        return None
+    section = m.group(1)
+    until_m = re.search(r"travel_subset_until\s*:\s*(\d{4}-\d{2}-\d{2})", section)
+    if not until_m:
+        return None
+    # Only capture gear-id bullets after the `travel_subset_gear:` key, so
+    # explanatory prose bullets in the block are not mistaken for gear ids.
+    parts = section.split("travel_subset_gear", 1)
+    gear_ids: set[str] = set()
+    if len(parts) > 1:
+        gear_ids = set(re.findall(r"^\s*-\s*([A-Za-z0-9]+)", parts[1], re.MULTILINE))
+    if not gear_ids:
+        return None
+    return {"until": until_m.group(1), "gear_ids": gear_ids}
+
+
 def _parse_kv(line: str, target: dict) -> None:
     """Parse 'key: value  # comment' into target dict."""
     m = re.match(r"^([\w_-]+)\s*:\s*(.+?)(?:\s*#.*)?$", line)
@@ -428,6 +472,25 @@ def build_shoe_context(
         if not s.get("retired")
         and profile_map.get(s["gear_key"], {}).get("active", "true") not in ("false", False)
     ]
+
+    # Travel/vacation subset: while a trip window is open, only the shoes
+    # actually taken along are available (auto-expires after the date, no
+    # manual reset). Guarded: if the subset matches no active shoe (e.g. a
+    # typo'd gear id) it is ignored rather than zeroing out recommendations.
+    travel = load_travel_subset()
+    if travel and today_str[:10] <= travel["until"]:
+        subset = [s for s in active_shoes if s["gear_key"] in travel["gear_ids"]]
+        if subset:
+            logger.info(
+                "Shoe travel-subset active (until %s): %d of %d active shoe(s) available",
+                travel["until"], len(subset), len(active_shoes),
+            )
+            active_shoes = subset
+        else:
+            logger.warning(
+                "Shoe travel-subset (until %s) matched no active shoe — "
+                "ignoring subset to avoid an empty recommendation", travel["until"],
+            )
 
     last_used = _compute_last_used(activities)
     # Merge local shoe log (fallback when intervals.icu gear_id is absent)
