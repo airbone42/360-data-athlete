@@ -863,6 +863,36 @@ signal — the planner overrides the gate-based suggestion and documents
 the reasoning in `coaching_notes`. The athlete should not have to remind
 the coach of agreed deload thresholds or taper plans.
 
+### Inter-session recovery window — account for the clock-time of the previous session (mandatory)
+
+Recovery between two sessions is a function of the **elapsed clock-time**,
+not the calendar-day gap. Two sessions on consecutive calendar days can be
+anywhere from ~10 h to ~36 h apart depending on when each actually happened.
+Before assessing today's readiness or briefing today's intensity /
+sequencing, the head coach reads the **actual end-time of the athlete's
+last session** (activity `start_date_local` + duration) and factors the
+real recovery window into the decision:
+
+- A **late-evening** prior session followed by a **morning** session
+  compresses the overnight recovery to well under a full day — fewer hours
+  of post-effort sleep, incomplete glycogen / CNS recovery. Weight a hard /
+  quality stimulus accordingly: prefer an easy / technique day, defer the
+  quality, or sequence it later in the day so the window reopens.
+- A prior session that finished **early** leaves a near-full or full day of
+  recovery — no compression penalty.
+- This is independent of, and additive to, the same-muscle DOMS-spacing and
+  the same-day concurrent-interference rules: it governs the **systemic**
+  recovery window between any two sessions, whatever the muscle groups.
+
+The signal is only reliable when the previous session's clock-time is
+actually consulted — a calendar-day gap alone hides a late-night → morning
+compression. When the timing is available in the activity history, use it;
+never estimate the recovery window from the date alone.
+
+*Enforcement: head-coach judgment; a `context_builder` field surfacing the
+previous session's end-time and computed hours-to-now would mechanize it
+(analogous to `daysSinceIntense`).*
+
 ### Hands-on therapy coverage check (mandatory)
 
 On days where the athlete attends a hands-on therapy / rehab / physio
