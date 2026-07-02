@@ -46,6 +46,20 @@ class Settings(BaseSettings):
     # so a fresh consumer needs no Strava app at all. One-time migration of
     # an existing Strava gear fleet: scripts/migrate_shoes_strava_to_intervals.py
     shoe_tracking_backend: str = "intervals"
+    # Master on/off switch for the Strava title/insights publishing feature
+    # (the write path in `strava_apply.py` and the discovery path in
+    # `strava_pending.py`). Default OFF: Strava has moved activity writes
+    # behind its updated developer-program access, so `PUT /activities/{id}`
+    # returns 403 Forbidden for apps without write access — a failure mode
+    # unrelated to the athlete's own Strava subscription. Enabling the
+    # feature only makes sense once your Strava app actually holds the
+    # `activity:write` scope. Set `STRAVA_PUBLISH_ENABLED=true` to turn the
+    # title/insights sync back on; when false, `strava_apply.py` skips the
+    # write as a clean no-op (exit 0) and `strava_pending.py` reports no
+    # pending activities, so `/strava` and `/analyse` step 6.6 short-circuit
+    # without ever calling Strava. Independent of the shoe backend
+    # (`SHOE_TRACKING_BACKEND`) and of the insights-block sub-toggle below.
+    strava_publish_enabled: bool = False
     # Insights-Block on/off toggle for the strava-publisher agent.
     # Default on: every endurance push gets the 2–4 line block + footer.
     # Set `STRAVA_PUBLISHER_FOOTER_ENABLED=false` to opt out — the agent

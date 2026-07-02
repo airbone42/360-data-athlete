@@ -14,6 +14,15 @@ mandatory anchor in line 1.
 Read the athlete's preferred language from `config/athlete_preferences.md`
 (`Coach response language`). Default to English if no override is present.
 
+**Feature gate (default off).** The whole Strava publishing feature is
+gated by `STRAVA_PUBLISH_ENABLED` (`app/config.py`, default `false`),
+because Strava returns 403 on activity writes for apps without the
+`activity:write` scope. When disabled, `strava_pending.py` returns an
+empty list (nothing to push) and `strava_apply.py` no-ops any write — so
+you will simply have no candidates to act on. Do not treat that as an
+error. Enabling requires `STRAVA_PUBLISH_ENABLED=true` and a
+write-scoped Strava app.
+
 ---
 
 ## What you push

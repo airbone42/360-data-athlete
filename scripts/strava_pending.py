@@ -51,6 +51,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from app.config import settings
 from app.api.intervals_client import IntervalsClient
 from app.api.strava_client import StravaClient
 from app.utils.strava_titles import (
@@ -187,6 +188,14 @@ def main() -> None:
         "(default: nur lesen).",
     )
     args = parser.parse_args()
+
+    # Master feature gate (see app.config.strava_publish_enabled). When
+    # Strava publishing is disabled (default), report no pending activities
+    # so the strava-publisher agent / `/strava` / `/analyse` step 6.6
+    # short-circuit without any Strava call.
+    if not settings.strava_publish_enabled:
+        print(json.dumps([], ensure_ascii=False, indent=2))
+        return
 
     display = f"Strava pending — last {args.days} days"
     with script_span(

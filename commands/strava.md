@@ -8,6 +8,13 @@ already carries the configured footer suffix (`INSIGHTS_ANCHOR`, set
 via `STRAVA_PUBLISHER_FOOTER_SUFFIX` — see `app/config.py`) skips the
 description, the title update stays available.
 
+**Off by default.** The feature is gated by `STRAVA_PUBLISH_ENABLED`
+(`app/config.py`, default `false`) because Strava returns 403 on
+activity writes for apps without `activity:write` scope. While disabled
+this command is a clean no-op (no pending candidates, no Strava call).
+Set `STRAVA_PUBLISH_ENABLED=true` with a write-scoped Strava app to
+enable it.
+
 ## Arguments
 $ARGUMENTS
 Optional. Accepted forms:

@@ -104,6 +104,13 @@ written as a footer at push time instead).
 
 ### Step 6.6: Sync Strava (title + insights)
 
+**Skip this step entirely when `STRAVA_PUBLISH_ENABLED` is `false`**
+(the default — see `app/config.py`). Strava returns 403 on activity
+writes for apps without `activity:write` scope, so the feature ships
+off; `strava_pending.py` then reports no candidates and any
+`strava_apply.py` write is a no-op. Only run this step once the gate is
+set to `true` with a write-scoped Strava app.
+
 Launch the `strava-publisher` agent in a pane and pass:
 
 ```

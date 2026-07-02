@@ -34,6 +34,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from app.config import settings
 from app.api.strava_client import StravaClient
 from app.utils.strava_titles import (
     INSIGHTS_ANCHOR,
@@ -322,6 +323,28 @@ def main() -> None:
         ),
     )
     args = parser.parse_args()
+
+    # Master feature gate. Strava publishing is opt-in (default off) because
+    # `PUT /activities/{id}` returns 403 for apps without `activity:write`
+    # access under Strava's updated developer program. When disabled, skip
+    # the real write as a clean no-op so `/analyse` step 6.6 and `/strava`
+    # don't error out. `--dry-run` previews stay available for debugging.
+    if not settings.strava_publish_enabled and not args.dry_run:
+        print(
+            json.dumps(
+                {
+                    "skipped": True,
+                    "reason": "strava_publish_disabled",
+                    "activity_id": args.activity_id,
+                    "hint": "Set STRAVA_PUBLISH_ENABLED=true to enable "
+                    "Strava title/insights publishing (requires an "
+                    "activity:write-scoped Strava app).",
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
+        return
 
     description = _read_description(args)
 

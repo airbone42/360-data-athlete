@@ -235,8 +235,18 @@ fixed string and doubles as the re-run idempotency anchor —
 `strava_pending.py` matches it literally to skip activities that have
 already been enriched.
 
-Two ENV variables control this, both in [`.env.example`](.env.example):
+Three ENV variables control this, all in [`.env.example`](.env.example):
 
+- **`STRAVA_PUBLISH_ENABLED`** (default `false`) — master on/off switch
+  for the whole Strava title/insights sync. It ships **off** because
+  Strava has moved activity writes behind its updated developer-program
+  access: `PUT /activities/{id}` returns **403 Forbidden** for apps
+  without the `activity:write` scope (this is independent of your
+  personal Strava subscription). While disabled, `/strava` and
+  `/analyse` step 6.6 short-circuit cleanly — `strava_apply.py` skips
+  the write as a no-op and `strava_pending.py` reports nothing pending,
+  so no Strava call is made and no 403 surfaces. Set it to `true` only
+  once your Strava app actually holds write access.
 - **`STRAVA_PUBLISHER_FOOTER_ENABLED`** (default `true`) — set to
   `false` to opt out entirely. The agent then mirrors the title only
   and leaves the description untouched; no body lines, no footer.
@@ -337,9 +347,12 @@ modes are mostly visible at the right stage.
   fresh-vs-fatigued comparison.
 - **Strava account (optional)** — only needed for the legacy `strava`
   gear backend and for the title/insights sync (`/strava`, mirrors
-  intervals.icu names to Strava). The default shoe backend `intervals`
-  (`SHOE_TRACKING_BACKEND` in `.env.example`) uses native intervals.icu
-  gear and needs no Strava access at all.
+  intervals.icu names to Strava). The title/insights sync is **off by
+  default** (`STRAVA_PUBLISH_ENABLED=false`) since Strava now returns
+  403 on activity writes for apps without `activity:write` scope; enable
+  it only once your Strava app holds write access. The default shoe
+  backend `intervals` (`SHOE_TRACKING_BACKEND` in `.env.example`) uses
+  native intervals.icu gear and needs no Strava access at all.
 - **Telegram bot** if you want to talk to the coach from your phone.
 - **OpenRouter API key** — required for the video form check
   (`scripts/analyse_video.py` calls Gemini through OpenRouter) and used
