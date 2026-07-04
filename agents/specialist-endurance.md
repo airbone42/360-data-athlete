@@ -30,11 +30,27 @@ intervals.icu's server-side step parser accepts HR targets in **exactly
 three** formats. Anything else is silently dropped — the step lands on
 the athlete's Garmin without any HR guidance.
 
-| ✅ Accepted | When |
-|------------|------|
-| `38m Z2 HR` | Full zone, e.g. complete Z2 corridor |
-| `38m 78-82% LTHR` | Precise corridor (within or across zone boundaries) — **preferred** |
-| `38m 90-95% HR` | Percent of HRmax (less common) |
+| Form | Verdict |
+|------|---------|
+| `38m 78-82% LTHR` | ✅ **Required default** — intervals.icu resolves it to a concrete bpm range and syncs *that* to the device, so the on-watch target + alarm match the intended corridor regardless of the device's own zone config |
+| `38m 90-95% HR` | ⚠️ Accepted only if the athlete's device HRmax equals intervals.icu's — otherwise same divergence problem as `Zn HR` |
+| `38m Z2 HR` | ⛔ **Deprecated for pushed run steps** — see below |
+
+**Why `Zn HR` is deprecated (mandatory).** A `Zn HR` step tells the watch
+"target zone N", and the watch resolves zone N against **its own HR-zone
+config** — frequently a %HRmax model — **not** the intervals.icu LTHR-based
+zones. When the two disagree (common case: intervals.icu Z2 is LTHR-based,
+e.g. 126-139 at LTHR 166, while the Garmin device computes Z2 as 60-70 %
+HRmax, e.g. ~106-123 at HRmax 176), the on-watch corridor **and the audible
+alert threshold are wrong**: the athlete runs at a HR their watch calls
+"in zone" while intervals.icu calls it Z1, so no alarm fires. `% LTHR`
+sidesteps this entirely — intervals.icu resolves the percentage to explicit
+bpm and the device follows that number verbatim, independent of its own zone
+config (this is the "couple concrete HR values to the alarm" practice).
+**Emit run HR targets as `% LTHR` for EVERY run type — easy/recovery
+included, not only quality.** (Regression pattern to avoid: easy/recovery
+steps falling back to `Zn HR` while quality steps used `% LTHR` — the easy
+runs then silently lose their on-watch alarm.)
 
 **Never write:**
 - `38m HR 130-137` — arbitrary BPM range, silently dropped (validator R012)

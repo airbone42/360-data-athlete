@@ -611,6 +611,49 @@ def check_hr_range_consistency(workouts: list[dict], ctx: Context) -> list[Findi
     return findings
 
 
+def check_run_hr_zone_target(workouts: list[dict], ctx: Context) -> list[Finding]:
+    """R020 — Run HR targets must use `% LTHR`, not `Zn HR`.
+
+    A `Z<n> HR` step is resolved by the athlete's device against ITS OWN
+    HR-zone config (frequently a %HRmax model), NOT the intervals.icu
+    LTHR-based zones. When the two diverge, the on-watch target and the
+    audible alarm are wrong — the classic case: device Z2 = 60-70 % HRmax
+    sits well below the LTHR-based Z2, so an easy/recovery run runs "in
+    zone" on the watch (no alarm) while intervals.icu calls it Z1. `% LTHR`
+    resolves to explicit bpm the device follows verbatim, independent of its
+    zone config. WARNING (a given athlete's device zones may happen to
+    match); applies to every run type incl. easy/recovery — the regression
+    pattern is easy runs falling back to `Zn HR` while quality uses `% LTHR`.
+    """
+    findings = []
+    zone_only_pattern = re.compile(r"\bZ\d+\s*HR\b", flags=re.IGNORECASE)
+    for w in workouts:
+        if (w.get("type") or "").lower() != "run":
+            continue
+        intervals = w.get("intervals_icu") or ""
+        matches = zone_only_pattern.findall(intervals)
+        if not matches:
+            continue
+        findings.append(Finding(
+            rule_id="R020",
+            severity=SEVERITY_WARNING,
+            workout=_workout_name(w),
+            message=(
+                f"Run HR step uses '{matches[0].strip()}' — the watch resolves the "
+                f"zone against its own device HR-zone config (often %HRmax), not the "
+                f"intervals.icu LTHR zones. If they diverge, the on-watch target and "
+                f"alarm are wrong (e.g. an easy run never alarms)."
+            ),
+            suggestion=(
+                "Emit the HR target as '% LTHR' so intervals.icu resolves it to "
+                "explicit bpm the device follows verbatim: 'XXm YY-ZZ% LTHR' "
+                "(YY/ZZ = corridor bound / LTHR * 100). Applies to every run type "
+                "incl. easy/recovery."
+            ),
+        ))
+    return findings
+
+
 def check_easy_hr_ceiling(workouts: list[dict], ctx: Context) -> list[Finding]:
     """R010 — Easy/Recovery run must not let HR ceiling creep into Z3.
 
@@ -2069,6 +2112,7 @@ RULES: list[tuple[str, Callable[[list[dict], Context], list[Finding]]]] = [
     ("R017", check_weekly_hardreize_cap),
     ("R018", check_duration_plausibility),
     ("R019", check_quality_warmup_priming),
+    ("R020", check_run_hr_zone_target),
 ]
 
 
