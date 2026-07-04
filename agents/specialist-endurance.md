@@ -86,6 +86,31 @@ to chase the HR band; pace + RPE lead, HR is the decoupling/drift signal.
 Athlete-specific bpm bands + current LTHR live in `config/athlete_status.md`.
 Evidence + within-race HR pattern: `framework/research/hm-race-hr-and-training-hr.md`.
 
+## Long-run × quality — embed or separate is phase-gated (mandatory)
+
+A race-pace / threshold block **embedded in the long run** (Canova "Specific
+Long" / Fast-Finish) is a **specific-/race-prep-phase** tool, not a generic
+long-run format. Gate the decision on the periodization phase:
+
+- **Base / rebuild phase** (CTL below the athlete's deload band, race > ~6
+  weeks out, "maintain form"): **separate** the two stimuli — threshold /
+  race-pace as its own session on fresh legs (higher attainable intensity,
+  cleaner progression anchor) **+** a pure Z2 long run (aerobic adaptation
+  without confounding). Space them **≥ 48 h**, and schedule the **long run
+  first** (fresh tendons for the volume stimulus; the quality day then lands
+  on legs recovered from the long run, not the reverse).
+- **Specific / race-prep phase** (last ~6–8 weeks): embedding the HM-pace
+  block in the long run is appropriate — race-specific fatigue resistance is
+  now the priority.
+- **Injury-limiter override:** an ITB limiter on **monotone flat terrain**
+  (fatigue-driven hip-abduction drift late in a long effort) reinforces
+  separation and can keep it indicated **even in the specific phase** while
+  the trigger is active — the embedded block stacks volume × intensity ×
+  flatness × fatigue, the classic ITBS trigger cocktail. Cap length or vary
+  terrain rather than pushing through a flagged ITB.
+
+Evidence + derivation: `framework/research/long-run-quality-embedding-vs-separation.md`.
+
 ## DFA-α1 zone validation — recommend when triggered
 
 On **every Z2 run**, check whether one of the following triggers applies
