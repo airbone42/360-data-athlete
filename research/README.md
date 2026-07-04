@@ -41,6 +41,7 @@ What the research did NOT clarify — and what should be checked next.
 
 | Date | Topic | File | Status |
 |------|-------|------|--------|
+| 2026-07-04 | Taper — strength and core maintenance in the race week (Mujika/Padilla: hold intensity + frequency, cut volume 60–90 %; isometric / low-volume core = taper-tauglich, heavy eccentric / failure / new exercise = not; ≥ 48 h race puffer) | [taper-strength-and-core-maintenance.md](taper-strength-and-core-maintenance.md) | active |
 | 2026-06-30 | Sand / beach running as a training stimulus — ~1.6× energy cost, lower GRF but higher calf/Achilles per-stride load, weak road-economy transfer, generic progression (firm wet → soft dry, shod → barefoot, camber discipline) | [sand-running.md](sand-running.md) | active |
 | 2026-06-28 | Single-finger isolation vs. whole-hand grip training — Force-Deficit/Enslaving real, aber Multi-Finger bleibt Hauptvektor; Isolation nur Rehab / dokumentierte Asymmetrie / Mono-Spezifik | [single-finger-isolation-vs-whole-hand-grip.md](single-finger-isolation-vs-whole-hand-grip.md) | active |
 | 2026-06-23 | Lumbar core stabilization (McGill Big 3) for mild non-specific LBP — neutral isometric endurance + hip-flexor mobility + glute activation; loaded lumbar flexion contraindicated while irritated | [lumbar-core-stabilization-mcgill-big3.md](lumbar-core-stabilization-mcgill-big3.md) | active |
