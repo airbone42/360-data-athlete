@@ -62,11 +62,24 @@ async def _dedup_existing_events(athlete_id: str, date_str: str, events: list[di
     except Exception as exc:  # noqa: BLE001
         logger.warning("Pre-push dedup: failed to fetch existing events (%s) — proceeding without sweep", exc)
         return 0
-    # Match key: (name, type). Only consider non-NOTE events (NOTE events have type=None).
-    targets = {(e.get("name"), e.get("type")) for e in events if e.get("name") and e.get("type")}
+    # Match key: TYPE (not name+type). A coach re-push regenerates the full
+    # daily plan, so it must replace the previously-pushed planned events of
+    # the same type(s) — regardless of whether the workout was renamed between
+    # pushes. Matching on name broke exactly that: a renamed workout left the
+    # stale, old-named event behind and the day ended up with a duplicate.
+    # intervals assigns a random server-side uid and stores no external_id, so
+    # there is no stable per-event coach marker to match on; the type of the
+    # regenerated plan is the reliable key.
+    #
+    # Guards: only planned WORKOUT-category events (never RACE_A/B/C, never
+    # NOTE which has type=None), and never an event already paired to a
+    # completed activity (don't touch what the athlete has actually done).
+    push_types = {e.get("type") for e in events if e.get("type")}
     to_delete = [
         ev for ev in existing
-        if ev.get("type") and (ev.get("name"), ev.get("type")) in targets
+        if ev.get("category") == "WORKOUT"
+        and ev.get("type") in push_types
+        and not ev.get("paired_activity_id")
     ]
     if not to_delete:
         return 0
