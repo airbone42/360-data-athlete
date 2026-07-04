@@ -30,6 +30,11 @@ from app.utils.prompt_loader import load_prompt
 TOLERANCE_PCT = 0.12
 DELOAD_PCT = 0.20
 MIN_CTL = 20
+# A week whose TSS collapses is a genuine recovery week (illness / holiday /
+# planned deload) even when the smoothed 42-day avgCTL only dips slightly —
+# used by _analyze_load_cycle to avoid miscounting it as a "load week".
+MIN_WEEK_TSS = 60             # absolute floor — below this a week is recovery
+DELOAD_WEEK_TSS_RATIO = 0.5   # or below 50% of the other weeks' mean
 
 CARDIO_TYPES = {"Run", "Ride", "VirtualRide", "VirtualRun"}
 
@@ -80,7 +85,8 @@ def build_context(state: AthleteContextState) -> dict:
     )
 
     weekly_stats = _compute_weekly_stats(wellness_history, today)
-    cycle_hint = _analyze_load_cycle(weekly_stats)
+    weekly_loads = _compute_weekly_loads(activities, today)
+    cycle_hint = _analyze_load_cycle(weekly_stats, weekly_loads)
     ctl_trend = _compute_ctl_trend(weekly_stats)
     zone_distribution = _compute_zone_distribution(activities)
     tsb_recent: list[float] | None = None
@@ -768,7 +774,42 @@ def _compute_weekly_stats(
     return stats
 
 
-def _analyze_load_cycle(weekly_stats: list[dict]) -> str:
+def _compute_weekly_loads(activities: list[dict], today: date) -> list[int]:
+    """Weekly TSS sums for the same 4 windows as _compute_weekly_stats
+    (KW-4 … KW-1), so _analyze_load_cycle can spot a genuine low-TSS deload
+    week that the smoothed avgCTL masks."""
+    loads: list[int] = []
+    for w in range(3, -1, -1):
+        from_date = (today - timedelta(days=(w + 1) * 7)).isoformat()
+        to_date = (today - timedelta(days=w * 7)).isoformat()
+        loads.append(
+            sum(
+                int(a.get("icu_training_load") or 0)
+                for a in activities
+                if from_date <= (a.get("start_date_local") or "")[:10] <= to_date
+            )
+        )
+    return loads
+
+
+def _is_deload_week(weekly_loads: list[int], i: int) -> bool:
+    """True when week *i*'s TSS is a genuine recovery week — an absolute
+    low, or well below the other weeks' mean. A single such week (illness /
+    holiday / planned deload) barely moves the 42-day-smoothed avgCTL, so the
+    CTL-based streak logic would otherwise miscount it as a load week."""
+    if not weekly_loads or i >= len(weekly_loads):
+        return False
+    load = weekly_loads[i]
+    others = [w for j, w in enumerate(weekly_loads) if j != i and w > 0]
+    if not others:
+        return False
+    ref = sum(others) / len(others)
+    return load < MIN_WEEK_TSS or load < DELOAD_WEEK_TSS_RATIO * ref
+
+
+def _analyze_load_cycle(
+    weekly_stats: list[dict], weekly_loads: list[int] | None = None
+) -> str:
     ctl_values = [_safe_float(w["avgCTL"]) for w in weekly_stats]
 
     load_weeks_in_row = 0
@@ -777,6 +818,13 @@ def _analyze_load_cycle(weekly_stats: list[dict]) -> str:
     for i in range(1, len(ctl_values)):
         prev, curr = ctl_values[i - 1], ctl_values[i]
         if prev < MIN_CTL or curr < MIN_CTL:
+            continue
+
+        # A genuine low-TSS week resets the streak even if avgCTL held —
+        # the smoothed CTL masks an illness/holiday week the weekly TSS shows.
+        if weekly_loads is not None and _is_deload_week(weekly_loads, i):
+            load_weeks_in_row = 0
+            unplanned_low_weeks = 0
             continue
 
         change_pct = (curr - prev) / prev
