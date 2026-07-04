@@ -66,6 +66,16 @@ value. Reject such an input silently. The HR ceiling for HM-pace work is a
 duration-dependent guardrail, not a target — see
 [hm-race-hr-and-training-hr.md](../research/hm-race-hr-and-training-hr.md).
 
+**Z1 HR on a RECOVERY run — NOT a finding / not "under target" (MANDATORY
+exclusion):** A recovery run's target is **upper Z1, below the Z2 floor** —
+Z1 is where it belongs, not a shortfall. Never frame "HR stayed in Z1",
+"below the Z2 corridor", or "too easy" as a deficit or growth area on a
+`workout_type=RECOVERY` session — staying in Z1 is **compliance, not
+under-effort** (a recovery run is not an aerobic stimulus). The *inverse* is
+the real finding: HR **drifting up into Z2/Z3** on a recovery run means it
+was run too fast. Evidence:
+[recovery-run-intensity.md](../research/recovery-run-intensity.md).
+
 **Elevation / surface as a finding — MANDATORY route-baseline check:**
 The planner's `surface` field (`asphalt | forest-path | trail | track |
 treadmill`) is a **routing default for the shoe advisor**, NOT a

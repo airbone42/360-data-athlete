@@ -41,6 +41,7 @@ What the research did NOT clarify — and what should be checked next.
 
 | Date | Topic | File | Status |
 |------|-------|------|--------|
+| 2026-07-04 | Recovery-Lauf-Intensität — Z1 ist das Ziel (nicht Z2-Unterlauf), Ceiling ≤ ~72 % HRmax / ≤ obere Z1 LTHR; häufigster Fehler ist zu schnell, nicht zu langsam; Untergrenze = Kadenz/Form, nicht HF | [recovery-run-intensity.md](recovery-run-intensity.md) | active |
 | 2026-07-04 | Long-Run × Quality — embedded HM-Pace-Block (Fast-Finish / Canova Specific Long) is phase-specific to Race-Prep; in Basis-/Rebuild-Phase separate Long Run and Threshold (Long first, ≥ 48 h, then intervals); ITB-Limiter × Flachkurs verstärkt das Argument für Trennung | [long-run-quality-embedding-vs-separation.md](long-run-quality-embedding-vs-separation.md) | active |
 | 2026-07-04 | Taper — strength and core maintenance in the race week (Mujika/Padilla: hold intensity + frequency, cut volume 60–90 %; isometric / low-volume core = taper-tauglich, heavy eccentric / failure / new exercise = not; ≥ 48 h race puffer) | [taper-strength-and-core-maintenance.md](taper-strength-and-core-maintenance.md) | active |
 | 2026-06-30 | Sand / beach running as a training stimulus — ~1.6× energy cost, lower GRF but higher calf/Achilles per-stride load, weak road-economy transfer, generic progression (firm wet → soft dry, shod → barefoot, camber discipline) | [sand-running.md](sand-running.md) | active |

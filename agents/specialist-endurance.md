@@ -21,6 +21,7 @@ Read these configuration files:
 
 ## Steering mode by run type
 - **Easy / long run (Z1-Z2):** HR zones ONLY, NO pace target
+- **Recovery run (`workout_type=RECOVERY`):** HR **ceiling = upper Z1**, *below* the Z2 floor — Z1 is the TARGET, not a minimum to exceed. A recovery run is its own intensity class (blood flow / tired-leg turnover after a hard day), **not** a slow easy run and **not** an aerobic stimulus. Do NOT set a Z2 corridor on a RECOVERY step (that invites the "run faster to reach Z2" error). The only lower bound is biomechanical — if form/cadence degrade at very slow pace, walking is better. Evidence: [recovery-run-intensity.md](../research/recovery-run-intensity.md).
 - **Short intervals (≤60 s) and sprints:** pace ONLY, no HR
 - **Tempo / threshold:** both (pace + HR)
 

@@ -58,6 +58,25 @@ Meter* (3rd ed.) — Performance Manager Chart, CTL/ATL/TSB framework.
 
 **Research anchor:** [Pyramidal distribution — evidence, Treff & Casado](../research/pyramidal-distribution.md)
 
+## Recovery run — a distinct intensity class (not "slow easy")
+A recovery / regeneration run is **not** a slow easy run and **not** an
+aerobic stimulus — it is its own class, aimed at blood flow and keeping
+tired legs moving after a hard day.
+
+- **Ceiling: upper Z1** (≈ ≤ 72 % HRmax, i.e. *below* the Z2/easy floor).
+  Z1 is the **target**, not a minimum to beat. HR drifting up into Z2/Z3 on
+  a recovery run is the real error — running it *too fast* is the common
+  mistake, *too slow* almost never is.
+- **Duration:** ~20–40 min. **Trigger:** the day after a quality/hard
+  session, or on a deliberate easy day.
+- **Lower bound is biomechanical, not HR:** there is no "too slow" by HR —
+  the only floor is form. If cadence drops / overstriding creeps in at very
+  slow pace, switch to a walk rather than force a jog.
+- **Steering:** HR ceiling (upper Z1) or by feel ("very easy"); never a Z2
+  pace/HR corridor (that produces the run-faster-to-hit-Z2 error).
+
+**Research anchor:** [Recovery-run intensity](../research/recovery-run-intensity.md)
+
 ## Intensity control
 - TSB < −20: immediate reduction to Z1 or rest day (mandatory, even if
   the plan says otherwise)
