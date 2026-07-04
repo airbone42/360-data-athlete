@@ -218,6 +218,44 @@ from app.utils.alerts import alert_on_failure
 
 
 @alert_on_failure
+def _refresh_muscle_log() -> None:
+    """Keep data/muscles/ fresh at session start.
+
+    The per-muscle log is otherwise only backfilled inside the /training flow
+    (commands/training.md) and per-activity in /analyse. An ad-hoc session
+    (e.g. a Telegram planning question that launches a specialist directly)
+    would then read a stale log and miss an activity that synced after the
+    last backfill — the specialist reports the session as "not performed".
+
+    Since fetch_context is the mandatory, universally-run session-start step,
+    a short idempotent backfill here guarantees freshness for every entry
+    path. Fail-open and stdout-isolated: a muscle-log error (or any print it
+    emits) must never break — or corrupt the JSON of — the context fetch.
+    Opt out with COACH_SKIP_MUSCLE_BACKFILL=1.
+    """
+    if os.environ.get("COACH_SKIP_MUSCLE_BACKFILL"):
+        return
+    import contextlib
+    import io
+
+    # Import the sibling module by top-level name from this script's own dir,
+    # not via the `scripts` package — a wrapper repo has its own `scripts/`
+    # package at cwd that would shadow `framework/scripts/` depending on how
+    # the interpreter was invoked. This resolution is cwd-independent.
+    _here = os.path.dirname(os.path.abspath(__file__))
+    if _here not in sys.path:
+        sys.path.insert(0, _here)
+    try:
+        from log_muscle_load import _backfill
+    except Exception:
+        return
+    try:
+        with contextlib.redirect_stdout(io.StringIO()):
+            asyncio.run(_backfill(7, silent=True))
+    except Exception:
+        pass  # freshness is best-effort — never fatal to context fetch
+
+
 def main() -> None:
     from app.utils.tracing import script_span, set_span_io
 
@@ -227,6 +265,8 @@ def main() -> None:
     args = parser.parse_args()
     if args.fresh_shoes:
         bust_shoes_cache()
+
+    _refresh_muscle_log()
 
     athlete_id = settings.intervals_icu_athlete_id
     display = f"Load coach context — {args.date}"
