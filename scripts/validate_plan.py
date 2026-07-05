@@ -423,7 +423,10 @@ def check_achilles_plyo_surface(workouts: list[dict], ctx: Context) -> list[Find
     """R005 — Achilles Phase 3 + hard plyo + asphalt/track → suggest softer surface.
 
     Sport-science anchor: `framework/research/achilles-rehab-phases.md`,
-                          `framework/research/plyometrics-frequency-recovery.md`
+                          `framework/research/plyometrics-frequency-recovery.md`,
+                          `framework/research/plyometric-exercise-catalog-and-progression.md`
+                          (§7: which plyo exercises stay available under a
+                          tendon freeze — concentric slow-SSC — vs. contraindicated)
     """
     findings = []
     if "Phase 3" not in ctx.athlete_static:

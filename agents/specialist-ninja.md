@@ -116,6 +116,15 @@ the longest ago? Prioritise that one.
 - If `#core` is in the tag: ninja-core (hollow, L-sit, anti-rotation)
 - If `#plyo` is in the tag: explosive-power pillar
 
+**Explosive-Power exercise selection:** choose along the SSC / tissue axes
+— slow-SSC concentric jumps (squat jumps, box jumps with step-down) spare
+the Achilles/calf; fast-SSC reactive drills (pogo, bounding, depth jumps)
+load the Achilles/calf peak and are gated by tendon status. Between-exercise
+progression is quality-gated (landing quality, ground-contact time,
+symptom-free window), never session-count alone; put the fast-SSC drill
+first in a mixed session so its ground-contact stays short. See
+[plyometric-exercise-catalog-and-progression.md](../research/plyometric-exercise-catalog-and-progression.md).
+
 ## Exercise variation + research (creativity — MANDATORY)
 
 The athlete wants varied training — pure parameter progression (more

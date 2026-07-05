@@ -568,7 +568,7 @@ other way round.
 - Normal Z2 run yesterday: no obstacle for plyo
 - Target frequency: 2–3×/week, 10–20 min is fully sufficient
 
-**Research anchor:** [Plyometrics — frequency, recovery & 48h spacing from intervals](../research/plyometrics-frequency-recovery.md)
+**Research anchor:** [Plyometrics — frequency, recovery & 48h spacing from intervals](../research/plyometrics-frequency-recovery.md) | [Exercise catalog + between-exercise progression (SSC / tissue selection)](../research/plyometric-exercise-catalog-and-progression.md) | [Progression levels + volume](../research/plyometric-progression-levels.md)
 
 ## Neuromuscular activation before sessions
 - Before intervals / tempo: strides (3–4×) OR a short plyo sequence —

@@ -97,9 +97,21 @@ the target S in the description: `Target: S2–S3 for 30 s`.
 - Level 3 (expert): reactive / depth jumps — drop jumps, bounding
   (20–30 contacts)
 → Move to the next level only when feedback on the current level
-  signals "easy".
+  signals "easy". **Between-exercise progression is quality-gated, not
+  session-count-gated:** advance a rung only on quiet/symmetric landings,
+  short ground-contact time (a fast-SSC drill that drifts long is fatigue,
+  not reactive stimulus), a symptom-free DOMS window, and — before any
+  unilateral rung — a symptom-free single-leg hop test. Never skip a rung
+  on session count alone.
 
-**Research anchor:** [plyometric-progression-levels.md](../research/plyometric-progression-levels.md) | [plyometrics-frequency-recovery.md](../research/plyometrics-frequency-recovery.md)
+**Exercise selection under an active restriction:** pick along the
+tissue-sparing axis — concentric-dominant slow-SSC (squat jumps, box jumps
+with step-down, broad jumps → quads/glutes) spares the Achilles/calf;
+fast-SSC (pogo, bounding, depth/drop jumps → Achilles/calf peak load) is
+contraindicated under a tendon freeze. Consult the exercise→tissue/SSC
+table before substituting an exercise.
+
+**Research anchor:** [plyometric-exercise-catalog-and-progression.md](../research/plyometric-exercise-catalog-and-progression.md) (exercise selection by tissue/SSC + between-exercise ladder) | [plyometric-progression-levels.md](../research/plyometric-progression-levels.md) (level volume) | [plyometrics-frequency-recovery.md](../research/plyometrics-frequency-recovery.md)
 
 **Frequency rule:** Minimum 48 h recovery between plyo sessions — CNS and tendon recovery. See [plyometrics-frequency-recovery.md](../research/plyometrics-frequency-recovery.md).
 
