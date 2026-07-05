@@ -18,9 +18,18 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.api.intervals_client import IntervalsClient
 from app.config import settings
+from app.utils.event_backup import backup_events_before_delete
 
 
 async def _delete_by_ids(client: IntervalsClient, event_ids: list[int]) -> list[int]:
+    # Capture full content BEFORE deleting so it is never silently lost.
+    fetched = []
+    for eid in event_ids:
+        try:
+            fetched.append(await client.get_event(str(eid)))
+        except Exception:  # noqa: BLE001 — event may already be gone; back up what we can
+            pass
+    backup_events_before_delete(fetched, reason="delete_workouts --event-ids")
     results = []
     for eid in event_ids:
         await client.delete_event(eid)
@@ -31,6 +40,8 @@ async def _delete_by_ids(client: IntervalsClient, event_ids: list[int]) -> list[
 async def _delete_by_prefix(client: IntervalsClient, date_str: str, prefix: str) -> list[str]:
     events = await client.get_events(date_str, date_str)
     to_delete = [e for e in events if str(e.get("uid", "")).startswith(prefix)]
+    # Capture full content BEFORE deleting so it is never silently lost.
+    backup_events_before_delete(to_delete, reason=f"delete_workouts --prefix {prefix} {date_str}")
     deleted = []
     for e in to_delete:
         await client.delete_event(e["id"])

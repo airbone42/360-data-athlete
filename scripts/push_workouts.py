@@ -26,6 +26,7 @@ from pydantic import ValidationError
 
 from app.api.intervals_client import IntervalsClient
 from app.config import settings
+from app.utils.event_backup import backup_events_before_delete
 from app.graphs.main_daily_planner.workout_parser import prepare_workout_events
 from app.schemas.planner import PlannerOutput
 from app.utils.alerts import alert_on_failure, notify_error
@@ -87,6 +88,9 @@ async def _dedup_existing_events(athlete_id: str, date_str: str, events: list[di
         "Pre-push dedup: deleting %d existing event(s) on %s matching push set: %s",
         len(to_delete), date_str, [(e.get("name"), e.get("type"), e.get("id")) for e in to_delete],
     )
+    # Safety net: capture full content BEFORE deleting so a dedup sweep can
+    # never silently lose a planned block that was not meant to be regenerated.
+    backup_events_before_delete(to_delete, reason=f"push-dedup {date_str}")
     for ev in to_delete:
         try:
             await client.delete_event(ev["id"])
