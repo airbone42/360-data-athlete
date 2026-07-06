@@ -730,6 +730,25 @@ achilles irritation"]
 Upload here after the session.
 ```
 
+**Running-posture cue library (pelvis / hip extension — evidence-based).**
+When the form focus touches posture, pelvis, lower back, or hip drive, cue
+the *good* version of hip extension and explicitly avoid the
+lumbar-hyperextension trap:
+- ✅ Cues: *run tall (grow through the crown)* → *lean from the ankles,
+  not the waist* (keep the lean small, ~4°) → *low-ab / deep-core on*
+  (locks a neutral pelvis) → *glute squeeze at toe-off* (that IS the hip
+  extension).
+- ❌ Anti-cues — never prescribe *"push the hips/pelvis forward"* or
+  *"drive the pelvis forward"*: with limited hip-extension ROM (tight hip
+  flexors / weak glutes) they route straight into anterior pelvic tilt +
+  lumbar hyperextension (hollow-back) and load the lumbar spine.
+- Video checkpoint (side-on): pelvic tilt at toe-off + lumbar lordosis in
+  stance — lordosis increases with speed + fatigue, so a fatigued / long-run
+  clip diagnoses it better than a fresh easy jog.
+- The off-run fix is coupled, not cue-only: hip-flexor mobility +
+  glute-max strength + neutral-spine core. Source + full derivation:
+  `framework/research/running-posture-pelvic-tilt-and-hip-extension.md`.
+
 **Section types** (Garmin chooses suitable windows automatically):
 - `fresh` — first 30 % of the session, most stable segment
 - `fatigued` — last 25 %, technique drift visible
