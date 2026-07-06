@@ -454,6 +454,58 @@ def check_hardcoded_restrictions() -> list[dict]:
     return findings
 
 
+# ── Check: Stale cancellation / strikethrough markers in config ───────
+
+# Signals that an entry was cancelled / superseded / lifted but KEPT as an
+# annotation instead of being deleted. Such markers dilute the LLM planning
+# context and have been misread as active entries (a cancelled event left
+# struck-through was read as a live race by a downstream agent). Rule:
+# delete, don't mark — see framework/CLAUDE.md "Removed entries are deleted,
+# not annotated". Two high-precision mechanical signals; the auditor agent
+# refines semantically.
+STALE_MARKER_PATTERNS: list[tuple[str, str]] = [
+    ("strikethrough", r"~~.+?~~"),
+    ("cancel-mark", r"❌"),
+]
+
+
+def check_stale_cancellation_markers() -> list[dict]:
+    """Flags leftover strikethrough / ❌ cancellation markers in config/*.md.
+
+    An obsolete entry (cancelled race, lifted restriction, superseded
+    prescription, retired exercise) should be DELETED outright, not retained
+    as ``~~struck~~`` text or a ``❌`` marker — git history is the
+    authoritative provenance record and stale markers only bloat the context
+    the coach reads at planning time. LOW severity (hygiene); the auditor
+    agent confirms and the head coach deletes on sight.
+    """
+    findings: list[dict] = []
+    for path in sorted(CONFIG_DIR.glob("*.md")):
+        rel = f"config/{path.name}"
+        for i, line_text in enumerate(_read(path).splitlines(), start=1):
+            for cat, pattern in STALE_MARKER_PATTERNS:
+                if re.search(pattern, line_text):
+                    findings.append(_finding(
+                        LOW,
+                        "stale_cancellation_marker",
+                        rel,
+                        source_line=i,
+                        evidence=f"[{cat}] {line_text.strip()[:160]}",
+                        suggested_action="delete_entry",
+                        fix_hint=(
+                            "Delete the obsolete entry outright instead of "
+                            "keeping it struck-through / ❌-marked. Git history "
+                            "carries the provenance — keep config lean."
+                        ),
+                        description=(
+                            f"Stale {cat} marker in {rel}:{i} — obsolete entries "
+                            "must be deleted, not annotated"
+                        ),
+                    ))
+                    break  # one finding per line is enough
+    return findings
+
+
 # ── Check 7: Erholungswoche-Konsistenz ────────────────────────────────
 
 
@@ -1538,6 +1590,7 @@ CHECK_MAP = {
     "NOTE_DRIFT": ("check_note_vs_static", True),
     "SHOES": ("check_strava_shoes", True),
     "HARDCODED": ("check_hardcoded_restrictions", False),
+    "STALE_MARKERS": ("check_stale_cancellation_markers", False),
     "DELOAD": ("check_deload_consistency", False),
     "CONFIG_DRIFT": ("check_config_drift", False),
     "LOG_VS_HISTORY": ("check_log_vs_history", True),  # online (braucht activities)
@@ -1574,6 +1627,8 @@ def run_audit(offline: bool, only: str | None) -> dict[str, Any]:
                 results = check_strava_shoes(online_data.get("shoes"))
             elif name == "HARDCODED":
                 results = check_hardcoded_restrictions()
+            elif name == "STALE_MARKERS":
+                results = check_stale_cancellation_markers()
             elif name == "DELOAD":
                 results = check_deload_consistency()
             elif name == "CONFIG_DRIFT":

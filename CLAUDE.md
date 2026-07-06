@@ -1329,6 +1329,39 @@ that don't fit any of the above (e.g. "the user prefers terse responses
 during evening sessions"). Whenever you catch yourself writing to memory,
 ask first whether one of the canonical files would carry it better.
 
+## Config hygiene — removed entries are deleted, not annotated (mandatory)
+
+When an entry in a config / knowledge file becomes obsolete — a cancelled
+race, a lifted restriction, a superseded load cap, a resolved agenda item,
+a retired exercise — **delete the entry outright**. Do not retain it as a
+strikethrough (`~~…~~`), a `❌ cancelled` / `SUPERSEDED` / `ÜBERHOLT`
+marker, or a commented-out block.
+
+The git history is the authoritative provenance record; a manually
+maintained graveyard of struck-through entries only **dilutes the context
+the coach reads at planning time** and invites a stale entry being misread
+as active. **Drift incident pattern** (canonical case to learn from): a
+cancelled event left annotated as "❌ abgesagt" instead of deleted was read
+as a *live* race by a downstream agent, which shaped a plan around a taper
+that did not exist — the fix was to delete the entry, not to annotate it
+more clearly.
+
+- **Default: delete.** Rely on `git log` / `git blame` for the history of
+  why something changed — the same principle already applied to research-doc
+  provenance ("no manually maintained version-stamp tables").
+- **Narrow exception:** a brief, dated supersession note is acceptable only
+  when the *change itself* is the decision-relevant information and the old
+  value carries a needed contrast (e.g. a load step "X→Y kg"). Even then,
+  prefer the lean form and let git carry the detail.
+- Covers `config/*.md`, `config/*.json`, and the framework knowledge files —
+  keep them lean.
+
+*Enforcement: `audit_consistency.py::check_stale_cancellation_markers`
+(check `STALE_MARKERS`) mechanically flags leftover `~~strikethrough~~` and
+`❌` markers in `config/*.md` as LOW hygiene findings; the `config-auditor`
+agent confirms semantically and the head coach deletes on sight during any
+edit.*
+
 ## Athlete feedback persistence (mandatory)
 
 Whenever the athlete provides feedback — feeling, restriction, plan, status
