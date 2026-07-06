@@ -1147,9 +1147,21 @@ python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/get_balance_rotation.py --date YYYY-M
   if the pool entry carries one. Never push a duplicate Single-Leg RDL
   on top of a 14 kg+ strength SL RDL — the balance stimulus needs no
   load.
-- A future enhancement of `get_balance_rotation.py` will automate this
-  via `--avoid-tag legs`, letting `push_workouts.py` route around the
-  conflict; until then it is the head coach's call.
+- **Equipment availability (travel / limited kit):** The pool contains
+  equipment-dependent exercises (balance board, kettlebell loading, TRX).
+  The auto-balance push is date-driven and **equipment-blind**, so when
+  the athlete is on travel or otherwise lacks the kit, the head coach must
+  inspect the auto-selected rotation and **swap the equipment-dependent
+  exercise for a bodyweight / soft-surface variant that preserves the same
+  stimulus** before or right after the push — e.g. a *balance-board
+  single-leg + head-rotation* drill becomes *single-leg stand on an
+  unstable soft surface (folded towel / cushion / soft mat) + head
+  rotation*; a *KB-loaded reach* becomes an unloaded reach. Otherwise the
+  rotation pushes a board/KB exercise the athlete cannot perform.
+- A future enhancement of `get_balance_rotation.py` will automate the
+  leg-conflict routing via `--avoid-tag legs` and the equipment swap via
+  an equipment/travel flag, letting `push_workouts.py` route around both;
+  until then both are the head coach's call.
 
 **No advance planning.** Plans are always created same-day, based on the
 current HRV, sleep, and athlete feeling. Never plan ahead in bulk.
