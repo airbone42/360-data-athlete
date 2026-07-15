@@ -63,23 +63,37 @@ async def _dedup_existing_events(athlete_id: str, date_str: str, events: list[di
     except Exception as exc:  # noqa: BLE001
         logger.warning("Pre-push dedup: failed to fetch existing events (%s) — proceeding without sweep", exc)
         return 0
-    # Match key: TYPE (not name+type). A coach re-push regenerates the full
-    # daily plan, so it must replace the previously-pushed planned events of
-    # the same type(s) — regardless of whether the workout was renamed between
-    # pushes. Matching on name broke exactly that: a renamed workout left the
-    # stale, old-named event behind and the day ended up with a duplicate.
-    # intervals assigns a random server-side uid and stores no external_id, so
-    # there is no stable per-event coach marker to match on; the type of the
-    # regenerated plan is the reliable key.
+    # Match key: (TYPE, is_balance) — not name+type. A coach re-push
+    # regenerates the full daily plan, so it must replace the previously-pushed
+    # planned events of the same type(s) — regardless of whether the workout was
+    # renamed between pushes. Matching on name broke exactly that: a renamed
+    # workout left the stale, old-named event behind and the day ended up with a
+    # duplicate. intervals assigns a random server-side uid and stores no
+    # external_id, so there is no stable per-event coach marker to match on; the
+    # type of the regenerated plan is the reliable key.
+    #
+    # The `is_balance` partition (tag `balance`) is required because the daily
+    # balance rotation is pushed in a SEPARATE call (`_auto_push_balance`, a
+    # post-step after the main push). Balance events are `type="Workout"`, and
+    # so are ninja / mobility / generic-strength mains — a pure type match made
+    # the balance push's dedup delete the freshly-created mains (and vice
+    # versa) whenever both shared `type="Workout"` (a ninja or mobility day).
+    # Partitioning the key on balance-ness keeps a balance push replacing only
+    # balance events and a main push replacing only non-balance events, while a
+    # combined push (mains + balance in one call) still replaces both. The
+    # type-based rename robustness is preserved within each partition.
     #
     # Guards: only planned WORKOUT-category events (never RACE_A/B/C, never
     # NOTE which has type=None), and never an event already paired to a
     # completed activity (don't touch what the athlete has actually done).
-    push_types = {e.get("type") for e in events if e.get("type")}
+    def _is_balance(ev: dict) -> bool:
+        return "balance" in (ev.get("tags") or [])
+
+    push_keys = {(e.get("type"), _is_balance(e)) for e in events if e.get("type")}
     to_delete = [
         ev for ev in existing
         if ev.get("category") == "WORKOUT"
-        and ev.get("type") in push_types
+        and (ev.get("type"), _is_balance(ev)) in push_keys
         and not ev.get("paired_activity_id")
     ]
     if not to_delete:
