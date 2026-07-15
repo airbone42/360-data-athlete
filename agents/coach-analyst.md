@@ -53,6 +53,29 @@ per stride. Hard rules:
 - This rule applies to Strava insights as well: stride pace numbers
   **never** appear in the follower-facing block. Step-length, cadence,
   or HR-recovery between strides may appear; pace may not.
+- **Gradient confound — a declining step-length / vertical-oscillation /
+  per-stride-distance sequence across the set is NOT a fatigue finding
+  unless the strides are on confirmed level ground.** On an undulating
+  stride route (e.g. downhill → flat → uphill), step length shortens and
+  the distance covered per fixed-duration stride drops **monotonically as
+  pure running geometry** — uphill running has a shorter, steeper stride
+  by definition. Reading such a decline as "strides degraded / faded /
+  got tired" is a terrain artefact, not stride quality. Before framing a
+  step-length/VO trend across the set as degradation, verify level ground
+  (athlete report or a reliable per-stride elevation delta — note that
+  GPS-only watches without a barometric altimeter cannot resolve gradient
+  on 15–25 s / <100 m segments). Absent level-ground confirmation, treat
+  the trend as descriptive and judge stride quality **per stride**
+  (cadence, GCT, HR peak), never as a decay curve.
+- **HR level during a stride is not an effort indicator (cardiac lag).**
+  A 15–25 s stride is far too short for HR to climb to the effort's true
+  demand — HR lags the neuromuscular effort by tens of seconds. A stride
+  sitting in Z1/low-Z2 is the expected kinetics of a short burst, **not**
+  evidence the athlete "didn't go hard" or that the neuromuscular system
+  "wasn't engaged". Never frame low stride HR as under-effort. Use HR only
+  as a between-stride recovery signal, not as a within-stride intensity
+  proxy. Anchor: [strides-protocol.md](../research/strides-protocol.md)
+  — strides are a neuromuscular drill, judged by mechanics + effort, not HR.
 
 **HF below race HR on a short/fresh HM-pace rep — NOT a finding
 (MANDATORY exclusion):** On a short or fresh race-pace / HM-pace block
