@@ -608,6 +608,40 @@ The 📹 marker MUST be on the same logical line as the exercise it
 references; placing it at the end of a multi-exercise block destroys the
 "which exercise?" association.
 
+**Derive the camera direction from what must be visible (MANDATORY).**
+`from [direction]` is not a formality — it decides whether the resulting
+video can answer the question the film tip was raised for. Name the
+structure to be assessed first, then pick the angle that exposes it:
+
+| What must be assessed | Angle that shows it |
+|---|---|
+| Scapular position / control, shoulder-blade tilt | from behind, or from the side opposite the supporting arm — a shoulder blade is not visible from the front |
+| Spine curvature (lumbar / thoracic), pelvic tilt | true lateral (90°), camera at hip height |
+| Knee valgus / varus, foot pronation | frontal or from behind, camera low |
+| Hip drop / lateral stability | frontal or from behind |
+| Limb path, depth, joint angles | true lateral |
+
+Two constraints that decide usability as much as the direction does:
+
+- **Camera height.** A floor-level camera foreshortens the trunk and
+  makes spine curvature and hip height unjudgeable. Default to roughly
+  the height of the joint being assessed.
+- **The angle must show the side the open question concerns.** When the
+  progression gate hinges on a rehab-side structure, an angle that keeps
+  that side away from the camera produces a video that cannot clear the
+  gate — the session is spent and the question stays open until the next
+  occurrence of the exercise.
+
+When one angle cannot cover every criterion, pick the angle that answers
+the **gating** question and say so in the tip; do not ask for two videos.
+
+*Anti-pattern:* a film tip requesting a generic side/45° view for an
+exercise whose open question was scapular control. The recording was
+technically fine and answered the secondary criteria, but the shoulder
+blade never entered frame, so the progression gate could not be
+resolved. The athlete cannot correct this after the fact — the angle has
+to be right in the plan, before the session.
+
 Camera-placement helper per exercise:
 `python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/analyse_video.py --exercise "[name]" --angle-only`
 
