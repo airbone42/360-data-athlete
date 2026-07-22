@@ -15,11 +15,20 @@ _DISTANCE_DURATION_RE = re.compile(
 _STEP_RE = re.compile(r"^\s*-\s+(.+)$", re.MULTILINE)
 # Duration extraction: matches Xm, Xs, Xm Ys patterns
 _DURATION_RE = re.compile(r"(\d+)\s*m(?:in)?(?:\s*(\d+)\s*s)?|(\d+)\s*s\b")
-# HR target pattern — matches Z1-Z5 zone, explicit BPM range (e.g. "154-166 HR"),
-# or single-bpm threshold (e.g. "<140 bpm"). Linter treats any of these as
-# a valid HR target on a step ≥60s.
+# HR target pattern — matches a %LTHR target (range "68-75% LTHR" or single
+# "80% LTHR"), a Z1-Z5 zone, an explicit BPM range (e.g. "154-166 HR"), or a
+# single-bpm threshold (e.g. "<140 bpm"). Linter treats any of these as a valid
+# HR target on a step ≥60s.
+#
+# %LTHR must be listed: it is the preferred target form (intervals.icu resolves
+# it to concrete bpm, which the watch then follows verbatim), while "Zn HR"
+# resolves against the watch's own zone model and is deprecated. Without the
+# %LTHR alternative every correctly-targeted step reported as target-less,
+# which buries real findings under false positives.
 _HR_ZONE_RE = re.compile(
-    r"Z[1-5]\s*HR|\d{2,3}\s*[-–—]\s*\d{2,3}\s*HR|\d{2,3}\s*bpm|HR\s*\d{2,3}\s*[-–—]\s*\d{2,3}",
+    r"\d{1,3}\s*[-–—]\s*\d{1,3}\s*%\s*LTHR|\d{1,3}\s*%\s*LTHR"
+    r"|Z[1-5]\s*HR|\d{2,3}\s*[-–—]\s*\d{2,3}\s*HR|\d{2,3}\s*bpm"
+    r"|HR\s*\d{2,3}\s*[-–—]\s*\d{2,3}",
     re.IGNORECASE,
 )
 # press lap marker
