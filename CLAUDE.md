@@ -1449,10 +1449,27 @@ exercise weeks later.
 
 ## Video form check (strength / core / balance / ninja)
 
-When the athlete sends a video via the Telegram plugin
-(`attachment_file_id` present):
+**Chat channels are not a valid transport for form-check video
+(mandatory).** Telegram and comparable channels re-encode on upload:
+resolution drops and compression artefacts appear. A form check reads
+joint angles, limb positions and left/right detail out of single frames,
+so that loss does not degrade the analysis gracefully — it produces
+confident wrong findings (misread foot stance, invisible scapular
+position, phantom spine curvature), which is worse than no analysis
+because it can drive a wrong progression decision.
 
-1. Download attachment.
+When a video arrives as a chat attachment, do **not** analyse it. Reply
+with the upload instruction: the athlete places the **original** file in
+`COACH_VIDEO_INBOX` and the analysis runs from there.
+`analyse_video.py` enforces this — a path under a chat-plugin inbox is
+refused with exit code 3 unless `--allow-chat-video` is passed
+(emergency only; the resulting finding must be marked as uncertain).
+`COACH_VIDEO_INBOX` has no default: when unset the script says so rather
+than guessing a local directory.
+
+Once the original is in the inbox:
+
+1. Take the uploaded path from `COACH_VIDEO_INBOX`.
 2. Determine the exercise: look in today's workout for `📹 Film tip:` —
    the specialist already named the exercise. Fallback: athlete message or
    type history.

@@ -54,6 +54,35 @@ MODELS = {
 }
 DEFAULT_MODEL = "pro"
 
+# --- Chat-transport guard -------------------------------------------------
+#
+# Chat channels (Telegram et al.) re-encode video on upload: resolution is
+# reduced and compression artefacts are introduced. A form check reads joint
+# angles, limb positions and left/right detail out of single frames, so that
+# loss directly produces perception errors — stacked vs. staggered feet,
+# scapular position, subtle spine curvature. The analysis then reads as
+# confident and is wrong, which is worse than no analysis.
+#
+# Videos arriving through a chat attachment are therefore refused by default.
+# The athlete uploads the original file to COACH_VIDEO_INBOX instead.
+_CHAT_INBOX_MARKERS = (("channels", "inbox"),)
+
+
+def is_chat_transport_path(path: str) -> bool:
+    """True when the path looks like a chat-plugin attachment download."""
+    parts = [p.lower() for p in Path(path).parts]
+    return any(all(marker in parts for marker in markers) for markers in _CHAT_INBOX_MARKERS)
+
+
+def video_inbox() -> Path | None:
+    """Configured upload directory for full-resolution form-check videos.
+
+    Returns ``None`` when unset — the caller then reports that the inbox is
+    not configured rather than falling back to a guessed local path.
+    """
+    raw = os.environ.get("COACH_VIDEO_INBOX", "").strip()
+    return Path(raw).expanduser() if raw else None
+
 # Kamera-Winkel pro Übung
 ANGLE_GUIDE: dict[str, str] = {
     "goblet squat": "schräg vorne (45°) — Knie-Tracking und Oberkörperlage",
@@ -449,12 +478,34 @@ def main() -> None:
                         help="Sekunden vom Ende abschneiden (default: 0)")
     parser.add_argument("--no-log", action="store_true",
                         help="exercise_log.md nicht aktualisieren (Ad-hoc-Analyse)")
+    parser.add_argument("--allow-chat-video", action="store_true",
+                        help="Chat-komprimiertes Video trotzdem analysieren "
+                             "(Notfall — Perzeptionsfehler wahrscheinlich, Befund entsprechend kennzeichnen)")
     args = parser.parse_args()
 
     if args.angle_only:
         print(f"📹 Kamera-Empfehlung für '{args.exercise}':")
         print(f"   {get_angle_tip(args.exercise)}")
         return
+
+    if args.video and is_chat_transport_path(args.video) and not args.allow_chat_video:
+        inbox = video_inbox()
+        target = str(inbox) if inbox else "(COACH_VIDEO_INBOX ist nicht gesetzt — Upload-Ziel bitte konfigurieren)"
+        print(
+            "⛔ Video über einen Chat-Kanal empfangen — Analyse abgelehnt.\n"
+            "\n"
+            "Chat-Kanäle rekodieren Videos beim Upload: Auflösung runter, Kompressions-\n"
+            "artefakte rein. Ein Formcheck liest Gelenkwinkel, Gliedmassen-Positionen und\n"
+            "Links/Rechts-Details aus Einzelbildern — genau das geht dabei verloren, und\n"
+            "die Analyse liefert dann selbstbewusste Fehlbefunde statt gar keiner.\n"
+            "\n"
+            f"Original-Datei bitte unverändert hier ablegen:\n  {target}\n"
+            "\n"
+            "Danach erneut mit --video <Pfad-im-Inbox> aufrufen.\n"
+            "Notfall-Override (Befund als unsicher kennzeichnen): --allow-chat-video",
+            file=sys.stderr,
+        )
+        raise SystemExit(3)
 
     # Wrap the whole analysis run in a sprechende root span
     mode_label = "garmin-sections" if (args.garmin_sections and args.activity_id) else (
