@@ -48,11 +48,37 @@ RUN_KEYWORDS = {"laufen", "run", "jogging", "tempo run", "easy run", "trail run"
                 "run sagittal", "run posterior"}
 
 # Modelle
+#
+# Slugs are pinned deliberately. OpenRouter's `~`-prefixed aliases
+# (e.g. ~google/gemini-pro-latest) re-point without notice and offer no
+# rollback, which would silently change grading behaviour on a check that
+# gates progression decisions.
+#
+# Selection is backed by MotionBench (fine-grained motion perception) and
+# Video-MME-v2 (temporal ordering / cross-segment inference), plus a local
+# smoke test on a real form-check clip with known ground truth:
+#   - gemini-2.5-pro (previous default) scored lowest of the modern field on
+#     MotionBench (66.3) and, in the local test, confabulated on structures
+#     that were not in frame at all.
+#   - gemini-3.1-pro-preview correctly answered "not assessable" for the
+#     lumbar contour (occluded by clothing/angle) and for a scapula outside
+#     the frame, where the older model produced confident findings.
+#   - bytedance-seed/seed-2.0-lite leads MotionBench on paper (72.4, vendor
+#     self-reported) but failed the same local test: wrong stance answer with
+#     high stated confidence, plus an unsupported fatigue claim. Not adopted.
 MODELS = {
-    "flash": "google/gemini-2.5-flash",
-    "pro":   "google/gemini-2.5-pro",
+    "flash": "google/gemini-3-flash-preview",
+    "pro":   "google/gemini-3.1-pro-preview",
 }
 DEFAULT_MODEL = "pro"
+
+# Known limitation — read before trusting a fine spatial detail:
+# on a chat-compressed clip at default sampling (~1 fps), a binary stance
+# question ("stacked vs. staggered feet") was answered inconsistently across
+# repeated identical runs of the SAME model. The information is not reliably
+# present in the sampled frames, so no model choice fixes it. The remedies are
+# upstream: full-resolution upload (see the chat-transport guard above) and a
+# clip short enough that each repetition gets several frames.
 
 # --- Chat-transport guard -------------------------------------------------
 #
