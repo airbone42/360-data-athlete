@@ -694,8 +694,10 @@ def _compute_hrv_readiness_band(
     return {
         "verdict": verdict,
         "days_below": days_below,
-        "rolling_mean_ln": round(roll_today, 4),
-        "rolling_mean_ms": round(math.exp(roll_today), 1),
+        "rolling_mean_ln": round(roll_today, 4) if roll_today is not None else None,
+        "rolling_mean_ms": (
+            round(math.exp(roll_today), 1) if roll_today is not None else None
+        ),
         "band_low_ln": round(band_low, 4),
         "band_high_ln": round(band_high, 4),
         "band_low_ms": round(math.exp(band_low), 1),

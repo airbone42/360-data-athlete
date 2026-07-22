@@ -150,6 +150,20 @@ def test_insufficient_data_below_threshold() -> None:
     assert res["cv_trend"] is not None
 
 
+def test_rolling_gap_with_valid_band_stays_clear_and_nulls_rolling() -> None:
+    # A measurement gap covering the whole 7-day rolling window (e.g. a break
+    # with no wearable data) leaves the 60d band computable but the rolling
+    # mean undefined. The classifier must fall through to ``clear`` and emit
+    # ``None`` for the rolling fields instead of raising on ``round(None)``.
+    res = _compute_hrv_readiness_band(_series({i: None for i in range(7)}), REF)
+    assert res["verdict"] == "clear"
+    assert res["days_below"] == 0
+    assert res["rolling_mean_ln"] is None
+    assert res["rolling_mean_ms"] is None
+    assert res["band_low_ms"] is not None
+    assert res["n_ref"] == 53
+
+
 def test_exactly_thirty_values_classifies() -> None:
     res = _compute_hrv_readiness_band(_series(days=30), REF)
     assert res["verdict"] != "insufficient_data"
