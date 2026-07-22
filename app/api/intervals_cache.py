@@ -158,6 +158,25 @@ class IntervalsFileCache:
         }
         return self._index
 
+    # --- Coverage watermark -------------------------------------------------
+    #
+    # A day-file is only written when a day actually HAS items, so "no file"
+    # is ambiguous: it means either "fetched, nothing that day" or "never
+    # fetched". Without a watermark the cold path silently reports the second
+    # case as an empty day — any date that aged past the fresh boundary while
+    # no session ran is then invisible forever (the multi-day-gap case:
+    # holiday, illness, travel). The watermark records how far the API has
+    # actually been queried per subdir so the gap can be re-fetched once.
+
+    def coverage_through(self, subdir: str) -> str | None:
+        return (self.load_index().get("_coverage") or {}).get(subdir)
+
+    def set_coverage_through(self, subdir: str, day: str) -> None:
+        idx = self.load_index()
+        coverage = idx.setdefault("_coverage", {})
+        if day > (coverage.get(subdir) or ""):
+            coverage[subdir] = day
+
     def save_index(self) -> None:
         if self._index is None:
             return
@@ -515,15 +534,36 @@ class CachedIntervalsClient:
                 return a.get("start_date_local") or a.get("start_date") or ""
         return sorted(merged.values(), key=sort_key)
 
+    # --- Fetch-window helper ------------------------------------------------
+
+    def _fetch_start(self, subdir: str, oldest: str, boundary: str) -> str:
+        """First date the API must be queried for, gaps included.
+
+        Normally the API is only asked for the hot range (``boundary``
+        onwards) and everything older comes from day-files. But a stretch
+        that aged past ``boundary`` while no session ran was never cached at
+        all, and the cold path cannot tell that apart from a genuinely empty
+        day. The coverage watermark closes that: whatever lies between the
+        last covered day and the hot range is re-fetched once, after which
+        the watermark moves up and the normal hot-only path resumes.
+        """
+        covered = self._cache.coverage_through(subdir)
+        if covered is None:
+            # Pre-watermark cache (or a fresh one): the extent of the gap is
+            # unknown, so query the whole requested range once to self-heal.
+            return oldest
+        gap_start = (date.fromisoformat(covered) + timedelta(days=1)).isoformat()
+        return max(oldest, min(boundary, gap_start))
+
     # --- Activities ---------------------------------------------------------
 
     async def get_activities(self, oldest: str, newest: str) -> list[dict]:
         boundary = _fresh_boundary()
-        cold_end = min(boundary, newest)
-        hot_start = max(boundary, oldest)
+        hot_start = self._fetch_start("activities", oldest, boundary)
+        cold_end = min(hot_start, newest)
 
         cached: list[dict] = []
-        if oldest < boundary:
+        if oldest < cold_end:
             cached = self._load_cached_range("activities", oldest, cold_end)
 
         fresh: list[dict] = []
@@ -532,6 +572,7 @@ class CachedIntervalsClient:
                 fresh = await self._client.get_activities(hot_start, newest)
                 self._save_day_grouped("activities", fresh)
                 self._cache.update_index_activities(fresh)
+                self._cache.set_coverage_through("activities", min(newest, _today()))
                 self._cache.save_index()
             except Exception as e:
                 logger.warning("cache: activities API failed, using cache only: %s", e)
@@ -546,13 +587,14 @@ class CachedIntervalsClient:
         today = _today()
         boundary = _fresh_boundary()
 
+        # Always fetch fresh: hot range (last 48h, gaps included) + future
+        hot_start = self._fetch_start("events", oldest, boundary)
+
         cached: list[dict] = []
-        cold_end = min(boundary, min(newest, today))
+        cold_end = min(hot_start, newest, today)
         if oldest < cold_end:
             cached = self._load_cached_range("events", oldest, cold_end)
 
-        # Always fetch fresh: hot range (last 48h) + future
-        hot_start = max(boundary, oldest)
         fresh: list[dict] = []
         if hot_start <= newest:
             try:
@@ -562,7 +604,8 @@ class CachedIntervalsClient:
                 if past_fresh:
                     self._save_day_grouped("events", past_fresh)
                     self._cache.update_index_events(past_fresh)
-                    self._cache.save_index()
+                self._cache.set_coverage_through("events", min(newest, today))
+                self._cache.save_index()
             except Exception as e:
                 logger.warning("cache: events API failed, using cache only: %s", e)
                 if _is_day_cache_stale("events", _today()):
@@ -574,13 +617,13 @@ class CachedIntervalsClient:
 
     async def get_notes(self, oldest: str, newest: str) -> list[dict]:
         boundary = _fresh_boundary()
-        cold_end = min(boundary, newest)
+        hot_start = self._fetch_start("notes", oldest, boundary)
+        cold_end = min(hot_start, newest)
 
         cached: list[dict] = []
-        if oldest < boundary:
+        if oldest < cold_end:
             cached = self._load_cached_range("notes", oldest, cold_end)
 
-        hot_start = max(boundary, oldest)
         fresh: list[dict] = []
         if hot_start <= newest:
             try:
@@ -589,7 +632,8 @@ class CachedIntervalsClient:
                 if past_fresh:
                     self._save_day_grouped("notes", past_fresh)
                     self._cache.update_index_events(past_fresh, category="NOTE")
-                    self._cache.save_index()
+                self._cache.set_coverage_through("notes", min(newest, _today()))
+                self._cache.save_index()
             except Exception as e:
                 logger.warning("cache: notes API failed, using cache only: %s", e)
                 if _is_day_cache_stale("notes", _today()):
