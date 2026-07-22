@@ -313,6 +313,112 @@ Antworte in diesem Format (maximal 10–12 Sätze):
 [Ist diese Übung + Ansatz optimal? Wenn ja: "Passt so." Wenn nein: was wäre besser?]"""
 
 
+# ─── Two-pass: perception without athlete context, then evaluation ──────────
+#
+# Athlete context in the same call as the video lets a supplied hypothesis
+# colour the perception: the model reports the finding it was handed, at a
+# confidence the footage does not support. Post-hoc "are you sure?" checking
+# makes this measurably worse, so the countermeasure has to be structural.
+#
+# Pass 1 sees the video and NO athlete context, and may only describe.
+# Pass 2 sees only pass 1's text — never the video — and gets the athlete
+# context there. A hypothesis therefore cannot reach the pixels.
+# Rationale + sources: framework/research/video-form-check-model-selection.md
+
+PERCEPTION_SYSTEM_PROMPT = """Du bist ein präziser Beobachter. Du beschreibst ausschliesslich, was in einem Video sichtbar ist.
+
+Du bewertest NICHT. Verboten sind Wertungen und Ursachenzuschreibungen jeder Art — auch implizite. Verbotene Wörter: gut, schlecht, sauber, instabil, kompensiert, zu tief, zu hoch, korrekt, falsch, ermüdungsbedingt, Schwäche, Defizit.
+
+Für JEDE Beobachtung gibst du eine Sicherheitsangabe an: `sicher` | `unsicher` | `nicht erkennbar`.
+`nicht erkennbar` ist eine vollwertige und ausdrücklich erwünschte Antwort. Eine ehrliche Enthaltung ist wertvoller als eine geratene Beobachtung — geratene Details führen stromabwärts zu falschen Trainingsentscheidungen.
+
+Regeln:
+- Räumliche Relationen zerlegst du, statt sie zusammenzufassen: vorne/hinten in Tiefenrichtung, Kontaktpunkte, Verdeckungen (verdeckt ein Körperteil ein anderes?).
+- **Seitigkeit ist IMMER anatomisch anzugeben — aus Sicht des Athleten, nicht aus Sicht der Kamera.** Eine der Kamera zugewandte Körperseite kann im Bild links erscheinen und anatomisch rechts sein. Nenne zu jeder Seitenangabe (a) die anatomische Seite, (b) auf welcher Bildseite sie erscheint, und (c) woran du die anatomische Zuordnung festmachst (Blickrichtung des Gesichts, Bauch-/Rückenseite, Daumenstellung, Fussstellung). Wenn die anatomische Zuordnung nicht sicher ableitbar ist: `nicht erkennbar` — rate NIEMALS. Eine vertauschte Seitigkeit macht die gesamte Bewertung stromabwärts falsch.
+- Jede Beobachtung bekommt einen Zeitstempel [mm:ss].
+- Trendwörter (progressiv, zunehmend, im Verlauf, lässt nach) sind NUR zulässig, wenn du zwei Zeitstempel zitierst UND die Differenz konkret benennst. Andernfalls schreibst du „kein Trend belegbar".
+- Was ausserhalb des Bildausschnitts liegt oder durch Kleidung, Winkel oder Unschärfe verdeckt ist, meldest du als `nicht erkennbar` — mit Angabe des Grundes."""
+
+
+def _build_perception_prompt(exercise: str, angle: str, run_mode: bool) -> str:
+    """Pass-1 prompt. Deliberately carries no athlete context and no checklist."""
+    subject = "Laufbewegung" if run_mode else "Übung"
+    extra = (
+        "- Fussaufsatz relativ zum Körperschwerpunkt, Kniewinkel bei Bodenkontakt, Rumpfneigung, Armführung\n"
+        if run_mode else
+        "- Falls ein Gerät/Gewicht sichtbar ist: welches, in welcher Hand, wo gehalten\n"
+    )
+    return f"""Video: {subject} — „{exercise}".
+Aufnahmewinkel laut Aufnahme-Vorgabe: {angle or get_angle_tip(exercise)}
+(Diese Angabe ist eine Vorgabe, keine Tatsache — prüfe am Bild, aus welchem Winkel tatsächlich gefilmt wurde.)
+
+Beschreibe ausschliesslich Sichtbares, in dieser Reihenfolge:
+
+**1. Aufnahme**
+Tatsächlicher Kamerawinkel und -höhe. Welcher Bildausschnitt ist zu sehen (ganzer Körper / Teilkörper)? Welche Körperteile sind zu KEINEM Zeitpunkt im Bild? Bildqualität/Unschärfe.
+
+**2. Ausgangsposition** [mm:ss]
+Körperposition, Auflagepunkte, Seitigkeit — **anatomisch** (aus Sicht des Athleten): welcher Arm/welches Bein trägt, welcher führt. Gib je Seitenangabe die Bildseite und die Begründung der anatomischen Zuordnung mit an, oder melde `nicht erkennbar`.
+{extra}
+**3. Erste Wiederholung** [mm:ss]
+Beschreibe die Endposition der ersten Wiederholung isoliert.
+
+**4. Letzte Wiederholung** [mm:ss]
+Beschreibe die Endposition der letzten Wiederholung isoliert.
+
+**5. Differenz**
+Erst jetzt: Unterscheiden sich 3 und 4? Trendwörter nur mit zwei Zeitstempeln und konkreter Differenz, sonst „kein Trend belegbar".
+
+**6. Nicht beurteilbar**
+Liste explizit auf, welche anatomischen Strukturen aus diesem Winkel NICHT beurteilbar sind und warum.
+
+Halte dich knapp. Keine Bewertung, keine Empfehlung, keine Ursachen."""
+
+
+def _build_evaluation_prompt(
+    exercise: str, checklist: str, context: str, angle: str, run_mode: bool, perception: str
+) -> str:
+    """Pass-2 prompt. Sees only the pass-1 text, never the video."""
+    checklist_block = f"\nÜbungs-Checkliste:\n{checklist}" if checklist else ""
+    context_block = f"\nAthlet-Kontext: {context}" if context else ""
+    body = _build_user_prompt(exercise, checklist, context, angle, run_mode)
+    # Reuse the established output format, but bind it to the observation text.
+    return f"""Ein unabhängiger Beobachter hat das Video beschrieben, OHNE den Athleten-Kontext zu kennen. Du siehst das Video selbst nicht — nur diese Beschreibung.
+
+=== BEOBACHTUNG (Videobeschreibung) ===
+{perception}
+=== ENDE BEOBACHTUNG ==={checklist_block}{context_block}
+
+Bewerte auf dieser Grundlage.
+
+HARTE REGELN:
+- Du darfst NICHTS behaupten, was nicht in der Beobachtung steht. Ergänze keine Details aus dem Übungsnamen, aus dem Athleten-Kontext oder aus Lehrbuchwissen.
+- Was der Beobachter als `nicht erkennbar` gemeldet hat, bleibt offen. Formuliere es als offene Frage samt Angabe, welcher Kamerawinkel sie beantworten würde — niemals als Befund.
+- Was der Beobachter mit `unsicher` markiert hat, kennzeichnest du in deiner Bewertung ebenfalls als unsicher.
+- **Seitenangaben des Beobachters sind anatomisch zu lesen** (aus Sicht des Athleten). Hat der Beobachter die anatomische Zuordnung als `nicht erkennbar` gemeldet, darfst du KEINE seitenabhängige Aussage treffen — insbesondere keine Aussage darüber, ob eine Reha-Seite belastet wird oder nicht.
+- Der Athleten-Kontext dient der Einordnung und der Dosierungs-Frage. Er ist KEIN Beleg dafür, dass ein bekanntes Muster im Video vorliegt — wenn die Beobachtung es nicht hergibt, liegt es nicht vor.
+
+{body}"""
+
+
+def _call_openrouter_text(client: object, model: str, system: str, user: str, max_tok: int) -> str:
+    """Plain text completion — used for the evaluation pass (no video payload)."""
+    response = client.chat.completions.create(  # type: ignore[attr-defined]
+        model=model,
+        max_tokens=max_tok,
+        messages=[
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ],
+    )
+    if not response.choices:
+        raise RuntimeError(f"Leere Antwort von {model} — kein choices-Array zurückgegeben")
+    out = response.choices[0].message.content
+    if not out:
+        raise RuntimeError(f"Leere Antwort-Content von {model} — choices vorhanden aber leer")
+    return out
+
+
 def analyse_with_gemini_video(
     video_path: str,
     exercise: str,
@@ -336,8 +442,12 @@ def analyse_with_gemini_video(
     model = MODELS.get(model_key, MODELS[DEFAULT_MODEL])
     print(f"  Modell: {model}", file=sys.stderr)
 
-    system_prompt = SYSTEM_PROMPT_RUN if run_mode else SYSTEM_PROMPT
-    user_text = _build_user_prompt(exercise, checklist, context, angle, run_mode)
+    # Pass 1 carries no athlete context and no checklist — see the two-pass
+    # rationale above. The checklist is withheld too: it names the exact
+    # patterns the evaluation is looking for and would prime the description
+    # just as the athlete context would.
+    system_prompt = PERCEPTION_SYSTEM_PROMPT
+    user_text = _build_perception_prompt(exercise, angle, run_mode)
 
     content: list = [
         {"type": "text", "text": user_text},
@@ -385,11 +495,28 @@ def analyse_with_gemini_video(
         )
         if not response.choices:
             raise RuntimeError(f"Leere Antwort von {model} — kein choices-Array zurückgegeben")
-        content_out = response.choices[0].message.content
-        if not content_out:
+        perception = response.choices[0].message.content
+        if not perception:
             raise RuntimeError(f"Leere Antwort-Content von {model} — choices vorhanden aber leer")
+
+        # An unusable recording is reported by pass 1 and must not be talked
+        # into a finding by pass 2 — return it verbatim.
+        if perception.lstrip().startswith("❌"):
+            set_span_io(output=perception)
+            return perception
+
+        print("  Pass 2 — Bewertung (nur Text, ohne Video)...", file=sys.stderr)
+        eval_system = SYSTEM_PROMPT_RUN if run_mode else SYSTEM_PROMPT
+        eval_user = _build_evaluation_prompt(
+            exercise, checklist, context, angle, run_mode, perception
+        )
+        content_out = _call_openrouter_text(client, model, eval_system, eval_user, max_tok)
+
         set_span_io(output=content_out)
-    return content_out
+
+    # The observation stays attached: it is the evidence the assessment rests
+    # on, and it is what makes a wrong finding auditable after the fact.
+    return f"{content_out}\n\n---\n**Beobachtung (Pass 1, ohne Athleten-Kontext erhoben)**\n\n{perception}"
 
 
 
