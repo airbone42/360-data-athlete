@@ -352,7 +352,7 @@ Respond with valid JSON only. Start directly with `{`.
       "description": "Forearm stretch 30 s/side, wrist mobilisation, shoulder stretch 30 s"
     }
   ],
-  "description": "WARM-UP (5 min)\nWrist rotations 20x, finger extensions 10x, shoulder circles, arm circles\n\nMAIN – GRIP (15 min)\nGrip pillar: 60 s rest between exercises\n\nGripmaster Fingers: 3x20 | level 1: bilateral, all 4 fingers, thumb passive, slow controlled close\n\nFarmer's Hold KB: 3x30s 20kg/side | RPE 6-7 | single-arm, quiet posture, forearm under tension\n\nWrist Curls: 2x15/side 4kg | RPE 6-7 | extensors + flexors — balance important for tendon prophylaxis\n\nCOOL-DOWN (3 min)\nForearm stretch 30 s/side, wrist mobilisation, shoulder stretch 30 s",
+  "description": "WARM-UP (5 min)\nWrist rotations 20x, finger extensions 10x, shoulder circles, arm circles\n\nMAIN – GRIP (15 min)\nGrip pillar: 60 s rest between exercises\n\nGripmaster Fingers: 3x20 | level 1: bilateral, all 4 fingers, thumb passive, slow controlled close\n\nFarmer's Hold KB: 3x30s/side @ 20kg | RPE 6-7 | single-arm, quiet posture, forearm under tension\n\nWrist Curls: 2x15/side @ 4kg | RPE 6-7 | extensors + flexors — balance important for tendon prophylaxis\n\nCOOL-DOWN (3 min)\nForearm stretch 30 s/side, wrist mobilisation, shoulder stretch 30 s",
   "focus": "3–5 sentences of coaching prose: pillar focus, progression rationale, injury context.",
   "duration_note": "Optional: justification if total duration falls outside the allowed range (max 1 sentence)."
 }
@@ -436,9 +436,22 @@ appropriate (RPE drifting to 5 over 3 sessions → cap can be lifted;
 RPE 8+ on the capped weight → cap is correct, hold).
 
 **Inline format in `description`:** `Farmer's Hold KB: 3x35s/side
-32.5kg | RPE 6-7 | last 13.05. 30kg @ 35s @ RPE 6-7 — Vektor 'load
+@ 32.5kg | RPE 6-7 | last 13.05. 30kg @ 35s @ RPE 6-7 — Vektor 'load
 primary' triggered`. The RPE token belongs **between** the volume
 spec and the progression rationale, separated by `|`.
+
+**The `@` before the load is MANDATORY, not decorative.** Writing the
+weight adjacent to the volume spec (`3x35s/side 32.5kg`) is ambiguous
+to a reader: `SxR` and `N kg` sit next to each other with nothing
+marking which number is which, and whenever the numbers happen to
+coincide the line reads as a piece-count of equipment rather than as
+sets and reps. `2x12 12kg` is parsed by a human as "two 12 kg bells",
+not as "2 sets of 12 reps at 12 kg" — an athlete who owns only one
+bell then believes the session is impossible and stops. Always
+separate the load with ` @ `, and where the exercise could plausibly
+be performed with one or two implements, state the implement count
+explicitly in the cue ("one kettlebell, both hands on the same
+handle").
 
 ## MANDATORY: two legitimate justification sources — planner estimate is NOT one
 

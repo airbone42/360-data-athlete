@@ -112,7 +112,7 @@ template: |
         "description": "Foam roller quads 60s per side, calf stretch 30s"
       }}
     ],
-    "description": "WARM-UP (5 min)\nCat-Cow 10x, hip circles 10x per side, leg swings 10x\n\nMAIN SET (20 min)\n60s rest between exercises\n\nGoblet Squat: 3x12 16kg | RPE 7 | Last week 12kg (easy) → +4kg\n\nBox Jumps: 3x8 | RPE 7 | Level 1 bilateral, emphasise soft landing\n\nDead Bug: 3x10 per side | Slow eccentric phase\n\nCOOL-DOWN (3 min)\nFoam roller quads 60s per side, calf stretch 30s",
+    "description": "WARM-UP (5 min)\nCat-Cow 10x, hip circles 10x per side, leg swings 10x\n\nMAIN SET (20 min)\n60s rest between exercises\n\nGoblet Squat: 3x12 @ 16kg | RPE 7 | Last week 12kg (easy) → +4kg\n\nBox Jumps: 3x8 | RPE 7 | Level 1 bilateral, emphasise soft landing\n\nDead Bug: 3x10 per side | Slow eccentric phase\n\nCOOL-DOWN (3 min)\nFoam roller quads 60s per side, calf stretch 30s",
     "focus": "3-5 sentences of coaching text: session goal, focus points, progression rationale.",
     "duration_note": "Optional: rationale if total duration falls outside the allowed range (max 1 sentence)."
   }}

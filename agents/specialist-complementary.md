@@ -170,7 +170,7 @@ Respond with valid JSON only. Start directly with `{`.
       "description": "Foam roller quads 60 s/side, calf stretch 30 s"
     }
   ],
-  "description": "WARM-UP (5 min)\nCat-cow 10x, hip circles 10x/side, leg swings 10x\n\nMAIN (20 min)\n60 s rest between exercises\n\nGoblet Squat: 3x12 16kg | RPE 7 | last week 12 kg (easy) → +4 kg\n\nBox Jumps: 3x8 | RPE 7 | level 1 bilateral, soft landing\n\nDead Bug: 3x10/side | slow eccentric\n\nPlank: 3x45s | last week 30 s → +15 s\n\nCOOL-DOWN (3 min)\nFoam roller quads 60 s/side, calf stretch 30 s",
+  "description": "WARM-UP (5 min)\nCat-cow 10x, hip circles 10x/side, leg swings 10x\n\nMAIN (20 min)\n60 s rest between exercises\n\nGoblet Squat: 3x12 @ 16kg | RPE 7 | last week 12 kg (easy) → +4 kg\n\nBox Jumps: 3x8 | RPE 7 | level 1 bilateral, soft landing\n\nDead Bug: 3x10/side | slow eccentric\n\nPlank: 3x45s | last week 30 s → +15 s\n\nCOOL-DOWN (3 min)\nFoam roller quads 60 s/side, calf stretch 30 s",
   "focus": "3–5 sentences of coaching prose: goal of the session, focus points, progression rationale.",
   "duration_note": "Optional: justification if total duration falls outside the allowed range (max 1 sentence)."
 }
@@ -444,9 +444,21 @@ the progression loop.
 @ 9 kg Cap) does NOT remove the RPE requirement — the cap fixes load,
 the RPE tells whether the cap is still appropriate.
 
-**Inline format in `description`:** `Goblet Squat: 3x12 16kg | RPE 7
+**Inline format in `description`:** `Goblet Squat: 3x12 @ 16kg | RPE 7
 | last week 12 kg (easy) → +4 kg`. The RPE token belongs **between**
 the volume spec and the progression rationale, separated by `|`.
+
+**The `@` before the load is MANDATORY, not decorative.** Writing the
+weight adjacent to the volume spec (`3x12 16kg`) is ambiguous to a
+reader: `SxR` and `N kg` sit next to each other with nothing marking
+which number is which, and whenever the numbers happen to coincide the
+line reads as a piece-count of equipment rather than as sets and reps.
+`2x12 12kg` is parsed by a human as "two 12 kg bells", not as "2 sets
+of 12 reps at 12 kg" — an athlete who owns only one bell then believes
+the session is impossible and stops. Always separate the load with
+` @ `, and where the exercise could plausibly be performed with one or
+two implements, state the implement count explicitly in the cue
+("one kettlebell, both hands on the same handle").
 
 ## MANDATORY: two legitimate justification sources — planner estimate is NOT one
 
