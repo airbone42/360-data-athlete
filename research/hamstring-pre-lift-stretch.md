@@ -49,6 +49,18 @@
 - **`config/athlete_static.md`** — pre-RDL static-hamstring measure (athlete-specifically dosed) → source anchor persisted here.
 - **`framework/agents/specialist-complementary.md`** should embed the pre-stretch obligation in the `intervals_icu` description when an RDL is prescribed (e.g. "WU: 2×30s hamstring static per side, then RDL").
 - **Cross-reference** to [pre-exercise-stretching.md](pre-exercise-stretching.md) (N1) and [maximal-strength-protocols.md](maximal-strength-protocols.md) (M8).
+- **Do not let scheduling quietly remove the RDL from a shortened-hamstring
+  athlete's programme.** The RDL is one of the few movements that reaches genuine
+  peak stretch, which makes it the structural stimulus for fascicle length
+  (reported gains of roughly +5 to +9 % with eccentric long-length work) — a
+  mobility measure alone does not produce that adaptation. The same peak stretch
+  also makes it the most damage-prone option in the 24–48 h before a long
+  endurance session, so it is tempting to substitute a ballistic hip hinge
+  (kettlebell swing) that never reaches end-range. That swap is legitimate **for
+  that slot only**: the ballistic variant is acutely safer but trains no fascicle
+  length. Treat it as a *placement* decision — keep the RDL in the programme at
+  ≥ 72 h from the long session — not as a substitution. Source:
+  [ballistic-hip-hinge-vs-eccentric-rdl-before-longrun.md](ballistic-hip-hinge-vs-eccentric-rdl-before-longrun.md).
 
 ## Open questions / Caveats
 

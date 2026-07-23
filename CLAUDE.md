@@ -823,6 +823,40 @@ DOMS window of a heavy eccentric leg / plyo day. Either
   day), so the quality lands on fresh legs and the strength day absorbs the
   residual fatigue.
 
+**Not every eccentric is the same — the spacing floor differs by signature
+(mandatory).** "Eccentric" covers two mechanically different stimuli, and one
+floor for both is wrong in both directions: it over-restricts ballistic work
+and under-restricts slow-eccentric work. Classify before spacing:
+
+| Signature | Examples | Mechanics | Floor before a leg-driven endurance session |
+|---|---|---|---|
+| **Ballistic / overspeed eccentric** | Kettlebell swing, drop / depth jump, bounding, hurdle hops | Braking action well under 1 s per rep, never at peak stretch | **~48 h** |
+| **Slow eccentric at long muscle length** | RDL, Nordic curl, downhill running, heavy split squat, slow-tempo squat | Long lengthening excursion at or near peak stretch | **≥ 72 h** |
+
+Two corollaries the coach must not get backwards:
+
+1. **A load jump is not the same stimulus as the exercise.** Novelty breaks
+   the repeated-bout protection, so an unfamiliar load produces an elevated
+   DOMS response even for a ballistic movement. Keep the **established** load
+   in the 48 h slot and move the **progression step** to a session ≥ 72 h out.
+   The progression is deferred, not cancelled — the target anchor stands (see
+   "No silent conservatism").
+2. **For a low-intensity endurance session, justify the spacing with DOMS,
+   not with running economy.** Economy is measurably impaired mainly at
+   ≳ 85 % VO₂max; an easy or long aerobic run 48 h after strength work is
+   largely unaffected metabolically. Soreness is the real cost — it degrades
+   the session subjectively and alters mechanics. Citing an economy penalty
+   for an easy day is a metric misuse.
+
+**Do not let this rule quietly delete a structural stimulus.** When a
+slow-eccentric exercise is moved out of a slot, it must be **re-placed**, not
+dropped: for an athlete with shortened hamstrings the RDL is the stimulus that
+builds fascicle length, and a ballistic hinge substituted into that slot is
+acutely safer but trains no fascicle length. Substituting for one slot is
+legitimate; substituting permanently removes an adaptation the athlete needs.
+
+**Research anchor:** [ballistic-hip-hinge-vs-eccentric-rdl-before-longrun.md](research/ballistic-hip-hinge-vs-eccentric-rdl-before-longrun.md).
+
 The bike itself is near-purely **concentric** and barely DOMS-inducing
 ([concurrent-training-interference.md](research/concurrent-training-interference.md));
 the constraint is the **residual DOMS from the prior eccentric session**, not

@@ -115,6 +115,37 @@ table before substituting an exercise.
 
 **Frequency rule:** Minimum 48 h recovery between plyo sessions — CNS and tendon recovery. See [plyometrics-frequency-recovery.md](../research/plyometrics-frequency-recovery.md).
 
+## Hip-hinge selection in the 48 h before a long endurance session
+
+When the briefing places a strength session roughly 48 h before a long run,
+the hip-dominant slot is the one that decides whether the long run is paid
+for in soreness. Classify the candidate before choosing:
+
+- **Ballistic hinge** (two-handed kettlebell swing): braking phase well under
+  a second per rep, never at peak stretch, no ground impact. **Acceptable in
+  the 48 h slot — at an established load.**
+- **Slow eccentric at long muscle length** (RDL, Nordic curl, heavy split
+  squat): long excursion at or near peak stretch. **Belongs ≥ 72 h out.**
+
+Three things are **not** acceptable in the 48 h slot:
+
+1. **A load jump.** Novelty breaks the repeated-bout protection, so the
+   elevated DOMS response lands in the window before the long run. Hold the
+   established load and route the progression step to a session ≥ 72 h out —
+   deferred, not cancelled; the target anchor stands.
+2. **Ballistic hinge and slow eccentric in the same session** — that
+   reinstates exactly the stimulus the slot was chosen to avoid.
+3. **Treating the substitution as permanent.** A ballistic hinge trains no
+   fascicle length. For an athlete with documented hamstring shortening the
+   RDL is the structural stimulus, so it must be re-placed at ≥ 72 h, not
+   dropped. If your plan removes it from the week entirely, say so in
+   `focus` and name where it returns.
+
+When the long run itself carries an open tendon-tolerance question, sequence
+the long run first instead and put the strength session after it.
+
+**Research anchor:** [ballistic-hip-hinge-vs-eccentric-rdl-before-longrun.md](../research/ballistic-hip-hinge-vs-eccentric-rdl-before-longrun.md) | [doms-peak-timing.md](../research/doms-peak-timing.md)
+
 ---
 
 ## Output format

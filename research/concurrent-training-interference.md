@@ -117,6 +117,16 @@ The framework rules "WeightTraining → run: ≥3h; leg focus → run: ≥6h" ar
 ### What is confirmed
 
 - **3h/6h anchors** are defensively conservative and consistent with Wilson 2012 + Doma 2013. The leg-strength → run-6h rule has the strongest study anchor (Wilson 2012 mode effect + Doma 2013 8h window).
+- **What the next-day spacing rules actually protect is the quality of the athlete's
+  session experience, not running economy per se.** Running economy is measurably
+  impaired mainly at high intensity (≳ 85 % VO₂max); for an aerobic long run or an
+  easy day it is largely unaffected 48 h after a strength stimulus. The reason to
+  keep a damaging eccentric session away from the day before a long endurance
+  session is the DOMS probability — soreness can ruin the session subjectively and
+  alter mechanics without any metabolic economy penalty. Do not justify a spacing
+  rule for a *low-intensity* endurance session with an economy argument; justify it
+  with DOMS. Source and the ballistic-vs-slow-eccentric split:
+  [ballistic-hip-hinge-vs-eccentric-rdl-before-longrun.md](ballistic-hip-hinge-vs-eccentric-rdl-before-longrun.md).
 - **Bike endurance is more interference-friendly than run endurance** → in practice, with bike sessions a 3h spacing to strength can be sufficient even with leg strength if the strength is upper-body focused.
 
 ### What should be changed / refined

@@ -8,6 +8,18 @@
 2. **Mechanics:** microscopic muscle damage from eccentric contractions → inflammatory response → myofibrillar repair starts day 3, complete day 7.
 3. **R004 validator rule (glute-DOMS NOTE in the last 3 days + hard glute exercises today = WARNING):** conservative and sensible — the 3-day window covers the peak range + early recovery start.
 4. **Eccentric load as main trigger:** downhill running, heel drops, deep squats, RDL variants. Pure concentric load (cycling, concentric strength) hardly produces DOMS.
+5. **"Eccentric" is not one category — separate ballistic from slow-eccentric.** The
+   damage-relevant variables are eccentric time-under-tension per repetition and how
+   close the muscle works to peak stretch, not the mere presence of a lengthening
+   phase. A ballistic braking action (kettlebell-swing backswing, drop-jump landing,
+   bounding) is an *overspeed eccentric* lasting well under a second per repetition
+   and never reaching end-range; a slow high-amplitude excursion (RDL, Nordic curl,
+   downhill running, heavy split squat) holds tension through a long lengthening
+   range at or near peak stretch. The second class is the classic damage stimulus;
+   the first sits closer to plyometrics. Practical consequence for spacing: treat the
+   ballistic signature as a ~48 h stimulus and the slow-eccentric signature as a
+   ≥ 72 h stimulus. Details and the running-economy caveat:
+   [ballistic-hip-hinge-vs-eccentric-rdl-before-longrun.md](ballistic-hip-hinge-vs-eccentric-rdl-before-longrun.md).
 
 ## Findings
 
