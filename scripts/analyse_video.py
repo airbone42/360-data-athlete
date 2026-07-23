@@ -220,6 +220,12 @@ Analysiere die Bewegungssequenz in zwei Ebenen:
 1. Ausführungsqualität — was siehst du konkret in den Frames?
 2. Challenge — ist diese Übung und Dosierung für diesen Athleten gerade optimal?
 
+ORIENTIERUNG ZUERST PRÜFEN: Steht der Athlet aufrecht im Bild? Wenn er quer oder
+auf dem Kopf liegt, ist das Video gedreht — Gelenkwinkel und Links/Rechts-Aussagen
+sind dann wertlos. NICHT im Kopf zurechtdrehen und trotzdem analysieren.
+Schreibe stattdessen NUR: "❌ Video nicht auswertbar: Bild ist gedreht (Athlet liegt
+quer/kopfüber im Bild)\n📹 Nächstes Mal: Analyse mit --rotate 90 (bzw. 180/270) erneut starten"
+
 Wenn die Frames nicht aussagekräftig sind (unscharf, falscher Winkel, Athlet außerhalb Bild, Beleuchtung):
 Schreibe NUR: "❌ Video nicht auswertbar: [Grund]\n📹 Nächstes Mal: [was ändern]"
 Keine Analyse durchführen wenn die Qualität nicht reicht."""
@@ -243,6 +249,12 @@ Bei posteriorer Kamera zusätzlich:
 - Pronationsgrad und Fersensymmetrie
 - Schulterachse (Asymmetrie = Kompensation?)
 
+ORIENTIERUNG ZUERST PRÜFEN: Läuft der Athlet aufrecht im Bild? Liegt er quer oder
+kopfüber, ist das Video gedreht — Gelenkwinkel, Fußaufsatz und Links/Rechts-Aussagen
+sind dann wertlos. NICHT im Kopf zurechtdrehen und trotzdem analysieren.
+Schreibe stattdessen NUR: "❌ Video nicht auswertbar: Bild ist gedreht (Athlet liegt
+quer/kopfüber im Bild)\n📹 Nächstes Mal: Analyse mit --rotate 90 (bzw. 180/270) erneut starten"
+
 Wenn die Frames nicht aussagekräftig sind (unscharf, Athlet zu weit weg, falscher Winkel, nur Rücken oder Füße sichtbar):
 Schreibe NUR: "❌ Video nicht auswertbar: [Grund]\n📹 Nächstes Mal: [was ändern — Distanz, Winkel, Bildausschnitt]"
 Keine Analyse wenn Qualität nicht reicht."""
@@ -250,7 +262,49 @@ Keine Analyse wenn Qualität nicht reicht."""
 
 # ─── Gemini via OpenRouter ───────────────────────────────────────────────────
 
-VIDEO_SIZE_LIMIT_MB = 50  # Direkte Video-Analyse bis 50MB, sonst Frames
+VIDEO_SIZE_LIMIT_MB = 50  # Hard ceiling — above this we do not even attempt an upload.
+
+# Practical payload target for the base64 data-URL upload.
+#
+# The file is base64-encoded into a single JSON request, which inflates it by
+# ~33 %. Well below VIDEO_SIZE_LIMIT_MB the provider starts returning an empty
+# response after a long upload instead of an error — observed reproducibly at
+# ~36 MB (three attempts, both model tiers, each failing only after 10-12
+# minutes), while a ~13 MB clip of the same footage succeeded first try. The
+# hard limit alone therefore does not protect the caller: it lets a request
+# through that is going to fail slowly and silently.
+#
+# So anything above this target is re-encoded down before upload rather than
+# sent as-is.
+VIDEO_UPLOAD_TARGET_MB = 15.0
+
+# Orientation. Two different failure modes get confused with each other:
+#
+#   1. Rotation *metadata* — the file is stored landscape with a display-matrix
+#      flag. Every well-behaved decoder applies it, so the athlete comes out
+#      upright. `--rotate auto` reads the flag and applies it explicitly, which
+#      also protects any consumer that ignores it.
+#   2. Rotation *in the content* — the file carries no flag at all and the
+#      athlete is simply lying sideways in a landscape frame. This happens with
+#      some phone and action-cam recordings. No amount of metadata handling can
+#      detect it, because there is no metadata to read.
+#
+# Case 2 is the dangerous one: a form check reads joint angles and left/right
+# detail, and both are meaningless on a rotated frame — the model does not
+# refuse, it confidently describes a sideways athlete. So the operator can force
+# the correction with `--rotate 90|180|270` (counter-clockwise degrees), and the
+# perception prompt separately instructs the model to reject a sideways clip
+# instead of analysing it.
+VALID_ROTATIONS = (0, 90, 180, 270)
+
+# Re-encode ladder, tried in order until the output fits the target. Each step
+# is (long-edge pixels, CRF). Resolution is reduced before quality because form
+# checks depend on joint-position clarity more than on pixel count.
+_COMPRESSION_LADDER: list[tuple[int, int]] = [
+    (1280, 28),
+    (960, 30),
+    (720, 32),
+]
 
 
 def _openrouter_client() -> object:
@@ -428,11 +482,35 @@ def analyse_with_gemini_video(
     model_key: str = DEFAULT_MODEL,
     run_mode: bool = False,
     section_label: str = "",
+    rotate: int | None = None,
 ) -> str:
-    """Direkte Video-Analyse via OpenRouter video_url (Gemini sieht das komplette Video)."""
+    """Direkte Video-Analyse via OpenRouter video_url (Gemini sieht das komplette Video).
+
+    ``rotate`` is degrees counter-clockwise to apply before upload; ``None``
+    means read the container's display matrix (see VALID_ROTATIONS).
+    """
     size_mb = Path(video_path).stat().st_size / (1024 * 1024)
     if size_mb > VIDEO_SIZE_LIMIT_MB:
         raise ValueError(f"Video zu groß für direkte Analyse ({size_mb:.1f}MB > {VIDEO_SIZE_LIMIT_MB}MB) — nutze Frames")
+
+    # Rotate upright and/or shrink before uploading. Above the practical payload
+    # target the provider tends to answer with an empty body after a long upload
+    # rather than with an error, so size is handled here rather than discovered
+    # ten minutes later.
+    rotate_ccw = rotate if rotate is not None else _detect_metadata_rotation(video_path)
+    if rotate_ccw:
+        print(f"  Orientierung: drehe {rotate_ccw}° gegen den Uhrzeigersinn", file=sys.stderr)
+    if size_mb > VIDEO_UPLOAD_TARGET_MB:
+        print(f"  {size_mb:.1f}MB über dem Upload-Ziel ({VIDEO_UPLOAD_TARGET_MB:.0f}MB) — bereite auf…",
+              file=sys.stderr)
+    prepared = _prepare_for_upload(video_path, rotate_ccw=rotate_ccw)
+    if prepared:
+        video_path = prepared
+        size_mb = Path(video_path).stat().st_size / (1024 * 1024)
+    elif size_mb > VIDEO_UPLOAD_TARGET_MB:
+        print("  Aufbereitung brachte das Video nicht unter das Ziel — sende Original. "
+              "Bei leerer Antwort das Video kürzen oder vorab verkleinern.",
+              file=sys.stderr)
 
     print(f"  Direkte Video-Analyse ({size_mb:.1f}MB)...", file=sys.stderr)
     with open(video_path, "rb") as f:
@@ -629,6 +707,12 @@ def main() -> None:
                         help="Sekunden vom Anfang abschneiden (default: 0)")
     parser.add_argument("--trim-end", type=float, default=0.0,
                         help="Sekunden vom Ende abschneiden (default: 0)")
+    parser.add_argument("--rotate", default="auto",
+                        help="Bild aufrichten: 'auto' liest die Rotations-Metadaten "
+                             "(default), oder 0/90/180/270 Grad GEGEN den Uhrzeigersinn "
+                             "erzwingen. Nötig, wenn der Athlet quer im Bild liegt und die "
+                             "Datei KEIN Rotations-Flag trägt — ein Formcheck auf einem "
+                             "gedrehten Bild liefert selbstbewusste Fehlbefunde.")
     parser.add_argument("--no-log", action="store_true",
                         help="exercise_log.md nicht aktualisieren (Ad-hoc-Analyse)")
     parser.add_argument("--allow-chat-video", action="store_true",
@@ -676,6 +760,20 @@ def main() -> None:
         _run_analysis(args)
 
 
+def _resolve_rotate_arg(raw: str) -> int | None:
+    """'auto' -> None (read metadata); an explicit degree value -> int."""
+    value = (raw or "auto").strip().lower()
+    if value == "auto":
+        return None
+    try:
+        deg = int(value) % 360
+    except ValueError:
+        raise SystemExit(f"--rotate: 'auto' oder {VALID_ROTATIONS} erwartet, nicht {raw!r}")
+    if deg not in VALID_ROTATIONS:
+        raise SystemExit(f"--rotate: nur {VALID_ROTATIONS} (Grad gegen den Uhrzeigersinn), nicht {raw!r}")
+    return deg
+
+
 def _run_analysis(args: argparse.Namespace) -> None:
 
     # Trim video if requested
@@ -714,7 +812,7 @@ def _run_analysis(args: argparse.Namespace) -> None:
         try:
             feedback = analyse_with_gemini_video(
                 args.video, args.exercise, checklist, args.context, args.angle,
-                args.model, run_mode=True,
+                args.model, run_mode=True, rotate=_resolve_rotate_arg(args.rotate),
             )
         except ValueError as e:
             print(f"Fehler: {e}", file=sys.stderr)
@@ -730,7 +828,7 @@ def _run_analysis(args: argparse.Namespace) -> None:
     try:
         feedback = analyse_with_gemini_video(
             args.video, args.exercise, checklist, args.context, args.angle,
-            args.model, run_mode=False,
+            args.model, run_mode=False, rotate=_resolve_rotate_arg(args.rotate),
         )
     except ValueError as e:
         print(f"Fehler: {e}", file=sys.stderr)
@@ -814,12 +912,161 @@ def _run_garmin_sections(args: argparse.Namespace, checklist: str) -> None:
                 feedback = analyse_with_gemini_video(
                     clip_path, args.exercise, checklist, ctx, args.angle,
                     args.model, run_mode=True, section_label=label,
+                    rotate=_resolve_rotate_arg(args.rotate),
                 )
                 print(f"\n### {label}\n")
                 print(feedback)
                 print()
             except Exception as e:
                 print(f"  Video-Analyse fehlgeschlagen ({e}) — Section {label} übersprungen", file=sys.stderr)
+
+
+def _detect_metadata_rotation(video_path: str) -> int:
+    """Rotation in degrees CCW from the container's display matrix, 0 if absent.
+
+    Only covers failure mode 1 (see VALID_ROTATIONS). A clip whose *content* is
+    sideways without a flag reports 0 here — that case needs an explicit
+    ``--rotate``.
+    """
+    try:
+        import av
+        with av.open(video_path) as container:
+            stream = container.streams.video[0]
+            side = getattr(stream, "side_data", None)
+            if not side:
+                return 0
+            for key in ("DISPLAYMATRIX", "displaymatrix"):
+                try:
+                    value = side[key]
+                except Exception:
+                    continue
+                if value is None:
+                    continue
+                # ffmpeg reports the clockwise rotation to undo; we work in CCW.
+                deg = int(round(float(getattr(value, "rotation", value)))) % 360
+                return (-deg) % 360
+    except Exception:
+        pass
+    return 0
+
+
+def _prepare_for_upload(
+    video_path: str,
+    rotate_ccw: int = 0,
+    target_mb: float = VIDEO_UPLOAD_TARGET_MB,
+) -> str | None:
+    """Re-encode a clip for the upload: rotate upright and shrink below target.
+
+    Returns the path of a temporary re-encoded file, or ``None`` when nothing
+    could be produced (caller then decides whether to send the original).
+
+    Prefers an ffmpeg binary when one is available and falls back to PyAV, since
+    deployments differ in which of the two they ship.
+    """
+    import tempfile as _tmp
+
+    needs_rotate = rotate_ccw % 360 != 0
+    size_mb = Path(video_path).stat().st_size / (1024 * 1024)
+    if not needs_rotate and size_mb <= target_mb:
+        return None  # nothing to do
+
+    ffmpeg = None
+    try:
+        import imageio_ffmpeg
+        ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
+    except Exception:
+        ffmpeg = None
+
+    for long_edge, crf in _COMPRESSION_LADDER:
+        out_path = _tmp.NamedTemporaryFile(suffix=".mp4", delete=False).name
+        ok = False
+
+        if ffmpeg:
+            filters = []
+            if needs_rotate:
+                # transpose=2 is 90° CCW; chain it for 180/270.
+                filters += ["transpose=2"] * ((rotate_ccw % 360) // 90)
+            filters.append(
+                f"scale='if(gt(iw,ih),min({long_edge},iw),-2)':"
+                f"'if(gt(iw,ih),-2,min({long_edge},ih))'"
+            )
+            try:
+                result = subprocess.run(
+                    [ffmpeg, "-y", "-noautorotate", "-i", video_path,
+                     "-vf", ",".join(filters),
+                     "-c:v", "libx264", "-preset", "veryfast", "-crf", str(crf),
+                     "-pix_fmt", "yuv420p", "-an", "-movflags", "+faststart",
+                     out_path],
+                    capture_output=True, timeout=600,
+                )
+                ok = result.returncode == 0 and Path(out_path).exists()
+            except Exception as e:
+                print(f"  ffmpeg-Reencode fehlgeschlagen ({long_edge}px/CRF{crf}): {e}",
+                      file=sys.stderr)
+        else:
+            ok = _reencode_with_pyav(video_path, out_path, rotate_ccw, long_edge, crf)
+
+        if not ok:
+            continue
+
+        out_mb = Path(out_path).stat().st_size / (1024 * 1024)
+        if out_mb <= target_mb:
+            note = f", {rotate_ccw}° CCW gedreht" if needs_rotate else ""
+            print(f"  Aufbereitet: {out_mb:.1f}MB (lange Kante {long_edge}px, CRF {crf}{note})",
+                  file=sys.stderr)
+            return out_path
+        print(f"  {long_edge}px/CRF{crf} → {out_mb:.1f}MB, noch über {target_mb:.0f}MB",
+              file=sys.stderr)
+
+    return None
+
+
+def _reencode_with_pyav(
+    src: str, dst: str, rotate_ccw: int, long_edge: int, crf: int
+) -> bool:
+    """PyAV fallback for _prepare_for_upload when no ffmpeg binary is present."""
+    try:
+        import av
+        from PIL import Image  # noqa: F401  (used via frame.to_image)
+    except Exception as e:
+        print(f"  Kein Reencode möglich (weder ffmpeg noch PyAV/Pillow: {e})", file=sys.stderr)
+        return False
+
+    try:
+        with av.open(src) as inp, av.open(dst, "w") as out:
+            in_stream = inp.streams.video[0]
+            in_stream.thread_type = "AUTO"
+            fps = in_stream.average_rate or 30
+
+            out_stream = None
+            for frame in inp.decode(in_stream):
+                img = frame.to_image()
+                if rotate_ccw % 360:
+                    img = img.rotate(rotate_ccw % 360, expand=True)
+                w, h = img.size
+                scale = min(1.0, long_edge / max(w, h))
+                if scale < 1.0:
+                    # even dimensions required by yuv420p
+                    img = img.resize((max(2, int(w * scale) // 2 * 2),
+                                      max(2, int(h * scale) // 2 * 2)))
+
+                if out_stream is None:
+                    out_stream = out.add_stream("libx264", rate=fps)
+                    out_stream.width, out_stream.height = img.size
+                    out_stream.pix_fmt = "yuv420p"
+                    out_stream.options = {"crf": str(crf), "preset": "veryfast"}
+
+                new_frame = av.VideoFrame.from_image(img)
+                for packet in out_stream.encode(new_frame):
+                    out.mux(packet)
+
+            if out_stream is not None:
+                for packet in out_stream.encode():
+                    out.mux(packet)
+        return Path(dst).exists() and Path(dst).stat().st_size > 0
+    except Exception as e:
+        print(f"  PyAV-Reencode fehlgeschlagen ({long_edge}px/CRF{crf}): {e}", file=sys.stderr)
+        return False
 
 
 def _get_video_duration_sec(video_path: str) -> float:
@@ -877,6 +1124,7 @@ def _run_multi_section(args: argparse.Namespace, checklist: str) -> None:
                 feedback = analyse_with_gemini_video(
                     clip_path, args.exercise, checklist, context_with_label, args.angle,
                     args.model, run_mode=True, section_label=label,
+                    rotate=_resolve_rotate_arg(args.rotate),
                 )
                 print(f"\n### {label}\n")
                 print(feedback)
