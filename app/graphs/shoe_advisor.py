@@ -424,13 +424,18 @@ def _score_shoe(
     elif pct >= 0.8:
         score -= 8.0
 
-    # Rotation bonus: reward longest rest
+    # Rotation bonus: reward longest rest. A shoe not seen in the activity
+    # look-back window has rested at least as long as that window — it is among
+    # the *longest*-rested shoes — so it must never rank below a shoe worn a few
+    # days ago. Award it the ceiling bonus. (Previously it got a flat +14 and
+    # lost to an in-window shoe worn ~12 days ago at +24, inverting the rotation
+    # intent for long-idle shoes.)
     last = last_used.get(sid)
     if last:
         days_rest = _days_ago(last, today_str)
         score += min(days_rest, 14) * 2.0  # up to +28
     else:
-        score += 14.0  # never used → treat as longest rest
+        score += 28.0  # rested >= look-back window -> treat as the longest rest
 
     return score
 
@@ -556,7 +561,10 @@ def build_shoe_context(
             if sc is not None:
                 scored.append((sc, s))
 
-        scored.sort(key=lambda x: x[0], reverse=True)
+        # Primary key: score (desc). Tie-break: prefer the less-worn shoe
+        # (lower pct_used) so equally-rested candidates spread mileage evenly
+        # across the fleet — the even-wear half of the rotation intent.
+        scored.sort(key=lambda x: (x[0], -x[1].get("pct_used", 0.0)), reverse=True)
 
         def _rec_entry(score: float, s: dict) -> dict:
             p = profile_map.get(s["gear_key"], {})

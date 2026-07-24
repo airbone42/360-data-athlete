@@ -221,12 +221,30 @@ Show readable markdown with coaching_notes + per workout: name, duration,
 focus, structure overview.
 
 **Shoe recommendation (MANDATORY when the plan contains Run or Ride):**
-Embed directly in the plan presentation — not after the push:
-- Primary shoe: `context.shoeRecommendation.primary.name` + km +
-  reason
-- Alternative: `context.shoeRecommendation.alternative.name` (if any)
-- Warnings: `context.shoeWarnings[]` if present
-- Fleet warning: `context.shoeFleetWarning.missing_types[]` if present
+Embed directly in the plan presentation — not after the push.
+
+**Compute it from the *planned* run — `context.shoeRecommendation` is empty
+pre-push.** `fetch_context.py` fills `shoeRecommendation` only from Run events
+already on the calendar (see `context_builder`: "populated when context is
+re-fetched after push_workouts"). At plan time — before the push — no run event
+exists yet, so the field is `{}`. Do **not** fall back to hand-picking a shoe
+from a coaching note or the "break-in" text: that ignores rotation and has
+recommended the shoe worn the day before. Pipe the planned run(s) into the
+advisor, which ranks by surface, mileage and rotation (least-recently-worn,
+then least-worn on ties):
+
+```bash
+echo '{run_workouts_json}' | python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/shoe_recommend.py --date {DATE}
+```
+
+Take `primary` / `alternative` from its output:
+- Primary shoe: name + km + reason (e.g. "44 days unused")
+- Alternative: name (if any)
+- Warnings / fleet gaps: surfaced in the same advisor output
+
+The same recommendation is re-applied deterministically at push time
+(`push_workouts.py` embeds the footer + `[coach-gear]` marker), so the shoe
+shown to the athlete and the one assigned in `/analyse` match.
 
 Format: `👟 Shoes today: **{primary.name}** ({primary.distance_km} km)
 — {primary.reason}`
