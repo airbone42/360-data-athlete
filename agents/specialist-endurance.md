@@ -283,12 +283,17 @@ Strides 4x
 - Easy 90s Z1 HR
 ```
 
-**Within-block ordering is athlete-configurable.** When `config/`
-documents a preferred end-of-run stride-block ordering, follow it. Two
+**Within-block ordering is athlete-configurable — and authoritative when
+set.** When `config/athlete_status.md` carries the machine key
+`stride_block_order` (`recovery-first` | `stride-first`), that ordering is
+**MANDATORY**: the mechanical validator **R021** blocks a mismatching
+stride block at push time. The syntax example above is *illustrative only* —
+do **not** treat stride-first as a fallback default when a
+`stride_block_order` is configured; read the key and emit that order. Two
 valid patterns:
 
-- *Stride-first* (default above): `Stride` then `Easy` recovery,
-  repeated — ends on a recovery rep.
+- *Stride-first*: `Stride` then `Easy` recovery, repeated — ends on a
+  recovery rep.
 - *Recovery-first* (when documented): `Easy` recovery then `Stride`,
   repeated — each stride gets a short jog lead-in (mental + physiological
   prep before every rep, incl. the first after the main set), and the

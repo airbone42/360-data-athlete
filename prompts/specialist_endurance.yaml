@@ -108,6 +108,7 @@ template: |
   - **Steps ≥ 60s:** specify an HR-zone target (`Z2 HR`, `Z3 HR`, etc.). Example: `- 4m Z4 HR`
   - **Steps < 60s:** NO HR target (HR reacts too slowly) — title and duration only. Example: `- Stride 30s`
   - **Interval blocks:** repetition syntax `Nx` as section title. Example: `Main set 4x`
+  - **Stride-block ordering (end-of-run finishers):** When `config/athlete_status.md` carries the machine key `stride_block_order` (`recovery-first` | `stride-first`), that ordering is MANDATORY inside the `Strides Nx` loop and is enforced by validator R021 at push time — do NOT treat stride-first as a default. `recovery-first`: `- Easy 90s Z1 HR` then `- Stride 20s`, block ends on the last stride (no trailing recovery — the cool-down absorbs it). `stride-first`: `- Stride 20s` then `- Easy 90s Z1 HR`. Applies to end-of-run finishers only, never to activation strides before intervals/tempo.
   - **Hill intervals (day contains "hill" / "berg" or workout_type implies hills):** Both work and recovery steps ALWAYS with `press lap` (duration and distance vary with topography). State duration and intensity in the step title. Example: `- 60s uphill Z4 HR press lap` / `- 3m easy downhill Z1 HR press lap`
   - **Cool-down — jog-out (Run + outdoor Ride only):** As with jog-in — `press lap` + time suggestion, NO HR target. Format: `- Cool-down jog Xm press lap`. Example: `- Cool-down jog 5m press lap`.
   - **Cool-down — Indoor Ride:** NO `press lap`, fixed time step with Z1 HR target. Format: `- Cool-down Xm Z1 HR`. Example: `- Cool-down 5m Z1 HR`.

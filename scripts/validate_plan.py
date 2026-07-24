@@ -2095,6 +2095,95 @@ def check_quality_warmup_priming(workouts: list[dict], ctx: Context) -> list[Fin
     return findings
 
 
+def check_stride_block_order(workouts: list[dict], ctx: Context) -> list[Finding]:
+    """R021 — Strides repeat block must follow the configured within-block order.
+
+    The within-block ordering (recovery-jog-before-stride vs stride-before-
+    recovery) is athlete-configurable via a machine-readable key in
+    ``config/athlete_status.md``::
+
+        stride_block_order: recovery-first     # or: stride-first
+
+    When the key is absent the rule is a no-op — the framework default leaves
+    the order unconstrained, so a fresh plugin user is never blocked. This
+    keeps the *rule* generic (framework) while the concrete *preference* lives
+    in the wrapper config, the same split as R002 (injury_locks.json).
+
+    Why a mechanical gate: the ordering used to be left to LLM discretion
+    against a stride-first example in the specialist prompt, so it oscillated
+    across sessions even though the preference was documented in prose. This
+    rule turns the configured order into a hard block at push time.
+    """
+    import re
+
+    # Tolerate markdown around the key (config uses `**stride_block_order:**`),
+    # same approach as R006's LTHR parse.
+    m = re.search(
+        r"stride_block_order[:\*\s=]*(recovery-first|stride-first)",
+        ctx.athlete_status,
+        re.IGNORECASE,
+    )
+    if not m:
+        return []
+    pref = m.group(1).lower()
+
+    REPEAT_HEADER_RE = re.compile(
+        r"^\s*(?:[A-Za-zÄÖÜäöüß0-9 _]+\s+)?\d+x\s*$", re.IGNORECASE
+    )
+    STRIDE_RE = re.compile(r"(?:stride|steigerung|surge)", re.IGNORECASE)
+    RECOVERY_RE = re.compile(r"(?:\beasy\b|\btrab\b|\bjog\b|recovery|\bfloat\b)", re.IGNORECASE)
+
+    findings: list[Finding] = []
+    for w in workouts:
+        icu = w.get("intervals_icu") or ""
+        if not icu.strip():
+            continue
+        lines = icu.split("\n")
+        for idx, raw in enumerate(lines):
+            if not REPEAT_HEADER_RE.match(raw.rstrip()):
+                continue
+            header = raw.strip()
+            # Collect the contiguous loop-body items (`-` lines) after the header.
+            items: list[str] = []
+            j = idx + 1
+            while j < len(lines) and lines[j].strip().startswith("-"):
+                items.append(lines[j].strip())
+                j += 1
+            if len(items) < 2:
+                continue
+            stride_pos = next(
+                (k for k, it in enumerate(items) if STRIDE_RE.search(it)), None
+            )
+            rec_pos = next(
+                (k for k, it in enumerate(items) if RECOVERY_RE.search(it)), None
+            )
+            # Only a genuine stride+recovery block qualifies — this skips
+            # work-interval sets (Work/Brisk 30/15 etc.) that carry no Stride
+            # item and may legitimately be work-first.
+            if stride_pos is None or rec_pos is None or stride_pos == rec_pos:
+                continue
+            actual = "stride-first" if stride_pos < rec_pos else "recovery-first"
+            if actual == pref:
+                continue
+            first_item = "recovery jog (Easy/Trab)" if pref == "recovery-first" else "Stride"
+            findings.append(Finding(
+                rule_id="R021",
+                severity=SEVERITY_ERROR,
+                workout=_workout_name(w),
+                message=(
+                    f"Strides block `{header}` is {actual}, but "
+                    f"config/athlete_status.md sets stride_block_order: {pref}. "
+                    f"Within the repeat the {first_item} must come first."
+                ),
+                suggestion=(
+                    "Reorder the loop body — for recovery-first write "
+                    "`- Easy 90s Z1 HR` then `- Stride 20s` (block ends on the "
+                    "last stride, no trailing recovery)."
+                ),
+            ))
+    return findings
+
+
 RULES: list[tuple[str, Callable[[list[dict], Context], list[Finding]]]] = [
     ("R001", check_reps_ceiling),
     ("R002", check_injury_locks_shoulder),
@@ -2116,6 +2205,7 @@ RULES: list[tuple[str, Callable[[list[dict], Context], list[Finding]]]] = [
     ("R018", check_duration_plausibility),
     ("R019", check_quality_warmup_priming),
     ("R020", check_run_hr_zone_target),
+    ("R021", check_stride_block_order),
 ]
 
 
