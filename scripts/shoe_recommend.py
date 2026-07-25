@@ -22,6 +22,7 @@ from app.config import settings
 from app.api.strava_client import StravaClient
 from app.api.intervals_client import IntervalsClient
 from app.graphs.shoe_advisor import (
+    SHOE_ADVISOR_LOOKBACK_DAYS,
     build_shoe_context,
     gear_to_shoes,
     load_shoe_profiles,
@@ -55,14 +56,17 @@ async def recommend(workouts: list[dict], weather: str, date_str: str) -> dict:
         client = IntervalsClient()
         gear = await client.list_gear()
         shoes = gear_to_shoes(gear)
-        # Pull last 90d intervals.icu activities so the advisor sees real wear
-        # (gear assigned to finished activities via /analyse step 6.55). The
-        # window must exceed a typical rotation rest: a shoe idle for 40+ days
-        # otherwise falls out of range, its last-used date is unknown, and the
-        # rotation reason degrades to a generic "type/terrain" label instead of
-        # "N days unused".
+        # Pull the rotation-look-back window of intervals.icu activities so
+        # the advisor sees real wear (gear assigned to finished activities via
+        # /analyse step 6.55). The window (`SHOE_ADVISOR_LOOKBACK_DAYS`) must
+        # exceed a typical rotation rest: a shoe idle beyond it falls out of
+        # range, its last-used date is unknown, and the rotation reason
+        # degrades to a generic "type/terrain" label instead of "N days unused".
         try:
-            oldest = (date.fromisoformat(date_str) - timedelta(days=90)).isoformat()
+            oldest = (
+                date.fromisoformat(date_str)
+                - timedelta(days=SHOE_ADVISOR_LOOKBACK_DAYS)
+            ).isoformat()
             recent_activities = await client.get_activities(oldest, date_str)
         except Exception as exc:
             logger.warning("intervals.icu activities fetch failed (rotation degraded): %s", exc)
@@ -82,13 +86,15 @@ async def recommend(workouts: list[dict], weather: str, date_str: str) -> dict:
     client = StravaClient()
     shoes = await client.list_shoes()
 
-    # Pull last 90d Strava activities so the advisor sees real gear_id usage
-    # (the local shoe_log.json only tracks what was *recommended*, not *worn*).
-    # 90d so a long-idle shoe still resolves a real last-used date for the
-    # rotation reason (see the intervals path above).
+    # Pull the rotation-look-back window of Strava activities so the advisor
+    # sees real gear_id usage (the local shoe_log.json only tracks what was
+    # *recommended*, not *worn*). The window (`SHOE_ADVISOR_LOOKBACK_DAYS`)
+    # must exceed a typical rotation rest so a long-idle shoe still resolves
+    # a real last-used date for the rotation reason (see the intervals path
+    # above).
     strava_ok = True
     try:
-        after_epoch = int(time.time()) - 90 * 86400
+        after_epoch = int(time.time()) - SHOE_ADVISOR_LOOKBACK_DAYS * 86400
         recent_activities = await client.list_activities(after_epoch=after_epoch)
     except Exception as exc:
         logger.warning("Strava activities fetch failed (rotation falls back to shoe_log): %s", exc)

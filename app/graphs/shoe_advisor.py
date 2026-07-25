@@ -27,6 +27,18 @@ from app.utils.surface import normalize_surface
 logger = logging.getLogger(__name__)
 
 
+# Activity look-back window (days) for shoe-rotation intelligence.
+# Must exceed a typical rotation rest so that a shoe idle beyond the
+# context window still resolves a real last-used date. Below this window
+# `_compute_last_used` returns no entry for the shoe, `days_since_used`
+# falls to None, and the recommendation reason degrades to a generic
+# "type/terrain" label instead of the intended "N days unused" — with the
+# corresponding drop in rotation-bonus signal quality. Shared by every
+# caller that assembles the activity list fed into `build_shoe_context`;
+# do not duplicate this window as a local magic number.
+SHOE_ADVISOR_LOOKBACK_DAYS = 90
+
+
 def _equipment_md_path() -> Path:
     """Resolve equipment.md via CONFIG_DIR → CONFIG_FALLBACK."""
     try:

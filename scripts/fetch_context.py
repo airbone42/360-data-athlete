@@ -27,7 +27,7 @@ from app.api.intervals_cache import CachedIntervalsClient as IntervalsClient
 from app.api.intervals_client import IntervalsClient as RawIntervalsClient
 from app.api.strava_client import StravaClient, bust_shoes_cache
 from app.config import settings
-from app.graphs.shoe_advisor import gear_to_shoes
+from app.graphs.shoe_advisor import SHOE_ADVISOR_LOOKBACK_DAYS, gear_to_shoes
 from app.graphs.sub_athlete_context.context_builder import build_context
 from app.utils.logging import configure
 from app.utils.tracing import configure_tracing
@@ -99,6 +99,15 @@ async def _fetch_all(athlete_id: str, date_str: str) -> dict:
     oldest_90d = (today - timedelta(days=90)).isoformat()
     oldest_notes = oldest_4w  # match activity range for HRV-Review detection
     newest_6w = (today + timedelta(days=42)).isoformat()
+    # Shoe rotation needs a longer look-back than the general 4-week activity
+    # window: a shoe idle beyond `SHOE_ADVISOR_LOOKBACK_DAYS` otherwise loses
+    # its last-used date and the recommendation reason degrades to a generic
+    # "type/terrain" label instead of "N days unused" (see shoe_advisor.py).
+    # Kept as a separate list so the wellness/CTL/zone signals above stay on
+    # the 4-week window they were calibrated against.
+    oldest_shoe_window = (
+        today - timedelta(days=SHOE_ADVISOR_LOOKBACK_DAYS)
+    ).isoformat()
 
     # Fetch wellness, activities, workouts (past events), upcoming events, history, settings, notes
     # + shoe data (optional, degrades gracefully) — all in parallel.
@@ -129,17 +138,30 @@ async def _fetch_all(athlete_id: str, date_str: str) -> dict:
             log.warning("intervals.icu gear fetch failed: %s", e)
             return []
 
-    wellness, activities, workouts, events, wellness_history, athlete_settings, notes, shoes = (
-        await asyncio.gather(
-            client.get_wellness(date_str),
-            client.get_activities(oldest_4w, date_str),
-            client.get_events(oldest_4w, date_str),
-            client.get_events(date_str, newest_6w),
-            client.get_wellness_history(oldest_90d, date_str),
-            client.get_athlete_settings(),
-            client.get_notes(oldest_notes, date_str),
-            _fetch_shoes(),
-        )
+    (
+        wellness,
+        activities,
+        workouts,
+        events,
+        wellness_history,
+        athlete_settings,
+        notes,
+        shoes,
+        shoe_activities,
+    ) = await asyncio.gather(
+        client.get_wellness(date_str),
+        client.get_activities(oldest_4w, date_str),
+        client.get_events(oldest_4w, date_str),
+        client.get_events(date_str, newest_6w),
+        client.get_wellness_history(oldest_90d, date_str),
+        client.get_athlete_settings(),
+        client.get_notes(oldest_notes, date_str),
+        _fetch_shoes(),
+        # Separate rotation window for the shoe advisor — decoupled from the
+        # 4-week `activities` list above so widening it does not perturb HRV /
+        # CTL / zone-distribution computations. Day-file cache makes the
+        # incremental cost small.
+        client.get_activities(oldest_shoe_window, date_str),
     )
 
     # Weather with retry (3 attempts)
@@ -171,6 +193,7 @@ async def _fetch_all(athlete_id: str, date_str: str) -> dict:
         "notes": notes,
         "shoes": shoes,
         "strava_shoes": shoes,  # back-compat alias for older readers
+        "shoe_activities": shoe_activities,
         "context_summary": {},
         "deload_state": deload_state,
         "deload_ctl_threshold": deload_ctl_threshold,

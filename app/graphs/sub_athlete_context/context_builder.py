@@ -175,11 +175,21 @@ def build_context(state: AthleteContextState) -> dict:
     shoe_profiles = load_shoe_profiles()
     shoe_ctx: dict = {}
     if shoe_list:
+        # Rotation intelligence uses a longer look-back than the general 4-week
+        # `activities` window (`SHOE_ADVISOR_LOOKBACK_DAYS` in shoe_advisor);
+        # otherwise a shoe idle beyond that window has no last-used date and
+        # the recommendation reason silently degrades from "N days unused" to
+        # a generic "type/terrain" label — a rotation-blind fallback. Callers
+        # that pre-fetched the wider window pass it via `shoe_activities`;
+        # legacy callers with only the short-window list fall back to
+        # `activities` so the code path stays working (rotation reason then
+        # degrades, but the recommendation itself does not).
+        shoe_activities: list[dict] = state.get("shoe_activities") or activities
         try:
             shoe_ctx = build_shoe_context(
                 shoes=shoe_list,
                 profiles=shoe_profiles,
-                activities=activities,
+                activities=shoe_activities,
                 planned_workouts=[
                     w for w in workouts
                     if w.get("type") == "Run"

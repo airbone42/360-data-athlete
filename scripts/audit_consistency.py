@@ -331,15 +331,27 @@ def _zone_keywords(zone_name: str) -> list[str]:
     return list(set(keywords))
 
 
-# ── Check 5: Strava-Schuhe vs. equipment.md ──────────────────────────
+# ── Check 5: Backend-neutral shoe check (equipment.md vs. active-backend gear) ─
 
 
-def check_strava_shoes(strava_shoes: list[dict] | None) -> list[dict]:
-    if strava_shoes is None:
+def check_shoes(shoes: list[dict] | None, backend: str = "intervals") -> list[dict]:
+    """Verify equipment.md shoe profiles against the active-backend gear list.
+
+    Backend-neutral: the join key comes from
+    ``app.graphs.shoe_advisor.profile_gear_key(profile, backend)`` — intervals
+    reads ``icu_gear_id`` (fallback neutral ``gear_id``), strava reads
+    ``strava_id``. Shoe dicts join on their ``gear_key`` alias (both the
+    intervals-native ``gear_to_shoes`` output and the Strava-native
+    ``list_shoes`` output carry an id we can resolve). A profile without a
+    join key for the active backend does **not** silently disappear — it
+    surfaces as its own ``shoe_profile_missing_gear_key`` finding so the
+    audit still points at the misconfiguration.
+    """
+    if shoes is None:
         return []
 
     try:
-        from app.graphs.shoe_advisor import load_shoe_profiles
+        from app.graphs.shoe_advisor import load_shoe_profiles, profile_gear_key
     except Exception as e:
         return [_finding(
             MEDIUM, "shoe_profile_load_error", "config/equipment.md",
@@ -348,56 +360,114 @@ def check_strava_shoes(strava_shoes: list[dict] | None) -> list[dict]:
         )]
 
     profiles = load_shoe_profiles()
-    profiled_ids = {p["strava_id"] for p in profiles}
-    active = [s for s in strava_shoes if not s.get("retired")]
+
     findings: list[dict] = []
+    profile_map: dict[str, dict] = {}  # backend-side join key -> profile
+    missing_key_field = "icu_gear_id" if backend == "intervals" else "strava_id"
+    for p in profiles:
+        key = profile_gear_key(p, backend)
+        if not key:
+            findings.append(_finding(
+                MEDIUM,
+                "shoe_profile_missing_gear_key",
+                "config/equipment.md",
+                evidence=(
+                    f"profile {p.get('name', '?')!r} carries no {backend}-side "
+                    f"gear id (looked for {missing_key_field} / gear_id)"
+                ),
+                canonical_source="config/equipment.md",
+                suggested_action="add_backend_gear_id",
+                fix_hint=(
+                    f"Profile lacks the {backend}-side join key. Add "
+                    f"`{missing_key_field}:` (or the neutral `gear_id:`) to "
+                    "the profile in equipment.md so the shoe advisor can "
+                    "join it against the actual gear."
+                ),
+                description=(
+                    f"Shoe profile '{p.get('name', '?')}' has no join key "
+                    f"for backend '{backend}' — invisible to the shoe advisor "
+                    "and unverifiable against the gear list."
+                ),
+            ))
+            continue
+        profile_map[key] = p
+
+    def _shoe_key(s: dict) -> str:
+        return str(
+            s.get("gear_key")
+            or s.get("strava_id")
+            or s.get("icu_gear_id")
+            or ""
+        )
+
+    profiled_ids = set(profile_map)
+    active = [s for s in shoes if not s.get("retired")]
 
     # Aktive Schuhe ohne Profil
     for s in active:
-        if s["strava_id"] not in profiled_ids:
+        sid = _shoe_key(s)
+        if not sid:
+            continue
+        if sid not in profiled_ids:
+            km = s.get("distance_km") or 0
             findings.append(_finding(
                 MEDIUM,
                 "shoe_unprofiled",
                 "config/equipment.md",
-                evidence=f"strava_id={s['strava_id']} | {s.get('name')} | {s.get('distance_km'):.0f}km",
-                canonical_source="Strava (list_shoes)",
+                evidence=f"gear_id={sid} | {s.get('name')} | {km:.0f}km",
+                canonical_source=f"{backend} gear list",
                 suggested_action="add_profile",
-                fix_hint=f"Add profile for strava_id={s['strava_id']} in equipment.md",
-                description=f"Active Strava shoe '{s.get('name')}' missing from equipment.md — shoe advisor cannot recommend it",
+                fix_hint=f"Add profile for gear_id={sid} in equipment.md",
+                description=(
+                    f"Active shoe '{s.get('name')}' missing from "
+                    "equipment.md — shoe advisor cannot recommend it"
+                ),
             ))
 
-    # Profiles that no longer exist in Strava
-    strava_ids = {s["strava_id"] for s in strava_shoes}
-    for p in profiles:
-        if p["strava_id"] not in strava_ids:
+    # Profile ohne Gegenstück im Backend-Gear
+    all_ids = {_shoe_key(s) for s in shoes if _shoe_key(s)}
+    for key, p in profile_map.items():
+        if key not in all_ids:
             findings.append(_finding(
                 LOW,
                 "shoe_profile_orphan",
                 "config/equipment.md",
-                evidence=f"strava_id={p['strava_id']} | {p.get('name')}",
-                canonical_source="Strava (list_shoes)",
+                evidence=f"gear_id={key} | {p.get('name')}",
+                canonical_source=f"{backend} gear list",
                 suggested_action="remove_profile",
-                fix_hint=f"Remove profile for strava_id={p['strava_id']} from equipment.md — shoe no longer in Strava",
-                description=f"Profile '{p.get('name')}' in equipment.md has no Strava match",
+                fix_hint=(
+                    f"Remove profile for gear_id={key} from equipment.md — "
+                    f"shoe no longer in {backend} gear list"
+                ),
+                description=(
+                    f"Profile '{p.get('name')}' in equipment.md has no "
+                    f"{backend} gear match"
+                ),
             ))
 
-    # Shoes near threshold
+    # Threshold-Warnungen
     for s in active:
-        prof = next((p for p in profiles if p["strava_id"] == s["strava_id"]), None)
+        sid = _shoe_key(s)
+        prof = profile_map.get(sid)
         if not prof:
             continue
-        threshold = prof.get("threshold_km", 800)
-        km = s.get("distance_km", 0)
+        threshold = float(prof.get("threshold_km", 800))
+        km = s.get("distance_km") or 0
         if km >= threshold * 0.95:
             findings.append(_finding(
                 MEDIUM,
                 "shoe_threshold_reached",
                 "config/equipment.md",
-                evidence=f"{s.get('name')}: {km:.0f}/{threshold}km ({km/threshold*100:.0f}%)",
-                canonical_source="Strava (list_shoes)",
+                evidence=f"{s.get('name')}: {km:.0f}/{threshold:.0f}km ({km/threshold*100:.0f}%)",
+                canonical_source=f"{backend} gear list",
                 suggested_action="rotate_or_retire",
-                fix_hint=f"Shoe '{s.get('name')}' near threshold — check rotation or retire",
-                description=f"Shoe '{s.get('name')}' at ≥95% of threshold ({km:.0f}/{threshold}km)",
+                fix_hint=(
+                    f"Shoe '{s.get('name')}' near threshold — check rotation or retire"
+                ),
+                description=(
+                    f"Shoe '{s.get('name')}' at ≥95% of threshold "
+                    f"({km:.0f}/{threshold:.0f}km)"
+                ),
             ))
     return findings
 
@@ -1338,11 +1408,14 @@ def check_prompt_drift() -> list[dict]:
 
 async def _fetch_online() -> dict[str, Any]:
     from app.api.intervals_cache import CachedIntervalsClient
+    from app.api.intervals_client import IntervalsClient as RawIntervalsClient
     from app.api.strava_client import StravaClient
     from app.config import settings
+    from app.graphs.shoe_advisor import gear_to_shoes
 
     athlete_id = settings.intervals_icu_athlete_id
     icu = CachedIntervalsClient(athlete_id)
+    backend = settings.shoe_tracking_backend
 
     from datetime import date, timedelta
     today = date.today()
@@ -1350,12 +1423,25 @@ async def _fetch_online() -> dict[str, Any]:
     newest = today.isoformat()
 
     async def _shoes() -> list[dict]:
-        if not settings.strava_client_id or not settings.strava_refresh_token:
+        # Fetch from the active shoe-tracking backend so the join key
+        # matches what load_shoe_profiles() will produce for the same
+        # backend (see check_shoes → profile_gear_key).
+        if backend == "off":
             return []
+        if backend == "strava":
+            if not settings.strava_client_id or not settings.strava_refresh_token:
+                return []
+            try:
+                return await StravaClient().list_shoes()
+            except Exception as e:
+                logger.warning("strava fetch failed: %s", e)
+                return []
+        # Default: intervals.icu native gear (uncached — small payload).
         try:
-            return await StravaClient().list_shoes()
+            gear = await RawIntervalsClient(athlete_id).list_gear()
+            return gear_to_shoes(gear)
         except Exception as e:
-            logger.warning("strava fetch failed: %s", e)
+            logger.warning("intervals.icu gear fetch failed: %s", e)
             return []
 
     try:
@@ -1367,9 +1453,22 @@ async def _fetch_online() -> dict[str, Any]:
         )
     except Exception as e:
         logger.warning("online fetch failed: %s", e)
-        return {"notes": None, "athlete_settings": None, "shoes": None, "activities": None, "error": str(e)}
+        return {
+            "notes": None,
+            "athlete_settings": None,
+            "shoes": None,
+            "activities": None,
+            "shoe_backend": backend,
+            "error": str(e),
+        }
 
-    return {"notes": notes, "athlete_settings": athlete_settings, "shoes": shoes, "activities": activities}
+    return {
+        "notes": notes,
+        "athlete_settings": athlete_settings,
+        "shoes": shoes,
+        "activities": activities,
+        "shoe_backend": backend,
+    }
 
 
 # ── Orchestrierung ───────────────────────────────────────────────────
@@ -1588,7 +1687,7 @@ CHECK_MAP = {
     "ORPHAN_MUSCLES": ("check_orphan_muscles", False),
     "UNMAPPED": ("check_unmapped_exercises", False),
     "NOTE_DRIFT": ("check_note_vs_static", True),
-    "SHOES": ("check_strava_shoes", True),
+    "SHOES": ("check_shoes", True),
     "HARDCODED": ("check_hardcoded_restrictions", False),
     "STALE_MARKERS": ("check_stale_cancellation_markers", False),
     "DELOAD": ("check_deload_consistency", False),
@@ -1624,7 +1723,10 @@ def run_audit(offline: bool, only: str | None) -> dict[str, Any]:
             elif name == "NOTE_DRIFT":
                 results = check_note_vs_static(online_data.get("notes"))
             elif name == "SHOES":
-                results = check_strava_shoes(online_data.get("shoes"))
+                results = check_shoes(
+                    online_data.get("shoes"),
+                    backend=online_data.get("shoe_backend", "intervals"),
+                )
             elif name == "HARDCODED":
                 results = check_hardcoded_restrictions()
             elif name == "STALE_MARKERS":
