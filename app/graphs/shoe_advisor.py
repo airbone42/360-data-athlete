@@ -363,13 +363,23 @@ def _is_wet_weather(weather_info: str) -> bool:
 
 # ── Pace bucket ───────────────────────────────────────────────────────────────
 
+def _workout_keys(workout: dict) -> list[str]:
+    """Lower-cased descriptors of a workout: tags, intensity, workout_type.
+
+    One shared vocabulary for every profile field that is keyed on "what kind
+    of session is this" — the pace bucket, `recommended_tags` and
+    `excluded_workout_types` all read from it, so a profile author does not
+    have to know which of the three slots a term happens to live in.
+    """
+    tags = [str(t).lower() for t in (workout.get("tags") or [])]
+    intensity = str(workout.get("intensity") or "").lower()
+    wtype = str(workout.get("workout_type") or "").lower()
+    return [k for k in (*tags, intensity, wtype) if k]
+
+
 def _derive_pace_bucket(workout: dict) -> tuple[float, float] | None:
     """Return (min_pace, max_pace) in min/km from workout metadata."""
-    tags = [t.lower() for t in (workout.get("tags") or [])]
-    intensity = (workout.get("intensity") or "").lower()
-    wtype = (workout.get("workout_type") or "").lower()
-
-    for key in (*tags, intensity, wtype):
+    for key in _workout_keys(workout):
         if key in _PACE_BUCKETS:
             return _PACE_BUCKETS[key]
     return None
@@ -397,12 +407,16 @@ def _score_shoe(
     today_str: str,
     last_used: dict[str, str],
     workout_type: str = "",
+    workout_keys: list[str] | None = None,
 ) -> float | None:
     """Return a score ≥ 0 or None if the shoe is disqualified.
 
     Higher score = better recommendation.
     """
     role = profile.get("role", "daily")
+    keys = set(workout_keys or ())
+    if workout_type:
+        keys.add(workout_type.lower())
     sid = profile.get("gear_key") or str(profile.get("strava_id") or "")
     threshold = float(profile.get("threshold_km", 800))
     distance_km = shoe.get("distance_km", 0)
@@ -422,6 +436,19 @@ def _score_shoe(
     req_wt = profile.get("required_workout_type", "")
     if req_wt and workout_type.upper() != req_wt.upper():
         return None
+
+    # 3. excluded_workout_types — the negative counterpart of the above:
+    #    the shoe is fine in general but unsuited to this kind of session
+    #    (e.g. a medium-cushion daily on a long run). Matched against the
+    #    full descriptor set, so "long" hits whether it arrives as a tag,
+    #    an intensity or a workout_type.
+    excluded = profile.get("excluded_workout_types") or []
+    if isinstance(excluded, str):
+        excluded = re.findall(r"\w+", excluded)
+    if excluded:
+        blocked = {str(x).lower() for x in excluded}
+        if blocked.intersection(keys):
+            return None
 
     # 4. Terrain match
     shoe_terrain = profile.get("terrain", "asphalt")
@@ -448,6 +475,15 @@ def _score_shoe(
     # Wet weather: prefer trail/mixed terrain
     if wet and shoe_terrain in ("trail", "mixed"):
         score += 10.0
+
+    # recommended_tags: a nudge, not a verdict. Deliberately small relative to
+    # the rotation bonus below — "suited to this session" should break a tie
+    # between equally-rested shoes, never override the rotation intent.
+    rec_tags = profile.get("recommended_tags") or []
+    if isinstance(rec_tags, str):
+        rec_tags = re.findall(r"\w+", rec_tags)
+    if keys.intersection({str(t).lower() for t in rec_tags}):
+        score += 6.0
 
     # Mileage penalty: deprioritise worn shoes for hard sessions
     if pct >= 0.9:
@@ -588,6 +624,7 @@ def build_shoe_context(
                 p, s, terrain, wet, pace_bucket,
                 race_in_days, today_str, last_used,
                 workout_type=run_workout.get("workout_type") or "",
+                workout_keys=_workout_keys(run_workout),
             )
             if sc is not None:
                 scored.append((sc, s))
