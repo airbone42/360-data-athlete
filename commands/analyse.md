@@ -22,6 +22,18 @@ Required: intervals.icu activity ID, e.g. `i12345678`
   not error. Only evaluate GCT as a fatigue indicator when the GCT rise
   disproportionately exceeds the pace slowdown (pace-normalized). Do not
   comment negatively on absolute GCT values in recovery phases.
+- **Cool-down running dynamics are out of scope (MANDATORY).** The
+  cool-down is run at a shuffle — far below any pace the athlete trains
+  at — and gait at that speed is a different movement pattern, not a
+  slower version of the same one. Ground-contact time, vertical
+  oscillation, step length, cadence and contact balance measured there
+  describe the shuffle, not the session. Restrict every running-dynamics
+  statement, trend and fresh-vs-fatigued comparison to the warm-up-
+  completed main block; never close a dynamics argument with a cool-down
+  value, and never let a claim about persistence ("the shift had not
+  recovered by the end") rest on cool-down data. State the excluded
+  window rather than silently trimming it. The same applies to the
+  post-interval jog segments inside a session.
 
 ### Step 1: Load athlete knowledge + activity (parallel)
 

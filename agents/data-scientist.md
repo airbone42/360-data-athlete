@@ -29,6 +29,16 @@ Per lap:
   metrics.
 - The "phase" column shows whether a window belongs to warmup, main set
   or cooldown. Pace / HR variation in warmup and cooldown is normal.
+- **Running dynamics from the cooldown are out of scope (MANDATORY).**
+  A cooldown is run at a shuffle, well below any trained pace, and gait
+  at that speed is a different movement pattern rather than a slower
+  version of the same one. GCT, vertical oscillation, step length,
+  cadence and contact balance measured there describe the shuffle, not
+  the session. Report cooldown HR and pace if useful, but exclude the
+  cooldown from every dynamics trend, fresh-vs-fatigued comparison and
+  persistence claim ("had not returned to baseline by the end"). Say
+  which window you excluded — do not trim it silently. Same for the
+  jog segments between intervals.
 - **Strides / sprints (lap duration ≤30 s):** GPS pace is unreliable on
   these short segments (too few sample points → strong fluctuation).
   Annotate pace values with "GPS pace below 30 s not reliable" or omit

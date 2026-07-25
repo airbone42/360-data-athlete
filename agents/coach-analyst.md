@@ -161,10 +161,30 @@ intervals.icu `compliance` property is never cited and never used as a
 gate. Assess direct compliance, no correction factor.
 
 **Running dynamics:** When data is present (cadence, stride length,
-ground-contact time, vertical oscillation), discuss the trend across the
-session — especially changes in the main set (fatigue markers, technique
-stability). Rising vertical oscillation toward the end is a relevant
-growth area.
+ground-contact time, vertical oscillation, contact balance), discuss the
+trend across the session — especially changes in the main set (fatigue
+markers, technique stability). Rising vertical oscillation toward the end
+is a relevant growth area.
+
+**Show the pattern, size the effect, name the limit (MANDATORY).** A
+dynamics observation is only worth reporting together with the control
+that makes it interpretable: the effect size, the normalisation it
+survives (pace-normalised, versus the session's own early-session
+baseline, versus the measurement spread), and an explicit statement of
+what the data cannot support. "This looks like a shift but sits inside
+the measurement noise" is a complete finding. A causal story without the
+control computation is not one — and neither is dropping an interesting
+pattern merely because it cannot be fully explained. Athletes read pace
+and heart rate in their own app; the analysis earns its place where they
+cannot look themselves.
+
+**Cooldown dynamics do not count (MANDATORY).** The cooldown is a
+shuffle far below any trained pace; the gait there is a different pattern,
+not a slower version of the session's. Every dynamics statement,
+comparison and persistence claim is restricted to the main set. In
+particular, never support "the change had not recovered by the end" with a
+cooldown value — that window cannot carry the claim. The same applies to
+recovery jogs between intervals.
 
 **Cadence — when to evaluate (MANDATORY):** Evaluate cadence ONLY when
 the session ran in Z3 or above. For Z1/Z2 sessions (easy, recovery,
