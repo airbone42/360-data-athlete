@@ -35,12 +35,20 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from app.api.intervals_client import IntervalsClient
 from app.config import settings
-from app.graphs.shoe_advisor import build_shoe_context, gear_to_shoes, load_shoe_profiles
+from app.graphs.shoe_advisor import (
+    SHOE_ADVISOR_LOOKBACK_DAYS,
+    build_shoe_context,
+    gear_to_shoes,
+    load_shoe_profiles,
+)
 
 # Markers written by push_workouts._format_shoe_footer onto the planned event
 # (intervals backend). The machine marker carries the gear id directly; the
 # human line is the legacy/strava fallback (name → gear id lookup).
-_GEAR_MARKER_RE = re.compile(r"\[coach-gear:\s*(g\w+)\]")
+# Gear ids are not uniformly ``g``-prefixed: Strava-backed items carry a ``g``
+# prefix, while gear created natively in intervals.icu is purely numeric.
+# Match both, or the marker is missed and the pick is silently re-derived.
+_GEAR_MARKER_RE = re.compile(r"\[coach-gear:\s*([A-Za-z0-9_-]+)\s*\]")
 _SHOE_REC_RE = re.compile(r"Shoe recommendation:\s*([^\n(—]+)")
 
 
@@ -120,7 +128,11 @@ async def _recommend_gear_for_activity(
     shoes = gear_to_shoes(gear)
     profiles = load_shoe_profiles()
     # Recent activities for rotation context (gear_id already set on past runs).
-    oldest = (date.fromisoformat(today_str) - timedelta(days=30)).isoformat()
+    # The window must exceed a typical rotation rest, otherwise a long-idle shoe
+    # has no visible last-used date and the rotation boost never fires.
+    oldest = (
+        date.fromisoformat(today_str) - timedelta(days=SHOE_ADVISOR_LOOKBACK_DAYS)
+    ).isoformat()
     try:
         recent = await icu.get_activities(oldest, today_str)
     except Exception:

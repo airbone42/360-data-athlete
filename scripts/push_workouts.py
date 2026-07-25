@@ -123,20 +123,31 @@ async def _push(athlete_id: str, events: list[dict], dry_run: bool, date_str: st
     return created
 
 
-def _format_shoe_footer(shoe_ctx: dict, include_gear_marker: bool = False) -> str:
+def _format_shoe_footer(
+    shoe_ctx: dict,
+    include_gear_marker: bool = False,
+    planned_workout: dict | None = None,
+) -> str:
     """Render a shoe-recommendation footer for run/ride descriptions.
 
     Uses the primary shoe name, km, and the advisor's reason string (which
     includes type/terrain or rotation hints).
 
-    When ``include_gear_marker`` is set (intervals.icu backend), a trailing
-    machine-readable ``[coach-gear:<gear_id>]`` marker is appended. This makes
-    the push-time recommendation the single source of truth: ``/analyse`` step
-    6.55 (set_activity_gear) reads the marker back and assigns *exactly* that
-    shoe to the finished activity — deterministically matching the push pick
-    (which already weighed surface, pace, preferences, mileage, rotation,
-    weather), instead of re-deriving it from the completed activity's partial
-    data.
+    When ``include_gear_marker`` is set (intervals.icu backend), two trailing
+    machine-readable markers are appended:
+
+    - ``[coach-gear:<gear_id>]`` — the push-time shoe pick as the single source
+      of truth. ``/analyse`` step 6.55 (set_activity_gear) reads it back and
+      assigns exactly that shoe to the finished activity, matching the push
+      pick (which already weighed surface, pace, preferences, mileage,
+      rotation, weather) instead of re-deriving from partial data.
+    - ``[coach-plan:surface=…,workout_type=…,intensity=…]`` — the planner
+      metadata that shaped the pick. Persisting it makes the same filters
+      (terrain, pace bucket) reproducible at read-time, so the context path
+      re-derives the same recommendation as the push path from identical
+      inputs. When ``planned_workout`` is None or the fields are empty, the
+      marker is skipped rather than emitted with placeholder values (so the
+      read side sees "unknown" instead of a fabricated default).
     """
     rec = (shoe_ctx or {}).get("shoeRecommendation") or {}
     primary = rec.get("primary") or {}
@@ -159,7 +170,39 @@ def _format_shoe_footer(shoe_ctx: dict, include_gear_marker: bool = False) -> st
             line += f"\n{w['msg']}"
     if include_gear_marker and primary.get("gear_id"):
         line += f"\n[coach-gear:{primary['gear_id']}]"
+        if planned_workout:
+            plan_marker = _format_coach_plan_marker(planned_workout)
+            if plan_marker:
+                line += f"\n{plan_marker}"
     return line
+
+
+def _format_coach_plan_marker(planned_workout: dict) -> str:
+    """Serialise the decision-shaping planner fields into a machine marker.
+
+    Only non-empty scalar fields are included, in a fixed order for stable
+    output. Values are restricted to ``[A-Za-z0-9._/-]`` (the enum values
+    used by planner/specialist output today — asphalt/forest-path/trail/…,
+    EASY/LONG/INTERVALS/…, low/medium/high) so the marker survives round-trip
+    without escaping. Any value containing other characters is skipped rather
+    than emitted, so the reader defaults to "unknown" for that field instead
+    of parsing a distorted value.
+    """
+    import re as _re
+    _SAFE_VALUE = _re.compile(r"^[A-Za-z0-9._/-]+$")
+    ordered_keys = ("surface", "workout_type", "intensity")
+    parts: list[str] = []
+    for k in ordered_keys:
+        v = planned_workout.get(k)
+        if v is None:
+            continue
+        vs = str(v).strip()
+        if not vs or not _SAFE_VALUE.match(vs):
+            continue
+        parts.append(f"{k}={vs}")
+    if not parts:
+        return ""
+    return "[coach-plan:" + ",".join(parts) + "]"
 
 
 async def _enrich_with_shoes(events: list[dict], workouts: list[dict], weather: str, date_str: str) -> None:
@@ -182,7 +225,21 @@ async def _enrich_with_shoes(events: list[dict], workouts: list[dict], weather: 
     except Exception as exc:
         logger.warning("Shoe recommendation failed: %s — workouts pushed without shoe footer", exc)
         return
-    footer = _format_shoe_footer(shoe_ctx, include_gear_marker=(backend == "intervals"))
+    # Same disambiguation as shoe_recommend.recommend(): the advisor scores
+    # against the first Run workout in the plan. Persist that workout's
+    # decision-shaping fields in the marker so the read path re-derives from
+    # the same inputs.
+    plan_wo: dict | None = next(
+        (w for w in workouts if (w.get("type") if isinstance(w, dict) else getattr(w, "type", None)) == "Run"),
+        None,
+    )
+    if plan_wo is not None and not isinstance(plan_wo, dict):
+        plan_wo = plan_wo.model_dump() if hasattr(plan_wo, "model_dump") else dict(plan_wo)
+    footer = _format_shoe_footer(
+        shoe_ctx,
+        include_gear_marker=(backend == "intervals"),
+        planned_workout=plan_wo,
+    )
     if not footer:
         return
     for ev in events:

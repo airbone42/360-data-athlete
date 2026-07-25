@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import math
+import re
 from datetime import date, timedelta
 from statistics import median, stdev
 
@@ -37,6 +38,152 @@ MIN_WEEK_TSS = 60             # absolute floor — below this a week is recovery
 DELOAD_WEEK_TSS_RATIO = 0.5   # or below 50% of the other weeks' mean
 
 CARDIO_TYPES = {"Run", "Ride", "VirtualRide", "VirtualRun"}
+
+
+# ── Coach markers persisted on planned event descriptions ────────────
+# Written by push_workouts._format_shoe_footer (intervals.icu backend); read
+# back here so the context-time shoe recommendation reproduces the push-time
+# pick from identical inputs. The gear marker is also parsed by
+# scripts/set_activity_gear.py; keep the regex compatible.
+_COACH_GEAR_MARKER_RE = re.compile(r"\[coach-gear:\s*([A-Za-z0-9_-]+)\]")
+_COACH_PLAN_MARKER_RE = re.compile(r"\[coach-plan:([^\]]+)\]")
+_COACH_PLAN_ALLOWED_KEYS = {"surface", "workout_type", "intensity"}
+
+
+def _parse_coach_plan_marker(description: str | None) -> dict:
+    """Extract planner metadata from a ``[coach-plan:key=value,…]`` marker.
+
+    Returns an empty dict when no marker is present. Only whitelisted keys are
+    returned so a stray token in an athlete-edited description cannot inject an
+    unexpected field into the workout dict fed into the shoe advisor.
+    """
+    if not description:
+        return {}
+    m = _COACH_PLAN_MARKER_RE.search(description)
+    if not m:
+        return {}
+    result: dict = {}
+    for token in m.group(1).split(","):
+        if "=" not in token:
+            continue
+        k, _, v = token.partition("=")
+        k = k.strip()
+        v = v.strip()
+        if not v or k not in _COACH_PLAN_ALLOWED_KEYS:
+            continue
+        result[k] = v
+    return result
+
+
+def _parse_coach_gear_marker(description: str | None) -> str | None:
+    """Extract the pinned gear id from a ``[coach-gear:<id>]`` marker."""
+    if not description:
+        return None
+    m = _COACH_GEAR_MARKER_RE.search(description)
+    return m.group(1) if m else None
+
+
+def _build_shoe_planned_workouts(events: list[dict], today_iso: str) -> list[dict]:
+    """Build the planned-workout list the shoe advisor scores against.
+
+    intervals.icu events returned via ``get_events`` do NOT carry the coach's
+    ``surface`` / ``workout_type`` / ``intensity`` / ``coaching_notes`` fields
+    even though ``push_workouts`` sent them — they are dropped server-side.
+    The advisor's terrain/pace filters therefore go blind (terrain defaults to
+    "asphalt", pace_bucket to None → no filter) and pick a different shoe than
+    the push-time recommendation which received the full planner directive
+    directly.
+
+    This builder recovers those fields from the ``[coach-plan:…]`` marker
+    written into the event description at push time (see
+    ``push_workouts._format_shoe_footer``). When the marker is absent (legacy
+    events or non-coach-pushed runs), the fields are left empty rather than
+    guessed from prose — a "Wald" mention in a run title should NOT flip the
+    terrain filter to trail if the coach's surface tag actually meant
+    "forest-path" (asphalt-equivalent for shoe choice). The gear marker,
+    when present, is attached as ``_coach_gear_id`` for the SSOT override in
+    ``_apply_coach_gear_ssot``.
+    """
+    planned: list[dict] = []
+    for e in events:
+        if e.get("type") != "Run":
+            continue
+        if (e.get("start_date_local") or "")[:10] != today_iso:
+            continue
+        desc = e.get("description") or ""
+        marker = _parse_coach_plan_marker(desc)
+        gear = _parse_coach_gear_marker(desc)
+        entry: dict = {
+            "type": "Run",
+            "tags": list(e.get("tags") or []),
+            # Only surfaced when the marker carried them — an empty string
+            # reads as "unknown" downstream (no filter) rather than as a
+            # concrete value. Deliberately not falling back to the raw
+            # description text: prose keyword scans against the intervals.icu
+            # event body can flip filters based on incidental wording.
+            "surface": marker.get("surface", ""),
+            "workout_type": marker.get("workout_type", ""),
+            "intensity": marker.get("intensity", ""),
+            "coaching_notes": "",
+        }
+        if gear:
+            entry["_coach_gear_id"] = gear
+        planned.append(entry)
+    return planned
+
+
+def _apply_coach_gear_ssot(shoe_ctx: dict, planned_workouts: list[dict]) -> dict:
+    """Promote the push-time gear pick to primary when it's still an active shoe.
+
+    Backstop for legacy events pushed before the ``[coach-plan:…]`` marker
+    existed: the ``[coach-gear:<id>]`` marker alone is enough to make the
+    context recommendation converge on the push pick. When both markers are
+    present, the advisor's inputs are already correct and its primary equals
+    the pinned shoe — this call is then a no-op.
+
+    Silent when: no marker, marker points to a retired/unknown shoe, or the
+    advisor already picked the pinned shoe. When it does override, the
+    previously-picked primary is demoted to ``alternative`` so the read side
+    still sees a runner-up.
+    """
+    if not planned_workouts:
+        return shoe_ctx
+    pinned = planned_workouts[0].get("_coach_gear_id")
+    if not pinned:
+        return shoe_ctx
+    shoes = shoe_ctx.get("shoes") or []
+    pinned_shoe = next((s for s in shoes if s.get("gear_key") == pinned), None)
+    if not pinned_shoe:
+        # Marker references a shoe not in the active enriched list (retired,
+        # migrated, or outside a travel subset). Leave the advisor's pick.
+        logger.info("coach-gear marker %s not in active shoes — SSOT skipped", pinned)
+        return shoe_ctx
+    rec = dict(shoe_ctx.get("shoeRecommendation") or {})
+    current_primary = rec.get("primary") or {}
+    if current_primary.get("gear_id") == pinned:
+        return shoe_ctx  # already converged
+    since = pinned_shoe.get("days_since_used")
+    reasons: list[str] = []
+    if since is not None:
+        reasons.append(f"{since} days unused")
+    reasons.append("push-time pick (coach-gear marker)")
+    new_primary = {
+        "gear_id": pinned_shoe.get("gear_key"),
+        "strava_id": pinned_shoe.get("strava_id"),
+        "name": pinned_shoe.get("name"),
+        "distance_km": pinned_shoe.get("distance_km"),
+        "pct_used": pinned_shoe.get("pct_used"),
+        "reason": ", ".join(reasons),
+    }
+    prev_alt = rec.get("alternative") or {}
+    if current_primary.get("gear_id") and current_primary.get("gear_id") != pinned:
+        rec["alternative"] = current_primary
+    elif prev_alt.get("gear_id") == pinned:
+        # The pinned shoe was already the alternative — clear it so we don't
+        # list the same shoe twice.
+        rec.pop("alternative", None)
+    rec["primary"] = new_primary
+    return {**shoe_ctx, "shoeRecommendation": rec}
 
 # ── HRV readiness classifier (7d-rolling ln-rMSSD vs 60d normal band) ──
 # Framework defaults; athlete-overridable later via config. The band is
@@ -185,21 +332,39 @@ def build_context(state: AthleteContextState) -> dict:
         # `activities` so the code path stays working (rotation reason then
         # degrades, but the recommendation itself does not).
         shoe_activities: list[dict] = state.get("shoe_activities") or activities
+        # Reconstruct the planner metadata the intervals.icu event dict does
+        # not preserve — surface / workout_type / intensity are read from the
+        # ``[coach-plan:…]`` marker the push writes into the description. Both
+        # `workouts` (past+today) and `events` (today+future) can carry today's
+        # planned Run; merge dedup-by-id so a re-fetch sees the same entry
+        # regardless of which endpoint returned it.
+        _seen_event_ids: set = set()
+        _run_events: list[dict] = []
+        for source in (workouts, events):
+            for ev in source:
+                ev_id = ev.get("id")
+                if ev_id is not None and ev_id in _seen_event_ids:
+                    continue
+                if ev_id is not None:
+                    _seen_event_ids.add(ev_id)
+                _run_events.append(ev)
+        shoe_planned = _build_shoe_planned_workouts(_run_events, today.isoformat())
         try:
             shoe_ctx = build_shoe_context(
                 shoes=shoe_list,
                 profiles=shoe_profiles,
                 activities=shoe_activities,
-                planned_workouts=[
-                    w for w in workouts
-                    if w.get("type") == "Run"
-                    and (w.get("start_date_local") or "")[:10] == today.isoformat()
-                ],  # populated when context is re-fetched after push_workouts
+                planned_workouts=shoe_planned,
                 weather_info=weather_info,
                 race_in_days=race_in_days,
                 today_str=today.isoformat(),
                 backend=settings.shoe_tracking_backend,
             )
+            # SSOT backstop: when the coach-gear marker pins a specific active
+            # shoe (legacy events pushed before the coach-plan marker existed
+            # only carry this one), promote it to primary so the context
+            # recommendation matches what was written to the event.
+            shoe_ctx = _apply_coach_gear_ssot(shoe_ctx, shoe_planned)
         except Exception as e:
             logger.warning("shoe_advisor failed: %s", e)
 

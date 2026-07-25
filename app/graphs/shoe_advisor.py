@@ -203,6 +203,25 @@ def profile_gear_key(profile: dict, backend: str) -> str:
     return str(profile.get("icu_gear_id") or profile.get("gear_id") or "")
 
 
+def _is_retired(raw: object) -> bool:
+    """Interpret the gear `retired` field, which is not reliably a boolean.
+
+    intervals.icu returns one of: ``None`` / absent (active), the *string*
+    ``"false"`` (also active), a real boolean, or an ISO date string marking
+    when the item was retired. A plain ``bool()`` cast turns ``"false"`` into
+    ``True`` and silently drops an active shoe from the fleet, so the string
+    forms are resolved explicitly and only a non-empty, non-falsey string
+    (i.e. a retirement date) counts as retired.
+    """
+    if raw is None:
+        return False
+    if isinstance(raw, bool):
+        return raw
+    if isinstance(raw, str):
+        return raw.strip().lower() not in ("", "false", "none", "null", "0")
+    return bool(raw)
+
+
 def gear_to_shoes(gear_list: list[dict]) -> list[dict]:
     """Map intervals.icu gear objects to the advisor's shoe-dict shape.
 
@@ -223,7 +242,7 @@ def gear_to_shoes(gear_list: list[dict]) -> list[dict]:
             "strava_id": gid,  # generic id alias for legacy field reads
             "name": g.get("name") or "",
             "distance_km": round((g.get("distance") or 0) / 1000, 1),
-            "retired": bool(g.get("retired", False)),
+            "retired": _is_retired(g.get("retired")),
             "primary": bool(g.get("primary", False)),
         })
     return shoes
