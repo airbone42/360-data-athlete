@@ -29,6 +29,8 @@ recommendations for the next diagnostic step.
 
 **Research anchor (Achilles-Reha):** For Achilles tendinopathy rehabilitation phases (Silbernagel protocol — isometric → isotonic → energy-storage), see [achilles-rehab-phases.md](../research/achilles-rehab-phases.md).
 
+**Research anchor (re-load after hands-on treatment):** For grading a post-treatment reaction by tissue irritability and deriving the re-load dose (hold anchor / one step below / no loading) plus red flags and re-progression timing, see [post-treatment-reaction-reload-dosing.md](../research/post-treatment-reaction-reload-dosing.md).
+
 ## Achilles phase transition (MANDATORY on a phase-switch request)
 
 When the athlete or head coach asks whether the Achilles rehab phase

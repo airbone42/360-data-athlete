@@ -167,6 +167,19 @@ The per-focus directives are scheduled back-to-back (no interference
 gap between non-endurance blocks), so they read as one slot the athlete
 can work through or partially complete.
 
+## Hands-on therapy within the last 48–72 h
+
+When `athleteFeedback` or the context reports a hands-on therapy /
+rehab appointment in the last 48–72 h **and** today's plan loads the
+treated structure, the directive's `coaching_notes` must state the
+irritability level of that structure (`low` / `moderate` / `high`) and
+the resulting load instruction — `hold the documented anchor`, `one
+step below, volume −30 %`, or `no mechanical loading`. A settled
+(`low`) reaction means **hold the anchor without a progression step**;
+it does **not** justify going below the anchor. Classification rules,
+red flags and the re-progression timing:
+[../research/post-treatment-reaction-reload-dosing.md](../research/post-treatment-reaction-reload-dosing.md).
+
 Decide WHAT is trained — a workout specialist will produce the detailed
 structure afterwards.
 

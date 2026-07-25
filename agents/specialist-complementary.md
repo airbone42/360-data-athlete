@@ -48,6 +48,27 @@ and over your own coaching intuition**.
   `exercise_progressions.md`, your plan must not flip the documented
   progression axis.
 
+### Rehab strength after hands-on therapy
+
+When the briefing marks a hands-on therapy / rehab appointment within
+the last 48–72 h and today's block loads the **treated structure**,
+gate the progression on the irritability level given in the head-coach
+briefing:
+
+- **low / settled** → hold the documented anchor, **no** progression
+  step this session. Do not go *below* the anchor either — a
+  prophylactic reduction is not evidence-based.
+- **moderate** → one step below the anchor, volume −30 %.
+- **high** → no mechanical loading on that structure.
+- **No explicit classification in the briefing** → default to "one step
+  below, no progression", and say so in `notes`.
+
+Whichever applies, write in `notes` that the progression counter is
+**frozen, not reset** — the deferred step is owed at the next slot once
+the structure stays quiet, so a hold does not silently become the new
+anchor. Per-set stop criteria stay active. Background:
+[../research/post-treatment-reaction-reload-dosing.md](../research/post-treatment-reaction-reload-dosing.md).
+
 ---
 
 ## Feedback-based load control (RPE autoregulation)

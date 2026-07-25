@@ -960,6 +960,33 @@ duplicated stimulus, not a complementary one.
    "today only shoulder, no core") — accept the override for that
    day, then update the persisted scope if the change is structural,
    not ad-hoc.
+5. **Post-treatment reaction — re-load by irritability, not by
+   calendar day.** A hands-on session can leave a benign
+   post-treatment soreness with its own 24–72 h course (onset 2–24 h,
+   peak ~48 h) — distinct from eccentric DOMS. On the days after the
+   appointment the head coach classifies the **treated structure**
+   before loading it, using four questions (current pain rating,
+   rest/night pain yes/no, active ROM ≈ passive ROM, red flags):
+   - **red flag** (worsening beyond 48–72 h, swelling/warmth, spread,
+     new neurological signs) → skip the block, refer back to the
+     practice;
+   - **high irritability** → no mechanical loading, passive mobility
+     only, re-check in 24 h;
+   - **moderate** → one progression step below the documented anchor,
+     volume −30 %;
+   - **low** (settled) → **hold the documented anchor**, no
+     progression step in that session. A prophylactic reduction below
+     the anchor is **not** evidence-based and counts as silent
+     conservatism.
+
+   Within the session the per-set pain-monitoring gate stays active
+   (pain during the exercise within the accepted band, back to
+   baseline the next morning, no week-over-week escalation).
+   Re-progression is released **one clean session after** the anchor
+   session, not in the session immediately following. Avoid stacking
+   the appointment and a structured home block on the **same**
+   structure on the **same** day. Details and sources:
+   [post-treatment-reaction-reload-dosing.md](research/post-treatment-reaction-reload-dosing.md).
 
 **Drift incident pattern:** A day with a physio appointment is
 planned with a "Physio-Termin" placeholder that claims to cover
