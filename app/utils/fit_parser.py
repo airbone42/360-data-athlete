@@ -118,6 +118,14 @@ def parse_fit_records(fit_path: Path) -> list[dict]:
                 data["lon"] = _semicircles_to_degrees(value)
             elif name == "stance_time":
                 data["stance_time"] = value  # ms
+            elif name == "stance_time_balance":
+                # Per-record ground-contact-time balance, in percent. The FIT
+                # field carries the *left*-side share, so > 50 means more time
+                # on the left. The only side-resolved metric a running-dynamics
+                # sensor produces — without it a one-sided complaint can only
+                # be assessed from lap averages, which smear a change over tens
+                # of minutes and cannot locate its onset.
+                data["stance_time_balance"] = value
             elif name == "vertical_oscillation":
                 data["vertical_oscillation"] = value  # mm
             elif name == "step_length":

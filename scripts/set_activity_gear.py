@@ -39,6 +39,7 @@ from app.graphs.shoe_advisor import (
     SHOE_ADVISOR_LOOKBACK_DAYS,
     build_shoe_context,
     gear_to_shoes,
+    is_retired,
     load_shoe_profiles,
 )
 
@@ -78,7 +79,7 @@ def _gear_from_planned_event(plan: dict, gear_list: list[dict]) -> tuple[str | N
     active = {
         g.get("id"): g
         for g in gear_list
-        if (g.get("type") or "") == "Shoes" and not g.get("retired")
+        if (g.get("type") or "") == "Shoes" and not is_retired(g.get("retired"))
     }
     m = _GEAR_MARKER_RE.search(desc)
     if m and m.group(1) in active:
@@ -175,7 +176,7 @@ async def _run(activity_id: str, gear_id: str | None, auto: bool, dry_run: bool,
         is_active_shoe = (
             entry is not None
             and (entry.get("type") or "") == "Shoes"
-            and not entry.get("retired")
+            and not is_retired(entry.get("retired"))
         )
         if is_active_shoe:
             print(f"– {activity_id}: trägt bereits aktiven Schuh gear={existing} — übersprungen (--force zum Überschreiben).")

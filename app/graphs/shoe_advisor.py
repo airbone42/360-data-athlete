@@ -203,7 +203,7 @@ def profile_gear_key(profile: dict, backend: str) -> str:
     return str(profile.get("icu_gear_id") or profile.get("gear_id") or "")
 
 
-def _is_retired(raw: object) -> bool:
+def is_retired(raw: object) -> bool:
     """Interpret the gear `retired` field, which is not reliably a boolean.
 
     intervals.icu returns one of: ``None`` / absent (active), the *string*
@@ -242,7 +242,7 @@ def gear_to_shoes(gear_list: list[dict]) -> list[dict]:
             "strava_id": gid,  # generic id alias for legacy field reads
             "name": g.get("name") or "",
             "distance_km": round((g.get("distance") or 0) / 1000, 1),
-            "retired": _is_retired(g.get("retired")),
+            "retired": is_retired(g.get("retired")),
             "primary": bool(g.get("primary", False)),
         })
     return shoes

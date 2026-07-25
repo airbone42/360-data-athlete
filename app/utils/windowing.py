@@ -43,7 +43,8 @@ def build_sub_laps(
 
     Each window contains:
       window_index, lap_index, start_s, end_s, avg_pace_min_km,
-      avg_hr, dominant_surface, avg_gct_ms, avg_stride_mm, avg_vo_mm, avg_cadence_spm
+      avg_hr, dominant_surface, avg_gct_ms, avg_stride_mm, avg_vo_mm, avg_cadence_spm,
+      avg_gct_balance_pct
     """
     time_stream: list[int] = streams.get("time", [])
     hr_stream: list[float | None] = streams.get("heartrate", [])
@@ -106,6 +107,7 @@ def build_sub_laps(
 
             # Running dynamics from FIT (match by offset)
             gct_vals, stride_vals, vo_vals, cadence_vals = [], [], [], []
+            balance_vals: list[float] = []
             for i in indices:
                 t = time_stream[i]
                 rec = fit_by_offset.get(t) or fit_by_offset.get(t - 1) or fit_by_offset.get(t + 1)
@@ -118,11 +120,16 @@ def build_sub_laps(
                         vo_vals.append(rec["vertical_oscillation"])
                     if rec.get("cadence") is not None:
                         cadence_vals.append(rec["cadence"])
+                    if rec.get("stance_time_balance") is not None:
+                        balance_vals.append(rec["stance_time_balance"])
 
             avg_gct = round(sum(gct_vals) / len(gct_vals)) if gct_vals else None
             avg_stride = round(sum(stride_vals) / len(stride_vals)) if stride_vals else None
             avg_vo = round(sum(vo_vals) / len(vo_vals), 1) if vo_vals else None
             avg_cadence = round(sum(cadence_vals) / len(cadence_vals)) if cadence_vals else None
+            avg_balance = (
+                round(sum(balance_vals) / len(balance_vals), 2) if balance_vals else None
+            )
 
             sub_laps.append({
                 "window_index": window_index,
@@ -136,6 +143,10 @@ def build_sub_laps(
                 "avg_stride_mm": avg_stride,
                 "avg_vo_mm": avg_vo,
                 "avg_cadence_spm": avg_cadence,
+                # Ground-contact-time balance, percent on the left side.
+                # The only side-resolved metric here — a one-sided
+                # complaint cannot be assessed without it.
+                "avg_gct_balance_pct": avg_balance,
             })
             window_index += 1
 
