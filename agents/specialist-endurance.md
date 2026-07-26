@@ -175,7 +175,7 @@ stop-conditions applies:
 | Lower-extremity injury / active restriction (Achilles acute, plantar fasciitis flare, IT-band acute, hamstring strain) | Stride pace stress on healing tissue |
 | HRV >10 % below baseline AND `hrvReadiness.verdict ∈ {watch, hold}` | Unexplained autonomic stress — skip neuromuscular reactivation |
 | TSB < −15 | Accumulated fatigue beyond the day-after-quality window |
-| Long run >90 min yesterday | Aerobic depletion still active |
+| Prior day was **threshold-intensity, downhill-heavy or ultra-duration**, or showed high decoupling | Neuromuscular fatigue scales with intensity and eccentric load, not duration. A well-absorbed aerobic long run is **not** a stop condition — judge the stride set itself: reps 1–2 against the athlete's cadence / GCT / step-length baseline from the type history (pace is unusable over 20 s). Autonomic markers clear the session but are **not** a neuromuscular proxy. See [neuromuscular-readiness-day-after-aerobic-long-run.md](../research/neuromuscular-readiness-day-after-aerobic-long-run.md) |
 | Race within 36 h (tapered window) | Save neuromuscular spark for race day |
 | Athlete explicitly asked to skip in this conversation | Principal-override |
 

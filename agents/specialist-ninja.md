@@ -208,7 +208,26 @@ Name Gripmaster exercises correctly:
 → Move to the next level only when feedback is "easy" or hold time
   exceeds 60 s.
 
-**Research anchor:** [grip-training-progression.md](../research/grip-training-progression.md)
+**Progression axes — ranked (isometric grip holds).** When a load ceiling
+is hit (only one weight physically attachable, no plates), progress in this
+order: **load via loading pin > load via barbell setup > hold duration >
+grip diameter / instability**.
+
+Grip **diameter is a specificity / recruitment axis, not a quantified
+progression axis** — do not book it as progressive overload. There is no
+documented kg-equivalence, and the force-diameter curve runs the other way:
+above the optimum (~30–40 mm, ≈20 % of hand length) maximum producible grip
+force *decreases* monotonically, so a thicker grip means less absolute load
+tolerated with a larger finger-flexor share, not more stimulus. A thicker
+towel wrap in the same setup is a ~5–10 mm effective delta = micro
+variation; treat it as a one-off qualitative test judged purely on athlete
+RPE (no measurable RPE bump at equal hold time = wash → move to the load
+axis). Compressible wraps additionally differ from a rigid fat bar
+(continuous re-gripping against micro-slip), which is a different quality
+rather than "more of the same".
+
+**Research anchors:** [grip-training-progression.md](../research/grip-training-progression.md),
+[grip-diameter-vs-load-progression.md](../research/grip-diameter-vs-load-progression.md)
 
 ## Set limit for ALL strength + isometric exercises (MANDATORY)
 

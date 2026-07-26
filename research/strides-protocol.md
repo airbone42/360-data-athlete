@@ -19,7 +19,9 @@
    - Acute lower extremity (Achilles tendinopathy, plantar-fasciitis flare, IT-band acute, hamstring strain)
    - HRV > 10% below baseline AND `hrvReadiness.verdict ∈ {watch, hold}`
    - TSB < −15 (accumulated fatigue beyond the day-after-quality window)
-   - Long run > 90 min yesterday (aerobic depletion still active)
+   - Prior day was threshold-intensity, downhill-heavy or ultra-duration, or showed
+     high decoupling (a well-absorbed aerobic long run is **not** a stop condition —
+     duration alone is the wrong gate, see the stop-condition table)
    - Race within 36 h (save the neuromuscular spark for race day)
    - Athlete override in the session
 
@@ -134,9 +136,35 @@ The old spec said "daysSinceIntense ≥ 3 AND TSB > −10". Both are over-restri
 | Acute lower extremity (Achilles tendinopathy, plantar-fascia flare, IT-band acute, hamstring strain) | Stride pace stresses healing tissue |
 | HRV > 10% below baseline **AND** `hrvReadiness.verdict ∈ {watch, hold}` | Unexplained autonomic load — do not stack a neuromuscular stimulus |
 | TSB < −15 | Accumulated fatigue beyond day-after-quality |
-| Long run > 90 min yesterday | Aerobic depletion still active, stride form suffers |
+| Prior day was **threshold-intensity, downhill-heavy or ultra-duration**, or showed high decoupling | Neuromuscular fatigue scales with intensity and eccentric load, not with duration — see [neuromuscular-readiness-day-after-aerobic-long-run.md](neuromuscular-readiness-day-after-aerobic-long-run.md) |
 | Race within 36 h | Save the neuromuscular spark for race — short strides race-day-WU OK, on the day before NO new stimulus |
 | Athlete override in the session | Principal override |
+
+**Neuromuscular readiness is an in-session assay, not a pre-session
+calculation.** Autonomic markers (HRV, RHR, sleep) and neuromuscular
+readiness are **separate physiological domains** and must not be traded off
+against each other: HRV typically returns to baseline within ~24 h while
+neuromuscular markers can still be depressed at ~48 h, and the two show no
+consistent association. A green autonomic picture therefore clears the
+*session*, but says nothing about whether the legs are springy.
+
+The stride set is itself the readiness test. Judge reps 1–2 against the
+athlete's own baseline from the type history:
+
+| Marker | Direction that indicates fatigue |
+|---|---|
+| Cadence (spm) | clear decrease |
+| Ground contact time | increase |
+| Step length at held cadence | decrease |
+| Subjective springiness | "flat" / "dull" rather than snappy |
+
+Ground contact time and cadence are the two most reliable field markers
+across the literature. **Pace is unusable for this judgement** — over 20 s
+GPS lags by 30–60 s/km, so a clean stride can read slow on the watch.
+Blunt first reps → abort the block and log it; that is information for the
+next day, not a failure.
+
+**Research anchor:** [neuromuscular-readiness-day-after-aerobic-long-run.md](neuromuscular-readiness-day-after-aerobic-long-run.md)
 
 **Myths that do NOT count as stop conditions:**
 - "HRV slightly below baseline" — if `verdict = expected` (e.g. after quality stimulus), no stop
