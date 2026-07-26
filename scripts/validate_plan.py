@@ -31,6 +31,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.api.intervals_client import IntervalsClient
 from app.config import settings
+from app.utils.impact_load import compute_run_day_streak
 
 
 SEVERITY_ERROR = "ERROR"
@@ -2184,6 +2185,146 @@ def check_stride_block_order(workouts: list[dict], ctx: Context) -> list[Finding
     return findings
 
 
+
+def check_impact_day_streak(workouts: list[dict], ctx: Context) -> list[Finding]:
+    """R022 — Impact-load streak guard (consecutive running days).
+
+    Running is the only modality in a typical endurance plan that transmits
+    ground impact; bike / swim / trainer work does not. Bone, tendon and
+    fascia adapt on a slower clock than the cardiovascular system, so an
+    athlete can be green on every autonomic marker (HRV above baseline, RHR
+    below it, TSB positive) and still be stacking structural load purely
+    because the runs sit on consecutive days.
+
+    Nothing else in the context catches that pattern:
+
+    - ``lastRestDay`` counts *any* logged activity as a training day, so a
+      mobility block masks a rest day and a bike day is indistinguishable
+      from a run day.
+    - ``daysSinceIntense`` is backward-looking and about intensity, not
+      about the impact pattern the *planned* day would create.
+    - R014 pushes easy runs *up* toward the phase floor, so it argues in
+      the opposite direction and will happily wave through an nth
+      consecutive running day.
+
+    Drift incident pattern: three running days in the week (including a
+    >90-min long run) plus a planned easy run, with the week's quality
+    session scheduled for the following day — four consecutive impact days
+    bracketing both a long run and a quality session, on an athlete whose
+    documented limiters were impact-driven. Every individual signal was
+    green and the plan passed every rule; the athlete had to spot the
+    pattern and ask for a cross-training swap.
+
+    The rule never blocks: a four-day streak is normal for a high-volume
+    runner and the tolerance is athlete-specific (it belongs in the
+    consumer's ``config/``, not here). It only forces the decision to be
+    conscious — either the swap happens, or the reason is written down.
+    A rationale documented in the run's notes downgrades it to INFO.
+    """
+    # Framework default: only the strict consecutive-day axis, at a
+    # generous threshold. The density axis is opt-in, because tolerance is
+    # athlete-specific — a 6x/week runner would get a finding almost daily
+    # and learn to ignore the rule. Both are configurable in
+    # config/athlete_status.md (machine-readable keys, same split as R021's
+    # stride_block_order and R002's injury_locks.json):
+    #
+    #     impact_streak_max: 4        # consecutive run days (default 4)
+    #     impact_density_max_5d: 4    # run days per trailing 5d (default off)
+    #
+    STREAK_THRESHOLD = 4
+    density_threshold = None
+
+    m = re.search(r"impact_streak_max[:\*\s=]*(\d+)", ctx.athlete_status or "", re.IGNORECASE)
+    if m:
+        STREAK_THRESHOLD = int(m.group(1))
+    m = re.search(r"impact_density_max_5d[:\*\s=]*(\d+)", ctx.athlete_status or "", re.IGNORECASE)
+    if m:
+        density_threshold = int(m.group(1))
+
+    planned_runs = [
+        w for w in workouts
+        if (w.get("type") or "") in ("Run", "VirtualRun", "TrailRun")
+    ]
+    if not planned_runs:
+        return []
+
+    try:
+        today = date.fromisoformat(ctx.target_date)
+    except (TypeError, ValueError):
+        return []
+
+    streak = compute_run_day_streak(ctx.recent_activities or [], today)
+    prospective = streak["prospective_days"]
+    prospective_5d = streak["prospective_5d"]
+
+    streak_hit = prospective >= STREAK_THRESHOLD
+    density_hit = density_threshold is not None and prospective_5d >= density_threshold
+    if not (streak_hit or density_hit):
+        return []
+
+    # Which axis tripped decides how the finding reads. Density is the axis a
+    # single off-day hides: runs on Tue/Thu/Fri/Sat are four impact days in
+    # five while the consecutive counter never passes three.
+    if streak_hit:
+        pattern = f"impact day {prospective} in a row"
+    else:
+        pattern = (
+            f"impact day {prospective_5d} within 5 days "
+            f"(consecutive streak only {prospective}, so an off-day masks it)"
+        )
+
+    # An acknowledged streak is a coaching decision, not a finding. Keep the
+    # keyword list narrow so a passing mention of "Lauftag" does not count.
+    ACK_RE = re.compile(
+        r"impact[-\s]*streak|lauftage? in folge|consecutive run day|"
+        r"impact[-\s]*tage? in folge|streak (?:acknowledged|bewusst)|"
+        r"cross[-\s]*training (?:gepr[uü]ft|verworfen|considered)",
+        re.IGNORECASE,
+    )
+
+    findings = []
+    for w in planned_runs:
+        notes = (w.get("coaching_notes") or "") + " " + (w.get("description") or "")
+        acknowledged = bool(ACK_RE.search(notes))
+        risky = streak["contains_long_run"] or streak["contains_quality"]
+
+        if acknowledged:
+            severity = SEVERITY_INFO
+        elif risky or prospective >= STREAK_THRESHOLD + 2:
+            severity = SEVERITY_WARNING
+        else:
+            severity = SEVERITY_INFO
+
+        inside = []
+        if streak["contains_long_run"]:
+            inside.append("a long run")
+        if streak["contains_quality"]:
+            inside.append("a quality session")
+        inside_txt = f" The streak already contains {' and '.join(inside)}." if inside else ""
+
+        findings.append(Finding(
+            rule_id="R022",
+            severity=severity,
+            workout=_workout_name(w),
+            message=(
+                f"This run would be {pattern} "
+                f"({streak['message']}).{inside_txt}"
+                + (" Rationale documented in the plan." if acknowledged else "")
+            ),
+            suggestion=(
+                "Structural tissue adapts slower than the cardiovascular "
+                "system, so green HRV/RHR/TSB do not clear an impact streak. "
+                "Either move the day onto a non-impact modality (bike / swim "
+                "— keeps the aerobic load, drops the impact), or state in the "
+                "run's coaching_notes why the streak is deliberate. Note that "
+                "R014 argues the other way (easy-run floor); when both fire, "
+                "the impact pattern is the constraint and the aerobic volume "
+                "belongs on the bike."
+            ),
+        ))
+    return findings
+
+
 RULES: list[tuple[str, Callable[[list[dict], Context], list[Finding]]]] = [
     ("R001", check_reps_ceiling),
     ("R002", check_injury_locks_shoulder),
@@ -2206,6 +2347,7 @@ RULES: list[tuple[str, Callable[[list[dict], Context], list[Finding]]]] = [
     ("R019", check_quality_warmup_priming),
     ("R020", check_run_hr_zone_target),
     ("R021", check_stride_block_order),
+    ("R022", check_impact_day_streak),
 ]
 
 

@@ -26,6 +26,7 @@ from app.graphs.sub_athlete_context.state import AthleteContextState
 from app.schemas.context import ContextDict
 from app.utils.alerts import notify_error
 from app.utils.hr_zones import extract_run_hr_bounds, format_hr_zones
+from app.utils.impact_load import compute_run_day_streak
 from app.utils.prompt_loader import load_prompt
 
 TOLERANCE_PCT = 0.12
@@ -257,6 +258,15 @@ def build_context(state: AthleteContextState) -> dict:
     last_intense = _find_last_intense_session(activities)
     last_rest_day = _find_last_rest_day(activities, today)
 
+    # Impact-load streak — consecutive running days. Neither lastRestDay
+    # (counts any activity, so a mobility block masks a rest day and a bike
+    # day looks like a run day) nor daysSinceIntense (backward-looking, and
+    # about intensity rather than impact) makes this pattern visible, so a
+    # plan can add a fourth consecutive running day unnoticed. Computed in
+    # code, not inferred by an agent: validate_plan.py R022 reads the same
+    # helper, so the planner and the validator cannot disagree about it.
+    run_day_streak = compute_run_day_streak(activities, today)
+
     days_since_intense = _days_since(last_intense, today)
     hrv_cv = _compute_hrv_cv(wellness_history, today)
 
@@ -404,6 +414,7 @@ def build_context(state: AthleteContextState) -> dict:
         "intensityReadiness": intensity_readiness,
         "daysSinceIntense": days_since_intense,
         "lastRestDay": last_rest_day,
+        "runDayStreak": run_day_streak,
         "athleteFeedback": athlete_feedback,
         "eventList": event_list,
         "raceInDays": race_in_days,
@@ -2515,6 +2526,18 @@ def _compute_planning_constraints(
     due = _compute_complementary_due(activities, today)
     if due:
         constraints.append(due)
+
+    # Impact-load streak — surfaced as a constraint line so the planner reads
+    # the pattern before it plans, not after the athlete catches it. Only
+    # emitted once a streak actually exists; a quiet day stays quiet.
+    streak = compute_run_day_streak(activities, today)
+    if streak["streak_days"] >= 2:
+        icon = "🔴" if streak["prospective_days"] >= 4 else "🟡"
+        constraints.append(
+            f"{icon} Impact-load streak: {streak['message']} "
+            "Running is the only impact modality — a cross-training day "
+            "(bike/swim) breaks the streak without costing aerobic load."
+        )
 
     # Exercise re-evaluation cadence — advisory flag at natural boundaries
     # (recovery week / phase change / staleness). Cheap: when absent the

@@ -66,6 +66,7 @@ pure symptom/feeling messages:
 | `todayWorkouts` | What is already scheduled today? Every recommendation must reference this concrete list. |
 | `hrv`, `hrvBaseline`, `hrvDeviation`, `intensityReadiness` | Current tolerance (Methodik: framework/research/hrv-rhr-baseline-methodology.md) |
 | `rhr`, `rhrBaseline`, `rhrDeviation`, `rhrContext`, `combinedOverloadSignal` | Long-window RHR drift + combined HRV+RHR overload trigger. `combinedOverloadSignal.verdict` ∈ {`clear`, `watch`, `deload`}. `deload` at 3+ consecutive days both signals fire → `intensityReadiness` flips red automatically (Methodik: framework/research/hrv-rhr-baseline-methodology.md) |
+| `runDayStreak` | Impact-load pattern: consecutive running days, run days per trailing 5d/7d, and whether a long run or quality session sits inside. Running is the only impact modality — `lastRestDay` and `daysSinceIntense` cannot see this (see rule below) |
 | `planningConstraints` | Active blocks (legs, plyo, recovery week, pause) |
 | `athleteFeedback`, `eventList` | Latest athlete notes — context violation if ignored |
 | `hrvReviewPending` | Daily review obligation |
@@ -193,7 +194,7 @@ ctl, atl, tsb, ctlDisplay,
 hrvBaseline, hrvDeviation, rhrContext, rhrBaseline, rhrDeviation,
 combinedOverloadSignal, ctlTrend, cycleHint,
 zoneDistribution, weeklyZoneBalance, mesoLoadTrend, weatherInfo,
-intensityReadiness, daysSinceIntense, lastRestDay,
+intensityReadiness, daysSinceIntense, lastRestDay, runDayStreak,
 athleteFeedback,
 eventList, raceInDays, dateStr,
 hrZones, hrvReviewPending, hrvReadiness, hrvCvTrend,
@@ -879,6 +880,73 @@ shortfall was context, not a capability drop (see "No silent conservatism").
 eccentric leg / plyo session sits in the same day or prior 48 h of a
 leg-driven endurance quality; head-coach judgment for the decouple-vs-sequence
 decision at plan time.*
+
+### Impact-load streak — structural load is not an autonomic signal (mandatory)
+
+Running is the only modality in a typical endurance plan that transmits
+ground impact; bike, swim and trainer work do not. Bone, tendon and fascia
+adapt on a slower clock than the cardiovascular system, so an athlete can
+be green on **every** autonomic marker — HRV above baseline, RHR below it,
+TSB positive, `hrvReadiness: clear` — and still be accumulating structural
+load purely because the runs sit close together.
+
+None of the older derived signals surface that pattern:
+
+- `lastRestDay` counts **any** logged activity as a training day, so a
+  10-minute mobility block masks a rest day and a pure bike day is
+  indistinguishable from a hard run day.
+- `daysSinceIntense` is backward-looking and about **intensity**, not about
+  the impact pattern the *planned* day would create.
+- R014 (easy-run conservatism) argues in the **opposite** direction — it
+  pushes easy-run duration *up* toward the phase floor and will happily
+  wave through an nth consecutive running day.
+
+`context.runDayStreak` closes the gap. It is computed in code
+(`app/utils/impact_load.py`), never inferred by an agent, and the validator
+imports the **same** helper — two implementations would eventually disagree,
+and a disagreement about whether a rule fired is worse than no rule. It
+reports two axes:
+
+| Axis | Why both are needed |
+|---|---|
+| **Consecutive** run days (`streak_days`, `prospective_days`) | The obvious pattern: four running days back to back. |
+| **Density** per trailing 5d (`run_days_5d`, `prospective_5d`) | The pattern a single off-day disguises: runs on Tue/Thu/Fri/Sat are four impact days in five while the consecutive counter never passes three. Structural load does not reset on one off-day the way the streak counter implies. |
+
+**Head-coach rule:** before briefing a Run, read `runDayStreak`. When the
+planned run would cross the athlete's tolerance, either move the day onto a
+non-impact modality (the bike keeps the aerobic load and drops the impact)
+or state in the run's `coaching_notes` why the streak is deliberate. When
+R014 and R022 both fire, the impact pattern is the constraint and the
+aerobic volume belongs on the bike — not on a fourth impact day.
+
+**Athlete tolerance is configuration, not framework policy.** How dense is
+too dense depends on the athlete's limiters and training history; a
+6×/week runner must not be flagged daily. Two machine-readable keys in
+`config/athlete_status.md` (same split as R021's `stride_block_order` and
+R002's `injury_locks.json`):
+
+```
+impact_streak_max: 4        # consecutive run days (framework default 4)
+impact_density_max_5d: 4    # run days per trailing 5d (default: off)
+```
+
+The density axis is deliberately **opt-in** — a fresh plugin user gets only
+the generous consecutive-day check and is never spammed.
+
+**Drift incident pattern** (canonical case to learn from): three running
+days in the week including a >90-min long run, a fourth easy run in the
+day's plan, and the week's quality session scheduled for the next day — four
+impact days in five, bracketing both a long run and a quality session, on an
+athlete whose documented limiters were impact-driven. Every individual
+signal was green, every validator rule passed, and the plan was presented.
+The athlete spotted the pattern and asked for a cross-training swap. Note
+what this implies for the guard's design: a strict consecutive-day counter
+would **not** have caught it (the streak was only two) — which is why the
+density axis exists.
+
+*Enforcement: `validate_plan.py::check_impact_day_streak` (R022) — WARNING,
+never blocking; downgraded to INFO when the run's notes document the
+rationale. Tests: `tests/test_impact_day_streak.py`.*
 
 ### Planner systematic-input rule (mandatory)
 
