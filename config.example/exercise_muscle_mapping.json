@@ -3559,7 +3559,14 @@
       "suitcase hold kb",
       "suitcase-hold",
       "suitcase carry hold",
-      "suitcase hold (aufbausatz)"
+      "suitcase hold (aufbausatz)",
+      "suitcase-aufbausatz kettlebell",
+      "suitcase-aufbausatz",
+      "suitcase aufbausatz kettlebell",
+      "suitcase hold langhantel",
+      "farmers hold langhantel-suitcase",
+      "farmer hold langhantel-suitcase",
+      "langhantel-suitcase"
     ],
     "primary": [
       {
