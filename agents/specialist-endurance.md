@@ -25,6 +25,35 @@ Read these configuration files:
 - **Short intervals (≤60 s) and sprints:** pace ONLY, no HR
 - **Tempo / threshold:** both (pace + HR)
 
+## Heat — the HR ceiling leads, the pace anchor moves (mandatory)
+
+On an easy/Z2 run in warm conditions the heart-rate ceiling stays where
+it is; the pace that ceiling buys is simply slower. Do **not** shorten
+the session to compensate, do **not** lift the ceiling so a familiar pace
+becomes reachable, and do **not** measure the athlete's pace compliance
+against a pace recorded on a cool day.
+
+Expected magnitude for an unacclimatised athlete: ~0.3–0.5 % pace loss
+per °C above a ~10–15 °C reference, scaled by humidity (×1.0 below 12 °C
+dew point, ×1.3 at 12–18 °C, ×1.6–1.8 above 18 °C) and by acclimatisation
+(×0.5–0.7 once adapted, which takes 10–14 days). Dew point is the better
+reference than air temperature alone.
+
+Consequences for the prescription:
+
+- When a heat-corrected pace corridor is stated at all, derive it from
+  the cool-weather anchor **times the expected penalty** — never quote
+  the cool-weather pace as the target and let the athlete chase it
+  against the HR cap.
+- Prefer stating no pace target at all on easy/Z2 in heat (consistent
+  with the steering mode above) and make the HR cap plus the "pace is the
+  result, not the instruction" cue explicit in the notes.
+- Duration stays on the phase band. Heat is a reason to run *slower*, not
+  *shorter* — the same discipline R014 enforces mechanically.
+
+**Research anchor:**
+[heat-pace-penalty-at-fixed-hr.md](../research/heat-pace-penalty-at-fixed-hr.md).
+
 ## HR target syntax in `intervals_icu` (mandatory)
 
 intervals.icu's server-side step parser accepts HR targets in **exactly

@@ -186,6 +186,45 @@ particular, never support "the change had not recovered by the end" with a
 cooldown value — that window cannot carry the claim. The same applies to
 recovery jogs between intervals.
 
+**Heat-driven pace loss at a capped HR is not a growth area (MANDATORY).**
+When an easy/Z2 session was run under a heart-rate ceiling in warm
+conditions, a slower pace than a cooler reference session is the
+*expected* consequence of holding the ceiling, not underperformance. For
+an unacclimatised athlete the expectation is ~0.3–0.5 % pace loss per °C
+above a ~10–15 °C reference, scaled by humidity (×1.0 below 12 °C dew
+point, ×1.3 at 12–18 °C, ×1.6–1.8 above 18 °C) and by acclimatisation
+(×0.5–0.7 once adapted, which takes 10–14 days). Before naming a pace
+offset as a finding, construct that band and compare:
+
+- Offset **within ±50 %** of the band → fully explained by the
+  environment. Report it as context if the athlete raised it; never as a
+  growth area.
+- Offset between **1× and 2×** the band → grey zone. One data point does
+  not carry a fatigue diagnosis; say so and name the cross-signals to
+  watch rather than concluding.
+- Offset **above ~2×** the band, or a large offset with **little or no
+  temperature delta** → other causes are worth raising (accumulated
+  fatigue, subclinical illness, sleep debt, dehydration, fuel depletion).
+
+**A pace offset alone is never a form signal.** When HRV, RHR trend and
+the subjective markers are unremarkable, a single offset — however large
+— does not support a fatigue or form-loss claim; that diagnosis needs a
+second, independent signal. Cross-signals that do argue for "not (only)
+heat": RPE clearly inflated at the same pace, `hrvReadiness ∈ {watch,
+hold}` across several days, RHR trending above baseline, prolonged HR
+recovery, or symptoms in `athleteFeedback`.
+
+Distinguish the two shapes: an offset present **from the first minutes**
+is a level shift (environmental / pre-session state), whereas an offset
+that **grows across the session** is cardiac drift. Do not read a level
+shift as drift — the pace-normalised in-session slope is the number that
+separates them. **Research anchor:**
+[heat-pace-penalty-at-fixed-hr.md](../research/heat-pace-penalty-at-fixed-hr.md).
+
+Note the honest limit when it applies: without a device temperature
+reading the heat is athlete-reported plus forecast, not measured. Say
+that rather than quoting a temperature the data does not contain.
+
 **Cadence — when to evaluate (MANDATORY):** Evaluate cadence ONLY when
 the session ran in Z3 or above. For Z1/Z2 sessions (easy, recovery,
 long-run-sim at Z2-pace), pace-dependent cadence drops are physiologically

@@ -132,6 +132,31 @@ Before producing the plan:
    - Explain in `coaching_notes` which pillar is up today and why
      (1 sentence).
 
+## Heat — cap the HR, keep the duration (MANDATORY)
+
+On a warm day the primary steering parameter for an easy/Z2 endurance
+directive is the **heart-rate ceiling**, not pace and not duration. A
+pace loss of roughly 0.3–0.5 % per °C above a ~10–15 °C reference is the
+*expected* cost of holding that ceiling for an unacclimatised athlete
+(scaled up by humidity, roughly halved once acclimatised over 10–14
+days) — it is a property of the environment, not a readiness signal, and
+it must not feed back into the directive as a reason to shorten the
+session or downgrade the day.
+
+- Duration stays anchored on the phase band and demonstrated capability
+  (see "No silent conservatism" in `CLAUDE.md`). Heat justifies running
+  slower, not shorter.
+- The legitimate heat levers are **slot placement** (earlier or later in
+  the day), **surface / shade**, and **hydration guidance** — put those in
+  `coaching_notes` instead of trimming volume.
+- Where heat genuinely does constrain the plan is the **quality**
+  session: the same ceiling that merely slows an easy run makes a
+  threshold or VO2max target harder to reach and raises the thermal cost
+  of reaching it. Weigh a slot move there before weighing a volume cut.
+
+**Research anchor:**
+[heat-pace-penalty-at-fixed-hr.md](../research/heat-pace-penalty-at-fixed-hr.md).
+
 ## Ordering with multiple sessions (MANDATORY)
 When the plan contains multiple sessions and one is plyo or strength
 (WeightTraining):

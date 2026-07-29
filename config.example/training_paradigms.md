@@ -220,6 +220,50 @@ day) about external factors.
   never as a zone target in the workout step
 - For analysis: ignore the first 10 minutes of a run in HR evaluation
 
+## Heat calibration for easy / Z2 (pace penalty at a fixed HR)
+
+Holding a heart-rate ceiling in warm conditions buys a slower pace. That
+is the expected physiological cost, not underperformance, and it is a
+*different* phenomenon from the cardiac startup above: startup and drift
+grow across the session, a heat penalty is a level shift present from the
+first minutes.
+
+**Rule of thumb (unacclimatised):**
+
+```
+expected_pace_loss_pct ≈ (0.3 … 0.5) × °C_delta × humidity_factor × acclim_factor
+```
+
+- `°C_delta` — versus a ~10–15 °C reference (or versus the cool-weather
+  session being compared against)
+- `humidity_factor` — ×1.0 below 12 °C dew point, ×1.3 at 12–18 °C,
+  ×1.6–1.8 above 18 °C. **Dew point beats air temperature** as the
+  reference quantity; a degrees-only rule does not carry.
+- `acclim_factor` — ×1.0 unacclimatised, ×0.5–0.7 once adapted.
+  Adaptation takes 10–14 days of repeated heat exposure.
+
+**Reading an observed offset** — a band, not a threshold. No source
+supports an "above X % it is no longer heat" cut-off:
+
+| Observed vs. expected band | Reading |
+|---|---|
+| within ±50 % | fully explained by the environment; no review |
+| 1×–2× the band | grey zone; one data point decides nothing, check cross-signals or wait for a second session |
+| above ~2×, or large with little temperature delta | consider other causes: accumulated fatigue, subclinical illness, sleep debt, dehydration, fuel depletion |
+
+**A pace offset on its own is never a form signal.** With HRV, RHR trend
+and subjective markers unremarkable, a single offset — however large —
+does not support a fatigue diagnosis; that needs a second independent
+signal (RPE inflated at the same pace, `hrvReadiness ∈ {watch, hold}`
+over several days, RHR trending up, prolonged HR recovery, or symptoms
+in `athleteFeedback`).
+
+**Planning consequence:** heat is a reason to run slower, not shorter.
+The levers are slot placement, shade/surface and hydration — not a volume
+cut. Duration stays on the phase band.
+
+Source: [heat-pace-penalty-at-fixed-hr.md](../research/heat-pace-penalty-at-fixed-hr.md)
+
 ## Warm-up priming before quality sessions
 
 A pure easy Z1–Z2 warm-up does NOT prime VO2 on-kinetics. Without
