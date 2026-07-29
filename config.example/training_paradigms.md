@@ -160,6 +160,21 @@ than a naive pace × elevation mix.
 - Takeaway: Strava GAP is the canonical source for any pace assessment
   involving elevation.
 
+**A number quoted in a past analysis is not a source (MANDATORY).**
+The rules above govern how a figure is derived *the first time*. They do
+not protect the second time, because a persisted coaching note, activity
+message or NOTE event is prose: once a distorted elevation figure has
+been written into one, it reads back as established fact and quietly
+becomes the baseline for a later comparison — with the source hierarchy
+never consulted, since nobody is looking at the FIT file any more.
+
+When a later analysis compares against an earlier session, re-derive the
+comparison values (elevation, distance, pace, HR) **from that session's
+activity record**, never from the text of its stored analysis. Treat
+figures inside persisted prose as narrative, not as data. When such a
+figure is found to be wrong, correct the persisted text as well —
+otherwise the same error is re-imported on the next comparison.
+
 **Research anchor:** [Strava vs. intervals.icu GAP — algorithm differences & canonicity](../research/strava-vs-intervals-gap.md)
 
 ## HRV readiness (`hrvReadiness` — 7d-rolling ln-rMSSD vs 60d normal band)

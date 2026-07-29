@@ -225,6 +225,16 @@ Note the honest limit when it applies: without a device temperature
 reading the heat is athlete-reported plus forecast, not measured. Say
 that rather than quoting a temperature the data does not contain.
 
+**Pick the reference session, don't carry a stored baseline.** The
+comparison anchor is a *recent* comparable session — same route class,
+same intensity class — not a fixed reference pace kept in config. Route
+conditions, fitness and surface drift continuously, so a stored anchor
+ages badly and silently distorts the band. Re-derive the comparison
+values (elevation, distance, pace, HR) from that session's **activity
+record**, never from the text of its stored coaching analysis: a figure
+quoted in persisted prose is narrative, not data, and importing it
+re-imports any error it contains.
+
 **Cadence — when to evaluate (MANDATORY):** Evaluate cadence ONLY when
 the session ran in Z3 or above. For Z1/Z2 sessions (easy, recovery,
 long-run-sim at Z2-pace), pace-dependent cadence drops are physiologically
