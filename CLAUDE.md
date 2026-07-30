@@ -876,6 +876,20 @@ and under-restricts slow-eccentric work. Classify before spacing:
 |---|---|---|---|
 | **Ballistic / overspeed eccentric** | Kettlebell swing, drop / depth jump, bounding, hurdle hops | Braking action well under 1 s per rep, never at peak stretch | **~48 h** |
 | **Slow eccentric at long muscle length** | RDL, Nordic curl, downhill running, heavy split squat, slow-tempo squat | Long lengthening excursion at or near peak stretch | **≥ 72 h** |
+| **Concentric-dominant at short muscle length, no external load** | Bodyweight hip thrust / glute bridge, concentric isolation at the shortened end | No controlled eccentric excursion under tension; peak force at the shortest muscle length; bodyweight only | **≥ 24 h** |
+
+This third class is the lowest-damage modality in the leg-strength palette —
+not an exception to the spacing rule but its bottom rung. All three damage
+multipliers (contraction mode, muscle length at peak force, absolute load) are
+minimal at once, so **a first exposure in this class is not a reason to reach
+for the 72 h floor**: the repeated-bout effect protects against
+eccentric-triggered damage, and a stimulus that barely produces any has no
+protection gap to worry about. The class shifts up the moment slow eccentric
+**or** external load **or** peak stretch enters — then read the row above. The
+operative failure mode here is volume overshoot, not load overshoot: cap a
+first exposure at 6–10 reps, ~3 sets on the target side, RPE ≤ 6–7, and
+progress via volume rather than load. Derivation and sources:
+[concentric-glute-first-exposure-before-longrun.md](research/concentric-glute-first-exposure-before-longrun.md).
 
 Two corollaries the coach must not get backwards:
 

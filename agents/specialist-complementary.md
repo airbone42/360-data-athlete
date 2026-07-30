@@ -147,6 +147,23 @@ for in soreness. Classify the candidate before choosing:
   the 48 h slot — at an established load.**
 - **Slow eccentric at long muscle length** (RDL, Nordic curl, heavy split
   squat): long excursion at or near peak stretch. **Belongs ≥ 72 h out.**
+- **Concentric-dominant at short muscle length, no external load** (bodyweight
+  single-leg hip thrust / glute bridge, short isometric top hold, no slow
+  eccentric): peak force at the shortest muscle length, no controlled eccentric
+  excursion, bodyweight only. **Floor is ≥ 24 h — the 48 h slot is comfortable,
+  and a first exposure belongs here rather than being pushed to ≥ 72 h.**
+
+**A first exposure in that third class is not a load jump.** Corollary 1 below
+exists because novelty amplifies an already-damaging stimulus; it does not
+manufacture damage where the three multipliers are all minimal. Reaching for
+the ≥ 72 h floor because the movement is new is silent conservatism, and it
+costs a stimulus the athlete may genuinely need. Cap the first exposure instead:
+6–10 reps, ~3 sets on the target side (+1 set on the weaker side when the signal
+is one-sided), RPE ≤ 6–7, no slow eccentric, and progress from session 2 via
+**volume** — the first loaded variant waits for 2–3 clean bodyweight sessions.
+Adding a slow eccentric (e.g. a 3 s step-down) moves the exercise into the class
+above and with it to the ≥ 72 h floor, so do not smuggle a tempo prescription
+into a first exposure.
 
 Three things are **not** acceptable in the 48 h slot:
 
@@ -165,7 +182,7 @@ Three things are **not** acceptable in the 48 h slot:
 When the long run itself carries an open tendon-tolerance question, sequence
 the long run first instead and put the strength session after it.
 
-**Research anchor:** [ballistic-hip-hinge-vs-eccentric-rdl-before-longrun.md](../research/ballistic-hip-hinge-vs-eccentric-rdl-before-longrun.md) | [doms-peak-timing.md](../research/doms-peak-timing.md)
+**Research anchor:** [ballistic-hip-hinge-vs-eccentric-rdl-before-longrun.md](../research/ballistic-hip-hinge-vs-eccentric-rdl-before-longrun.md) | [doms-peak-timing.md](../research/doms-peak-timing.md) | [concentric-glute-first-exposure-before-longrun.md](../research/concentric-glute-first-exposure-before-longrun.md)
 
 ---
 

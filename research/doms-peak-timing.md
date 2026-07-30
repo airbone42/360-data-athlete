@@ -20,6 +20,18 @@
    ballistic signature as a ~48 h stimulus and the slow-eccentric signature as a
    ≥ 72 h stimulus. Details and the running-economy caveat:
    [ballistic-hip-hinge-vs-eccentric-rdl-before-longrun.md](ballistic-hip-hinge-vs-eccentric-rdl-before-longrun.md).
+6. **Three signatures, not two — there is a class below the ballistic one.**
+   Concentric-dominant contraction at the *short* muscle end without external load
+   (bodyweight hip thrust / glute bridge, concentric isolation at the shortened
+   position) has all three damage multipliers minimal at once: contraction mode,
+   muscle length at peak force, and absolute load. Item 4 above already notes that
+   pure concentric work hardly produces DOMS; the operational consequence is that
+   a **first exposure** in this class needs no extended buffer, because the
+   repeated-bout effect protects against eccentric-triggerable damage and this
+   stimulus barely produces any. Spacing floor before an aerobic long run: **≥ 24 h**
+   (40–48 h comfortable). The limiting failure mode is volume overshoot, not load
+   overshoot. Details:
+   [concentric-glute-first-exposure-before-longrun.md](concentric-glute-first-exposure-before-longrun.md).
 
 ## Findings
 

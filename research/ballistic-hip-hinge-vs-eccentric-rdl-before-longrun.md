@@ -447,6 +447,16 @@ laufspezifischen Volumen- oder Quality-Einheit.
 
 ## Application in framework
 
+> **Es gibt eine dritte Klasse unterhalb der hier behandelten Ballistik.**
+> Konzentrisch-dominante Hüftextension am kurzen Muskelende ohne externe Last
+> (Bodyweight Hip Thrust, Glute Bridge, kurzer Top-Hold, kein slow eccentric)
+> liegt noch unter dem ballistischen Overspeed-Eccentric: der Boden vor einem
+> aeroben Longrun ist dort **≥ 24 h**. Wichtig für die Novelty-Frage aus §6
+> unten — der dortige Last-Sprung-Vorbehalt überträgt sich **nicht** auf eine
+> Erst-Exposition in dieser dritten Klasse, weil der Repeated-Bout-Effekt vor
+> eccentric-triggerbarem Schaden schützt und dieser Reiz kaum welchen erzeugt.
+> Details: [concentric-glute-first-exposure-before-longrun.md](concentric-glute-first-exposure-before-longrun.md).
+
 ### Was bestätigt wird
 
 - Die framework-Regel **„6 h Spacing bei Leg-Strength → Run"** aus
