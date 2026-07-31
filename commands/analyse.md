@@ -18,6 +18,20 @@ Required: intervals.icu activity ID, e.g. `i12345678`
   plan data. The **precomputed `compliance` property** from intervals.icu
   is unreliable — it is never cited and never used as a gate; coaching
   feedback never comments on it
+- **ERG-trainer power is not an athlete signal (MANDATORY).** On an
+  ERG-controlled smart trainer the device holds target watts whatever the
+  athlete is doing, so a flat power trace is the trainer working, not the
+  rider. Never report "power held to the last rep", "zero decay", "watts
+  never dropped" as a strength, a finding, or evidence of adaptation, and
+  never gate a progression on it. What stays valid from such a session is
+  **repetition count** (volume compliance), **cadence**, **HR** and
+  **RPE** — cadence being the variable that actually carries muscular
+  capacity, since it falls when the athlete runs out while power does
+  not. Check `config/equipment.md` for the trainer and its control mode
+  before analysing any indoor ride; where the mode is unknown, assume ERG
+  for a structured session and state the assumption. Prescribed watt
+  anchors remain valid as *dose* — only the inference from held watts
+  back to athlete state is invalid.
 - **GCT on recovery runs:** High GCT during slow jogging is biomechanics,
   not error. Only evaluate GCT as a fatigue indicator when the GCT rise
   disproportionately exceeds the pace slowdown (pace-normalized). Do not
