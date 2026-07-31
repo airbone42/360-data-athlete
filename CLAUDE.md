@@ -564,6 +564,39 @@ to overwrite a standing prescription, the default is **additive**:
 treat the new instruction as a parallel layer on top of the existing
 prescription until the athlete explicitly confirms a replacement.
 
+**A deferral is only a deferral if it has a named slot.** The rule above
+guards against dropping a prescription *at once*. The more common failure
+is slower: the element is omitted today for a perfectly good same-day
+reason (a lock, a session-order collision, a cancelled day), the reason is
+written into that day's plan text, and the day passes. Nothing re-reads
+that text. Repeat three times and the prescription is gone without any
+single decision to drop it — which is exactly the outcome this section
+exists to prevent, reached by a route it did not cover.
+
+- Whenever a prescribed element is left out, name **when it runs instead**,
+  in the same breath as the reason. "Skipped today, moves to Saturday"
+  is a deferral; "skipped today because X" is a drop with better wording.
+- The replacement slot belongs in a file that is read at planning time
+  (`config/`), not only in the workout description of the day it was
+  dropped from. Workout text is written once and read by nobody afterwards.
+- A same-day reason twice in a row for the same element is a signal in its
+  own right: either the prescription does not fit the current schedule and
+  needs re-scoping with the athlete, or it needs a protected slot.
+- **Check the mechanism, not the label.** "Single-leg variants are locked"
+  is a label; the lock covers *unstable and reactive* loading. Before
+  omitting an exercise under a restriction, verify it actually meets the
+  restriction's criteria — a supine single-leg lift has no balance demand
+  and is not what an ankle lock blocks. A wrong omission reads exactly like
+  a right one in the record.
+
+**Mechanical support:** `_compute_prescription_compliance` surfaces this in
+`planningConstraints` at exercise granularity, driven by a
+`**Soll-Frequenz:**` line on the exercise entry in
+`exercise_progressions.md`. The tag-level due-warnings cannot do this —
+they resolve to "did a `core` session happen?", so a prescription living
+*inside* such a session is invisible to them. Declare the cadence for any
+prescription whose omission would otherwise be silent.
+
 Three concrete triggers — pause and ask the athlete before acting:
 
 1. **Atomic block would lose members.** Today's plan is shaping up to

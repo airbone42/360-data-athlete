@@ -35,6 +35,39 @@ Wenn eine Übung eine biomechanisch schwächere Variante einer Basisübung ist, 
 
 ---
 
+## Soll-Frequenz-Feld (Ausführungs-Kontrolle für stehende Verschreibungen)
+
+Die Fälligkeits-Warnungen im Kontext (`Complementary due`) arbeiten auf
+**Aktivitäts-Tags**: sie beantworten „wann lief zuletzt eine `core`-Einheit?".
+Eine Übung, die *innerhalb* eines solchen Blocks verschrieben ist — ein Lift,
+der am Core-Slot hängt, eine Physio-Position im Schulterblock — ist darin
+**nicht sichtbar**: Der Block läuft, das Tag ist bedient, und ein Weglassen
+hinterlässt keine Spur. Genau so verschwindet eine Verschreibung, ohne dass
+sie je jemand gestrichen hätte.
+
+Jede Übung, deren Weglassen sonst still bliebe, kann deshalb eine
+maschinenlesbare Frequenz-Zeile tragen:
+
+```markdown
+- **Soll-Frequenz:** 2x/Woche — kurze Begründung nach dem Gedankenstrich
+```
+
+Erkannte Formate: `täglich`, `alle N Tage`, `Nx/Woche`, `wöchentlich`.
+Alles nach einem Gedankenstrich ist Prosa und wird ignoriert.
+
+`app/analytics/prescription_compliance.py` vergleicht diese Deklarationen
+gegen die tatsächlich ausgeführten Übungen aus `data/muscles/*.json` (dem
+Muskel-Log, das ohne Zusatzaufwand ohnehin entsteht) und meldet Rückstand
+in `planningConstraints`. Ad hoc:
+
+```bash
+python3 scripts/check_prescription_compliance.py [--date YYYY-MM-DD] [--json]
+```
+
+**Opt-in pro Übung:** Ohne `Soll-Frequenz`-Zeile wird eine Übung nicht
+verfolgt. Das hält die Meldung kurz — sie soll auf die wenigen stehenden
+Verschreibungen zeigen, nicht auf jeden Eintrag der Datei.
+
 ## Re-Eval-Feld (WHY-Persistenz für die Re-Evaluations-Kadenz)
 
 Damit die Übungsauswahl nicht „blind" Session für Session übernommen,

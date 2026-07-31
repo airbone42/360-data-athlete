@@ -1794,6 +1794,29 @@ def _achilles_plyo_locked() -> bool:
     return bool(_re.search(r"Achillessehne.*Phase\s*[12]\s*aktiv", content, _re.IGNORECASE))
 
 
+def _compute_prescription_compliance(today: date) -> str | None:
+    """Flag standing prescriptions that were not actually executed.
+
+    Complements `_compute_complementary_due`, which resolves only to the tag
+    level. An exercise prescribed inside another block — a lift that hangs off
+    the core session, a physio position inside a shoulder block — is invisible
+    there: the block runs, the tag is satisfied, and the omission is silent.
+    Only exercises that declare a `**Soll-Frequenz:**` in
+    `exercise_progressions.md` are tracked, so this stays opt-in per exercise
+    rather than flagging every entry in the file.
+    """
+    from app.analytics.prescription_compliance import (
+        compute_prescription_compliance,
+        format_findings,
+    )
+    from app.utils.config_loader import load_config
+
+    findings = compute_prescription_compliance(
+        load_config("exercise_progressions"), today
+    )
+    return format_findings(findings)
+
+
 def _compute_complementary_due(activities: list[dict], today: date) -> str | None:
     """Emit 🟡/🔴 due-warnings for complementary training categories.
 
@@ -2526,6 +2549,19 @@ def _compute_planning_constraints(
     due = _compute_complementary_due(activities, today)
     if due:
         constraints.append(due)
+
+    # Prescription compliance — the due-warning above works on activity TAGS
+    # and therefore cannot see a prescribed exercise that lives inside another
+    # block: the session runs, the tag is satisfied, and a dropped element
+    # leaves no trace. This check compares declared cadences against the
+    # exercises actually recorded in the muscle logs. Fail-soft by design — a
+    # parsing problem must never cost a plan.
+    try:
+        prescription = _compute_prescription_compliance(today)
+        if prescription:
+            constraints.append(prescription)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Prescription-compliance check skipped: %s", exc)
 
     # Impact-load streak — surfaced as a constraint line so the planner reads
     # the pattern before it plans, not after the athlete catches it. Only
