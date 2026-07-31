@@ -2592,7 +2592,11 @@
       "mini-pogo",
       "mini pogo",
       "mini-pogos beidbeinig",
-      "mini pogos beidbeinig"
+      "mini pogos beidbeinig",
+      "pogo-hops",
+      "pogo hops",
+      "pogo-hops beidbeinig",
+      "pogo hops beidbeinig"
     ],
     "primary": [
       {
@@ -2827,7 +2831,12 @@
       "balance board sl",
       "einbeinig balance board",
       "single leg balance board",
-      "balance board single leg"
+      "balance board single leg",
+      "balance board single-leg + catch (wasserflasche gegen wand)",
+      "balance board single-leg + catch",
+      "balance board einbeinig + fang",
+      "balance board einbeinig + catch",
+      "balance board single-leg"
     ],
     "load_mode": "bodyweight",
     "primary": [
@@ -3148,7 +3157,11 @@
       "stabilization) auf schaumstoff/yogamatte",
       "auf schaumstoff/yogamatte",
       "gaze stabilization",
-      "tandem stand"
+      "tandem stand",
+      "tandemstand auf gefalteter matte + kopfrotation, letzte 10s augen zu",
+      "tandemstand auf gefalteter matte + kopfrotation",
+      "tandemstand auf schaumstoff + kopfrotation",
+      "tandemstand matte kopfrotation"
     ],
     "primary": [
       {
@@ -3656,5 +3669,161 @@
     ],
     "load_mode": "band",
     "eccentric_dominant": false
+  },
+  "toe_heel_raise_bilateral": {
+    "aliases": [
+      "zehen-/fersenstand beidbeinig",
+      "zehen-/fersenstand",
+      "zehen- und fersenstand",
+      "zehenstand/fersenstand",
+      "toe and heel raise",
+      "toe heel raise bilateral",
+      "zehenstand fersenstand beidbeinig"
+    ],
+    "load_mode": "bodyweight",
+    "primary": [
+      {
+        "muscle": "gastrocnemius",
+        "intensity": 0.25
+      },
+      {
+        "muscle": "soleus",
+        "intensity": 0.25
+      },
+      {
+        "muscle": "tibialis_anterior",
+        "intensity": 0.25
+      }
+    ],
+    "secondary": [
+      {
+        "muscle": "flexor_hallucis_longus",
+        "intensity": 0.15
+      },
+      {
+        "muscle": "peroneus_longus",
+        "intensity": 0.15
+      },
+      {
+        "muscle": "tibialis_posterior",
+        "intensity": 0.15
+      }
+    ],
+    "stabilizer": [
+      {
+        "muscle": "abductor_hallucis",
+        "intensity": 0.1
+      }
+    ],
+    "eccentric_dominant": false,
+    "notes": "Bilateral ankle warm-up through the sagittal range, alternating plantar- and dorsiflexion under bodyweight only. Deliberately distinct from calf_raise (a loaded strength vector) and from pogo_jumps (a plyometric landing vector) — it is a mobilising activation drill and must not be logged as either. Keeping it separate matters wherever a plyo/landing restriction is active: mapping it to a jump entry would make a lock look breached and inflate triceps-surae strength load."
+  },
+  "balance_board_bilateral": {
+    "aliases": [
+      "balance board beidbeinig + wand-rebound-fang mit aufsetzer",
+      "balance board beidbeinig + wand-rebound-fang",
+      "balance board beidbeinig + fang",
+      "balance board beidbeinig",
+      "bilateral balance board",
+      "balance board both feet"
+    ],
+    "load_mode": "isometric",
+    "primary": [
+      {
+        "muscle": "peroneus_longus",
+        "intensity": 0.45
+      },
+      {
+        "muscle": "peroneus_brevis",
+        "intensity": 0.4
+      },
+      {
+        "muscle": "tibialis_anterior",
+        "intensity": 0.35
+      }
+    ],
+    "secondary": [
+      {
+        "muscle": "tibialis_posterior",
+        "intensity": 0.3
+      },
+      {
+        "muscle": "gluteus_medius",
+        "intensity": 0.25
+      },
+      {
+        "muscle": "soleus",
+        "intensity": 0.2
+      }
+    ],
+    "stabilizer": [
+      {
+        "muscle": "gluteus_minimus",
+        "intensity": 0.15
+      },
+      {
+        "muscle": "transversus_abdominis",
+        "intensity": 0.15
+      },
+      {
+        "muscle": "obliquus_externus",
+        "intensity": 0.1
+      }
+    ],
+    "eccentric_dominant": false,
+    "notes": "Bilateral board work, optionally with an external perturbation (catch, push, tilt). Roughly half the per-limb demand of balance_board_sl because the load is shared and the contralateral foot can co-contract — it must not fall through to the single-leg entry, which would both overstate ankle load and mislabel the exercise as the unilateral variant that an ankle restriction typically blocks first."
+  },
+  "tandem_stand_perturbation": {
+    "aliases": [
+      "tandemstand fester boden + wand-rebound-fang",
+      "tandemstand fester boden + fang",
+      "tandem stance perturbation on firm ground",
+      "tandem stance catch perturbation"
+    ],
+    "load_mode": "isometric",
+    "primary": [
+      {
+        "muscle": "peroneus_longus",
+        "intensity": 0.35
+      },
+      {
+        "muscle": "gluteus_medius",
+        "intensity": 0.3
+      },
+      {
+        "muscle": "tibialis_anterior",
+        "intensity": 0.25
+      }
+    ],
+    "secondary": [
+      {
+        "muscle": "peroneus_brevis",
+        "intensity": 0.25
+      },
+      {
+        "muscle": "tibialis_posterior",
+        "intensity": 0.2
+      },
+      {
+        "muscle": "gluteus_minimus",
+        "intensity": 0.2
+      }
+    ],
+    "stabilizer": [
+      {
+        "muscle": "transversus_abdominis",
+        "intensity": 0.15
+      },
+      {
+        "muscle": "obliquus_externus",
+        "intensity": 0.15
+      },
+      {
+        "muscle": "obliquus_internus",
+        "intensity": 0.15
+      }
+    ],
+    "eccentric_dominant": false,
+    "notes": "Tandem stance on firm ground with an externally triggered perturbation (wall-rebound catch, partner push). Reduced base of support in the sagittal plane plus a genuinely unanticipated stimulus — higher frontal-plane and peroneal demand than tandem_stand_gaze_stab, whose perturbation is sensory rather than mechanical. Distinct entry because the surface stays firm: the difficulty comes from the perturbation, not the base."
   }
 }
