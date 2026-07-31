@@ -656,6 +656,21 @@ routes, pick the dominant surface (>60 %); if truly 50/50, mention in
   rather than raising it (Frontiers 2024). Athlete-specific watt/MAP
   anchors live in `config/athlete_status.md`; read them from there.
   **Research anchor:** [vo2max-short-intervals.md](../research/vo2max-short-intervals.md).
+- **30/15 — the stop criterion must cover the recovery interval, not just
+  the work interval.** A work-power threshold ("end the set when a rep
+  drops below X W") is the standard formulation and it misses a real
+  failure mode: the athlete can hold target power on every work rep and
+  still be unable to turn the short recovery over. In that pattern the
+  work stream stays flat right up to the final rep, so a power-based rule
+  never fires and the session ends on the athlete's own judgement instead
+  of the prescribed criterion. Write both into the plan: the work-power
+  rule **and** "if you can no longer pedal the recovery, the set you are
+  in is the last one." Where recovery power and cadence are recorded, they
+  are worth watching as the earlier signal — a sustained drop across the
+  recovery segments can precede any change in the work reps. Treat that as
+  an observation to log rather than a validated threshold; per-athlete
+  numbers, where they exist at all, belong in `config/athlete_status.md`
+  and carry the sample size they came from.
 - **30/15 — inter-set recovery duration:** default **3 min** between
   sets (Rønnestad baseline — the research-backed *lower bound*, not a
   fixed rule). Extend to **4 min** when the session sits at the upper
