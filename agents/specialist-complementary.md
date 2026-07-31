@@ -126,6 +126,18 @@ this section is the **dose**.
   clean set: no opposite-limb touchdown, no trunk lean beyond ~30°, no target
   miss. A longer hold at a level the athlete cannot perform cleanly is not
   progress.
+- **Record task errors separately from posture errors.** The published rule counts
+  "missing the target" as an error alongside the postural ones, which is fine for
+  gating a single set but breaks the moment the same rate is read as a trend. Where
+  the perturbation is delivered by a skill the athlete is still acquiring — catching
+  a rebounding ball is the common case — a falling error rate over weeks is partly
+  just that skill improving, and the marker stops measuring joint control. Log two
+  columns: **task errors** (target missed) and **posture errors** (compensatory step,
+  board edge contact, trunk past ~30°). Gate progression on the posture column alone,
+  and where the delivery skill is the limiter, rehearse it on firm ground before the
+  block so the miss falls outside the measurement. Unpredictability survives this;
+  only the confound is removed. A session recorded before the split is descriptive —
+  it is not the baseline of the longitudinal marker.
 - **Unpredictability is the active ingredient, not instability.** Randomised-onset
   platform tilt beats a self-paced wobble drill; strobe / visual occlusion is a
   legitimate sensory perturbation. Do not substitute "harder to balance on" for
