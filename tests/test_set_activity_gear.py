@@ -174,3 +174,38 @@ def test_recommendation_reads_paired_event_terrain(monkeypatch):
     assert primary and primary["gear_id"] == "g_trail"
     planned = captured["planned"][0]
     assert "Trail" in planned["coaching_notes"], "must use paired-event description"
+
+
+def test_device_gear_ignored_when_configured(monkeypatch):
+    """With SHOE_IGNORE_DEVICE_GEAR=true an *active* device shoe is overwritten.
+
+    This is the case the phantom heuristic cannot reach: the device stamps a
+    shoe that is still in the fleet and not retired, so it looks like a
+    genuine athlete assignment. For an athlete who does not maintain shoes on
+    the watch it is noise, and preserving it silently drops the coach pick.
+    """
+    monkeypatch.setattr(sag.settings, "shoe_ignore_device_gear", True)
+    icu = _FakeIcu(
+        activity={"type": "Run", "gear": {"id": "g_device"}},
+        gear=[
+            {"id": "g_device", "type": "Shoes", "retired": None, "name": "Device default"},
+            {"id": "g_new", "type": "Shoes", "retired": None, "name": "Coach pick"},
+        ],
+    )
+    _run_with(icu, activity_id="i1", gear_id="g_new", auto=False, dry_run=False, force=False)
+    assert icu.set_calls == [("i1", "g_new")], "device gear must lose to the coach pick"
+
+
+def test_device_gear_respected_by_default(monkeypatch):
+    """Default stays unchanged: an active shoe still blocks the overwrite.
+
+    Guards the opt-in nature of the flag — a consumer who does maintain shoes
+    on the device must not have their assignment silently replaced.
+    """
+    monkeypatch.setattr(sag.settings, "shoe_ignore_device_gear", False)
+    icu = _FakeIcu(
+        activity={"type": "Run", "gear": {"id": "g_device"}},
+        gear=[{"id": "g_device", "type": "Shoes", "retired": None, "name": "Athlete's pick"}],
+    )
+    _run_with(icu, activity_id="i1", gear_id="g_new", auto=False, dry_run=False, force=False)
+    assert icu.set_calls == [], "active shoe must still win when the flag is off"

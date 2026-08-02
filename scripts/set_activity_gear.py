@@ -11,6 +11,13 @@ left untouched (unless --force). A retired / non-shoe / unknown gear id
 (a stale auto-default "phantom") does NOT count as an assignment and is
 overwritten so the analysis self-corrects.
 
+That default assumes the athlete keeps their shoes current on the
+recording device. When they do not, set ``SHOE_IGNORE_DEVICE_GEAR=true``:
+the device value is then treated as noise regardless of whether it points
+at an active shoe, and the coach pick always wins. Without it, a device
+default that names a shoe still in the fleet outranks the coach pick
+silently and the rotation mileage accrues to the wrong shoe.
+
 Usage:
     # explicit shoe
     python3 scripts/set_activity_gear.py --activity-id i12345 --gear-id b9876
@@ -166,7 +173,21 @@ async def _run(activity_id: str, gear_id: str | None, auto: bool, dry_run: bool,
     # ({"id": ...}), not a flat `gear_id` — read the id from there (with a
     # legacy flat-field fallback) so the idempotency guard actually fires.
     existing = (activity.get("gear") or {}).get("id") or activity.get("gear_id")
-    if existing and not force:
+    if existing and not force and settings.shoe_ignore_device_gear:
+        # Athlete does not maintain shoes on the recording device, so whatever
+        # arrived with the import carries no information — not even when it
+        # points at an active shoe. Skipping the guard entirely (rather than
+        # widening the phantom heuristic) is what makes this deterministic:
+        # otherwise a device default that happens to name a shoe still in the
+        # fleet silently outranks the coach pick and the mileage accrues to
+        # the wrong shoe.
+        entry = next((g for g in gear_list if g.get("id") == existing), None)
+        label = f" ({entry.get('name')})" if entry and entry.get("name") else ""
+        print(
+            f"  {activity_id}: vorhandenes gear={existing}{label} stammt vom Gerät und wird "
+            "ignoriert (SHOE_IGNORE_DEVICE_GEAR=true) — Coach-Empfehlung überschreibt."
+        )
+    elif existing and not force:
         # A retired or non-shoe gear id is a stale auto-default ("phantom" —
         # e.g. an old default shoe Garmin/intervals.icu stamps onto every
         # imported activity). That is NOT a real assignment and must not block

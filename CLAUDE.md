@@ -1288,6 +1288,17 @@ shoe advisor gets gear, mileage, and active/retired status:
   who still have Strava API access.
 - **`off`** — advisor disabled.
 
+`SHOE_IGNORE_DEVICE_GEAR` (default `false`) decides who owns the gear field
+on a finished activity. By default a shoe already attached by the recording
+device counts as a real assignment and `set_activity_gear.py` leaves it
+alone; only a retired / non-shoe id is treated as a stale "phantom" and
+overwritten. Set it to `true` when the athlete does not maintain shoes on
+the watch — many devices stamp a default shoe onto every imported run, and
+while that default names a shoe still in the fleet the phantom heuristic
+cannot see it, so the coach pick is dropped silently and the rotation
+mileage accrues to the wrong shoe. `--force` and an explicit `--gear-id`
+are unaffected in both modes.
+
 One-time migration of an existing Strava fleet into intervals.icu gear:
 `migrate_shoes_strava_to_intervals.py` (writes a `strava_id → icu_gear_id`
 mapping for the equipment.md update).

@@ -46,6 +46,21 @@ class Settings(BaseSettings):
     # so a fresh consumer needs no Strava app at all. One-time migration of
     # an existing Strava gear fleet: scripts/migrate_shoes_strava_to_intervals.py
     shoe_tracking_backend: str = "intervals"
+    # Whether a shoe already attached to a finished activity by the recording
+    # device / import counts as a real assignment.
+    #   false (default) — it does. `set_activity_gear.py` leaves an activity
+    #     alone when it already carries an *active* Shoes-type gear, on the
+    #     assumption the athlete (or their device) maintains that field. Only
+    #     a retired / non-shoe "phantom" id is overwritten.
+    #   true — it does not. The coach's recommendation always wins and the
+    #     device value is overwritten, whether it is active or retired.
+    # Set this to true when the athlete does not maintain shoes on the
+    # watch: many devices stamp a default shoe onto every imported run, and
+    # while it stays *active* the default guard preserves it, so the coach
+    # pick is silently dropped and the rotation mileage accrues to the wrong
+    # shoe. `--force` remains the per-call override in either mode; an
+    # explicit `--gear-id` is unaffected.
+    shoe_ignore_device_gear: bool = False
     # Master on/off switch for the Strava title/insights publishing feature
     # (the write path in `strava_apply.py` and the discovery path in
     # `strava_pending.py`). Default OFF: Strava has moved activity writes
