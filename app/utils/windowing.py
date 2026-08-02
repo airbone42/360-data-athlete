@@ -64,13 +64,36 @@ def build_sub_laps(
                     offset_s = int(ts - first_ts)
                     fit_by_offset[offset_s] = rec
 
-    # ── Lap boundaries (cumulative seconds) ───────────────────────────────────
+    # ── Lap boundaries ────────────────────────────────────────────────────────
+    # The windows below are matched against `time_stream`, which is *elapsed*
+    # seconds from activity start (it contains gaps wherever recording was
+    # paused). Lap boundaries must therefore live on the same axis.
+    #
+    # Cumulating `duration_s` does NOT: that field is timer time, which
+    # excludes stopped time, so every lap after the first pause is shifted
+    # earlier by the stopped time accumulated so far. On an activity with a
+    # few minutes of auto-pause that is enough to slide short laps (strides,
+    # drills) completely off their real position — the window keeps the label
+    # of one lap while carrying another lap's samples, which is worse than
+    # missing data because it reads as valid.
+    #
+    # Prefer the absolute `start_time` stamps when the parser supplied them,
+    # and fall back to the old cumulative behaviour otherwise (callers that
+    # synthesise laps without timestamps, and older fixtures).
     lap_boundaries: list[tuple[int, int, int]] = []  # (lap_idx, start_s, end_s)
-    cursor = 0
-    for lap in laps:
-        dur = lap.get("duration_s") or 0
-        lap_boundaries.append((lap.get("lap_index", 0), cursor, cursor + dur))
-        cursor += dur
+    lap_starts = [_to_timestamp(lap.get("start_time")) for lap in laps]
+    if laps and all(ts is not None for ts in lap_starts):
+        origin = lap_starts[0]
+        for lap, start_ts in zip(laps, lap_starts):
+            start_s = int(start_ts - origin)  # type: ignore[operator]
+            span = lap.get("elapsed_s") or lap.get("duration_s") or 0
+            lap_boundaries.append((lap.get("lap_index", 0), start_s, start_s + span))
+    else:
+        cursor = 0
+        for lap in laps:
+            dur = lap.get("duration_s") or 0
+            lap_boundaries.append((lap.get("lap_index", 0), cursor, cursor + dur))
+            cursor += dur
 
     # ── Build windows per-lap ─────────────────────────────────────────────────
     sub_laps: list[dict[str, Any]] = []

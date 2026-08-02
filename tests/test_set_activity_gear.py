@@ -58,8 +58,15 @@ def _run_with(monkeyclient: _FakeIcu, **kwargs) -> None:
         sag.IntervalsClient = orig  # type: ignore[assignment]
 
 
-def test_active_shoe_blocks_overwrite():
-    """An already-assigned active shoe is left untouched (idempotent)."""
+def test_active_shoe_blocks_overwrite(monkeypatch):
+    """An already-assigned active shoe is left untouched (idempotent).
+
+    The flag is pinned explicitly: `settings` is populated from the consumer's
+    .env, so without this the assertion silently depends on whoever runs the
+    suite — a consumer with SHOE_IGNORE_DEVICE_GEAR=true would see this fail
+    for a configuration reason rather than a code one.
+    """
+    monkeypatch.setattr(sag.settings, "shoe_ignore_device_gear", False)
     icu = _FakeIcu(
         activity={"type": "Run", "gear": {"id": "g_active"}},
         gear=[{"id": "g_active", "type": "Shoes", "retired": None}],

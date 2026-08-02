@@ -28,6 +28,18 @@ def parse_fit_laps(fit_path: Path) -> list[dict[str, Any]]:
 
             if name == "total_timer_time":
                 data["duration_s"] = round(value) if value is not None else None
+            elif name == "total_elapsed_time":
+                # Wall-clock length of the lap, including auto-pause / stops.
+                # `duration_s` (timer time) excludes them, so the two diverge
+                # exactly by the stopped time — see `windowing.build_sub_laps`,
+                # which needs the elapsed axis to line up with the stream.
+                data["elapsed_s"] = round(value) if value is not None else None
+            elif name == "start_time":
+                # Absolute lap start. The only field that lets a consumer place
+                # laps on the same elapsed timeline as the per-second records
+                # and the intervals.icu `time` stream; cumulating timer
+                # durations drifts by the stopped time.
+                data["start_time"] = value.isoformat() if value is not None else None
             elif name == "total_distance":
                 data["distance_m"] = round(value, 1) if value is not None else None
             elif name == "enhanced_avg_speed":
