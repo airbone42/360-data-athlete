@@ -50,6 +50,15 @@ Consequences for the prescription:
   result, not the instruction" cue explicit in the notes.
 - Duration stays on the phase band. Heat is a reason to run *slower*, not
   *shorter* — the same discipline R014 enforces mechanically.
+- **Raise the recovery HR band too, not just the main-block expectation.**
+  Heat lifts the floor the HR falls back to during a jog recovery exactly
+  as it lifts the working HR, so a recovery band copied from cool-weather
+  conditions is simply unreachable — the athlete then "misses" every
+  recovery in a block through no fault of their own, and the analysis
+  reads it as a compliance gap. Move the band with the conditions. When
+  the recovery genuinely has to land (the next rep depends on it), change
+  the *form* rather than the number: walking the first 20–30 s drops HR,
+  a tighter band on paper does not.
 
 **Research anchor:**
 [heat-pace-penalty-at-fixed-hr.md](../research/heat-pace-penalty-at-fixed-hr.md).

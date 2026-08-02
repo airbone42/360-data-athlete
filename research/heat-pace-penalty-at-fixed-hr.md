@@ -259,6 +259,41 @@ Datenpunkt sind eine bekannte Coach-Fehlklasse) und trotzdem
 sensitiv, weil die Signalkreuze aus §4.3 andere Ursachen mit-
 prüfen.
 
+### 4b. Verschreibungsseite — Recovery-HF-Bänder sind in Hitze oft unerreichbar
+
+Die Regeln oben behandeln die **Auswertung** eines Hitze-Laufs. Der
+spiegelbildliche Fehler passiert bei der **Verschreibung**, und zwar dort,
+wo ein Intervall-/Steigerungsblock ein HF-Band für die Trab- oder
+Geh-Pausen vorgibt (typisch: eine Zone unterhalb des Hauptteil-Bands).
+
+Dieselbe Physiologie, die den Pace-Versatz erzeugt — erhöhter Hautblutfluss,
+reduziertes Schlagvolumen, kompensatorisch höhere Herzfrequenz —, hebt auch
+den **Boden** an, auf den die HF in einer kurzen Pause zurückfällt. Ein
+90-Sekunden-Trab, der bei 15 °C bequem in ein Recovery-Band fällt, erreicht
+es bei 30 °C nicht mehr, ohne dass am Athleten oder an der Ausführung
+irgendetwas auffällig wäre. Zusätzlich verlängert Hitze die
+HF-Erholungszeit nach einer Belastungsspitze (siehe §4.3, gleicher
+Mechanismus).
+
+**Operative Konsequenz:**
+
+1. Ein in Hitze **nicht erreichtes Recovery-Band ist ein Fehler der
+   Vorgabe, nicht der Ausführung.** Es gehört nicht als Wachstumsfeld in
+   eine Analyse und nicht als Compliance-Mangel in eine Bewertung. Wer es
+   dem Athleten anlastet, bestraft ihn für die Lufttemperatur.
+2. **Recovery-Bänder in Hitze mit anheben** — sinnvollerweise um dieselbe
+   Grössenordnung, um die der Hauptteil-Aufschlag erwartet wird, statt das
+   Kühl-Wetter-Band unverändert zu übernehmen.
+3. Wenn die Erholung **inhaltlich** gebraucht wird (der nächste Reiz hängt
+   an einem tatsächlich erholten Ausgangszustand), ist der wirksame Hebel
+   die **Pausenform**, nicht die Bandbreite: gehen statt traben in den
+   ersten 20–30 s bringt die HF real herunter, ein enger gesetztes Band auf
+   dem Papier nicht.
+4. Ein steigender Bodenkontakt über eine Steigerungs-/Intervallserie
+   (statt des sonst üblichen Absinkens) ist mit unvollständiger Erholung
+   zwischen den Wiederholungen vereinbar und stützt Punkt 3 — er ist für
+   sich genommen aber kein Ermüdungsbefund (§4.4 gilt analog).
+
 ### 5. Niveau-Versatz vs. Cardiac Drift — diagnostische Trennung
 
 Die Literatur unterscheidet die beiden Phänomene mechanistisch klar
