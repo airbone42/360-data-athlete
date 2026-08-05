@@ -1622,6 +1622,76 @@ def check_intervals_repeat_press_lap(workouts: list[dict], ctx: Context) -> list
     return findings
 
 
+def check_press_lap_duration_cue(workouts: list[dict], ctx: Context) -> list[Finding]:
+    """R023 — A `press lap` step must state its intended duration in the cue text.
+
+    The `Xm` in `- Easy 20m press lap` is intervals.icu's **plan-view
+    default only**. Garmin receives the step as athlete-controlled and
+    displays the **cue text**, not that number. A `press lap` step whose
+    cue text carries no duration therefore reaches the watch as an
+    open-ended "run until you press lap" with no indication of how long
+    "until" is — the one piece of information the athlete needs in order
+    to press it at the right moment.
+
+    This is not cosmetic. Warm-up length is what positions a quality
+    block in the day: overrunning it by ten minutes moves the main set
+    ten minutes later into rising heat or falling light, and the block
+    then reports conditions the plan never intended.
+
+    Drift incident pattern: a race-pace session prescribed
+    `- Easy 20m press lap` with no cue text. On the watch the athlete
+    saw an open-ended easy step, could not tell how far along he was,
+    and pressed lap at 30 min. The quality block started ten minutes
+    later than planned and ran into direct sun that the earlier slot
+    would have avoided; pace in the closing windows was governed by heat
+    rather than by the prescription.
+
+    Rule: any step containing `press lap` must carry a duration mention
+    in the text that follows the target tokens — e.g.
+    `- Easy 20m press lap — Ziel ~20 min, dann Lap drücken`.
+    """
+    PRESS_LAP_RE = re.compile(r"press\s*lap", re.IGNORECASE)
+    # A duration mention in the cue: "20 min", "20min", "~20 min", "3-5 min",
+    # "90 s", "20 Minuten". Deliberately permissive — any explicit time hint
+    # in the cue satisfies the rule.
+    DURATION_CUE_RE = re.compile(
+        r"\d+\s*(?:[–\-]\s*\d+\s*)?(?:m\b|min\b|minute|minuten|s\b|sec|sek)",
+        re.IGNORECASE,
+    )
+    findings = []
+    for w in workouts:
+        if w.get("type") not in ("Run", "Ride"):
+            continue
+        icu = w.get("intervals_icu") or ""
+        if not icu.strip():
+            continue
+        for raw in icu.split("\n"):
+            line = raw.strip()
+            if not line.startswith("-"):
+                continue
+            m = PRESS_LAP_RE.search(line)
+            if not m:
+                continue
+            cue = line[m.end():].lstrip(" \t—–-:•")
+            if DURATION_CUE_RE.search(cue):
+                continue
+            findings.append(Finding(
+                rule_id="R023",
+                severity=SEVERITY_WARNING,
+                workout=_workout_name(w),
+                message=(
+                    f"press-lap step `{line[:70]}` has no duration in its cue text — "
+                    "the `Xm` prefix is an intervals.icu plan-view default and is NOT "
+                    "shown on the watch, so the athlete sees an open-ended step."
+                ),
+                suggestion=(
+                    "Append the intended duration as cue text, e.g. "
+                    "`- Easy 20m press lap — Ziel ~20 min, dann Lap drücken`."
+                ),
+            ))
+    return findings
+
+
 # ── Phase-band anchor for R014 (competition_plan.md "Lauf-Dauer-Logik pro Phase") ──
 # Canonical easy-run-duration anchor: the per-phase band keyed by CTL, NOT a
 # rolling-median heuristic. A markdown table whose rows carry a `CTL lo–hi`
@@ -2348,6 +2418,7 @@ RULES: list[tuple[str, Callable[[list[dict], Context], list[Finding]]]] = [
     ("R020", check_run_hr_zone_target),
     ("R021", check_stride_block_order),
     ("R022", check_impact_day_streak),
+    ("R023", check_press_lap_duration_cue),
 ]
 
 

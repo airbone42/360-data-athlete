@@ -698,9 +698,24 @@ routes, pick the dominant surface (>60 %); if truly 50/50, mention in
   duration visible on Garmin via a leading `~` (`Easy ~5m press
   lap`) broke the parser: the entire step was silently dropped from
   `workout_doc`, leaving the athlete without that part of the warmup.
-  → Stick with the classical form; communicate the duration estimate
-  in the `structure` description text and/or directly to the athlete.
-  HR orientation may appear in the `structure` description text.
+  → Stick with the classical form.
+
+  **MANDATORY — put the duration in the step's own cue text.** Garmin
+  shows the cue, and the cue is the only channel that reaches the
+  athlete mid-run; the `Xm` prefix never does. A bare
+  `- Easy 20m press lap` arrives on the watch as an open-ended "run
+  until you press lap" with no indication of how long "until" is.
+  Write **`- Easy 20m press lap — Ziel ~20 min, dann Lap drücken`** (or
+  the equivalent in the athlete's language). Mechanically enforced by
+  validator R023 (WARNING). Restating the estimate in the `structure`
+  description text is good practice but does **not** substitute — the
+  athlete does not read `structure` while running.
+
+  This matters beyond tidiness: warm-up length positions the quality
+  block in the day. Overrunning it pushes the main set later into
+  rising heat or falling light, and the block then measures conditions
+  the plan never intended. HR orientation may appear in the `structure`
+  description text.
 - **Warmup — indoor ride (`type: Ride` + `indoor: true`):** NO `press
   lap` (athlete is already on the trainer, no decision moment). Fixed
   time step with a **power (watt) target — NOT an HR-only target**. A
