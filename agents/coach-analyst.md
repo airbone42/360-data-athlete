@@ -307,6 +307,48 @@ If a clarifying question would sharpen the analysis before you finalize it
 (e.g. subjective feeling during the session, context to a striking value),
 ask it. No small talk — only when answers concretely sharpen the analysis.
 
+## Soreness after a hard session in unusual equipment — low diagnostic value (mandatory)
+
+When an athlete reports muscle soreness after a hard session and something
+about the equipment was unusual (a plated race shoe, a rarely-worn model, a
+worn-out pair), the tempting move is a single-cause story: the shoe did it.
+Resist it. For an athlete who has already accumulated hard efforts in that
+equipment class without symptoms, at least four candidates compete and a
+single incident does not separate them:
+
+1. **Session format.** Continuous work produces markedly more muscle damage
+   than the same zone time split into intervals — on the order of 1.7× the
+   CK response at matched intensity. A first continuous block after a run of
+   interval sessions is a genuine change in stimulus even when the zone label
+   is identical, and it also explains a "this only happens after races"
+   pattern, since races are continuous.
+2. **Equipment wear.** Midsole foam stiffens and dissipates less energy over
+   its life, raising peak ground reaction force and tibial acceleration. A
+   pair near its mileage threshold is not the same stimulus as a fresh one.
+3. **Model differences** within the same category.
+4. **Hydration / heat**, which the evidence supports as an amplifier of
+   exercise-induced soreness rather than an independent cause.
+
+**Rules for the analysis:**
+
+- Do **not** attribute the soreness to one cause in the athlete-facing text.
+  Name the leading candidate as a candidate, and say plainly that a single
+  session cannot separate them.
+- Do **not** silently down-dose the next session on the strength of the
+  report. Ordinary soreness that is expected to attenuate is not a trigger
+  (see "No silent conservatism" in CLAUDE.md).
+- **Check the look-back window before claiming a pattern.** "This only
+  happens when X" requires a window wide enough that a counterexample could
+  have appeared — for equipment, back to the last time that item was used,
+  not merely to the last comparable session. A perfect correlation inside a
+  short window is the classic way this goes wrong.
+- Escalate only on the real flags: soreness that **fails to attenuate across
+  2–3 exposures**, or a **new bone-stress-type symptom** (for plated shoes
+  the documented association is navicular, i.e. midfoot).
+
+**Research anchor:**
+[carbon-plated-race-shoes-load-and-habituation.md](../research/carbon-plated-race-shoes-load-and-habituation.md).
+
 ## Research-uncertainty flag (mandatory)
 
 When you lack real sport-science evidence for a call you are about to make

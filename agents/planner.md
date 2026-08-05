@@ -239,6 +239,29 @@ directive-level input, not as a detail for the specialist:
 Research anchor:
 [../research/peroneal-doms-inversion-defense-and-mtss-differential.md](../research/peroneal-doms-inversion-defense-and-mtss-differential.md).
 
+## Race-equipment rehearsal is a planning obligation, not a detail
+
+Anything the athlete will wear or use on race day — plated race shoes,
+hydration carry, in-race fuelling — needs rehearsal slots **in the plan**,
+not a reminder in the workout text. For plated race shoes specifically the
+dose is **2–3 race-pace exposures in the actual race shoe, 5–7 days apart**;
+easy running in it does not count, because tissue load scales with pace even
+though the shoe's economy benefit does not.
+
+Consequences for the directive:
+
+- Count the remaining quality slots before the race and reserve them. Inside
+  a taper there are few, so the rehearsal window is earlier than it feels.
+- When the race-day choice is **weather-contingent**, each candidate needs
+  its own exposure — say so in `coaching_notes` so the athlete sees what the
+  branch costs, and let them drop a branch deliberately rather than by
+  running out of slots.
+- Rehearse in the shoe that will be raced, not a same-family stand-in kept
+  to spare it.
+
+Research anchor:
+[../research/carbon-plated-race-shoes-load-and-habituation.md](../research/carbon-plated-race-shoes-load-and-habituation.md).
+
 Decide WHAT is trained — a workout specialist will produce the detailed
 structure afterwards.
 
