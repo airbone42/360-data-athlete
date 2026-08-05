@@ -60,8 +60,58 @@ Consequences for the prescription:
   the *form* rather than the number: walking the first 20–30 s drops HR,
   a tighter band on paper does not.
 
-**Research anchor:**
-[heat-pace-penalty-at-fixed-hr.md](../research/heat-pace-penalty-at-fixed-hr.md).
+**On a quality block in heat, the HR cap stops being the steering
+signal and becomes a guardrail.** Everything above is written for
+easy/Z2, where the cap can lead because it is far from the athlete's
+ceiling. At threshold / race-pace intensity in warm conditions the same
+construction backfires: HR drifts 5–15 bpm upward for an unchanged
+pace, so a cap that is correct in the cool is reached early, and an
+athlete who obeys it literally slows well below the target — the
+session then reports a capability drop that never happened. Raising
+the cap instead is the mirror error: the athlete keeps chasing a
+cool-weather HR that heat has made unreachable at the intended effort.
+
+The way out is to steer by **breathing and RPE** for the block and let
+HR mark only the upper bound:
+
+- State an RPE / breathing anchor alongside the pace corridor for any
+  race-pace or threshold block prescribed above ~22 °C. Race-pace
+  breathing is short phrases possible, full sentences not — that
+  descriptor survives heat, a bpm number does not.
+- Keep the pace corridor at the documented anchor and let the *result*
+  land at its slow end. Do not pre-shave the corridor for heat (see
+  "No silent conservatism") — the heat allowance belongs in the
+  interpretation, not in the target.
+- Say explicitly in the notes what a cap hit under heat means: at the
+  cap with race-pace breathing is the expected heat signature, not
+  running too fast. At the cap with breathing already past race pace
+  is genuinely too fast.
+
+**Hydration for sessions past ~60 min in heat: the pre-load is the
+lever, not the carried volume.** Drinking 400–600 ml in the two hours
+before the start buys more than any realistic drinking rate during the
+session, because gastric uptake caps out around 0.8–1.0 L/h while
+sweat rates in real heat exceed that. When the athlete's own measured
+sweat rates are on file, size the deficit against a 2 % body-mass
+threshold and say whether the planned carry is sufficient rather than
+quoting a generic volume. Electrolyte concentration follows the
+athlete's sweat-sodium measurement where one exists — a generic
+"one tablet per bottle" instruction is wrong by a factor of two or
+more for an athlete at either end of the sodium range.
+
+**Carbohydrate inside a ≤ 75 min session is gut training, not
+fuelling.** Below roughly 60–75 min of work, intake is not
+performance-relevant — glycogen is not the limiter. A small bolus is
+still worth prescribing during a race-prep phase to rehearse race
+fuelling, and taking it **while already running** is the lower-risk
+window: the insulin response is blunted under exercise, so the same
+dose is safer mid-session than swallowed at rest shortly before the
+start. Two constraints: never introduce an untried product in a
+session whose purpose is measurement, and pair the intake with fluid.
+
+**Research anchors:**
+[heat-pace-penalty-at-fixed-hr.md](../research/heat-pace-penalty-at-fixed-hr.md),
+[fueling-hydration-heat-threshold-70min.md](../research/fueling-hydration-heat-threshold-70min.md).
 
 ## Acute lower-leg DOMS — gate the quality stimulus (mandatory)
 
