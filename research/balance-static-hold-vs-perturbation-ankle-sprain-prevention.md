@@ -500,6 +500,34 @@ erzeugt dabei die Illusion von Progression, solange die Haltedauer steigt.
 | Normative values for the unipedal stance test with eyes open and closed | Springer BA, Marin R, Cyhan T, Roberts H, Gill NW | 2007 | *J Geriatr Phys Ther* 30(1):8–15 — [PubMed 19839175](https://pubmed.ncbi.nlm.nih.gov/19839175/) | „There was a significant age dependent decrease in UPST time during both conditions." — Normwerte für 18–39 J. begründen den 30-s-Deckeneffekt der klinischen Testversion |
 | Do we underestimate the frequency of ankle sprains in running? A systematic review and meta-analysis | Hansoule T, Peters-Dickie JL, Mahaudens P, Nguyen AP | 2024 | *Phys Ther Sport* — [ScienceDirect](https://www.sciencedirect.com/science/article/abs/pii/S1466853X24000713) | 32 Studien / 19 in der Metaanalyse; gewichteter Anteil von Sprunggelenks-Distorsionen an laufbezogenen Verletzungen ~13,7 % (Spannbreite 8–67 %) |
 
+## Querverweis — das Akut-Fenster, in dem dieses Bild kurzfristig nicht greift
+
+Dieses Dokument beschreibt den **Kapazitäts-Aufbau**: Perturbationstraining
+verschiebt die Feed-Forward-Kontrolle über Wochen, statisches Halten leistet
+das nicht. Diese Konklusion bleibt unverändert. Sie beantwortet aber **nicht**,
+was in einem Fenster von 24–72 Stunden zu tun ist, in dem die
+Unterschenkel-Stabilisatoren akut gereizt sind (ungewohnte Exposition, DOMS)
+— dort ist Kapazität transient reduziert und über die Wochen-Achse ohnehin
+nicht kurzfristig beeinflussbar. Die dominant steuerbaren Hebel im Akut-Fenster
+sind **Expositionsreduktion** (ebener Untergrund, Ermüdungsphase gehen statt
+traben) und **externe Stütze** — nicht ein zusätzlicher Trainingsreiz.
+
+Zwei Präzisierungen aus der Nachrecherche, die das Bild hier schärfen statt es
+zu ändern:
+
+- Der hier zentrale Befund — der schützende Reflex kommt zu spät, der Schutz
+  läuft über Feed-Forward — bleibt der maßgebliche Anker. Ermüdungsbedingte
+  Verlängerung der elektromechanischen Verzögerung (~10–15 ms) verschiebt einen
+  ohnehin zu späten Reflex weiter nach hinten und trägt die intuitive
+  Kausalgeschichte „müde Evertoren → mehr Umknicken" deshalb **nicht**.
+- Was die verstärkte Vorsicht im Akut-Fenster tatsächlich trägt, gilt nur für
+  einen Teil der Population: Athleten mit **rezidivierender** Instabilität
+  verlieren unter Ermüdung ihre schützende Landungs-Kompensation, während
+  Athleten mit ausgeheiltem Einzeltrauma gegenläufig protektiver reagieren.
+
+Details, Quellen und die daraus abgeleitete Freigabe-Kaskade:
+[peroneal-doms-inversion-defense-and-mtss-differential.md](peroneal-doms-inversion-defense-and-mtss-differential.md).
+
 ## Application in framework
 
 Alle folgenden Punkte sind **Vorschläge** — sie werden vom Head Coach mit

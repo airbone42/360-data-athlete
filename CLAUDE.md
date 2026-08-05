@@ -966,6 +966,39 @@ leg pre-fatigue does **not** complete its volume step (it stays open for a
 fresh re-attempt) and is **not** a reason to down-anchor the target — the
 shortfall was context, not a capability drop (see "No silent conservatism").
 
+**Soreness the athlete acquired outside training counts too — and it
+needs a differential first.** Everything above assumes a *session*
+created the residual load, which is why the type history surfaces it.
+An athlete can arrive equally sore from something no session records:
+unsupportive footwear, a first barefoot or minimalist outing, an
+unusually long walk on hard ground, a downhill hike. Nothing in
+`planningConstraints`, the pillar counters or the type history sees
+that — only `athleteFeedback` does. Treat such a report as a real
+spacing input rather than as colour.
+
+The order of operations differs from the table above in one important
+way: **classify before you space.** Lower-leg soreness after an unusual
+exposure has three candidate explanations that present alike on day one
+and diverge by weeks — exposure DOMS (peak 24–72 h, gone by day 5–7),
+medial tibial stress syndrome (posteromedial, weeks-scale graded
+return), and exertional compartment syndrome (exertion-locked, needs a
+specialist). Applying a 48–72 h spacing rule to the second of those
+produces a confident, wrong release. Route the differential to the
+physio consultant when the soreness sits in the lower leg, and treat a
+48–72 h deferral as valid **only** once the DOMS reading holds.
+
+One correction worth stating explicitly, because the intuitive version
+is wrong and sounds right: when sore *stabilisers* are the concern
+(peroneals and an ankle history), do **not** argue from protective
+reflex latency. That reflex is too slow to prevent an inversion event
+in the first place, so slowing it further changes little. What the
+evidence supports is narrower — an athlete with a **recurrent**
+instability history loses their protective landing compensation under
+fatigue, where an athlete whose single injury healed does not. Argue
+from that, or argue from plain exposure reduction; do not dress either
+up as reflex protection. Details and sources:
+[peroneal-doms-inversion-defense-and-mtss-differential.md](research/peroneal-doms-inversion-defense-and-mtss-differential.md).
+
 *Enforcement: `plan-validator` S8 surfaces it (WARNING) when a heavy
 eccentric leg / plyo session sits in the same day or prior 48 h of a
 leg-driven endurance quality; head-coach judgment for the decouple-vs-sequence

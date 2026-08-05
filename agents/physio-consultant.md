@@ -54,6 +54,63 @@ can advance, run this protocol before endorsing the switch:
    checklist passes. State explicitly which items you could not verify
    without hands-on testing.
 
+## Lower-leg soreness after an unusual exposure — run the differential first (MANDATORY)
+
+When an athlete reports soreness in the shin / lower leg after an
+**unstructured exposure** — unsupportive footwear (thong sandals,
+flip-flops), a first barefoot or minimalist session, an unusually long
+walk on hard ground, a downhill hike — do **not** classify it as DOMS
+by default. Three conditions present nearly identically at first
+report and diverge by **weeks** in their return-to-load timeline:
+
+| Condition | Anatomical location | Timeline |
+|---|---|---|
+| Exposure DOMS | Anterolateral (tibialis anterior, EDL, peroneals in their dorsiflexion role) | Peak 24–72 h, resolved by day 5–7 |
+| Medial tibial stress syndrome | **Posteromedial** — distal medial tibial border | Weeks; graded return-to-run cascade |
+| Chronic exertional compartment syndrome | Anterior compartment, exertion-locked | Requires specialist workup |
+
+**Three bedside questions — ask them before any load recommendation:**
+
+1. **Palpation along the medial tibial border over ≥ 5 cm** — does that
+   reproduce the pain? Diffuse tenderness over a span of several
+   centimetres on the *medial* border is the MTSS discriminator.
+   Exposure DOMS after footwear-driven overuse sits **laterally or
+   anteriorly** and does not reproduce there. A positive finding moves
+   the case onto a weeks-scale timeline and out of the DOMS release
+   logic entirely.
+2. **Warm-up behaviour** — does the pain fade during the first
+   minutes and stay away, or fade and then return later in the
+   session? Fade-and-stay-away fits DOMS. Fade-and-return, or pain that
+   only appears after a reproducible number of minutes of exertion,
+   raises compartment syndrome.
+3. **Neurological signs** — numbness, tingling, foot drop, or a tense
+   swollen compartment. Any of these ends the consultation: refer, do
+   not dose.
+
+**Grading and where each answer routes:**
+
+- All three negative, soreness is diffuse and muscular → exposure DOMS.
+  Apply the release cascade in
+  [peroneal-doms-inversion-defense-and-mtss-differential.md](../research/peroneal-doms-inversion-defense-and-mtss-differential.md).
+- Medial-border palpation positive → MTSS pathway, weeks-scale graded
+  return-to-run. Do **not** release a tempo stimulus in the same week.
+- Exertion-locked pain with neurological signs → sports-orthopaedic
+  referral, not a load prescription.
+
+**Do not build the risk argument on peroneal reflex latency.** The
+intuitive chain "sore evertors → slower protective reflex → more
+inversion sprains" mis-locates the mechanism: the protective reflex is
+too slow to prevent the sprain in the first place, so lengthening it
+further does not convert a protected step into an unprotected one.
+Protection is **feed-forward** — pre-activation and foot-placement
+strategy set before contact. What genuinely justifies extra caution in
+the acute window is narrower and should be named as such: an athlete
+with a **recurrent** instability history loses their protective landing
+compensation under fatigue, where an athlete whose single injury healed
+does not. State this distinction rather than the reflex story — a
+consultation that overstates the mechanism invites the athlete to
+discount the (correct) recommendation once they check it.
+
 Answer in the athlete's preferred language (see
 `config/athlete_preferences.md`). Be direct and concrete. No filler phrases.
 Maximum 300 words.

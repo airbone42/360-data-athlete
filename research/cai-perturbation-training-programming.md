@@ -352,6 +352,7 @@ nicht simultan im Trainingsmoment**:
 | Alltägliches easy running während der Aufbauphase | Frei — Brace nur bei erhöhtem Symptom | Kein Zusatzrisiko im typischen aeroben Volumen, gleichzeitig frei für neuromuskuläre Adaptation im Fußaufsatz |
 | Post-Wettkampf-Rehabilitationsphase | Training ohne Brace, Alltag/Sport frei nach Symptomstatus | Volle Adaptations-Umgebung |
 | Kombiniertes Programm über Monate | **Training + Brace-bei-Sport parallel**, kein additiver Rezidiv-Effekt — die Investition ist zeitverteilt: Brace deckt das Akut-Risiko, Training baut das Langzeit-Risiko ab | Janssen 2014 kombinierter Arm lag zwischen den Einzel-Armen; JOSPT CPG akzeptiert Kombination |
+| **Akutes Unterschenkel-DOMS-Fenster (24–72 h nach ungewohnter Exposition)** | **Stütze zulässig, auch beim Laufen** — der Zeile-1-Vorbehalt greift hier nicht | Der Fuerst-2021-Einwand lautet: Brace senkt die aktive Stabilisation und damit den Adaptationsreiz. Im Akut-DOMS-Fenster ist die aktive Stabilisation **ohnehin transient reduziert**, und es steht kein Perturbations-Adaptationsreiz auf dem Plan, der geschützt werden müsste. Es gibt also nichts zu verlieren und mechanischen Schutz zu gewinnen. Details: [peroneal-doms-inversion-defense-and-mtss-differential.md](peroneal-doms-inversion-defense-and-mtss-differential.md) |
 
 **Kernaussage:** Bracing und neuromuskuläres Training sind **nicht additiv
 auf denselben Zeitpunkt**. Sie sind komplementär auf **verschiedenen

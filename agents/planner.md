@@ -205,6 +205,40 @@ it does **not** justify going below the anchor. Classification rules,
 red flags and the re-progression timing:
 [../research/post-treatment-reaction-reload-dosing.md](../research/post-treatment-reaction-reload-dosing.md).
 
+## Acute lower-leg soreness from an unstructured exposure
+
+When `athleteFeedback` reports soreness in the lower leg (shin,
+anterolateral compartment, peroneals) from something that was **not a
+training session** — unsupportive footwear, a first barefoot session,
+an unusually long walk on hard ground, a downhill hike — treat it as a
+directive-level input, not as a detail for the specialist:
+
+- **Within the 24–72 h soreness peak, an impact quality stimulus is
+  gated, not automatically cancelled.** Name the gate in
+  `coaching_notes` so the specialist builds the in-session read-out
+  (an easy opening block plus abort criteria) rather than guessing.
+- **Terrain default in that window depends on the athlete's ankle
+  history, and the two cases differ in strength of evidence.** With a
+  **recurrent** lateral-instability history, an even surface is
+  well-supported: those athletes lose their protective landing
+  compensation under fatigue, where athletes whose single injury healed
+  do not. Without that history the argument is weaker and reduces to
+  lowering the number of perturbation events per unit time — still
+  defensible, but state it as exposure reduction rather than as
+  protection.
+- **A terrain default is not a restriction.** If a standing terrain
+  restriction was previously lifted by an explicit athlete decision,
+  say in `coaching_notes` that today's surface choice is a
+  single-session, symptom-driven default and that the lifted
+  restriction stays lifted. Restrictions return only by explicit
+  athlete confirmation, never by a coach's quiet re-application.
+- **Soreness persisting past ~72 h is no longer a planning question.**
+  Route it to the physio consultant for the differential before
+  scheduling the next quality stimulus.
+
+Research anchor:
+[../research/peroneal-doms-inversion-defense-and-mtss-differential.md](../research/peroneal-doms-inversion-defense-and-mtss-differential.md).
+
 Decide WHAT is trained — a workout specialist will produce the detailed
 structure afterwards.
 
