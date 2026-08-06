@@ -563,7 +563,7 @@ class CachedIntervalsClient:
         cold_end = min(hot_start, newest)
 
         cached: list[dict] = []
-        if oldest < cold_end:
+        if oldest <= cold_end:
             cached = self._load_cached_range("activities", oldest, cold_end)
 
         fresh: list[dict] = []
@@ -592,7 +592,7 @@ class CachedIntervalsClient:
 
         cached: list[dict] = []
         cold_end = min(hot_start, newest, today)
-        if oldest < cold_end:
+        if oldest <= cold_end:
             cached = self._load_cached_range("events", oldest, cold_end)
 
         fresh: list[dict] = []
@@ -621,7 +621,7 @@ class CachedIntervalsClient:
         cold_end = min(hot_start, newest)
 
         cached: list[dict] = []
-        if oldest < cold_end:
+        if oldest <= cold_end:
             cached = self._load_cached_range("notes", oldest, cold_end)
 
         fresh: list[dict] = []
@@ -823,15 +823,41 @@ class CachedIntervalsClient:
 
     # --- Write-through operations -------------------------------------------
 
+    def _merge_into_day_files(self, items: list[dict]) -> None:
+        """Merge freshly written events into their day files, category-aware.
+
+        NOTEs live in the "notes" day files (read by get_notes), everything
+        else in "events" — the old write-through put NOTEs into "events",
+        which made a coach-written NOTE on a cold date invisible to
+        fetch_context (hrvReviewPending re-fired daily). Merging (instead of
+        overwriting) keeps whatever else the day file already carries.
+        Future-dated items are skipped: plans are mutable and get deleted /
+        re-created by the push dedup.
+        """
+        today = _today()
+        by_target: dict[tuple[str, str], list[dict]] = {}
+        for item in items:
+            day = (item.get("start_date_local") or item.get("start_date") or "")[:10]
+            if not day or day > today:
+                continue
+            subdir = "notes" if item.get("category") == "NOTE" else "events"
+            by_target.setdefault((subdir, day), []).append(item)
+        for (subdir, day), day_items in by_target.items():
+            existing = self._cache.read_day(subdir, day) or []
+            if not isinstance(existing, list):
+                existing = []
+            merged = self._merge_by_id(existing, day_items)
+            self._cache.write_day(subdir, day, merged)
+            self._cache.update_index_events(
+                day_items,
+                category="NOTE" if subdir == "notes" else "WORKOUT",
+            )
+        if by_target:
+            self._cache.save_index()
+
     async def post_events_bulk(self, events: list[dict]) -> list[dict]:
         result = await self._client.post_events_bulk(events)
-        # Cache past events returned by the API
-        boundary = _fresh_boundary()
-        past = [e for e in result if (e.get("start_date_local") or e.get("start_date") or "")[:10] < boundary]
-        if past:
-            self._save_day_grouped("events", past)
-            self._cache.update_index_events(past)
-            self._cache.save_index()
+        self._merge_into_day_files([e for e in result if isinstance(e, dict)])
         return result
 
     async def post_activity_message(self, activity_id: str, content: str) -> dict:
@@ -850,10 +876,30 @@ class CachedIntervalsClient:
             self._cache.update_index_events(
                 [result], category=result.get("category") or "WORKOUT"
             )
+            # Refresh the day file too — the NOTE-upsert path updates
+            # existing day NOTEs via update_event, and a cold-date day file
+            # would otherwise keep serving the pre-update content.
+            self._merge_into_day_files([result])
         self._cache.save_index()
         return result
 
     async def delete_event(self, event_id: int) -> None:
+        # Find the event's day file BEFORE dropping the index entry — the
+        # index is the only place that still knows its date and category.
+        eid = str(event_id)
+        idx = self._cache.load_index()
+        for key, subdir in (("events", "events"), ("notes", "notes")):
+            for entry in idx.get(key) or []:
+                if str(entry.get("id")) != eid:
+                    continue
+                day = entry.get("date") or ""
+                if day:
+                    existing = self._cache.read_day(subdir, day)
+                    if isinstance(existing, list):
+                        self._cache.write_day(
+                            subdir, day,
+                            [e for e in existing if str(e.get("id")) != eid],
+                        )
         await self._client.delete_event(event_id)
         self._cache.delete_by_id("event_detail", str(event_id))
         self._cache.remove_index_event(event_id)

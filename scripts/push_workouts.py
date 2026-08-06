@@ -24,7 +24,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from pydantic import ValidationError
 
-from app.api.intervals_client import IntervalsClient
+from app.api.intervals_cache import CachedIntervalsClient
 from app.config import settings
 from app.utils.event_backup import backup_events_before_delete
 from app.graphs.main_daily_planner.workout_parser import prepare_workout_events
@@ -57,7 +57,7 @@ async def _dedup_existing_events(athlete_id: str, date_str: str, events: list[di
 
     Returns the number of events deleted.
     """
-    client = IntervalsClient(athlete_id)
+    client = CachedIntervalsClient(athlete_id)
     try:
         existing = await client.get_events(date_str, date_str)
     except Exception as exc:  # noqa: BLE001
@@ -118,7 +118,7 @@ async def _push(athlete_id: str, events: list[dict], dry_run: bool, date_str: st
         logger.info("[DRY-RUN] Would create %d event(s): %s", len(events), [e.get("uid") for e in events])
         return [{"uid": e["uid"], "dry_run": True} for e in events]
     await _dedup_existing_events(athlete_id, date_str, events)
-    client = IntervalsClient(athlete_id)
+    client = CachedIntervalsClient(athlete_id)
     created = await client.post_events_bulk(events)
     return created
 
@@ -390,7 +390,7 @@ def _auto_push_balance(target_date: str, current_workouts: list, athlete_id: str
         from datetime import date as _date
         from get_balance_rotation import build_rotation_workout
 
-        client = IntervalsClient(athlete_id)
+        client = CachedIntervalsClient(athlete_id)
         existing = asyncio.run(client.get_events(target_date, target_date))
         if any("balance" in (e.get("tags") or []) for e in existing):
             logger.debug("Auto-balance: balance event already exists for %s, skipping", target_date)

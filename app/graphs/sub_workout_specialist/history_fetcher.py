@@ -6,7 +6,7 @@ import asyncio
 import logging
 from datetime import date, timedelta
 
-from app.api.intervals_client import IntervalsClient
+from app.api.intervals_cache import CachedIntervalsClient
 
 logger = logging.getLogger(__name__)
 
@@ -240,7 +240,7 @@ async def _fetch_extended_activities(athlete_id: str, current_date: str, weeks: 
     """Fetch activities for a wider window if needed."""
     today = date.fromisoformat(current_date)
     oldest = (today - timedelta(weeks=weeks)).isoformat()
-    client = IntervalsClient(athlete_id)
+    client = CachedIntervalsClient(athlete_id)
     return await client.get_activities(oldest, current_date)
 
 
@@ -269,7 +269,7 @@ async def fetch_type_history(
     if not is_endurance:
         return [_slim_activity(s, is_endurance=False) for s in sessions]
 
-    client = IntervalsClient(athlete_id)
+    client = CachedIntervalsClient(athlete_id)
 
     async def _enrich(activity: dict) -> dict:
         act_id = str(activity.get("id", ""))

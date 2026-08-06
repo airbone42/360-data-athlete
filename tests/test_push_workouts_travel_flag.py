@@ -61,7 +61,7 @@ def test_auto_push_balance_forwards_travel_true(monkeypatch):
         return "A", {"type": "Workout", "name": "stub", "tags": ["balance"], "description": "x"}
 
     monkeypatch.setattr(gbr, "build_rotation_workout", fake_build_rotation_workout)
-    monkeypatch.setattr(pw, "IntervalsClient", lambda athlete_id=None: _StubClient())
+    monkeypatch.setattr(pw, "CachedIntervalsClient", lambda athlete_id=None: _StubClient())
     monkeypatch.setattr(pw, "_push", _fake_push)
     monkeypatch.setattr(pw, "prepare_workout_events", lambda workouts, date_str: workouts)
 
@@ -77,7 +77,7 @@ def test_auto_push_balance_forwards_travel_false_by_default(monkeypatch):
         return "A", {"type": "Workout", "name": "stub", "tags": ["balance"], "description": "x"}
 
     monkeypatch.setattr(gbr, "build_rotation_workout", fake_build_rotation_workout)
-    monkeypatch.setattr(pw, "IntervalsClient", lambda athlete_id=None: _StubClient())
+    monkeypatch.setattr(pw, "CachedIntervalsClient", lambda athlete_id=None: _StubClient())
     monkeypatch.setattr(pw, "_push", _fake_push)
     monkeypatch.setattr(pw, "prepare_workout_events", lambda workouts, date_str: workouts)
 

@@ -31,13 +31,13 @@ from datetime import date
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.api.intervals_client import IntervalsClient
+from app.api.intervals_cache import CachedIntervalsClient
 from app.config import settings
 from app.utils.note_upsert import upsert_day_note
 
 
 async def _run(args: argparse.Namespace) -> None:
-    client = IntervalsClient(settings.intervals_icu_athlete_id)
+    client = CachedIntervalsClient(settings.intervals_icu_athlete_id)
 
     # Resolve text source: `--message` and `--note` are accepted as aliases
     # when an activity-id is present (the routing decision is driven by

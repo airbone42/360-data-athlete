@@ -16,12 +16,12 @@ from datetime import date
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.api.intervals_client import IntervalsClient
+from app.api.intervals_cache import CachedIntervalsClient
 from app.config import settings
 from app.utils.event_backup import backup_events_before_delete
 
 
-async def _delete_by_ids(client: IntervalsClient, event_ids: list[int]) -> list[int]:
+async def _delete_by_ids(client: CachedIntervalsClient, event_ids: list[int]) -> list[int]:
     # Capture full content BEFORE deleting so it is never silently lost.
     fetched = []
     for eid in event_ids:
@@ -37,7 +37,7 @@ async def _delete_by_ids(client: IntervalsClient, event_ids: list[int]) -> list[
     return results
 
 
-async def _delete_by_prefix(client: IntervalsClient, date_str: str, prefix: str) -> list[str]:
+async def _delete_by_prefix(client: CachedIntervalsClient, date_str: str, prefix: str) -> list[str]:
     events = await client.get_events(date_str, date_str)
     to_delete = [e for e in events if str(e.get("uid", "")).startswith(prefix)]
     # Capture full content BEFORE deleting so it is never silently lost.
@@ -50,7 +50,7 @@ async def _delete_by_prefix(client: IntervalsClient, date_str: str, prefix: str)
 
 
 async def _run(args: argparse.Namespace) -> None:
-    client = IntervalsClient(settings.intervals_icu_athlete_id)
+    client = CachedIntervalsClient(settings.intervals_icu_athlete_id)
     if args.event_ids:
         ids = [int(x.strip()) for x in args.event_ids.split(",")]
         deleted = await _delete_by_ids(client, ids)

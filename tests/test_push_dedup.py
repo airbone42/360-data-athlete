@@ -34,7 +34,7 @@ class _StubClient:
 
 def _events(existing, monkeypatch):
     stub = _StubClient(existing)
-    monkeypatch.setattr(pw, "IntervalsClient", lambda athlete_id=None: stub)
+    monkeypatch.setattr(pw, "CachedIntervalsClient", lambda athlete_id=None: stub)
     # backup writes to disk — no-op it for the unit test
     monkeypatch.setattr(pw, "backup_events_before_delete", lambda *a, **k: 0)
     return stub
