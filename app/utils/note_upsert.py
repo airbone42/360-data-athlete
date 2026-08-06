@@ -25,6 +25,8 @@ from __future__ import annotations
 import logging
 import re
 
+from app.utils.activity_helpers import activity_date
+
 logger = logging.getLogger(__name__)
 
 DAY_NOTE_PREFIX = "Coach-Log"
@@ -92,7 +94,7 @@ async def upsert_day_note(client, date_str: str, section: str, text: str) -> dic
     notes = await client.get_notes(date_str, date_str)
     day_notes = [
         n for n in notes
-        if (n.get("start_date_local") or n.get("start_date") or "")[:10] == date_str
+        if activity_date(n) == date_str
     ]
 
     if not day_notes:

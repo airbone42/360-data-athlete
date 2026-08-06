@@ -29,7 +29,10 @@ here — this module only reports the pattern.
 
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import date
+
+from app.utils.activity_helpers import activity_date as _shared_activity_date
+from app.utils.date_windows import cutoff_iso
 
 # Activity types that transmit ground impact. Treadmill / virtual runs
 # count: the surface is softer, the impact cycle is not removed.
@@ -52,7 +55,7 @@ MAX_LOOKBACK_DAYS = 14
 
 
 def _activity_date(activity: dict) -> str:
-    return (activity.get("start_date_local") or "")[:10]
+    return _shared_activity_date(activity)
 
 
 def _is_impact(activity: dict, impact_types: frozenset[str]) -> bool:
@@ -145,7 +148,7 @@ def compute_run_day_streak(
     streak_dates: list[str] = []
     offset = 0 if includes_today else 1
     while offset < MAX_LOOKBACK_DAYS:
-        day = (today - timedelta(days=offset)).isoformat()
+        day = cutoff_iso(today, offset)
         if day not in impact_by_date:
             break
         streak_dates.append(day)
@@ -163,7 +166,7 @@ def compute_run_day_streak(
         return sum(
             1
             for i in range(window)
-            if (today - timedelta(days=i)).isoformat() in impact_by_date
+            if cutoff_iso(today, i) in impact_by_date
         )
 
     # Density matters independently of strict consecutiveness: runs on

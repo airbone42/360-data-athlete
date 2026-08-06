@@ -9,6 +9,8 @@ import math
 from datetime import date, timedelta
 from statistics import median, stdev
 
+from app.utils.date_windows import cutoff_iso
+
 # ── HRV readiness classifier (7d-rolling ln-rMSSD vs 60d normal band) ──
 # Framework defaults; athlete-overridable later via config. The band is
 # mean ± k·SD of daily ln-rMSSD over the reference window (Vesterinen /
@@ -41,7 +43,7 @@ HRV_CVTREND_DEADBAND_PCT = 10.0
 def _compute_hrv_baseline(
     wellness_history: list[dict], hrv: float | None, today: date
 ) -> tuple[str, str | None, str]:
-    cutoff = (today - timedelta(days=90)).isoformat()
+    cutoff = cutoff_iso(today, 90)
     hrv_values = [
         d["hrv"]
         for d in wellness_history
@@ -86,7 +88,7 @@ def _compute_rhr_baseline(
     is signed integer percent; ``rhr_context_str`` is the human-readable
     format used by the planner ("44 bpm (90d-Median: 40 bpm, +10%)").
     """
-    cutoff = (today - timedelta(days=90)).isoformat()
+    cutoff = cutoff_iso(today, 90)
     rhr_values = [
         d["restingHR"]
         for d in wellness_history
@@ -146,7 +148,7 @@ def _compute_combined_overload_signal(
     # Walk backward from today; count consecutive days both signals fire.
     streak = 0
     for offset in range(0, 7):  # check today + last 6 days
-        d_str = (today - timedelta(days=offset)).isoformat()
+        d_str = cutoff_iso(today, offset)
         entry = next((x for x in wellness_history if x.get("id") == d_str), None)
         if entry is None:
             # No data for this day → stop streak (do not count gaps as hits)
@@ -191,7 +193,7 @@ def _compute_hrv_cv(wellness_history: list[dict], today: date) -> float | None:
 
     Returns None if fewer than 20 data points available.
     """
-    cutoff = (today - timedelta(days=60)).isoformat()
+    cutoff = cutoff_iso(today, 60)
     hrv_values = [
         d["hrv"]
         for d in wellness_history
@@ -224,9 +226,9 @@ def _compute_hrv_cv_trend(wellness_history: list[dict], today: date) -> dict:
 
     def _cv_over(lo: int, hi: int) -> float | None:
         vals = [
-            ln_map[(today - timedelta(days=o)).isoformat()]
+            ln_map[cutoff_iso(today, o)]
             for o in range(lo, hi + 1)
-            if (today - timedelta(days=o)).isoformat() in ln_map
+            if cutoff_iso(today, o) in ln_map
         ]
         if len(vals) < HRV_CVTREND_MIN_PTS:
             return None
@@ -304,9 +306,9 @@ def _compute_hrv_readiness_band(
 
     def _rolling_mean_as_of(d: date) -> float | None:
         vals = [
-            ln_map[(d - timedelta(days=o)).isoformat()]
+            ln_map[cutoff_iso(d, o)]
             for o in range(0, roll_days)
-            if (d - timedelta(days=o)).isoformat() in ln_map
+            if cutoff_iso(d, o) in ln_map
         ]
         if len(vals) < min_coverage_roll:
             return None
@@ -314,9 +316,9 @@ def _compute_hrv_readiness_band(
 
     def _band_as_of(d: date) -> tuple[float, float, float, float, int] | None:
         vals = [
-            ln_map[(d - timedelta(days=o)).isoformat()]
+            ln_map[cutoff_iso(d, o)]
             for o in range(0, ref_days)
-            if (d - timedelta(days=o)).isoformat() in ln_map
+            if cutoff_iso(d, o) in ln_map
         ]
         n = len(vals)
         if n < min_coverage_band:
@@ -332,7 +334,7 @@ def _compute_hrv_readiness_band(
         n_valid = sum(
             1
             for o in range(0, ref_days)
-            if (today - timedelta(days=o)).isoformat() in ln_map
+            if cutoff_iso(today, o) in ln_map
         )
         return {
             "verdict": "insufficient_data",
@@ -400,7 +402,7 @@ def _compute_sleep_trend(wellness_history: list[dict], today: date) -> str:
     Returns a formatted string. Flags chronic sleep deprivation (avg < 6.5h)
     when at least 5 of the last 7 days have data.
     """
-    cutoff = (today - timedelta(days=7)).isoformat()
+    cutoff = cutoff_iso(today, 7)
     days = [
         d for d in wellness_history
         if d.get("id", "") > cutoff and d.get("id", "") <= today.isoformat()
@@ -442,7 +444,7 @@ def _compute_rhr_trend(
     def _rhr_avg(days_ago_start: int, days_ago_end: int) -> float | None:
         vals = []
         for offset in range(days_ago_start, days_ago_end + 1):
-            d = (today - timedelta(days=offset)).isoformat()
+            d = cutoff_iso(today, offset)
             entry = next((x for x in wellness_history if x.get("id") == d), None)
             if entry and entry.get("restingHR") is not None:
                 vals.append(entry["restingHR"])

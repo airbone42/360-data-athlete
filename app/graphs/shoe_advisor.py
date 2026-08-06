@@ -21,6 +21,7 @@ import re
 from pathlib import Path
 from typing import Any
 
+from app.utils.activity_helpers import activity_date
 from app.utils.paths import resolve_config
 from app.utils.surface import normalize_surface
 
@@ -257,7 +258,7 @@ def _compute_last_used(activities: list[dict]) -> dict[str, str]:
         gear_id = (a.get("gear") or {}).get("id") or a.get("gear_id") or a.get("icu_gear_id") or ""
         if not gear_id:
             continue
-        date_str = (a.get("start_date_local") or "")[:10]
+        date_str = activity_date(a)
         if date_str:
             last[str(gear_id)] = date_str
     return last

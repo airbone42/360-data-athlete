@@ -7,6 +7,8 @@ from __future__ import annotations
 
 from datetime import date, timedelta
 
+from app.utils.activity_helpers import activity_date
+
 CARDIO_TYPES = {"Run", "Ride", "VirtualRide", "VirtualRun"}
 
 
@@ -81,7 +83,7 @@ def _compute_zone_distribution(activities: list[dict]) -> str:
 
     if without_hr:
         missing = ", ".join(
-            f"{a.get('start_date_local', '')[:10]} {a.get('type', '')}"
+            f"{activity_date(a)} {a.get('type', '')}"
             for a in without_hr
         )
         result += (
@@ -153,7 +155,7 @@ def _compute_weekly_hard_reize_balance(activities: list[dict], today: date) -> s
     MIN_Z4_Z5_SECS = HARD_STIMULUS_MIN_Z4_Z5_SECS
 
     for a in activities:
-        d_str = (a.get("start_date_local") or "")[:10]
+        d_str = activity_date(a)
         try:
             act_date = date.fromisoformat(d_str)
         except (ValueError, TypeError):

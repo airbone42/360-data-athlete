@@ -16,6 +16,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.api.intervals_cache import CachedIntervalsClient as IntervalsClient
 from app.config import settings
+from app.utils.activity_helpers import activity_date as _activity_date
 from app.utils.tracing import script_span, set_span_io
 
 
@@ -37,7 +38,7 @@ async def _fetch(athlete_id: str, activity_id: str) -> dict:
             pass
 
     # Fetch wellness for activity date
-    activity_date = (activity.get("start_date_local") or "")[:10]
+    activity_date = _activity_date(activity)
     wellness: dict = {}
     if activity_date:
         try:

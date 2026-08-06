@@ -7,6 +7,9 @@ from __future__ import annotations
 
 from datetime import date, timedelta
 
+from app.utils.activity_helpers import activity_date
+from app.utils.date_windows import cutoff_iso
+
 TOLERANCE_PCT = 0.12
 
 
@@ -30,8 +33,8 @@ def _compute_weekly_stats(
 ) -> list[dict]:
     stats: list[dict] = []
     for w in range(3, -1, -1):
-        from_date = (today - timedelta(days=(w + 1) * 7)).isoformat()
-        to_date = (today - timedelta(days=w * 7)).isoformat()
+        from_date = cutoff_iso(today, (w + 1) * 7)
+        to_date = cutoff_iso(today, w * 7)
         week_slice = [
             d
             for d in wellness_history
@@ -57,13 +60,13 @@ def _compute_weekly_loads(activities: list[dict], today: date) -> list[int]:
     week that the smoothed avgCTL masks."""
     loads: list[int] = []
     for w in range(3, -1, -1):
-        from_date = (today - timedelta(days=(w + 1) * 7)).isoformat()
-        to_date = (today - timedelta(days=w * 7)).isoformat()
+        from_date = cutoff_iso(today, (w + 1) * 7)
+        to_date = cutoff_iso(today, w * 7)
         loads.append(
             sum(
                 int(a.get("icu_training_load") or 0)
                 for a in activities
-                if from_date <= (a.get("start_date_local") or "")[:10] <= to_date
+                if from_date <= activity_date(a) <= to_date
             )
         )
     return loads
@@ -183,7 +186,7 @@ def _compute_meso_load_trend(
         load = sum(
             int(a.get("icu_training_load") or 0)
             for a in activities
-            if window_start.isoformat() <= (a.get("start_date_local") or "")[:10] <= window_end.isoformat()
+            if window_start.isoformat() <= activity_date(a) <= window_end.isoformat()
         )
         week_loads.append(load)
 

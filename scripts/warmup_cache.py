@@ -25,6 +25,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app.api.intervals_client import IntervalsClient
 from app.api.intervals_cache import IntervalsFileCache, _is_special, _activity_index_entry, _event_index_entry, _note_index_entry
 from app.config import settings
+from app.utils.activity_helpers import activity_date
 from app.utils.logging import configure
 
 logger = configure(__name__, level="INFO")
@@ -86,7 +87,7 @@ async def warmup(athlete_id: str, weeks: int, fetch_streams: bool) -> None:
         # Group by day and write
         by_day: dict[str, list[dict]] = {}
         for act in acts:
-            day = (act.get("start_date_local") or "")[:10]
+            day = activity_date(act)
             if day:
                 by_day.setdefault(day, []).append(act)
         for day, day_acts in by_day.items():
@@ -119,7 +120,7 @@ async def warmup(athlete_id: str, weeks: int, fetch_streams: bool) -> None:
             continue
         by_day: dict[str, list[dict]] = {}
         for ev in evs:
-            day = (ev.get("start_date_local") or ev.get("start_date") or "")[:10]
+            day = activity_date(ev)
             if day:
                 by_day.setdefault(day, []).append(ev)
         for day, day_evs in by_day.items():
@@ -144,7 +145,7 @@ async def warmup(athlete_id: str, weeks: int, fetch_streams: bool) -> None:
             continue
         by_day: dict[str, list[dict]] = {}
         for n in notes:
-            day = (n.get("start_date_local") or n.get("start_date") or "")[:10]
+            day = activity_date(n)
             if day:
                 by_day.setdefault(day, []).append(n)
         for day, day_notes in by_day.items():

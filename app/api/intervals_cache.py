@@ -26,7 +26,9 @@ from pathlib import Path
 from typing import Any
 
 from app.api.intervals_client import IntervalsClient
+from app.utils.activity_helpers import activity_date
 from app.utils.alerts import notify_error
+from app.utils.date_windows import cutoff_iso
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +49,7 @@ from app.utils.paths import CACHE_DIR as _CACHE_ROOT  # noqa: E402
 
 def _fresh_boundary() -> str:
     """Date string 2 days ago — everything before this is cold (cached)."""
-    return (date.today() - timedelta(days=2)).isoformat()
+    return cutoff_iso(date.today(), 2)
 
 
 def _today() -> str:
@@ -80,7 +82,7 @@ def _activity_index_entry(activity: dict) -> dict:
     act_id = str(activity.get("id", ""))
     return {
         "id": act_id,
-        "date": (activity.get("start_date_local") or "")[:10],
+        "date": activity_date(activity),
         "type": activity.get("type", ""),
         "tags": activity.get("tags") or [],
         "name": activity.get("name", ""),
@@ -96,7 +98,7 @@ def _activity_index_entry(activity: dict) -> dict:
 def _event_index_entry(event: dict) -> dict:
     return {
         "id": event.get("id"),
-        "date": (event.get("start_date_local") or event.get("start_date") or "")[:10],
+        "date": activity_date(event),
         "category": event.get("category", ""),
         "type": event.get("type", ""),
         "tags": event.get("tags") or [],
@@ -108,7 +110,7 @@ def _event_index_entry(event: dict) -> dict:
 def _note_index_entry(note: dict) -> dict:
     return {
         "id": note.get("id"),
-        "date": (note.get("start_date_local") or note.get("start_date") or "")[:10],
+        "date": activity_date(note),
         "name": note.get("name", ""),
     }
 
@@ -221,7 +223,7 @@ class IntervalsFileCache:
         idx["activities"].sort(key=lambda a: a.get("date", ""))
         idx["special"].sort(key=lambda a: a.get("date", ""))
         # Re-detect compound events for affected days
-        affected_dates = {str(act.get("start_date_local") or "")[:10] for act in activities if act.get("start_date_local")}
+        affected_dates = {activity_date(act) for act in activities if act.get("start_date_local")}
         if affected_dates:
             self.rebuild_compound_events()
 
@@ -600,7 +602,7 @@ class CachedIntervalsClient:
             try:
                 fresh = await self._client.get_events(hot_start, newest)
                 # Cache only past events (not future)
-                past_fresh = [e for e in fresh if (e.get("start_date_local") or e.get("start_date") or "")[:10] < boundary]
+                past_fresh = [e for e in fresh if activity_date(e) < boundary]
                 if past_fresh:
                     self._save_day_grouped("events", past_fresh)
                     self._cache.update_index_events(past_fresh)
@@ -628,7 +630,7 @@ class CachedIntervalsClient:
         if hot_start <= newest:
             try:
                 fresh = await self._client.get_notes(hot_start, newest)
-                past_fresh = [n for n in fresh if (n.get("start_date_local") or n.get("start_date") or "")[:10] < boundary]
+                past_fresh = [n for n in fresh if activity_date(n) < boundary]
                 if past_fresh:
                     self._save_day_grouped("notes", past_fresh)
                     self._cache.update_index_events(past_fresh, category="NOTE")
@@ -734,12 +736,12 @@ class CachedIntervalsClient:
     async def get_activity(self, activity_id: str) -> dict:
         cached = self._cache.read_by_id("activity_detail", activity_id)
         if cached and isinstance(cached, dict):
-            act_date = (cached.get("start_date_local") or "")[:10]
+            act_date = activity_date(cached)
             if act_date < _fresh_boundary():
                 return cached
         try:
             data = await self._client.get_activity(activity_id)
-            act_date = (data.get("start_date_local") or "")[:10]
+            act_date = activity_date(data)
             if act_date and act_date < _fresh_boundary():
                 self._cache.write_by_id("activity_detail", activity_id, data)
             return data
@@ -754,7 +756,7 @@ class CachedIntervalsClient:
     async def get_activity_messages(self, activity_id: str) -> list[dict]:
         # Check if activity is old enough to cache messages
         act_detail = self._cache.read_by_id("activity_detail", activity_id)
-        act_date = (act_detail.get("start_date_local") or "")[:10] if isinstance(act_detail, dict) else ""
+        act_date = activity_date(act_detail) if isinstance(act_detail, dict) else ""
 
         if act_date and act_date < _fresh_boundary():
             cached = self._cache.read_by_id("messages", activity_id)
@@ -808,12 +810,12 @@ class CachedIntervalsClient:
     async def get_event(self, event_id: str) -> dict:
         cached = self._cache.read_by_id("event_detail", event_id)
         if cached and isinstance(cached, dict):
-            ev_date = (cached.get("start_date_local") or cached.get("start_date") or "")[:10]
+            ev_date = activity_date(cached)
             today = _today()
             if ev_date and ev_date < _fresh_boundary() and ev_date <= today:
                 return cached
         data = await self._client.get_event(event_id)
-        ev_date = (data.get("start_date_local") or data.get("start_date") or "")[:10]
+        ev_date = activity_date(data)
         if ev_date and ev_date < _fresh_boundary() and ev_date <= _today():
             self._cache.write_by_id("event_detail", event_id, data)
         return data
@@ -837,7 +839,7 @@ class CachedIntervalsClient:
         today = _today()
         by_target: dict[tuple[str, str], list[dict]] = {}
         for item in items:
-            day = (item.get("start_date_local") or item.get("start_date") or "")[:10]
+            day = activity_date(item)
             if not day or day > today:
                 continue
             subdir = "notes" if item.get("category") == "NOTE" else "events"

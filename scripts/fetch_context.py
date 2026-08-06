@@ -28,6 +28,7 @@ from app.api.intervals_client import IntervalsClient as RawIntervalsClient
 from app.config import settings
 from app.graphs.shoe_advisor import SHOE_ADVISOR_LOOKBACK_DAYS, gear_to_shoes
 from app.graphs.sub_athlete_context.context_builder import build_context
+from app.utils.date_windows import cutoff_iso
 from app.utils.logging import configure
 from app.utils.tracing import configure_tracing
 
@@ -94,8 +95,8 @@ async def _fetch_all(athlete_id: str, date_str: str) -> dict:
     client = IntervalsClient(athlete_id)
 
     oldest_4w = (today - timedelta(weeks=4)).isoformat()
-    oldest_7d = (today - timedelta(days=7)).isoformat()
-    oldest_90d = (today - timedelta(days=90)).isoformat()
+    oldest_7d = cutoff_iso(today, 7)
+    oldest_90d = cutoff_iso(today, 90)
     oldest_notes = oldest_4w  # match activity range for HRV-Review detection
     newest_6w = (today + timedelta(days=42)).isoformat()
     # Shoe rotation needs a longer look-back than the general 4-week activity
@@ -104,9 +105,7 @@ async def _fetch_all(athlete_id: str, date_str: str) -> dict:
     # "type/terrain" label instead of "N days unused" (see shoe_advisor.py).
     # Kept as a separate list so the wellness/CTL/zone signals above stay on
     # the 4-week window they were calibrated against.
-    oldest_shoe_window = (
-        today - timedelta(days=SHOE_ADVISOR_LOOKBACK_DAYS)
-    ).isoformat()
+    oldest_shoe_window = cutoff_iso(today, SHOE_ADVISOR_LOOKBACK_DAYS)
 
     # Fetch wellness, activities, workouts (past events), upcoming events, history, settings, notes
     # + shoe data (optional, degrades gracefully) — all in parallel.

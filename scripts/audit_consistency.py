@@ -29,6 +29,7 @@ from typing import Any
 ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT))
 
+from app.utils.activity_helpers import activity_date  # noqa: E402
 from app.utils.date_parse import parse_config_date  # noqa: E402
 from app.utils.paths import (  # noqa: E402
     CONFIG_DIR,
@@ -300,7 +301,7 @@ def check_note_vs_static(notes: list[dict] | None) -> list[dict]:
                 continue
             for healing in HEALING_KEYWORDS:
                 if healing in body:
-                    date_str = (note.get("start_date_local") or note.get("start_date") or "")[:10]
+                    date_str = activity_date(note)
                     snippet = body[max(0, body.find(healing) - 40): body.find(healing) + 40]
                     matches.append(f"{date_str}: …{snippet}…")
                     break
@@ -732,10 +733,10 @@ def check_log_vs_history(activities: list[dict] | None) -> list[dict]:
             if not all(t in norm_desc for t in key_tokens):
                 continue
             # Datum extrahieren
-            start = act.get("start_date_local") or act.get("start_date") or ""
+            start = activity_date(act)
             try:
                 from datetime import date as _date
-                act_date = _date.fromisoformat(start[:10])
+                act_date = _date.fromisoformat(start)
             except (ValueError, TypeError):
                 continue
             if last_seen is None or act_date > last_seen:

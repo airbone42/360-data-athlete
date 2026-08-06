@@ -31,6 +31,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.api.intervals_client import IntervalsClient
 from app.config import settings
+from app.utils.activity_helpers import activity_date
 from app.utils.impact_load import compute_run_day_streak
 
 
@@ -2521,7 +2522,7 @@ async def _fetch_recent_activities(target_date: str, days_back: int = 30) -> lis
     activities = await client.get_activities(start.isoformat(), end.isoformat())
     return [
         {
-            "date": a.get("start_date_local", "")[:10],
+            "date": activity_date(a),
             "type": a.get("type"),
             "name": a.get("name"),
             "duration_min": int((a.get("moving_time") or 0) / 60),

@@ -24,7 +24,9 @@ from app.config import settings
 from app.graphs.shoe_advisor import build_shoe_context, load_shoe_profiles
 from app.graphs.sub_athlete_context.state import AthleteContextState
 from app.schemas.context import ContextDict
+from app.utils.activity_helpers import activity_date
 from app.utils.alerts import notify_error
+from app.utils.date_windows import cutoff_iso
 from app.utils.hr_zones import extract_run_hr_bounds, format_hr_zones
 from app.utils.impact_load import compute_run_day_streak
 from app.analytics.zones import (  # noqa: F401 — re-exported for callers/tests
@@ -267,7 +269,7 @@ def build_context(state: AthleteContextState) -> dict:
         tsb_recent=tsb_recent,
     )
     weekly_zone_balance = _compute_zone_distribution(
-        [a for a in activities if (a.get("start_date_local") or "")[:10] >= (today - timedelta(days=7)).isoformat()]
+        [a for a in activities if activity_date(a) >= cutoff_iso(today, 7)]
     )
     weekly_hard_reize_balance = _compute_weekly_hard_reize_balance(activities, today)
 
@@ -425,7 +427,7 @@ def build_context(state: AthleteContextState) -> dict:
     # briefing-relevant only for the recent window; older activities keep
     # their metadata (type/tags/load/duration feed streak & balance reads)
     # while per-exercise detail comes from fetch_type_history on demand.
-    _notes_cutoff = (today - timedelta(days=7)).isoformat()
+    _notes_cutoff = cutoff_iso(today, 7)
 
     result = {
         "hrvContext": hrv_context,
@@ -436,7 +438,7 @@ def build_context(state: AthleteContextState) -> dict:
         "activities": [
             _summarize_activity(
                 a,
-                include_notes=(a.get("start_date_local") or "")[:10] >= _notes_cutoff,
+                include_notes=activity_date(a) >= _notes_cutoff,
             )
             for a in activities_with_workout
         ],
@@ -512,7 +514,7 @@ def _summarize_activity(a: dict, include_notes: bool = True) -> dict:
 
     raw_name = a.get("name") or ""
     result: dict = {
-        "date": (a.get("start_date_local") or "")[:10],
+        "date": activity_date(a),
         "type": a.get("type"),
         "name": escape_for_prompt(raw_name, max_len=200) if raw_name else raw_name,
         "tags": a.get("tags"),
@@ -613,7 +615,7 @@ def _find_pending_hrv_review(
 
     days_below = hrv_readiness.get("days_below", 0)
     window = {
-        (today - timedelta(days=o)).isoformat()
+        cutoff_iso(today, o)
         for o in range(0, max(days_below, 1))
     }
     for note in notes:
@@ -651,10 +653,10 @@ def _find_last_intense_session(activities: list[dict]) -> dict | None:
 
 def _find_last_rest_day(activities: list[dict], today: date) -> str:
     activity_dates = {
-        a.get("start_date_local", "")[:10] for a in activities
+        activity_date(a) for a in activities
     }
     for i in range(1, 8):
-        d = (today - timedelta(days=i)).isoformat()
+        d = cutoff_iso(today, i)
         if d not in activity_dates:
             return "yesterday" if i == 1 else f"{i} days ago"
     return "no rest day in the last 7 days"
@@ -705,7 +707,7 @@ def _compute_last_session_end(
 def _days_since(activity: dict | None, today: date) -> int:
     if not activity:
         return 99
-    start = activity.get("start_date_local", "")[:10]
+    start = activity_date(activity)
     if not start:
         return 99
     try:
@@ -1032,7 +1034,7 @@ def _compute_last_ninja_pillar_history(activities: list[dict], n: int = 5) -> st
             pillar_str = "unknown"
         else:
             pillar_str = "+".join(pillars)
-        d_str = (a.get("start_date_local") or "")[:10]
+        d_str = activity_date(a)
         name = a.get("name") or "Ninja"
         ninja_sessions.append(f"{d_str} | {name} | pillars: {pillar_str}")
         if len(ninja_sessions) >= n:
@@ -1173,7 +1175,7 @@ def _compute_complementary_due(activities: list[dict], today: date) -> str | Non
         last_date: date | None = None
 
         for a in reversed(activities):
-            d_str = (a.get("start_date_local") or "")[:10]
+            d_str = activity_date(a)
             try:
                 act_date = date.fromisoformat(d_str)
             except (ValueError, TypeError):
@@ -1421,7 +1423,7 @@ def _compute_recovery_blocks(activities: list[dict], today: date) -> list[str]:
                     continue
             if len(trigger_tags) == 1 and trigger_tags[0] not in act_tags:
                 continue
-            d_str = (a.get("start_date_local") or "")[:10]
+            d_str = activity_date(a)
             try:
                 act_date = date.fromisoformat(d_str)
             except (ValueError, TypeError):
@@ -1612,7 +1614,7 @@ def _compute_muscle_overlap_blocks(activities: list[dict], today: date) -> list[
             if matched_line is None:
                 continue
 
-            d_str = (a.get("start_date_local") or "")[:10]
+            d_str = activity_date(a)
             try:
                 act_date = date.fromisoformat(d_str)
             except (ValueError, TypeError):
@@ -1680,7 +1682,7 @@ def _compute_previous_day_exercises(activities: list[dict], today: date) -> str:
 
     entries: list[str] = []
     for a in activities:
-        d_str = (a.get("start_date_local") or "")[:10]
+        d_str = activity_date(a)
         try:
             act_date = date.fromisoformat(d_str)
         except (ValueError, TypeError):
@@ -1816,7 +1818,7 @@ def _compute_planning_constraints(
             continue
 
         days_until = (break_start - today).days
-        last_training = (break_start - timedelta(days=1)).isoformat()
+        last_training = cutoff_iso(break_start, 1)
 
         # Try to detect break end from description
         # Supports: "03.04.–10.04." (no year) and "03.04.2026–10.04.2026"

@@ -26,12 +26,13 @@ import asyncio
 import json
 import os
 import sys
-from datetime import date, timedelta
+from datetime import date
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.api.intervals_client import IntervalsClient
 from app.graphs.sub_athlete_context.context_builder import _compute_hrv_readiness_band
+from app.utils.date_windows import cutoff_iso
 from app.utils.logging import configure
 
 configure("hrv_readiness", level="WARNING")
@@ -52,7 +53,7 @@ async def _gather(target: date) -> list[dict]:
     # the live client so the reference window is complete (the per-day cache
     # only holds recently-touched days).
     client = IntervalsClient()
-    oldest = (target - timedelta(days=90)).isoformat()
+    oldest = cutoff_iso(target, 90)
     newest = target.isoformat()
     return await client.get_wellness_history(oldest=oldest, newest=newest)
 

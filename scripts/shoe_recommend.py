@@ -12,7 +12,7 @@ import asyncio
 import json
 import logging
 import sys
-from datetime import date, timedelta
+from datetime import date
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -25,6 +25,7 @@ from app.graphs.shoe_advisor import (
     gear_to_shoes,
     load_shoe_profiles,
 )
+from app.utils.date_windows import cutoff_iso
 
 logger = logging.getLogger(__name__)
 
@@ -55,10 +56,7 @@ async def recommend(workouts: list[dict], weather: str, date_str: str) -> dict:
     # range, its last-used date is unknown, and the rotation reason
     # degrades to a generic "type/terrain" label instead of "N days unused".
     try:
-        oldest = (
-            date.fromisoformat(date_str)
-            - timedelta(days=SHOE_ADVISOR_LOOKBACK_DAYS)
-        ).isoformat()
+        oldest = cutoff_iso(date.fromisoformat(date_str), SHOE_ADVISOR_LOOKBACK_DAYS)
         recent_activities = await client.get_activities(oldest, date_str)
     except Exception as exc:
         logger.warning("intervals.icu activities fetch failed (rotation degraded): %s", exc)

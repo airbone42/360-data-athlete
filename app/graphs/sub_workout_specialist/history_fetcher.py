@@ -7,6 +7,7 @@ import logging
 from datetime import date, timedelta
 
 from app.api.intervals_cache import CachedIntervalsClient
+from app.utils.activity_helpers import activity_date
 
 logger = logging.getLogger(__name__)
 
@@ -182,7 +183,7 @@ def _slim_activity(activity: dict, *, is_endurance: bool = False) -> dict:
     )
 
     slim: dict = {
-        "date": (activity.get("start_date_local") or "")[:10],
+        "date": activity_date(activity),
         "name": escape_for_prompt(activity.get("name") or "", max_len=120) or None,
         "duration_min": round(activity.get("moving_time", 0) / 60) or None,
         "description": description,
