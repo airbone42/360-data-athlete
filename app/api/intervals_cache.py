@@ -828,6 +828,19 @@ class CachedIntervalsClient:
         self._cache.delete_by_id("messages", activity_id)
         return result
 
+    async def update_event(self, event_id: int, payload: dict) -> dict:
+        result = await self._client.update_event(event_id, payload)
+        # Invalidate the cached detail and refresh the index entry so a later
+        # read does not resurrect the pre-update version.
+        self._cache.delete_by_id("event_detail", str(event_id))
+        self._cache.remove_index_event(event_id)
+        if isinstance(result, dict) and result.get("id") is not None:
+            self._cache.update_index_events(
+                [result], category=result.get("category") or "WORKOUT"
+            )
+        self._cache.save_index()
+        return result
+
     async def delete_event(self, event_id: int) -> None:
         await self._client.delete_event(event_id)
         self._cache.delete_by_id("event_detail", str(event_id))

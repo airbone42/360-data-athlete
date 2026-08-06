@@ -1,6 +1,9 @@
 """Typisierter Helper zum Speichern von Athleten-Feedback als NOTE in intervals.icu.
 
 Ersetzt raw `post_message.py --note` mit explizitem Logging + Kategorie-Mapping.
+Ein NOTE-Event pro Tag: die Kategorie wird als `## <Sektion>`-Block in die
+bestehende Tages-NOTE gemerged (replace-or-append, `app.utils.note_upsert`)
+statt eine neue NOTE zu stapeln.
 
 Usage:
     python3 scripts/save_feedback.py --date 2026-04-20 --note "Achilles ok" --category hrv_review
@@ -23,6 +26,7 @@ from app.api.intervals_client import IntervalsClient
 from app.config import settings
 from app.utils.alerts import alert_on_failure
 from app.utils.logging import configure
+from app.utils.note_upsert import upsert_day_note
 
 logger = configure(__name__)
 
@@ -39,19 +43,16 @@ VALID_CATEGORIES = list(_CATEGORY_NAMES.keys())
 
 async def _save(date_str: str, note: str, category: str, dry_run: bool) -> None:
     name = _CATEGORY_NAMES.get(category, "Athleten-Feedback")
-    event = {
-        "category": "NOTE",
-        "start_date_local": f"{date_str}T08:00:00",
-        "name": name,
-        "description": note,
-    }
     if dry_run:
-        logger.info("[DRY-RUN] Would save NOTE: %s | %s | %s", date_str, name, note[:80])
-        print(json.dumps([event], ensure_ascii=False, indent=2))
+        logger.info("[DRY-RUN] Would upsert day NOTE: %s | %s | %s", date_str, name, note[:80])
+        print(json.dumps(
+            {"action": "dry-run", "date": date_str, "section": name, "text": note},
+            ensure_ascii=False, indent=2,
+        ))
         return
     client = IntervalsClient(settings.intervals_icu_athlete_id)
-    result = await client.post_events_bulk([event])
-    logger.info("NOTE saved: %s | %s | %s", category, date_str, note[:80])
+    result = await upsert_day_note(client, date_str, section=name, text=note)
+    logger.info("NOTE %s: %s | %s | %s", result["action"], category, date_str, note[:80])
     print(json.dumps(result, ensure_ascii=False, indent=2))
 
 

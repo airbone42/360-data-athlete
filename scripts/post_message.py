@@ -14,7 +14,9 @@ Routing rule (important — silent-drift case 2026-05-19):
   versions silently ignored `--note` in combination with `--activity-id`
   and fell through to the date-NOTE path, creating a stray NOTE event
   next to the activity instead of attaching feedback to the activity.
-- `--activity-id` absent + `--date` + `--note` → create a date-NOTE.
+- `--activity-id` absent + `--date` + `--note` → upsert the date-NOTE:
+  one NOTE event per day (`app.utils.note_upsert`). An existing day NOTE
+  is updated (section replace-or-append), never stacked.
 - Anything else → error.
 """
 
@@ -31,6 +33,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.api.intervals_client import IntervalsClient
 from app.config import settings
+from app.utils.note_upsert import upsert_day_note
 
 
 async def _run(args: argparse.Namespace) -> None:
@@ -54,15 +57,9 @@ async def _run(args: argparse.Namespace) -> None:
         sys.exit(1)
 
     elif args.date and args.note:
-        note_event = [
-            {
-                "category": "NOTE",
-                "start_date_local": f"{args.date}T08:00:00",
-                "name": "Athleten-Feedback",
-                "description": args.note,
-            }
-        ]
-        result = await client.post_events_bulk(note_event)
+        result = await upsert_day_note(
+            client, args.date, section="Athleten-Feedback", text=args.note
+        )
         print(json.dumps(result, ensure_ascii=False, indent=2))
 
     else:

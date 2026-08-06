@@ -126,6 +126,17 @@ the activity already carries a gear_id (the athlete may have assigned it
 themselves; they can always correct the choice in intervals.icu).
 Errors are swallowed — this step does not block the analysis.
 
+### Step 6.6: Activity-name reality check
+
+Before presenting, verify the activity **name** matches the actual
+setting. When a planned outdoor session was executed indoor (or vice
+versa — `trainer` flag, `type: VirtualRun`/`VirtualRide`, athlete
+feedback), surface terms in the inherited plan name become wrong
+("Forstweg" on a treadmill session). Fix the name in intervals.icu via
+`IntervalsClient.update_activity_name` (replace the surface term:
+"Forstweg"/"Trail"/"Asphalt" → "Laufband"/"Indoor", or insert the real
+surface on the outdoor case). Skip silently when the name already fits.
+
 ### Step 6.7: Sync description drift
 
 ```bash

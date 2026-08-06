@@ -1464,6 +1464,24 @@ python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/get_balance_rotation.py --date YYYY-M
   an equipment/travel flag, letting `push_workouts.py` route around both;
   until then both are the head coach's call.
 
+**Push discipline — always push the complete day set (mandatory):**
+`push_workouts.py`'s pre-push dedup matches existing WORKOUT events by
+**type** (not name) and deletes every non-paired event of a pushed type
+before re-creating. Two consequences:
+
+1. Always push the **entire** day's set in one array — a partial push
+   silently deletes same-typed events that were left out of the array.
+   An event that already exists and must survive goes **into** the array
+   (re-fetch/reconstruct its content), never "left standing".
+2. Before pushing, list the day's existing WORKOUT events and account
+   for all of them — manually created events can carry arbitrary UIDs, a
+   `--prefix coach-` filter does not see them.
+3. On days with a `type: Workout` main unit (plyo, generic workout), the
+   auto-balance push's type-based dedup collides with it — put the
+   balance event into the same push array and use `--no-auto-balance`
+   (two `Workout`-typed events only coexist when created in the same
+   push; underlying scoping bug tracked in the wrapper's tasks.md).
+
 **No advance planning.** Plans are always created same-day, based on the
 current HRV, sleep, and athlete feeling. Never plan ahead in bulk.
 
@@ -1700,6 +1718,30 @@ activity-id form when posting coach-analyst output.
 activity messages are visible when the athlete (or coach) opens the
 activity. intervals.icu is the canonical source — never store athlete
 state only in Claude memory.
+
+### One NOTE per day — upsert, never stack (mandatory)
+
+A date carries **exactly one** NOTE event. Both write paths
+(`post_message.py --date` and `save_feedback.py`) upsert via
+`app.utils.note_upsert`: the day NOTE is organised in `## <Section>`
+blocks (one per feedback category — HRV-Review, Mental-Coach,
+Athleten-Feedback, …); writing a section that already exists **replaces**
+that block, a new section is **appended**, other sections stay untouched.
+A single-section note keeps the section name as event name; from the
+second section on it is renamed `Coach-Log <date>`.
+
+Consequences for the head coach and agents:
+
+- Never work around the upsert by crafting raw `post_events_bulk` NOTE
+  calls — that reintroduces stacking.
+- Phrase each section as the **current state of the day**, not as an
+  increment ("HRV-Review 06.08.: …" as the full current reading) — a
+  later write of the same category replaces the section.
+- Topic detection by substring (e.g. the `HRV-Review` pending check)
+  keeps working because the section heading carries the topic name.
+- If legacy duplicate NOTEs exist on a day, the upsert targets the
+  oldest and logs a warning listing the extras — consolidate them via
+  `delete_workouts.py --event-ids` when you see it.
 
 ### Exercise-specific feedback — canonical locations (mandatory)
 
