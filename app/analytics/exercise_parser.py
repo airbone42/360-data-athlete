@@ -516,8 +516,44 @@ def parse_description(description: str) -> tuple[list[ParsedExercise], list[str]
     return parsed, unmapped
 
 
-def match_to_mapping_key(exercise_name: str, exercise_mappings: dict) -> str | None:
-    """Find mapping key for a normalised exercise name via alias lookup."""
+# Connector / filler tokens that carry no exercise identity — they must not
+# count toward a fuzzy match ("Bow & Arrow Band" vs "Fingerstrecker Band"
+# once shared "&"/"band"-class tokens alone).
+_MATCH_STOPWORDS = frozenset({"&", "+", "and", "und", "mit", "with", "the"})
+
+
+def _significant_tokens(text: str) -> frozenset[str]:
+    """Token set for fuzzy matching: hyphen/underscore-insensitive, no fillers."""
+    tokens = set()
+    for raw in text.replace("-", " ").replace("_", " ").split():
+        token = raw.strip("()[]{},.;:!?—–|/")
+        if not token or token in _MATCH_STOPWORDS:
+            continue
+        if not any(ch.isalnum() for ch in token):
+            continue
+        tokens.add(token)
+    return frozenset(tokens)
+
+
+def match_to_mapping_key(
+    exercise_name: str, exercise_mappings: dict, *, strict: bool = False
+) -> str | None:
+    """Find mapping key for a normalised exercise name via alias lookup.
+
+    Match order:
+    1. Exact key / exact alias (string equality after lowercasing).
+    2. Significant-token-set equality — word order, hyphenation, and filler
+       tokens ("&", "mit", …) don't matter.
+    3. Containment: ALL significant candidate tokens appear in the name.
+       The most specific candidate wins (most tokens, then longest string),
+       so a "towel farmer hold" entry always beats a bare "farmer hold".
+
+    A name with extra tokens beyond every candidate ("Towel Farmer's Hold"
+    when only "Farmer's Hold" is mapped) still matches via containment —
+    callers that WRITE based on the match (drift sync) pass ``strict=True``,
+    which stops after step 2 so unknown variants surface as unmapped instead
+    of silently editing the base exercise's entry.
+    """
     name = exercise_name.lower().strip()
 
     if name in exercise_mappings:
@@ -531,20 +567,26 @@ def match_to_mapping_key(exercise_name: str, exercise_mappings: dict) -> str | N
         if name in aliases:
             return key
 
-    # Partial / substring match (longest alias wins)
+    nwords = _significant_tokens(name)
+    if not nwords:
+        return None
+
     best_key: str | None = None
-    best_len = 0
+    best_score: tuple[int, int, int] = (0, 0, 0)
     for key, mapping in exercise_mappings.items():
         if mapping.get("_type") == "endurance":
             continue
         candidates = [a.lower() for a in mapping.get("aliases", [])] + [key]
         for candidate in candidates:
-            # Check if all significant words of candidate appear in name or vice versa
-            cwords = set(candidate.split())
-            nwords = set(name.split())
-            overlap = cwords & nwords
-            if len(overlap) >= max(1, len(cwords) - 1) and len(candidate) > best_len:
+            cwords = _significant_tokens(candidate)
+            if not cwords or not cwords <= nwords:
+                continue
+            if strict and cwords != nwords:
+                continue
+            rank = 2 if cwords == nwords else 1
+            score = (rank, len(cwords), len(candidate))
+            if score > best_score:
                 best_key = key
-                best_len = len(candidate)
+                best_score = score
 
     return best_key

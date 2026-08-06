@@ -112,12 +112,15 @@ def _parse_sections(text: str) -> list[Section]:
 def _section_mapping_key(header: str, mapping: dict) -> str | None:
     """Map a markdown section header to a mapping_key via alias normalisation.
 
-    Strips parentheticals so "Pinch Grip Plates (Hantelscheiben)" matches
-    the same alias as the plain "Pinch Grip Plates" exercise line.
+    Strips parentheticals so "Pinch Grip Plates (Hantelscheiben)" resolves
+    like the plain "Pinch Grip Plates" exercise line. strict: a fuzzy match
+    here would attach the wrong section to a key and route drift writes into
+    a foreign exercise's entry — a header that is not an exact alias (or
+    token-set equal) stays unmatched and is simply not synced.
     """
     cleaned = re.sub(r"\s*\([^)]*\)", "", header).strip()
     normalised = normalise_exercise_name(cleaned)
-    return match_to_mapping_key(normalised, mapping)
+    return match_to_mapping_key(normalised, mapping, strict=True)
 
 
 # ── diff & rewrite ───────────────────────────────────────────────────────────
@@ -339,7 +342,10 @@ def _aggregate_per_exercise(
     for pe in parsed:
         if not pe.name:
             continue
-        key = match_to_mapping_key(pe.name, mapping)
+        # strict: this key decides which progression entry gets REWRITTEN —
+        # a fuzzy containment match would let an unknown variant ("Towel
+        # Farmer's Hold") overwrite the base exercise's anchor.
+        key = match_to_mapping_key(pe.name, mapping, strict=True)
         if key is None:
             continue
         by_key[key] = pe
@@ -375,7 +381,7 @@ def compute_drifts(
     for pe in parsed_exercises:
         if not pe.name:
             continue
-        if match_to_mapping_key(pe.name, mapping) is None:
+        if match_to_mapping_key(pe.name, mapping, strict=True) is None:
             if pe.name not in unmapped_names:
                 unmapped_names.append(pe.name)
 
