@@ -99,6 +99,8 @@ Configuration files live in `config/` (athlete-specific) with fallback to
 | `recovery_protocol.md` | Deload-week rules (framework defaults) |
 | `training_paradigms.md` | HR zones, polarized/pyramidal, intensity rules |
 | `injury_locks.json` | Configurable injury-lock activation keywords per body zone (used by validator R002) |
+| `recovery_rules.yaml` | Cross-day recovery blocks (trigger tags → min rest days) — read by context_builder and validator alike |
+| `ninja_saeulen.yaml` | Ninja pillar keyword + tag definitions for pillar-rotation tracking |
 | `exercise_tag_mapping.json` | Per-tag exercise whitelist + minimum count for tag-content adequacy (validator R024; empty default = off) |
 
 Path resolution is governed by `app/utils/paths.py` (see `COACH_HOME`,
@@ -1358,20 +1360,26 @@ python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/get_balance_rotation.py --date YYYY-M
   on top of a 14 kg+ strength SL RDL — the balance stimulus needs no
   load.
 - **Equipment availability (travel / limited kit):** The pool contains
-  equipment-dependent exercises (balance board, kettlebell loading, TRX).
-  The auto-balance push is date-driven and **equipment-blind**, so when
-  the athlete is on travel or otherwise lacks the kit, the head coach must
-  inspect the auto-selected rotation and **swap the equipment-dependent
-  exercise for a bodyweight / soft-surface variant that preserves the same
-  stimulus** before or right after the push — e.g. a *balance-board
+  equipment-dependent exercises (balance board, kettlebell loading, TRX),
+  each declaring an `equipment` list and an optional `travel_fallback` in
+  `balance_pool.json`. This is now mechanized: `get_balance_rotation.py
+  --travel` (alias `--no-equipment`) swaps every equipment-dependent
+  exercise for its pool-declared `travel_fallback` — e.g. a *balance-board
   single-leg + head-rotation* drill becomes *single-leg stand on an
   unstable soft surface (folded towel / cushion / soft mat) + head
-  rotation*; a *KB-loaded reach* becomes an unloaded reach. Otherwise the
-  rotation pushes a board/KB exercise the athlete cannot perform.
-- A future enhancement of `get_balance_rotation.py` will automate the
-  leg-conflict routing via `--avoid-tag legs` and the equipment swap via
-  an equipment/travel flag, letting `push_workouts.py` route around both;
-  until then both are the head coach's call.
+  rotation*; a *KB-loaded reach* becomes an unloaded reach. An exercise
+  with equipment but no declared fallback gets a generic single-leg /
+  soft-surface substitute, flagged with a note in the output. The flag
+  is forwarded end-to-end: `push_workouts.py --travel` passes it through
+  to the auto-balance push. Default is off — the head coach passes
+  `--travel` explicitly on travel / limited-kit days; nothing infers
+  travel status automatically.
+- **Leg-conflict routing remains future work.** Unlike the equipment
+  swap, `--avoid-tag legs` routing around a same-day `legs`-tagged
+  strength block is not yet mechanized — the head coach must still
+  inspect the auto-selected rotation for posterior-chain-load overlap
+  (see "Leg-strength conflict awareness" above) before piping it into
+  `push_workouts.py`.
 
 **Push discipline — always push the complete day set (mandatory):**
 `push_workouts.py`'s pre-push dedup matches existing WORKOUT events by

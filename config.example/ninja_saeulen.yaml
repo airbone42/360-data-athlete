@@ -1,0 +1,15 @@
+# Ninja pillar definitions — canonical source read by app/analytics/recovery.py.
+# pillar_keywords: description-text keywords that count a session toward a
+# pillar (lowercase substring match). tag_to_pillar: workout tags → pillars.
+# Athlete-specific exercises: copy to the consumer's config/ and extend there.
+pillar_keywords:
+  Grip: [gripmaster, "farmer's hold", "farmer's walk", wrist curl, finger-extensoren, towel grip]
+  Pull: [trx row, kurzhantel row, supinated row, zugseil row, lat-zug, rudern]
+  Push: [push-up, pushup, kneeling push, dips, trx push]
+  Core: [hollow rock, hollow hold, l-sit, dead bug, pallof press, planche lean, tuck hold]
+  Explosive Power: [clap push, plyo push, box jump, explosive row]
+tag_to_pillar:
+  grip: [Grip]
+  upperbody: [Pull, Push]
+  core: [Core]
+  plyo: [Explosive Power]

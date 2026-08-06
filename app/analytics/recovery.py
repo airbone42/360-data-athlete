@@ -26,24 +26,28 @@ def canonicalise_tags(raw_tags: list | None) -> list[str]:
     return tags
 
 
-# (tags_that_trigger, min_rest_days, label)
-# Trigger tags use the new canonical English form ("legs") — the
-# `canonicalise_tags()` helper at the read site ensures legacy
-# "beine"-tagged activities still match.
-RECOVERY_RULES: list[tuple[list[str], int, str]] = [
-    (["plyo"], 3, "Plyo blocked"),
-    (["legs"], 2, "Legs/strength blocked"),
-    (["intervals"], 2, "Legs/Plyo blocked (post-interval)"),
-    (["ninja", "upperbody"], 1, "Ninja upper body blocked"),
-    (["ninja", "core"], 2, "Ninja core blocked (L-sit CNS recovery)"),
-    # Grip → Pull-next-day is the physiological lock (forearm flexor → scapular
-    # stabilisation during rowing). The tag system currently doesn't distinguish
-    # between Pull and Push — both carry `upperbody`. Conservative: Push is
-    # blocked along with Pull, even if not strictly required physiologically.
-    # Granular separation possible via separate `pull`/`push` tags in a future
-    # VALID_TAGS extension.
-    (["ninja", "grip"], 2, "Ninja upper body blocked after Grip (forearm-flexor interference)"),
-]
+# Recovery rules live in config: recovery_rules.yaml (consumer config/ first,
+# fallback config.example/) — new rules or athlete-specific spacing need no
+# code change. Loaded once at import; a broken YAML fails loudly here rather
+# than silently running without blocks.
+def _load_recovery_rules() -> list[tuple[list[str], int, str]]:
+    import yaml
+
+    from app.utils.paths import resolve_config
+
+    with open(resolve_config("recovery_rules.yaml"), encoding="utf-8") as f:
+        raw = yaml.safe_load(f) or {}
+    return [
+        (
+            [str(t).lower() for t in rule["trigger_tags"]],
+            int(rule["min_rest_days"]),
+            str(rule["label"]),
+        )
+        for rule in raw.get("rules", [])
+    ]
+
+
+RECOVERY_RULES: list[tuple[list[str], int, str]] = _load_recovery_rules()
 
 # Keyword-based overlap rules — checked against activity description text, not tags.
 # rpe_tiers: dict keyed "low"/"mid"/"high" → (max_rpe_inclusive, hard_days, soft_days)
@@ -98,20 +102,30 @@ def _extract_rpe_from_line(line: str) -> float | None:
     return None
 
 
-NINJA_PILLAR_KEYWORDS: dict[str, list[str]] = {
-    "Grip": ["gripmaster", "farmer's hold", "farmer's walk", "wrist curl", "finger-extensoren", "towel grip"],
-    "Pull": ["trx row", "kurzhantel row", "supinated row", "zugseil row", "lat-zug", "rudern"],
-    "Push": ["push-up", "pushup", "kneeling push", "dips", "trx push"],
-    "Core": ["hollow rock", "hollow hold", "l-sit", "dead bug", "pallof press", "planche lean", "tuck hold"],
-    "Explosive Power": ["clap push", "plyo push", "box jump", "explosive row"],
-}
+# Ninja pillar definitions live in config: ninja_saeulen.yaml (consumer
+# config/ first, fallback config.example/) — athlete-specific exercises
+# extend the keyword lists without a code change.
+def _load_ninja_pillars() -> tuple[dict[str, list[str]], dict[str, list[str]]]:
+    import yaml
 
-NINJA_TAG_TO_PILLAR: dict[str, list[str]] = {
-    "grip": ["Grip"],
-    "upperbody": ["Pull", "Push"],
-    "core": ["Core"],
-    "plyo": ["Explosive Power"],
-}
+    from app.utils.paths import resolve_config
+
+    with open(resolve_config("ninja_saeulen.yaml"), encoding="utf-8") as f:
+        raw = yaml.safe_load(f) or {}
+    keywords = {
+        str(pillar): [str(k).lower() for k in kws]
+        for pillar, kws in (raw.get("pillar_keywords") or {}).items()
+    }
+    tag_map = {
+        str(tag).lower(): [str(p) for p in pillars]
+        for tag, pillars in (raw.get("tag_to_pillar") or {}).items()
+    }
+    return keywords, tag_map
+
+
+NINJA_PILLAR_KEYWORDS: dict[str, list[str]]
+NINJA_TAG_TO_PILLAR: dict[str, list[str]]
+NINJA_PILLAR_KEYWORDS, NINJA_TAG_TO_PILLAR = _load_ninja_pillars()
 
 # Backward-compatibility aliases — will be removed once all callers migrate
 # to the new names. Currently re-exported so external scripts and tests can
