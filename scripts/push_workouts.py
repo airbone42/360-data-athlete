@@ -272,6 +272,14 @@ def main() -> None:
         action="store_true",
         help="Skip auto-push of the daily balance rotation after the main push.",
     )
+    parser.add_argument(
+        "--travel", "--no-equipment",
+        dest="travel",
+        action="store_true",
+        help="Forwarded to the auto-balance rotation: swap equipment-dependent balance "
+             "exercises (balance board / kettlebell / TRX) for bodyweight / soft-surface "
+             "fallbacks. Default off.",
+    )
     args = parser.parse_args()
 
     if args.file:
@@ -349,12 +357,12 @@ def main() -> None:
 
     if not args.dry_run:
         if not args.no_auto_balance:
-            _auto_push_balance(args.date, workouts, athlete_id)
+            _auto_push_balance(args.date, workouts, athlete_id, travel=args.travel)
         _warn_on_warmup_overlap(args.date)
         _warn_on_mental_coach_triggers(workouts, args.date)
 
 
-def _auto_push_balance(target_date: str, current_workouts: list, athlete_id: str) -> None:
+def _auto_push_balance(target_date: str, current_workouts: list, athlete_id: str, travel: bool = False) -> None:
     """Push the daily balance rotation as a third workout if none exists yet.
 
     Implements the SSOT for the "Daily balance rotation (mandatory)" rule from
@@ -368,6 +376,10 @@ def _auto_push_balance(target_date: str, current_workouts: list, athlete_id: str
       `get_balance_rotation.py | push_workouts.py` pipe).
     - An intervals.icu event with the `balance` tag already exists for the
       target date (idempotent — re-pushes don't stack duplicates).
+
+    `travel` is forwarded to `build_rotation_workout` — swaps equipment-
+    dependent exercises (balance board / kettlebell / TRX) for bodyweight /
+    soft-surface fallbacks (see `get_balance_rotation.py --travel`).
     """
     try:
         for w in current_workouts:
@@ -384,7 +396,7 @@ def _auto_push_balance(target_date: str, current_workouts: list, athlete_id: str
             logger.debug("Auto-balance: balance event already exists for %s, skipping", target_date)
             return
 
-        rotation, workout = build_rotation_workout(_date.fromisoformat(target_date))
+        rotation, workout = build_rotation_workout(_date.fromisoformat(target_date), travel=travel)
         logger.info("Auto-balance: pushing rotation %s for %s", rotation, target_date)
         events = prepare_workout_events([workout], target_date)
         asyncio.run(_push(athlete_id, events, dry_run=False, date_str=target_date))
