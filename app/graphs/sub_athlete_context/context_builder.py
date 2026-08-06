@@ -376,10 +376,32 @@ def build_context(state: AthleteContextState) -> dict:
         except Exception as e:
             logger.warning("shoe_advisor failed: %s", e)
 
+    today_workouts = _summarize_today_workouts(events, today)
+
+    # Context-lean gating: the full shoe fleet is only planning-relevant when
+    # today actually carries a Run/Ride. On other days the fleet list and the
+    # systemPrompt shoe block are dropped (recommendation stays {} anyway —
+    # the push-time advisor in push_workouts/shoe_recommend fetches gear
+    # itself, independent of this context field).
+    _RUN_RIDE_TYPES = ("Run", "VirtualRun", "Ride", "VirtualRide")
+    run_or_ride_today = any(
+        (w.get("type") or "") in _RUN_RIDE_TYPES for w in today_workouts
+    )
+    if not run_or_ride_today:
+        shoe_ctx = {
+            **shoe_ctx,
+            "shoes": [],
+            "shoeRecommendation": shoe_ctx.get("shoeRecommendation", {}),
+        }
+
     shoe_context_text = _format_shoe_context(shoe_ctx)
     system_prompt = system_prompt.replace("{shoeContext}", shoe_context_text)
 
-    today_workouts = _summarize_today_workouts(events, today)
+    # coaching_notes (paired event descriptions, up to 500 chars each) are
+    # briefing-relevant only for the recent window; older activities keep
+    # their metadata (type/tags/load/duration feed streak & balance reads)
+    # while per-exercise detail comes from fetch_type_history on demand.
+    _notes_cutoff = (today - timedelta(days=7)).isoformat()
 
     result = {
         "hrvContext": hrv_context,
@@ -388,7 +410,11 @@ def build_context(state: AthleteContextState) -> dict:
         "sleep": sleep_score if sleep_score is not None else "-",
         "sleepHours": sleep_hours,
         "activities": [
-            _summarize_activity(a) for a in activities_with_workout
+            _summarize_activity(
+                a,
+                include_notes=(a.get("start_date_local") or "")[:10] >= _notes_cutoff,
+            )
+            for a in activities_with_workout
         ],
         "ctl": ctl if ctl is not None else "-",
         "atl": atl if atl is not None else "-",
@@ -446,12 +472,16 @@ def build_context(state: AthleteContextState) -> dict:
 # ── Helper functions ────────────────────────────────────────────────
 
 
-def _summarize_activity(a: dict) -> dict:
+def _summarize_activity(a: dict, include_notes: bool = True) -> dict:
     """Reduce a full activity object to the fields the planner actually needs.
 
     `name` and `event_description` are athlete-/third-party-roundtrip-controlled
     and end up in specialist briefings → sanitize at this write boundary
     (mirrors history_fetcher._format_activity).
+
+    `include_notes=False` drops the `coaching_notes` payload (context-lean
+    mode for activities outside the recent briefing window — the metadata
+    stays, exercise detail comes from fetch_type_history on demand).
     """
     from app.utils.sanitize import escape_for_prompt
 
@@ -465,7 +495,7 @@ def _summarize_activity(a: dict) -> dict:
         "training_load": a.get("icu_training_load"),
         "duration_min": round(a.get("moving_time", 0) / 60) or None,
     }
-    if a.get("event_description"):
+    if include_notes and a.get("event_description"):
         result["coaching_notes"] = escape_for_prompt(a["event_description"], max_len=500)
     return result
 

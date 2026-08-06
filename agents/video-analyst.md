@@ -101,10 +101,12 @@ what specifically would be better and why?]
 ```
 
 ### Model choice
-- **Default:** `google/gemini-2.0-flash-001` — fast, cheap
-  (~$0.001/analysis), good for standard form check
-- **`--model pro`:** `google/gemini-1.5-pro` — deeper analysis, better
-  on complex movement patterns (~$0.05–0.09/analysis)
+- **Default (`flash`):** fast tier — good for standard form checks
+- **`--model pro`:** deeper analysis, better on complex movement patterns
+
+The concrete OpenRouter model ids live in `scripts/analyse_video.py`
+(`_MODELS` map — pinned there with the selection rationale); this file
+never restates them, so they cannot drift apart.
 
 Frames are passed as **sequential single images** (not as a grid) —
 Gemini sees the temporal progression of the movement.

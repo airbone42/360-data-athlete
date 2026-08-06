@@ -642,14 +642,7 @@ for the full case.
 
 Respond with valid JSON only. Start directly with `{`.
 
-**Workout-name convention (mandatory):** the `name` you reuse from the
-planner directive (or override) must NOT carry calendar-week markers
-(`KW21`, `Week 21`, `Woche 21`). The activity timestamp already carries
-the date and the calendar week is derivable from it — the marker adds
-no information for the athlete in the activity feed and is pure noise
-in the activity feed. Stimulus / phase
-descriptors are allowed if they help recall ("Race-spezifisch",
-"Aufbau", "Konsolidierung"), but not the literal KW-number.
+Workout names come from the planner directive — never add calendar-week markers (KW21 etc.); see planner.md.
 
 The `focus` field contains 3–5 sentences of coaching prose for the
 athlete: goal of the session, focus points, context from history /

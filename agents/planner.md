@@ -133,25 +133,15 @@ Before producing the plan:
 
 ## Heat — cap the HR, keep the duration (MANDATORY)
 
-On a warm day the primary steering parameter for an easy/Z2 endurance
-directive is the **heart-rate ceiling**, not pace and not duration. A
-pace loss of roughly 0.3–0.5 % per °C above a ~10–15 °C reference is the
-*expected* cost of holding that ceiling for an unacclimatised athlete
-(scaled up by humidity, roughly halved once acclimatised over 10–14
-days) — it is a property of the environment, not a readiness signal, and
-it must not feed back into the directive as a reason to shorten the
-session or downgrade the day.
-
-- Duration stays anchored on the phase band and demonstrated capability
-  (see "No silent conservatism" in `CLAUDE.md`). Heat justifies running
+- **Easy/Z2:** steer by HR ceiling, not pace or duration. Duration stays
+  anchored on the phase band (see "No silent conservatism"). Heat justifies
   slower, not shorter.
-- The legitimate heat levers are **slot placement** (earlier or later in
-  the day), **surface / shade**, and **hydration guidance** — put those in
-  `coaching_notes` instead of trimming volume.
-- Where heat genuinely does constrain the plan is the **quality**
-  session: the same ceiling that merely slows an easy run makes a
-  threshold or VO2max target harder to reach and raises the thermal cost
-  of reaching it. Weigh a slot move there before weighing a volume cut.
+- **Levers:** slot placement (earlier/later), surface/shade, hydration
+  guidance → put in `coaching_notes`. Do not trim volume.
+- **Quality sessions:** a threshold/VO2max target is harder to reach and
+  carries higher thermal cost. Weigh a slot move before any volume cut.
+- Heat kicks in when `weatherInfo` shows conditions the research anchor
+  defines as warm (>~10–15 °C reference, amplified by humidity).
 
 **Research anchor:**
 [heat-pace-penalty-at-fixed-hr.md](../research/heat-pace-penalty-at-fixed-hr.md).
@@ -206,57 +196,42 @@ red flags and the re-progression timing:
 
 ## Acute lower-leg soreness from an unstructured exposure
 
-When `athleteFeedback` reports soreness in the lower leg (shin,
-anterolateral compartment, peroneals) from something that was **not a
-training session** — unsupportive footwear, a first barefoot session,
-an unusually long walk on hard ground, a downhill hike — treat it as a
-directive-level input, not as a detail for the specialist:
+When `athleteFeedback` reports lower-leg soreness (shin, anterolateral
+compartment, peroneals) from a **non-training** cause (bad footwear,
+barefoot session, long walk, downhill hike):
 
-- **Within the 24–72 h soreness peak, an impact quality stimulus is
-  gated, not automatically cancelled.** Name the gate in
-  `coaching_notes` so the specialist builds the in-session read-out
-  (an easy opening block plus abort criteria) rather than guessing.
-- **Terrain default in that window depends on the athlete's ankle
-  history, and the two cases differ in strength of evidence.** With a
-  **recurrent** lateral-instability history, an even surface is
-  well-supported: those athletes lose their protective landing
-  compensation under fatigue, where athletes whose single injury healed
-  do not. Without that history the argument is weaker and reduces to
-  lowering the number of perturbation events per unit time — still
-  defensible, but state it as exposure reduction rather than as
-  protection.
+- **24–72 h peak:** impact quality is gated, not cancelled. Name the
+  gate in `coaching_notes` so the specialist builds an easy opening block
+  + abort criteria.
+- **Terrain default:** even surface is well-supported only with a
+  **recurrent** lateral-instability history (those athletes lose
+  protective landing compensation under fatigue). Without that history,
+  state the surface choice as exposure reduction, not protection.
 - **A terrain default is not a restriction.** If a standing terrain
-  restriction was previously lifted by an explicit athlete decision,
-  say in `coaching_notes` that today's surface choice is a
-  single-session, symptom-driven default and that the lifted
-  restriction stays lifted. Restrictions return only by explicit
-  athlete confirmation, never by a coach's quiet re-application.
-- **Soreness persisting past ~72 h is no longer a planning question.**
-  Route it to the physio consultant for the differential before
-  scheduling the next quality stimulus.
+  restriction was previously lifted, say in `coaching_notes` it is a
+  single-session symptom-driven default — the lifted restriction stays
+  lifted. Restrictions return only by explicit athlete confirmation.
+- **>72 h:** route to physio consultant for differential before scheduling
+  the next quality stimulus.
 
 Research anchor:
 [../research/peroneal-doms-inversion-defense-and-mtss-differential.md](../research/peroneal-doms-inversion-defense-and-mtss-differential.md).
 
 ## Race-equipment rehearsal is a planning obligation, not a detail
 
-Anything the athlete will wear or use on race day — plated race shoes,
-hydration carry, in-race fuelling — needs rehearsal slots **in the plan**,
-not a reminder in the workout text. For plated race shoes specifically the
-dose is **2–3 race-pace exposures in the actual race shoe, 5–7 days apart**;
-easy running in it does not count, because tissue load scales with pace even
-though the shoe's economy benefit does not.
+Plated race shoes, hydration carry, and in-race fuelling need **reserved
+slots in the plan**, not reminders in workout text.
 
-Consequences for the directive:
+**Plated shoes:** 2–3 race-pace exposures in the actual race shoe, 5–7 days
+apart. Easy running does not count.
 
-- Count the remaining quality slots before the race and reserve them. Inside
-  a taper there are few, so the rehearsal window is earlier than it feels.
-- When the race-day choice is **weather-contingent**, each candidate needs
-  its own exposure — say so in `coaching_notes` so the athlete sees what the
-  branch costs, and let them drop a branch deliberately rather than by
-  running out of slots.
-- Rehearse in the shoe that will be raced, not a same-family stand-in kept
-  to spare it.
+Directive rules:
+- Count remaining quality slots before the race; the rehearsal window is
+  earlier than it feels inside a taper.
+- Weather-contingent shoe choice: each candidate needs its own exposure —
+  note in `coaching_notes` what the branch costs so the athlete can
+  drop one deliberately.
+- Rehearse in the shoe that will be raced, not a same-family stand-in.
 
 Research anchor:
 [../research/carbon-plated-race-shoes-load-and-habituation.md](../research/carbon-plated-race-shoes-load-and-habituation.md).

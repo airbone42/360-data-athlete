@@ -85,3 +85,32 @@ def test_context_date_str_contains_date() -> None:
     # dateStr is a formatted string like "Saturday, 19. April 2025"
     assert "2025" in result["dateStr"]
     assert isinstance(result["dateStr"], str)
+
+
+def test_summarize_activity_include_notes_flag() -> None:
+    """Context-lean mode: include_notes=False drops coaching_notes, keeps metadata."""
+    from app.graphs.sub_athlete_context.context_builder import _summarize_activity
+
+    activity = {
+        "start_date_local": "2025-04-10T08:00:00",
+        "type": "Run",
+        "name": "Easy Z2",
+        "tags": ["run"],
+        "icu_training_load": 40,
+        "moving_time": 3600,
+        "event_description": "WARM-UP\n\nHAUPTTEIL: 60min Z2",
+    }
+    full = _summarize_activity(activity, include_notes=True)
+    lean = _summarize_activity(activity, include_notes=False)
+    assert "coaching_notes" in full
+    assert "coaching_notes" not in lean
+    assert lean["type"] == "Run" and lean["training_load"] == 40
+
+
+def test_shoes_dropped_without_run_or_ride_today() -> None:
+    """CF-5 gating: no Run/Ride in todayWorkouts -> shoes[] empty in output."""
+    state = _minimal_state()
+    state["shoes"] = [{"gear_key": "b1", "name": "Demo Shoe", "distance_km": 100.0,
+                      "retired": False, "primary": False}]
+    result = build_context(state)
+    assert result["shoes"] == []
