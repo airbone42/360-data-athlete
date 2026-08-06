@@ -1950,6 +1950,14 @@ not training cycle.*
 - 3.11, strict type hints
 - Test scripts: `python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/...` or `pytest tests/`
 
+### CI parity (mandatory before push)
+`bash scripts/ci_local.sh` mirrors `.github/workflows/test.yml` locally
+(plugin-manifest validation, advisory ruff, pytest on every locally
+installed matrix interpreter — missing legs are reported loudly, CI
+covers them). Consumer wrappers can install it as a pre-push hook so a
+red CI is never the first place a failure shows up. `CI_LOCAL_STRICT=1`
+makes ruff blocking.
+
 ### Token efficiency
 - Diff-only on code changes
 - No trailing summaries
