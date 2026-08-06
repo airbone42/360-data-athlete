@@ -1373,8 +1373,10 @@ python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/get_balance_rotation.py --date YYYY-M
 
 **Push discipline — always push the complete day set (mandatory):**
 `push_workouts.py`'s pre-push dedup matches existing WORKOUT events by
-**type** (not name) and deletes every non-paired event of a pushed type
-before re-creating. Two consequences:
+**(type, balance-tag)** — not name — and deletes every non-paired event
+of a pushed partition before re-creating (the balance partition keeps the
+auto-balance push and `Workout`-typed mains from deleting each other).
+Two consequences:
 
 1. Always push the **entire** day's set in one array — a partial push
    silently deletes same-typed events that were left out of the array.
@@ -1383,11 +1385,6 @@ before re-creating. Two consequences:
 2. Before pushing, list the day's existing WORKOUT events and account
    for all of them — manually created events can carry arbitrary UIDs, a
    `--prefix coach-` filter does not see them.
-3. On days with a `type: Workout` main unit (plyo, generic workout), the
-   auto-balance push's type-based dedup collides with it — put the
-   balance event into the same push array and use `--no-auto-balance`
-   (two `Workout`-typed events only coexist when created in the same
-   push; underlying scoping bug tracked in the wrapper's tasks.md).
 
 **No advance planning.** Plans are always created same-day, based on the
 current HRV, sleep, and athlete feeling. Never plan ahead in bulk.
