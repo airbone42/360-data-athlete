@@ -346,11 +346,13 @@ class IntervalsClient:
     async def get_streams(
         self,
         activity_id: str,
-        types: str = "time,heartrate,latlng,velocity_smooth,cadence,altitude,distance",
+        types: str = "time,heartrate,latlng,velocity_smooth,cadence,altitude,distance,watts,torque,temp",
     ) -> dict[str, list]:
         """Fetch activity streams from intervals.icu.
 
         API returns [{"type": "time", "data": [...]}, ...] – converted to {type: data}.
+        Streams absent on the activity (e.g. watts on a run without a power
+        meter) are simply missing from the result — requesting them is free.
         """
         async with httpx.AsyncClient(auth=self._auth) as c:
             r = await c.get(

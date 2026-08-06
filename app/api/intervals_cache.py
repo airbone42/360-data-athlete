@@ -782,13 +782,25 @@ class CachedIntervalsClient:
     async def get_streams(
         self,
         activity_id: str,
-        types: str = "time,heartrate,latlng,velocity_smooth,cadence,altitude,distance",
+        types: str = "time,heartrate,latlng,velocity_smooth,cadence,altitude,distance,watts,torque,temp",
     ) -> dict[str, list]:
+        requested = {t.strip() for t in types.split(",") if t.strip()}
         cached = self._cache.read_by_id("streams", activity_id)
         if cached is not None and isinstance(cached, dict):
-            return cached
+            # A cache entry only satisfies the call if it was fetched with at
+            # least the requested types — an entry cached before `watts` joined
+            # the defaults would otherwise silently report "no power stream".
+            covered = {
+                t.strip()
+                for t in (cached.get("_meta_requested_types") or "").split(",")
+                if t.strip()
+            }
+            if requested <= covered:
+                return {k: v for k, v in cached.items() if k != "_meta_requested_types"}
         data = await self._client.get_streams(activity_id, types)
-        self._cache.write_by_id("streams", activity_id, data)
+        self._cache.write_by_id(
+            "streams", activity_id, {**data, "_meta_requested_types": types}
+        )
         return data
 
     # --- Single event -------------------------------------------------------

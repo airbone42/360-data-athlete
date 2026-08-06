@@ -120,3 +120,37 @@ def test_coverage_is_tracked_per_subdir(client) -> None:
     c._cache.set_coverage_through("activities", TODAY.isoformat())
     assert c._cache.coverage_through("events") is None
     assert c._cache.coverage_through("notes") is None
+
+
+# ── get_streams cache-coverage of requested types ────────────────────────────
+
+
+class _StreamStub:
+    def __init__(self) -> None:
+        self.athlete_id = "i0"
+        self.calls: list[str] = []
+
+    async def get_streams(self, activity_id: str, types: str) -> dict[str, list]:
+        self.calls.append(types)
+        # only HR exists on this activity — watts absent from the response
+        return {"time": [0, 1], "heartrate": [120, 130]}
+
+
+def test_streams_cached_without_watts_are_refetched(client) -> None:
+    """An entry cached before `watts` joined the default types must not
+    satisfy a call that requests watts (would read as 'no power stream')."""
+    cached_client, _stub = client([])
+    stub = _StreamStub()
+    cached_client._client = stub
+
+    # legacy cache entry: no _meta_requested_types marker
+    cached_client._cache.write_by_id("streams", "i42", {"time": [0], "heartrate": [99]})
+
+    first = asyncio.run(cached_client.get_streams("i42"))
+    assert len(stub.calls) == 1 and "watts" in stub.calls[0]
+    assert "_meta_requested_types" not in first
+
+    # second call is now served from cache (marker covers the default set)
+    second = asyncio.run(cached_client.get_streams("i42"))
+    assert len(stub.calls) == 1
+    assert second == first
