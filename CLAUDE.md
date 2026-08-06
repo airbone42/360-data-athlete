@@ -145,6 +145,7 @@ hrvBaseline, hrvDeviation, rhrContext, rhrBaseline, rhrDeviation,
 combinedOverloadSignal, ctlTrend, cycleHint,
 zoneDistribution, weeklyZoneBalance, mesoLoadTrend, weatherInfo,
 intensityReadiness, daysSinceIntense, lastRestDay, runDayStreak,
+lastSessionEnd,
 athleteFeedback,
 eventList, raceInDays, dateStr,
 hrZones, hrvReviewPending, hrvReadiness, hrvCvTrend,
@@ -1005,14 +1006,15 @@ real recovery window into the decision:
   the same-day concurrent-interference rules: it governs the **systemic**
   recovery window between any two sessions, whatever the muscle groups.
 
-The signal is only reliable when the previous session's clock-time is
-actually consulted — a calendar-day gap alone hides a late-night → morning
-compression. When the timing is available in the activity history, use it;
-never estimate the recovery window from the date alone.
+The signal is mechanized: `context.lastSessionEnd` carries the previous
+session's end time (`endLocal`, from `start_date_local` + duration) and
+the elapsed `hoursSinceEnd` — read it before any intensity / sequencing
+decision instead of estimating the window from dates. A calendar-day gap
+alone hides a late-night → morning compression.
 
-*Enforcement: head-coach judgment; a `context_builder` field surfacing the
-previous session's end-time and computed hours-to-now would mechanize it
-(analogous to `daysSinceIntense`).*
+*Enforcement: `context_builder._compute_last_session_end` surfaces the
+field (analogous to `daysSinceIntense`); reading it before intensity
+decisions is head-coach judgment.*
 
 ### Hands-on therapy coverage check (mandatory)
 

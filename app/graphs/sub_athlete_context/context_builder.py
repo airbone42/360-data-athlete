@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import math
 import re
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from statistics import median, stdev
 
 logger = logging.getLogger(__name__)
@@ -266,6 +266,13 @@ def build_context(state: AthleteContextState) -> dict:
     # helper, so the planner and the validator cannot disagree about it.
     run_day_streak = compute_run_day_streak(activities, today)
 
+    # Inter-session recovery window — recovery is a function of elapsed
+    # clock-time, not calendar-day gap: a late-evening session before a
+    # morning session compresses the overnight window to well under a full
+    # day, which a date-only view cannot see. Computed in code so the
+    # planner reads the real window instead of estimating from dates.
+    last_session_end = _compute_last_session_end(activities)
+
     days_since_intense = _days_since(last_intense, today)
     hrv_cv = _compute_hrv_cv(wellness_history, today)
 
@@ -439,6 +446,7 @@ def build_context(state: AthleteContextState) -> dict:
         "daysSinceIntense": days_since_intense,
         "lastRestDay": last_rest_day,
         "runDayStreak": run_day_streak,
+        "lastSessionEnd": last_session_end,
         "athleteFeedback": athlete_feedback,
         "eventList": event_list,
         "raceInDays": race_in_days,
@@ -1396,6 +1404,48 @@ def _find_last_rest_day(activities: list[dict], today: date) -> str:
         if d not in activity_dates:
             return "yesterday" if i == 1 else f"{i} days ago"
     return "no rest day in the last 7 days"
+
+
+def _compute_last_session_end(
+    activities: list[dict], now: datetime | None = None
+) -> dict | None:
+    """End clock-time of the most recent finished session + hours since.
+
+    Mechanizes the "Inter-session recovery window" rule (framework
+    CLAUDE.md): two sessions on consecutive calendar days can be anywhere
+    from ~10 h to ~36 h apart depending on when each actually happened —
+    the planner must read the elapsed clock-time, never estimate the
+    window from dates alone.
+
+    Timestamps are athlete-local (`start_date_local`); `now` defaults to
+    server time, which the deployment keeps in the athlete's timezone.
+    Returns None when no parseable activity exists.
+    """
+    now = now or datetime.now()
+    best_end: datetime | None = None
+    best: dict | None = None
+    for a in activities:
+        raw = a.get("start_date_local")
+        if not raw:
+            continue
+        try:
+            start = datetime.fromisoformat(str(raw).split("+")[0].rstrip("Z"))
+        except ValueError:
+            continue
+        end = start + timedelta(seconds=a.get("moving_time") or 0)
+        if end > now:
+            continue  # scheduled / future artefacts
+        if best_end is None or end > best_end:
+            best_end, best = end, a
+    if best_end is None or best is None:
+        return None
+    hours = (now - best_end).total_seconds() / 3600
+    return {
+        "activityId": best.get("id"),
+        "activityName": best.get("name"),
+        "endLocal": best_end.isoformat(timespec="minutes"),
+        "hoursSinceEnd": round(hours, 1),
+    }
 
 
 def _days_since(activity: dict | None, today: date) -> int:
