@@ -1,6 +1,6 @@
 {
   "name": "aicoach-framework",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Multi-agent AI coach for endurance & strength athletes — runs entirely inside Claude Code.",
   "author": {
     "name": "Tobias Zander",
