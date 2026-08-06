@@ -281,7 +281,6 @@ def main() -> None:
         "fetch_context",
         display_name=display,
         date=args.date,
-        fresh_shoes=args.fresh_shoes,
     ):
         context = asyncio.run(_fetch_all(athlete_id, args.date))
         n_acts = len(context.get("activities", []))
@@ -290,7 +289,7 @@ def main() -> None:
         tsb = context.get("tsb") or "?"
         ctl = context.get("ctlDisplay") or context.get("ctl") or "?"
         set_span_io(
-            input={"date": args.date, "fresh_shoes": args.fresh_shoes},
+            input={"date": args.date},
             output=f"HRV={hrv} · RHR={rhr} · CTL={ctl} · TSB={tsb} · {n_acts} activities (4w)",
         )
     print(json.dumps(context, ensure_ascii=False, indent=2))
