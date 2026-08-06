@@ -204,28 +204,75 @@ class IntervalsClient:
         return data
 
     @traced("intervals.icu · fetch activity messages", kind="tool")
-    async def get_activity_messages(self, activity_id: str) -> list[dict]:
+    async def get_activity_messages(
+        self, activity_id: str, include_deleted: bool = False
+    ) -> list[dict]:
+        """List messages on an activity's chat.
+
+        Deleting a message only soft-deletes it (the API keeps it in the
+        list with a `deleted` timestamp) — those are filtered out unless
+        `include_deleted` is set.
+        """
         async with httpx.AsyncClient(auth=self._auth) as c:
             r = await c.get(f"{BASE_URL}/activity/{activity_id}/messages")
             r.raise_for_status()
             data = r.json()
+        if not include_deleted:
+            data = [m for m in data if not m.get("deleted")]
         set_span_io(
             input={"activity_id": activity_id},
             output=f"{len(data)} messages",
         )
         return data
 
-    @traced("intervals.icu · delete activity message", kind="tool")
-    async def delete_activity_message(self, chat_id: int, message_id: int) -> None:
-        """Delete an activity message via /chats/{chat_id}/messages/{message_id}.
+    @traced("intervals.icu · resolve activity chat", kind="tool")
+    async def get_activity_chat_id(self, activity_id: str) -> int | None:
+        """Resolve the chat id behind an activity's message thread.
 
-        chat_id is returned by post_activity_message in response['new_chat']['id'].
+        Message objects do NOT carry their chat id, and
+        post_activity_message returns `new_chat` only when the post
+        creates the chat (None on every later post). The only stable
+        source is /athlete/{id}/chats, whose ACTIVITY-type entries carry
+        `activity_id`. Returns None when the activity has no chat yet.
         """
+        norm_id = activity_id if str(activity_id).startswith("i") else f"i{activity_id}"
+        async with httpx.AsyncClient(auth=self._auth) as c:
+            r = await c.get(f"{BASE_URL}/athlete/{self.athlete_id}/chats")
+            r.raise_for_status()
+            chats = r.json()
+        chat_id = next(
+            (
+                ch["id"]
+                for ch in chats
+                if ch.get("type") == "ACTIVITY" and ch.get("activity_id") == norm_id
+            ),
+            None,
+        )
+        set_span_io(
+            input={"activity_id": norm_id},
+            output=f"chat_id={chat_id}",
+        )
+        return chat_id
+
+    @traced("intervals.icu · delete activity message", kind="tool")
+    async def delete_activity_message(self, activity_id: str, message_id: int) -> None:
+        """Soft-delete a message on an activity's chat.
+
+        Resolves the chat id via get_activity_chat_id (message objects
+        don't carry it), then DELETEs /chats/{chat_id}/messages/{id}.
+        The message stays in the raw list with a `deleted` timestamp;
+        get_activity_messages hides it by default.
+        """
+        chat_id = await self.get_activity_chat_id(activity_id)
+        if chat_id is None:
+            raise ValueError(
+                f"no activity chat found for {activity_id} — nothing to delete"
+            )
         async with httpx.AsyncClient(auth=self._auth) as c:
             r = await c.delete(f"{BASE_URL}/chats/{chat_id}/messages/{message_id}")
             r.raise_for_status()
         set_span_io(
-            input={"chat_id": chat_id, "message_id": message_id},
+            input={"activity_id": activity_id, "chat_id": chat_id, "message_id": message_id},
             output="OK",
         )
 
