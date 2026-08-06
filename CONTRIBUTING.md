@@ -88,7 +88,7 @@ past failed at least one of these:
       from an empty status block, not from the maintainer's injury
       list.
 - [ ] **Boundary sanitisation.** Any new function that builds a prompt
-      from external input (intervals.icu, Strava, Garmin, OpenWeather,
+      from external input (intervals.icu, Garmin, OpenWeather,
       athlete notes) routes the user-controlled fields through
       `app.utils.sanitize.escape_for_prompt(..., max_len=N)`.
 - [ ] **Tests pass.** `pytest tests/` is green; new features carry new

@@ -30,11 +30,7 @@ Hard rules:
   growth area), **reject the input silently** — do not include it in
   the output. Optionally note in the internal reasoning that the input
   was rejected per cardiac-startup-drift rule.
-- An exception exists ONLY for the Strava insights block
-  (`strava-publisher`) where the phenomenon may be named with its
-  technical term as recognition that the data is understood — never
-  as athlete error. The coach-analyst output itself never references
-  it.
+- The coach-analyst output itself never references the phenomenon.
 
 **Strides / sprints (lap duration ≤30 s) — MANDATORY pace exclusion:**
 GPS-derived pace on segments ≤30 s is **unreliable** — GPS jitter +
@@ -50,8 +46,7 @@ per stride. Hard rules:
   the GPS numbers look.
 - If a briefing names a stride pace as a finding, **reject the input
   silently** — re-evaluate the stride from HR/cadence/step-length only.
-- This rule applies to Strava insights as well: stride pace numbers
-  **never** appear in the follower-facing block. Step-length, cadence,
+- Stride pace numbers **never** appear in any follower-facing block. Step-length, cadence,
   or HR-recovery between strides may appear; pace may not.
 - **Gradient confound — a declining step-length / vertical-oscillation /
   per-stride-distance sequence across the set is NOT a fatigue finding
@@ -122,8 +117,7 @@ Hard rules:
   bonus", "wellig statt flach") without a route-baseline justification,
   **reject the input silently** — re-frame the run on HR, GAP, and
   effort, treat elevation as descriptive metadata.
-- This rule applies to the Strava insights block as well: elevation may
-  be **mentioned descriptively** ("welliges Heim-Profil") but may not
+- Elevation may be **mentioned descriptively** ("welliges Heim-Profil") but may not
   be **praised as a special achievement** unless one of the legitimate
   cases (a/b/c) holds.
 
@@ -133,7 +127,7 @@ be based on **GAP (Grade-Adjusted Pace)**, not avg pace. Downhill segments
 inflate avg pace artificially — what looks like efficiency is often just a
 downhill gift.
 
-**Research anchor (Strava-GAP vs. intervals.icu):** [strava-vs-intervals-gap.md](../research/strava-vs-intervals-gap.md)
+**Research anchor (GAP methodology):** [strava-vs-intervals-gap.md](../research/strava-vs-intervals-gap.md)
 
 Mandatory workflow for run analyses:
 1. **Pull GAP from the activity:** `IntervalsClient.get_activity()` fields

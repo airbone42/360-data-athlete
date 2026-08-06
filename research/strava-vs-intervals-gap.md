@@ -1,4 +1,4 @@
-# Strava-GAP vs. Intervals.icu-GAP vs. Minetti — algorithms, differences, application
+# GAP algorithm differences — Minetti vs. platform models (Strava-model and Intervals.icu)
 
 **Created:** 2026-05-16
 
@@ -16,7 +16,7 @@
    - Minetti shows **maximum easiness at -10.6%**, Strava sees a similar optimum.
    - Uphill adjustment is **pace-dependent in Strava** (faster runners have larger pace penalty per % gradient), Minetti is pace-agnostic.
 
-3. **Practical implication for our framework:** Strava-GAP is "real-world running performance"-optimised, Minetti is "caloric cost"-optimised. For training steering (Z2 pace, threshold pace) Strava-GAP is more sensible — for VO2 estimation Minetti would be cleaner. The `training_paradigms.md` convention "Strava-GAP" is defensively sensible.
+3. **Practical implication for our framework:** The Strava-model GAP is "real-world running performance"-optimised, Minetti is "caloric cost"-optimised. For training steering (Z2 pace, threshold pace) the Strava-model GAP is more sensible — for VO2 estimation Minetti would be cleaner. The `training_paradigms.md` convention "Strava-GAP" refers to this algorithm, not to the Strava API (no Strava API access is required to apply it).
 
 4. **Empirical drift on real sessions:** Strava-GAP typically deviates by ±5% from Intervals.icu-GAP, even though both nominally use the same Strava model — that's due to different DEM smoothing (Strava uses its own elevation data + smoothing, Intervals.icu uses Garmin/device data). On steep trail profiles the difference can grow to 10%.
 
@@ -27,10 +27,10 @@
 In `config.example/training_paradigms.md` (lines 70-97):
 > "Run analysis with elevation (≥30 m/km) → Strava-GAP as primary pace assessment. [...] Strava smoothing differs typically +5%."
 
-Empirical finding from real application: Strava-GAP differs from Intervals.icu-GAP. The source of the difference and algorithm details were not previously persisted.
+Empirical finding from real application: the Strava-model GAP differs from Intervals.icu-GAP. The source of the difference and algorithm details were not previously persisted.
 
 Questions:
-1. Which model does Strava use internally?
+1. Which model did Strava publish, and how is it implemented in intervals.icu?
 2. How does it relate to the Minetti 2002 standard?
 3. Why are there differences between Strava and Intervals.icu when both supposedly use the same model?
 4. Which model should be used for which use case?
@@ -116,25 +116,22 @@ Key observation: on steep downhill sections (> -10%) Minetti becomes clearly pac
 
 ### What is confirmed
 
-- **Strava-GAP as the primary pace source for trail analyses** (`training_paradigms.md`) is evidence-based sensible — real-world-performance-optimised.
-- **5% drift between Strava and Intervals.icu** is algorithm-consistent (same model, different elevation data) — no coach-error signal.
+- **The Strava-model GAP as the primary pace source for trail analyses** (`training_paradigms.md`) is evidence-based sensible — real-world-performance-optimised. No Strava API access is required to apply this; the algorithm is described in published Strava Engineering blog posts and implemented identically in intervals.icu.
+- **5% drift between the two implementations** is algorithm-consistent (same model, different elevation-data sources) — no coach-error signal.
 
 ### What should be changed / refined
 
 1. **`framework/config.example/training_paradigms.md`** — extend the GAP section:
-   - Clarification: Strava-GAP uses an empirically trained model (post-2017), not pure Minetti
+   - Clarification: the Strava-model GAP uses an empirically trained model (post-2017), not pure Minetti
    - Note: 5-10% drift to Intervals.icu is algorithm-related (elevation-data difference), not measurement error
    - Reference this doc
 2. **`framework/agents/specialist-endurance.md` and `coach-analyst.md`** — on trail analyses:
-   - Take pace anchor primarily from Strava-GAP
-   - If intervals.icu-GAP is cited: deliberately communicate the drift ("intervals.icu-GAP shows X, Strava-GAP shows Y — we take Strava as the more race-realistic source")
-3. **`framework/agents/strava-publisher.md`** — insights block on hilly sessions:
-   - Quote GAP pace when ≥30 m/km elevation present
-   - Source (Strava) implicit, no confusion with avg pace
+   - Take pace anchor primarily from the Strava-model GAP (as reported by intervals.icu or derived from the known algorithm)
+   - If intervals.icu-GAP is cited: deliberately communicate the drift ("intervals.icu-GAP shows X, Strava-model GAP shows Y — we take the Strava model as the more race-realistic source")
 
 ### What stays unchanged
 
-- **Intervals.icu pace training load** uses intervals.icu-internal GAP — this is consistent with our TSS values and should not be confused by Strava drift. Both anchors run in parallel.
+- **Intervals.icu pace training load** uses intervals.icu-internal GAP — this is consistent with our TSS values and should not be confused by algorithm drift. Both anchors run in parallel.
 
 ---
 

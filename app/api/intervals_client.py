@@ -189,9 +189,9 @@ class IntervalsClient:
 
     @traced("intervals.icu · update activity name", kind="tool")
     async def update_activity_name(self, activity_id: str, name: str) -> dict:
-        """Rename an existing activity. Used e.g. by `strava_pending` when an
-        Indoor-Activity carries an outdoor surface term in the title — keeps
-        the source-of-truth name coherent with the actual setting
+        """Rename an existing activity. Used e.g. when an Indoor-Activity
+        carries an outdoor surface term in the title — keeps the
+        source-of-truth name coherent with the actual setting
         (Forstweg ≠ Laufband)."""
         async with httpx.AsyncClient(auth=self._auth) as c:
             r = await c.put(f"{BASE_URL}/activity/{activity_id}", json={"name": name})

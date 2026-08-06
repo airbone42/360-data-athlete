@@ -647,7 +647,7 @@ planner directive (or override) must NOT carry calendar-week markers
 (`KW21`, `Week 21`, `Woche 21`). The activity timestamp already carries
 the date and the calendar week is derivable from it — the marker adds
 no information for the athlete in the activity feed and is pure noise
-once `strava-publisher` mirrors the title to Strava. Stimulus / phase
+in the activity feed. Stimulus / phase
 descriptors are allowed if they help recall ("Race-spezifisch",
 "Aufbau", "Konsolidierung"), but not the literal KW-number.
 

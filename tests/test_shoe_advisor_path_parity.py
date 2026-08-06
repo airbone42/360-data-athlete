@@ -28,7 +28,13 @@ from pathlib import Path
 import pytest
 
 from app.graphs import shoe_advisor
-from app.graphs.shoe_advisor import build_shoe_context, load_shoe_profiles
+from app.graphs.shoe_advisor import (
+    _compute_last_used,
+    build_shoe_context,
+    gear_to_shoes,
+    load_shoe_profiles,
+    profile_gear_key,
+)
 from app.graphs.sub_athlete_context.context_builder import (
     _apply_coach_gear_ssot,
     _build_shoe_planned_workouts,
@@ -64,12 +70,6 @@ _EQUIP_MD = """# Equipment
   recommended_tags: [tempo, intervals]
   threshold_km: 700
 """
-
-
-@pytest.fixture()
-def _isolate_shoe_log(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Prevent the local recommendation-log fallback from bleeding into fixtures."""
-    monkeypatch.setattr(shoe_advisor, "_SHOE_LOG", tmp_path / "no_shoe_log.json")
 
 
 @pytest.fixture()
@@ -213,7 +213,7 @@ def _shoes() -> list[dict]:
 
 
 def test_marker_reconstruction_matches_push_on_long_run(
-    _equipment: None, _isolate_shoe_log: None
+    _equipment: None
 ) -> None:
     """The context path (event → marker parse → advisor) must pick the same
     shoe as the push path (workout dict → advisor) for a LONG run."""
@@ -260,7 +260,7 @@ def test_marker_reconstruction_matches_push_on_long_run(
 
 
 def test_context_without_marker_diverges_from_push_on_long_run(
-    _equipment: None, _isolate_shoe_log: None
+    _equipment: None
 ) -> None:
     """Regression pin: without any recovery, the context path leaves surface
     empty / workout_type empty / intensity empty — the terrain filter still
@@ -298,7 +298,7 @@ def test_context_without_marker_diverges_from_push_on_long_run(
 
 
 def test_coach_gear_ssot_overrides_diverging_advisor_pick(
-    _equipment: None, _isolate_shoe_log: None
+    _equipment: None
 ) -> None:
     """Legacy event with only ``[coach-gear:…]`` (no coach-plan): the SSOT
     must promote the pinned shoe to primary so context converges on push."""
@@ -334,7 +334,7 @@ def test_coach_gear_ssot_overrides_diverging_advisor_pick(
 
 
 def test_coach_gear_ssot_noop_when_pinned_shoe_missing(
-    _equipment: None, _isolate_shoe_log: None
+    _equipment: None
 ) -> None:
     """Pin references a shoe not in the active fleet (retired, migrated,
     travel-subset excluded): SSOT stays silent, advisor's pick stands."""
@@ -357,7 +357,7 @@ def test_coach_gear_ssot_noop_when_pinned_shoe_missing(
 
 
 def test_coach_gear_ssot_noop_when_advisor_already_agrees(
-    _equipment: None, _isolate_shoe_log: None
+    _equipment: None
 ) -> None:
     """Advisor already picked the pinned shoe — SSOT does nothing, no
     duplicate demotion into alternative."""
@@ -376,3 +376,112 @@ def test_coach_gear_ssot_noop_when_advisor_already_agrees(
         ctx, [{"type": "Run", "_coach_gear_id": "gLONG"}]
     )
     assert ctx_after["shoeRecommendation"] == before
+
+
+# ── gear_to_shoes ─────────────────────────────────────────────────────────────
+
+def test_gear_to_shoes_filters_and_converts() -> None:
+    gear = [
+        {"id": "b1", "type": "Shoes", "name": "Runner", "distance": 250000, "retired": False},
+        {"id": "k9", "type": "Bike", "name": "Roadie", "distance": 9000000},
+    ]
+    shoes = gear_to_shoes(gear)
+    assert len(shoes) == 1
+    s = shoes[0]
+    assert s["gear_key"] == "b1"
+    assert "strava_id" not in s  # strava backend removed
+    assert s["distance_km"] == 250.0
+    assert s["retired"] is False
+
+
+# ── profile_gear_key ──────────────────────────────────────────────────────────
+
+def test_profile_gear_key_icu_gear_id() -> None:
+    p = {"icu_gear_id": "b5", "gear_id": "x5"}
+    # icu_gear_id wins over neutral gear_id; backend param is ignored
+    assert profile_gear_key(p, "intervals") == "b5"
+    assert profile_gear_key(p, "strava") == "b5"
+
+
+def test_profile_gear_key_neutral_fallback() -> None:
+    p = {"gear_id": "x7"}
+    assert profile_gear_key(p, "intervals") == "x7"
+    assert profile_gear_key(p, "strava") == "x7"
+
+
+# ── build_shoe_context with intervals backend ─────────────────────────────────
+
+def test_build_context_joins_on_icu_gear_id() -> None:
+    shoes = gear_to_shoes([
+        {"id": "b100", "type": "Shoes", "name": "Tempo Demo", "distance": 100000, "retired": False},
+    ])
+    profiles = [{
+        "icu_gear_id": "b100",
+        "name": "Tempo Demo",
+        "type": "tempo",
+        "role": "daily",
+        "terrain": "asphalt",
+        "pace_range_min_km": [3.0, 4.5],
+        "threshold_km": 600.0,
+    }]
+    planned = [{"type": "Run", "surface": "asphalt", "intensity": "z4", "workout_type": "WORKOUT"}]
+    ctx = build_shoe_context(
+        shoes=shoes,
+        profiles=profiles,
+        activities=[],
+        planned_workouts=planned,
+        weather_info="",
+        race_in_days=None,
+        today_str="2025-03-01",
+        backend="intervals",
+    )
+    primary = ctx["shoeRecommendation"]["primary"]
+    assert primary["gear_id"] == "b100"
+    assert primary["name"] == "Tempo Demo"
+    assert ctx["shoes"][0]["type"] == "tempo"
+
+
+# ── _compute_last_used ────────────────────────────────────────────────────────
+
+def test_compute_last_used_reads_nested_gear_object() -> None:
+    """intervals.icu returns an assigned shoe as a nested `gear` object."""
+    activities = [
+        {"start_date_local": "2025-03-01T09:00:00", "gear": {"id": "b100"}},
+        {"start_date_local": "2025-03-03T09:00:00", "gear": {"id": "b200"}},
+    ]
+    last = _compute_last_used(activities)
+    assert last["b100"] == "2025-03-01"
+    assert last["b200"] == "2025-03-03"
+
+
+def test_compute_last_used_flat_field_fallback() -> None:
+    """Legacy rows may still carry a flat gear_id."""
+    activities = [
+        {"start_date_local": "2025-03-01T09:00:00", "gear_id": "g100"},
+        {"start_date_local": "2025-03-02T09:00:00", "icu_gear_id": "g200"},
+        {"start_date_local": "2025-03-04T09:00:00", "gear": None},  # no gear → skipped
+    ]
+    last = _compute_last_used(activities)
+    assert last["g100"] == "2025-03-01"
+    assert last["g200"] == "2025-03-02"
+    assert "None" not in last
+
+
+# ── load_shoe_profiles: icu_gear_id marker ─────────────────────────────────────
+
+def test_parser_accepts_icu_gear_id_marker(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    md = tmp_path / "equipment.md"
+    md.write_text(
+        "## Laufschuhe\n"
+        "- icu_gear_id: b321\n"
+        '  name: "Demo Long"\n'
+        "  type: long\n"
+        "  threshold_km: 900\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(shoe_advisor, "_equipment_md_path", lambda: md)
+    profiles = load_shoe_profiles()
+    assert len(profiles) == 1
+    assert profiles[0]["icu_gear_id"] == "b321"
+    assert profiles[0]["name"] == "Demo Long"
+    assert profile_gear_key(profiles[0], "intervals") == "b321"

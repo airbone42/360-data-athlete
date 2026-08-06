@@ -61,12 +61,6 @@ _EQUIP_MD_TIE = """# Equipment
 """
 
 
-@pytest.fixture()
-def _isolate_shoe_log(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    # Ensure the local recommendation log never fills in a last_used value.
-    monkeypatch.setattr(shoe_advisor, "_SHOE_LOG", tmp_path / "no_shoe_log.json")
-
-
 def _equip(md: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     p = tmp_path / "equipment.md"
     p.write_text(md, encoding="utf-8")
@@ -77,7 +71,7 @@ _RUN = {"type": "Run", "tags": ["run"], "workout_type": "EASY", "surface": "asph
 
 
 def test_long_idle_shoe_outranks_recently_worn(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, _isolate_shoe_log: None
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """A shoe not seen in the window must beat one worn ~12 days ago."""
     _equip(_EQUIP_MD, tmp_path, monkeypatch)
@@ -106,7 +100,7 @@ def test_long_idle_shoe_outranks_recently_worn(
 
 
 def test_tie_break_prefers_less_worn(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, _isolate_shoe_log: None
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Two equally-rested (both idle) shoes → the less-worn one wins."""
     _equip(_EQUIP_MD_TIE, tmp_path, monkeypatch)

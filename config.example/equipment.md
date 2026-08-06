@@ -5,8 +5,7 @@
 
 ## Running shoes
 *(YAML-like list parsed by `shoe_advisor.load_shoe_profiles()`. Replace
-`strava_id` values with your real Strava gear IDs when you sync — or use
-`icu_gear_id` when the gear lives natively in intervals.icu. Demo IDs below
+`icu_gear_id` values with your real intervals.icu gear IDs. Demo IDs below
 let the framework run end-to-end without a gear connection.)*
 
 Optional per-shoe fields that steer the recommendation:
@@ -22,21 +21,21 @@ Optional per-shoe fields that steer the recommendation:
 Leave them unset to keep a shoe eligible everywhere — the defaults are
 permissive on purpose.
 
-- strava_id: g_demo_daily
+- icu_gear_id: b1234567
   name: "Demo Daily Trainer"
   role: daily
   type: easy
   surface: asphalt
   threshold_km: 800
 
-- strava_id: g_demo_tempo
+- icu_gear_id: b2345678
   name: "Demo Tempo Shoe"
   role: tempo
   type: tempo
   surface: asphalt
   threshold_km: 600
 
-- strava_id: g_demo_race
+- icu_gear_id: b3456789
   name: "Demo Race Carbon"
   role: race
   type: race
@@ -44,7 +43,7 @@ permissive on purpose.
   threshold_km: 250
   race_prep_days: 14
 
-- strava_id: g_demo_trail
+- icu_gear_id: b4567890
   name: "Demo Trail Shoe"
   role: trail
   type: trail

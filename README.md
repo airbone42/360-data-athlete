@@ -12,8 +12,8 @@ An **AI coach for endurance and strength athletes**, distributed as a
 specialised sub-agents (planner, three workout specialists, mental
 coach, video analyst, post-activity analyst, data scientist, plan
 validator, config auditor, two clinical consultants) collaborate to
-plan, push, and review training — grounded in intervals.icu, Strava,
-Garmin and (optionally) Telegram.
+plan, push, and review training — grounded in intervals.icu, Garmin
+and (optionally) Telegram.
 
 ### Framing
 
@@ -212,51 +212,7 @@ per session. The coach proposes **one** plan — no menu, no
 options-list. The athlete accepts (`ok`, `passt`, `go`, …) or pushes
 back; pushback re-enters the relevant pane. On accept, `push_workouts.py`
 serialises the workouts to intervals.icu (one event per workout, plus
-the daily balance-rotation unit). Once Strava picks the activities up,
-the `strava-publisher` agent (`/strava`) mirrors the names and adds a
-follower-facing insights block on endurance activities — invoked
-automatically as step 6.6 of `/analyse`, or manually any time.
-
-The insights block (2–4 lines of curated form/HR/pace insight plus a
-short footer) is **on by default** — Run / VirtualRun / Ride /
-VirtualRide activities get enriched on every push.
-
-The footer is the last line of the block and looks like:
-
-```
-Pondering by 360° Data Athlete
-```
-
-The leading word is a **random gerund** drawn fresh per push from a
-small wordlist ([`app/data/gerunds.json`](app/data/gerunds.json) —
-inspired by the Claude-Code CLI spinner vocabulary; *Beaming*,
-*Booping*, *Razzmatazzing*, ~250 entries). The suffix after it is a
-fixed string and doubles as the re-run idempotency anchor —
-`strava_pending.py` matches it literally to skip activities that have
-already been enriched.
-
-Three ENV variables control this, all in [`.env.example`](.env.example):
-
-- **`STRAVA_PUBLISH_ENABLED`** (default `false`) — master on/off switch
-  for the whole Strava title/insights sync. It ships **off** because
-  Strava has moved activity writes behind its updated developer-program
-  access: `PUT /activities/{id}` returns **403 Forbidden** for apps
-  without the `activity:write` scope (this is independent of your
-  personal Strava subscription). While disabled, `/strava` and
-  `/analyse` step 6.6 short-circuit cleanly — `strava_apply.py` skips
-  the write as a no-op and `strava_pending.py` reports nothing pending,
-  so no Strava call is made and no 403 surfaces. Set it to `true` only
-  once your Strava app actually holds write access.
-- **`STRAVA_PUBLISHER_FOOTER_ENABLED`** (default `true`) — set to
-  `false` to opt out entirely. The agent then mirrors the title only
-  and leaves the description untouched; no body lines, no footer.
-- **`STRAVA_PUBLISHER_FOOTER_SUFFIX`** (default `by 360° Data Athlete`) —
-  override the fixed suffix. The default carries the project name on
-  purpose — light open-source attribution surfacing in the follower's
-  feed when you push to public Strava. If you'd rather attribute to
-  your own coach setup (or no one at all), set
-  `STRAVA_PUBLISHER_FOOTER_SUFFIX="by My Coach"` in your `.env`. The
-  random-gerund prefix stays either way.
+the daily balance-rotation unit).
 
 The mechanical validator runs a second time inside `push_workouts.py`
 as a last-line defence — even if step 5 was skipped or the plan
@@ -345,14 +301,6 @@ modes are mostly visible at the right stage.
   stable enough for biomechanical analysis). Any drone with a working
   follow-me works; phone-on-tripod gives you only one angle and no
   fresh-vs-fatigued comparison.
-- **Strava account (optional)** — only needed for the legacy `strava`
-  gear backend and for the title/insights sync (`/strava`, mirrors
-  intervals.icu names to Strava). The title/insights sync is **off by
-  default** (`STRAVA_PUBLISH_ENABLED=false`) since Strava now returns
-  403 on activity writes for apps without `activity:write` scope; enable
-  it only once your Strava app holds write access. The default shoe
-  backend `intervals` (`SHOE_TRACKING_BACKEND` in `.env.example`) uses
-  native intervals.icu gear and needs no Strava access at all.
 - **Telegram bot** if you want to talk to the coach from your phone.
 - **OpenRouter API key** — required for the video form check
   (`scripts/analyse_video.py` calls Gemini through OpenRouter) and used
@@ -575,15 +523,6 @@ descriptions back into `config/exercise_progressions.md`, so a 2s→3s
 hold progression doesn't sit silently in the activity stream while the
 spec still says 2s.
 
-### `/aicoach-framework:strava` — Sync titles + insights to Strava
-
-Mirrors intervals.icu workout names to Strava (all activity types) and
-writes the follower-facing insights block on endurance activities via
-the `strava-publisher` agent. Idempotent — re-runs skip activities that
-already carry the configured footer suffix. Runs automatically as step
-6.6 of `/analyse`; manual forms: `/strava`, `/strava --days 7`,
-`/strava --activity-id i...`, `/strava --dry-run`.
-
 ### `/aicoach-framework:pull` — Fetch git remote
 
 Fast-forward pull on the configured default branch. Generic — works
@@ -639,11 +578,12 @@ Athlete-specific overrides go in your `config/training_paradigms.md`.
 │       config-auditor / config-fixer (on /audit)                │
 │       physio-consultant / sports-ortho-consultant              │
 │                                                                │
-└────────┬───────────────┬────────────────┬──────────────────────┘
-         │               │                │
-   intervals.icu      Strava           Garmin             Telegram
-   (workouts +        (gear,           (FIT files,        (chat
-    wellness)          activities)      streams)           channel)
+└────────┬───────────────┬────────────────────────────────────────┘
+         │               │
+   intervals.icu      Garmin             Telegram
+   (workouts +        (FIT files,        (chat
+    wellness +         streams)           channel)
+    gear)
 ```
 
 Each agent runs in its own pane with fresh context. The head coach is
@@ -667,7 +607,6 @@ outputs, and applies cross-workout consistency rules before pushing.
 | `config-fixer` | Implements one audit finding at a time, with approval log | `/audit` after auditor handoff | one finding YAML + audit report path | diff applied + approval log entry + report mark |
 | `physio-consultant` | Physiotherapy consultation on injuries / symptoms | athlete invokes manually | symptoms, training history, athlete_static | rehab / load / red-flag assessment (≤ 300 words, with disclaimer) |
 | `sports-ortho-consultant` | Orthopaedic consultation, imaging indication | athlete invokes manually | symptoms, training history, athlete_static | differential diagnoses + imaging + return-to-sport (≤ 300 words, with disclaimer) |
-| `strava-publisher` | Mirrors intervals.icu titles to Strava + follower-facing insights block on endurance activities | `/strava`, or automatically as `/analyse` step 6.6 | `strava_pending.py` candidates, `fetch_activity.py`, `strava_coupling.py` | title update + 2–4 line insights block + gerund footer |
 
 **Specialization without inheritance.** Plugin agents are generic and
 read all athlete-specific facts (PRs, HR zones, injury restrictions,
@@ -768,7 +707,7 @@ or move on.
 This is an experimental system. Read [SECURITY.md](SECURITY.md) before
 exposing it to data you care about. Key points:
 
-- External text from intervals.icu NOTEs, Strava / Garmin activities,
+- External text from intervals.icu NOTEs, Garmin activities,
   and athlete messages is **escaped** before injection into LLM prompts
   (`app/utils/sanitize.py`), but this is hygiene, not a hardened
   defence.

@@ -52,7 +52,7 @@ Three patterns of override apply:
 | `athlete_static.md` | EN — Alex Demo | 35y / 70 kg recreational athlete |
 | `athlete_status.md` | EN — generic | LTHR/zones template |
 | `athlete_preferences.md` | EN — generic | defaults + acceptance phrases |
-| `equipment.md` | EN — generic | demo shoe profiles in YAML, no Strava IDs |
+| `equipment.md` | EN — generic | demo shoe profiles in YAML with placeholder `icu_gear_id` values |
 | `competition_plan.md` | EN — empty template | one example race |
 | `exercise_log.md` | EN — empty | filled by `scripts/analyse_video.py` |
 | `recovery_protocol.md` | EN — generic | deload-week defaults |

@@ -1,7 +1,8 @@
 """Defensive escaping for text from external sources before injection into prompts.
 
 External text — athlete notes from intervals.icu, activity descriptions from
-Strava/Garmin, exercise descriptions parsed from workout files — can contain
+third-party sync sources (e.g. Garmin), exercise descriptions parsed from
+workout files — can contain
 markdown control characters, format-string placeholders ({...}), or even
 instructions that look like prompt directives (`# system:`, etc.).
 

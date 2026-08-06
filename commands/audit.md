@@ -2,14 +2,14 @@
 
 Scans the coach system for contradictions between `config/` files,
 sub-agents, prompts, the exercise mapping, and external sources
-(intervals.icu NOTEs, Strava). Findings are refined by the
+(intervals.icu NOTEs). Findings are refined by the
 `config-auditor` (fresh context) and written as a markdown report to
 `data/audits/`. Fixes go through the `config-fixer` (fresh context)
 after athlete approval.
 
 ## Arguments
 $ARGUMENTS
-Optional: `--offline` (skip intervals.icu + Strava roundtrip — faster,
+Optional: `--offline` (skip intervals.icu roundtrip — faster,
 but NOTE drift and shoes are not checked).
 
 ---
@@ -19,7 +19,7 @@ but NOTE drift and shoes are not checked).
 ### Step 1: Run the mechanical scanner
 
 Default is online — the most important drift sources (NOTE-vs-static,
-Strava shoes) need API access.
+intervals.icu gear/shoes) need API access.
 
 ```bash
 python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/audit_consistency.py > /tmp/audit_raw.json

@@ -151,14 +151,8 @@ blocks any bare `python3 scripts/...` from sneaking back into
 | `download_fit.py` | Download FIT file from Garmin |
 | `parse_fit.py` | Parse FIT (laps + records) |
 | `build_sub_laps.py` | Sub-lap windows with surface data |
-| `fetch_shoes.py` | Strava shoes + profile check against `equipment.md` (legacy `strava` backend) |
-| `shoe_recommend.py` | Shoe recommendation after plan push (legacy `strava` backend footer) |
-| `migrate_shoes_strava_to_intervals.py` | One-time: mirror Strava shoe fleet (status + mileage) into intervals.icu gear |
 | `set_activity_gear.py` | Assign the recommended shoe to a finished activity (intervals backend, `/analyse` 6.55) |
-| `strava_auth.py` | One-time Strava OAuth2 flow |
-| `strava_pending.py` | List Strava activities pending title/insights update (read; optional intervals.icu surface-mismatch rename) |
-| `strava_coupling.py` | Detect same-day Koppeleinheit (Rad/Beine/Doppellauf) before an activity |
-| `strava_apply.py` | Push title/description to one Strava activity (with idempotency safety net) |
+| `shoe_recommend.py` | Shoe recommendation after plan push |
 | `sync_description_drift.py` | Sync athlete description edits back into `config/exercise_progressions.md` (sets/reps/duration/weight + hold-time/TUT vector) |
 | `extract_run_dynamics.py` | Garmin running dynamics for video time window |
 | `warmup_cache.py` | Pre-populate intervals.icu file cache |
@@ -257,7 +251,6 @@ otherwise                         →  specialist-complementary
 | `config-fixer` | Audit-finding remediation with approval log |
 | `physio-consultant` | Injury consultation (physiotherapy view) |
 | `sports-ortho-consultant` | Injury consultation (orthopaedic view) |
-| `strava-publisher` | Mirrors intervals.icu titles to Strava and writes a follower-facing insights block on endurance activities |
 
 ### Collaborative pane model
 
@@ -309,7 +302,7 @@ numbers.
 
 ### Briefing rule — head coach does not seed measurement artifacts as findings (mandatory)
 
-When briefing `coach-analyst` (or `strava-publisher`) on a run, the head
+When briefing `coach-analyst` on a run, the head
 coach **never** lists the following as growth areas, strengths, or
 talking points:
 
@@ -343,14 +336,10 @@ talking points:
    is a clear outlier vs. the type-history median. Otherwise: elevation
    is descriptive metadata, not a finding.
 
-The corresponding agent contracts (`coach-analyst.md`,
-`strava-publisher.md`) require the agents to **reject** these inputs
-silently if they appear in a briefing — but the head coach removes the
-risk at the source by not listing them. All three rules apply to every
-run analysis; the exception that the cardiac startup drift may be
-**named with its technical term** in Strava insights (recognition that
-the data is understood, never as athlete error) is documented in
-`strava-publisher.md`.
+The corresponding agent contract (`coach-analyst.md`) requires the agent
+to **reject** these inputs silently if they appear in a briefing — but
+the head coach removes the risk at the source by not listing them. All
+three rules apply to every run analysis.
 
 **Drift incident pattern** (canonical case to learn from): an Easy-Z2
 plan listed `surface: forest-path` for routing/shoe purposes; the head
@@ -1371,11 +1360,7 @@ shoe advisor gets gear, mileage, and active/retired status:
   accumulated by intervals.icu from each activity's `gear_id`; the coach
   assigns the recommended shoe to the *finished* activity in `/analyse`
   step 6.55 (`set_activity_gear.py`). equipment.md profiles join on
-  `icu_gear_id`. No Strava app required.
-- **`strava`** (legacy) — Strava gear API; the recommendation is appended
-  as a text footer to Run events at push time; profiles join on
-  `strava_id`; `shoe_log.json` is the offline fallback. Kept for consumers
-  who still have Strava API access.
+  `icu_gear_id`.
 - **`off`** — advisor disabled.
 
 `SHOE_IGNORE_DEVICE_GEAR` (default `false`) decides who owns the gear field
@@ -1388,10 +1373,6 @@ while that default names a shoe still in the fleet the phantom heuristic
 cannot see it, so the coach pick is dropped silently and the rotation
 mileage accrues to the wrong shoe. `--force` and an explicit `--gear-id`
 are unaffected in both modes.
-
-One-time migration of an existing Strava fleet into intervals.icu gear:
-`migrate_shoes_strava_to_intervals.py` (writes a `strava_id → icu_gear_id`
-mapping for the equipment.md update).
 
 ---
 
@@ -1485,18 +1466,6 @@ python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/get_balance_rotation.py --date YYYY-M
 
 **No advance planning.** Plans are always created same-day, based on the
 current HRV, sleep, and athlete feeling. Never plan ahead in bulk.
-
-**Strava publishing after analysis (mandatory):** When `/analyse` runs,
-step 6.6 launches the `strava-publisher` agent. The agent mirrors the
-intervals.icu workout name to Strava (every type) and — for `Run`,
-`VirtualRun`, `Ride`, `VirtualRide` — composes a follower-facing
-insights block (3–5 lines, German by default, footer
-`{Random-Gerund} {STRAVA_PUBLISHER_FOOTER_SUFFIX}`; suffix default
-`by 360° Data Athlete` — project-brand attribution, configurable via
-ENV; whole block can be turned off via
-`STRAVA_PUBLISHER_FOOTER_ENABLED=false`). The footer line serves as
-the idempotency anchor: re-runs are silent no-ops. Manual invocation
-remains available any time via `/strava [--days N | --activity-id ID]`.
 
 ---
 
@@ -1878,7 +1847,7 @@ register in `RULES`. Auditable via `audit_consistency.py`.
 Reproducible drift scanner:
 
 1. `scripts/audit_consistency.py` — mechanical checks (HR zones, orphan
-   muscle IDs, unmapped exercises, NOTE vs. static, Strava shoes,
+   muscle IDs, unmapped exercises, NOTE vs. static, shoe profiles vs intervals.icu gear,
    hard-coded restrictions, recovery-week consistency, cross-source config
    drift, log-vs-history, **override-drift** between framework defaults and
    wrapper overrides for `training_paradigms.md` / `exercise_progressions.md`).
@@ -1896,7 +1865,7 @@ Audit reports are committed — audit history stays in the repo.
 
 Notify the athlete via the active channel for:
 - Permission Denied on cache/data/config files
-- API errors (5xx, auth, timeout) at intervals.icu / Garmin / Strava
+- API errors (5xx, auth, timeout) at intervals.icu / Garmin
 - Stale cache (> 48 h while fresh data expected)
 - Missing env vars / config files
 - Script errors that touch training data or planning

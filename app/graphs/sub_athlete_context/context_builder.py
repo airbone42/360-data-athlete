@@ -170,7 +170,6 @@ def _apply_coach_gear_ssot(shoe_ctx: dict, planned_workouts: list[dict]) -> dict
     reasons.append("push-time pick (coach-gear marker)")
     new_primary = {
         "gear_id": pinned_shoe.get("gear_key"),
-        "strava_id": pinned_shoe.get("strava_id"),
         "name": pinned_shoe.get("name"),
         "distance_km": pinned_shoe.get("distance_km"),
         "pct_used": pinned_shoe.get("pct_used"),
@@ -325,10 +324,9 @@ def build_context(state: AthleteContextState) -> dict:
     skipped_workouts = _find_skipped_workouts(activities, state["workouts"], today)
 
     # Shoe context (optional — degrades silently if no shoe backend configured).
-    # `shoes` is the backend-neutral shoe list assembled by fetch_context
-    # (`strava_shoes` key kept for back-compat); the join key is selected by
-    # `shoe_tracking_backend` (intervals → icu_gear_id, strava → strava_id).
-    shoe_list: list[dict] = state.get("shoes") or state.get("strava_shoes") or []
+    # `shoes` is the shoe list assembled by fetch_context from intervals.icu
+    # gear; profiles join on `icu_gear_id`.
+    shoe_list: list[dict] = state.get("shoes") or []
     shoe_profiles = load_shoe_profiles()
     shoe_ctx: dict = {}
     if shoe_list:
@@ -427,7 +425,7 @@ def build_context(state: AthleteContextState) -> dict:
         "skippedWorkouts": skipped_workouts,
         "systemPrompt": system_prompt,
         "dataWarnings": warnings,
-        # Shoe context (empty dicts/lists when Strava not configured)
+        # Shoe context (empty dicts/lists when no shoe backend configured)
         "shoes": shoe_ctx.get("shoes", []),
         "shoeRecommendation": shoe_ctx.get("shoeRecommendation", {}),
         "shoeWarnings": shoe_ctx.get("shoeWarnings", []),
@@ -451,7 +449,7 @@ def build_context(state: AthleteContextState) -> dict:
 def _summarize_activity(a: dict) -> dict:
     """Reduce a full activity object to the fields the planner actually needs.
 
-    `name` and `event_description` are athlete-/Strava-roundtrip-controlled
+    `name` and `event_description` are athlete-/third-party-roundtrip-controlled
     and end up in specialist briefings → sanitize at this write boundary
     (mirrors history_fetcher._format_activity).
     """
@@ -1486,7 +1484,7 @@ def _summarize_today_workouts(events: list[dict], today: date) -> list[dict]:
     """Return compact summaries of today's planned WORKOUT events.
 
     `name` is athlete-roundtrip-controlled via intervals.icu event edits and
-    Strava description sync → sanitize at this write boundary.
+    third-party description sync → sanitize at this write boundary.
     """
     from app.utils.sanitize import escape_for_prompt
 

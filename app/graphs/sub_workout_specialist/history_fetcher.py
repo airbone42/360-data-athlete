@@ -162,9 +162,10 @@ def _slim_activity(activity: dict, *, is_endurance: bool = False) -> dict:
     Messages (endurance only) are preserved if already attached.
 
     `description` and `messages` flow directly into the specialist briefing.
-    Since both coach-authored content and Strava-roundtrip-writeable fields
-    are mixed in, external text fields are sanitised before the briefing
-    (LLM injection hardening — same vector as athleteFeedback).
+    Since both coach-authored content and externally-writeable fields
+    (athlete edits, third-party sync roundtrips) are mixed in, external text
+    fields are sanitised before the briefing (LLM injection hardening — same
+    vector as athleteFeedback).
     """
     from app.utils.sanitize import escape_for_prompt
 

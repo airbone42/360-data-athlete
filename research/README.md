@@ -101,7 +101,7 @@ What the research did NOT clarify — and what should be checked next.
 | 2026-05-16 | Downhill running — eccentric damage, DOMS timeline, taper recommendation | [downhill-running-doms-taper.md](downhill-running-doms-taper.md) | active |
 | 2026-05-16 | DFA-α1 — non-linear HRV index for threshold estimation | [dfa-alpha1-vt-estimation.md](dfa-alpha1-vt-estimation.md) | active |
 | 2026-05-16 | Concurrent training interference — strength + endurance temporal order | [concurrent-training-interference.md](concurrent-training-interference.md) | active |
-| 2026-05-16 | Strava GAP vs. Intervals.icu GAP vs. Minetti — algorithms, differences | [strava-vs-intervals-gap.md](strava-vs-intervals-gap.md) | active |
+| 2026-05-16 | GAP algorithm differences — Minetti vs. platform models (Strava-model and Intervals.icu); no Strava API required | [strava-vs-intervals-gap.md](strava-vs-intervals-gap.md) | active |
 | 2026-05-16 → 2026-05-17 | Strides — neuromuscular priming, running economy, format parametrisation (Paavolainen 1999, stop conditions, 4-vs-6 dosing) | [strides-protocol.md](strides-protocol.md) | active |
 | 2026-05-17 | Cardiac startup drift — minute-0–10 HR transient (onset overshoot + cardiac-output lag + strap dry-contact); 10-min exclusion convention | [cardiac-startup-drift.md](cardiac-startup-drift.md) | active |
 | 2026-05-16 | DOMS — peak timing, recovery window, 3-day validator window | [doms-peak-timing.md](doms-peak-timing.md) | active |

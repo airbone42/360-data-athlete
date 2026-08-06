@@ -1,7 +1,7 @@
 """Shoe advisor — recommendation, rotation, gap detection.
 
 Input:
-    shoes       — list of enriched shoe dicts from StravaClient.list_shoes()
+    shoes       — list of enriched shoe dicts from gear_to_shoes()
     activities  — last 14 days of intervals.icu activities (for rotation)
     workouts    — planned workouts for today (list of workout dicts from planner)
     weather     — weatherInfo string from context_builder
@@ -69,11 +69,10 @@ def load_shoe_profiles() -> list[dict]:
     """Parse shoe profiles from config/equipment.md.
 
     Profiles are YAML-like bullet lists under '## Laufschuhe'. A profile
-    entry starts with an id line — `icu_gear_id:` (intervals.icu backend,
-    the default), `strava_id:` (legacy Strava backend), or the neutral
-    `gear_id:`. A profile may carry both ids during the migration window:
+    entry starts with an id line — `icu_gear_id:` (intervals.icu gear id)
+    or the neutral `gear_id:`. The legacy `strava_id:` key is still
+    tolerated on read so old files keep parsing, but carries no meaning:
         - icu_gear_id: 'b1234567'
-          strava_id: g123          # legacy, kept for reference
           name: "..."
           type: tempo
           role: daily
@@ -193,13 +192,11 @@ def _parse_kv(line: str, target: dict) -> None:
 # ── Backend-agnostic gear key ───────────────────────────────────────────────────
 
 def profile_gear_key(profile: dict, backend: str) -> str:
-    """Return the id a profile joins on for the active backend.
+    """Return the id a profile joins on: `icu_gear_id` (fallback neutral `gear_id`).
 
-    intervals backend → `icu_gear_id` (fallback neutral `gear_id`).
-    strava backend    → `strava_id`.
+    `backend` is kept in the signature for call-site stability; the only
+    remaining data backend is intervals.icu.
     """
-    if backend == "strava":
-        return str(profile.get("strava_id") or profile.get("gear_id") or "")
     return str(profile.get("icu_gear_id") or profile.get("gear_id") or "")
 
 
@@ -225,10 +222,8 @@ def is_retired(raw: object) -> bool:
 def gear_to_shoes(gear_list: list[dict]) -> list[dict]:
     """Map intervals.icu gear objects to the advisor's shoe-dict shape.
 
-    Keeps only `type == "Shoes"`. intervals.icu gear `distance` is in metres
-    (same as the Strava gear API), converted to km here. The gear `id`
-    becomes `gear_key` (the join key) — and is also mirrored to `strava_id`
-    so legacy field reads keep working in the intervals path.
+    Keeps only `type == "Shoes"`. intervals.icu gear `distance` is in metres,
+    converted to km here. The gear `id` becomes `gear_key` (the join key).
     """
     shoes: list[dict] = []
     for g in gear_list:
@@ -239,7 +234,6 @@ def gear_to_shoes(gear_list: list[dict]) -> list[dict]:
             continue
         shoes.append({
             "gear_key": gid,
-            "strava_id": gid,  # generic id alias for legacy field reads
             "name": g.get("name") or "",
             "distance_km": round((g.get("distance") or 0) / 1000, 1),
             "retired": is_retired(g.get("retired")),
@@ -251,10 +245,10 @@ def gear_to_shoes(gear_list: list[dict]) -> list[dict]:
 # ── Last-used lookup ──────────────────────────────────────────────────────────
 
 def _compute_last_used(activities: list[dict]) -> dict[str, str]:
-    """Return {strava_id: last_used_date_str} from intervals.icu activities.
+    """Return {gear_id: last_used_date_str} from intervals.icu activities.
 
     intervals.icu exposes an assigned shoe as a nested `gear` object
-    ({"id": ...}); older/Strava-synced rows may carry a flat `gear_id` /
+    ({"id": ...}); older imported rows may carry a flat `gear_id` /
     `icu_gear_id`. Read the nested id first, fall back to the flat fields.
     Falls back gracefully if gear info is absent.
     """
@@ -267,52 +261,6 @@ def _compute_last_used(activities: list[dict]) -> dict[str, str]:
         if date_str:
             last[str(gear_id)] = date_str
     return last
-
-
-from app.utils.paths import DATA_DIR as _DATA_DIR_ALIAS
-_SHOE_LOG = _DATA_DIR_ALIAS / "shoe_log.json"
-
-
-def _merge_shoe_log(last_used: dict[str, str], today_str: str) -> dict[str, str]:
-    """Fill gaps in last_used (from Strava gear_id) with local shoe-log fallback.
-
-    Strava gear_id is the source of truth for what was actually worn. The local
-    log only tracks coach *recommendations* and is therefore used solely to
-    fill in shoes that the Strava lookup did not cover (e.g. shoes not worn in
-    the activities window, or Strava temporarily unavailable).
-    """
-    try:
-        if not _SHOE_LOG.exists():
-            return last_used
-        import json
-        log: dict[str, str] = json.loads(_SHOE_LOG.read_text(encoding="utf-8"))
-        merged = dict(last_used)
-        for sid, log_date in log.items():
-            if sid not in merged:
-                merged[sid] = log_date
-        return merged
-    except Exception:
-        return last_used
-
-
-def write_shoe_log(strava_id: str, date_str: str) -> None:
-    """Persist recommended shoe as fallback when Strava activities are unavailable.
-
-    Only call this when recent Strava activities could not be fetched — otherwise
-    the recommendation log would shadow the real `gear_id` data and skew rotation
-    (every recommendation would count as 'worn today').
-    """
-    import json
-    try:
-        _SHOE_LOG.parent.mkdir(parents=True, exist_ok=True)
-        log: dict[str, str] = {}
-        if _SHOE_LOG.exists():
-            log = json.loads(_SHOE_LOG.read_text(encoding="utf-8"))
-        if log.get(strava_id, "") < date_str:
-            log[strava_id] = date_str
-        _SHOE_LOG.write_text(json.dumps(log, indent=2, ensure_ascii=False))
-    except Exception as e:
-        logger.warning("shoe_log write failed: %s", e)
 
 
 # ── Terrain detection ─────────────────────────────────────────────────────────
@@ -417,7 +365,7 @@ def _score_shoe(
     keys = set(workout_keys or ())
     if workout_type:
         keys.add(workout_type.lower())
-    sid = profile.get("gear_key") or str(profile.get("strava_id") or "")
+    sid = str(profile.get("gear_key") or "")
     threshold = float(profile.get("threshold_km", 800))
     distance_km = shoe.get("distance_km", 0)
     pct = distance_km / threshold if threshold else 0
@@ -517,23 +465,21 @@ def build_shoe_context(
     weather_info: str,
     race_in_days: int | None,
     today_str: str,
-    backend: str = "strava",
+    backend: str = "intervals",
 ) -> dict:
     """Build shoe context dict for context_builder output.
 
-    `backend` selects the join key between shoe data and equipment.md
-    profiles: 'intervals' joins on `icu_gear_id`, 'strava' on `strava_id`
-    (see `profile_gear_key`). Both reduce to a per-item `gear_key`, so the
-    scoring/rotation logic below is backend-agnostic.
+    Profiles join shoe data on `icu_gear_id` (see `profile_gear_key`); both
+    sides reduce to a per-item `gear_key` for the scoring/rotation logic.
 
     Returns:
         shoes, shoeRecommendation, shoeWarnings, shoeFleetWarning
     """
-    # Reduce every profile and shoe to a single join key for the backend.
+    # Reduce every profile and shoe to a single join key.
     for p in profiles:
         p["gear_key"] = profile_gear_key(p, backend)
     for s in shoes:
-        s.setdefault("gear_key", str(s.get("strava_id") or ""))
+        s.setdefault("gear_key", str(s.get("gear_id") or ""))
 
     profile_map = {p["gear_key"]: p for p in profiles if p.get("gear_key")}
     shoe_map = {s["gear_key"]: s for s in shoes if s.get("gear_key")}
@@ -565,8 +511,6 @@ def build_shoe_context(
             )
 
     last_used = _compute_last_used(activities)
-    # Merge local shoe log (fallback when intervals.icu gear_id is absent)
-    last_used = _merge_shoe_log(last_used, today_str)
 
     # Enrich active shoes with computed fields
     enriched: list[dict] = []
@@ -596,7 +540,7 @@ def build_shoe_context(
             continue  # race shoes: higher threshold, don't warn on standard %
         if s["pct_used"] >= 80:
             warnings.append({
-                "strava_id": s["strava_id"],
+                "gear_id": s["gear_key"],
                 "name": s["name"],
                 "distance_km": s["distance_km"],
                 "threshold_km": s["threshold_km"],
@@ -645,7 +589,6 @@ def build_shoe_context(
                 reasons.append(f"type: {p.get('type', '?')}, terrain: {p.get('terrain', '?')}")
             return {
                 "gear_id": s["gear_key"],
-                "strava_id": s.get("strava_id"),  # legacy alias
                 "name": s["name"],
                 "distance_km": s["distance_km"],
                 "pct_used": s["pct_used"],

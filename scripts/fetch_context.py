@@ -25,7 +25,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.api.intervals_cache import CachedIntervalsClient as IntervalsClient
 from app.api.intervals_client import IntervalsClient as RawIntervalsClient
-from app.api.strava_client import StravaClient, bust_shoes_cache
 from app.config import settings
 from app.graphs.shoe_advisor import SHOE_ADVISOR_LOOKBACK_DAYS, gear_to_shoes
 from app.graphs.sub_athlete_context.context_builder import build_context
@@ -112,25 +111,14 @@ async def _fetch_all(athlete_id: str, date_str: str) -> dict:
     # Fetch wellness, activities, workouts (past events), upcoming events, history, settings, notes
     # + shoe data (optional, degrades gracefully) — all in parallel.
     # Shoe source is selected by SHOE_TRACKING_BACKEND:
-    #   intervals (default) — native intervals.icu gear (no Strava needed)
-    #   strava (legacy)     — Strava gear API
+    #   intervals (default) — native intervals.icu gear
     #   off                 — no shoe context
-    strava_client = StravaClient()
-
     async def _fetch_shoes() -> list[dict]:
         backend = settings.shoe_tracking_backend
         log = logging.getLogger(__name__)
         if backend == "off":
             return []
-        if backend == "strava":
-            if not settings.strava_client_id or not settings.strava_refresh_token:
-                return []
-            try:
-                return await strava_client.list_shoes()
-            except Exception as e:
-                log.warning("strava shoes fetch failed: %s", e)
-                return []
-        # Default: intervals.icu native gear (uncached — gear list is small).
+        # intervals.icu native gear (uncached — gear list is small).
         try:
             gear = await RawIntervalsClient(athlete_id).list_gear()
             return gear_to_shoes(gear)
@@ -192,7 +180,6 @@ async def _fetch_all(athlete_id: str, date_str: str) -> dict:
         "athlete_settings": athlete_settings,
         "notes": notes,
         "shoes": shoes,
-        "strava_shoes": shoes,  # back-compat alias for older readers
         "shoe_activities": shoe_activities,
         "context_summary": {},
         "deload_state": deload_state,
@@ -216,7 +203,7 @@ async def _fetch_all(athlete_id: str, date_str: str) -> dict:
         recent_acts = activities[-50:] if activities else []
         drift_findings = check_log_vs_history(recent_acts)
         if drift_findings:
-            # `evidence` carries activity-description excerpts (Strava-roundtrip-
+            # `evidence` carries activity-description excerpts (third-party-roundtrip-
             # reachable, so athlete-/third-party-controlled) → sanitize at this
             # write boundary before the dict lands in the planner prompt.
             context["configDrift"] = [
@@ -284,10 +271,7 @@ def main() -> None:
 
     parser = argparse.ArgumentParser(description="Fetch athlete context JSON")
     parser.add_argument("--date", default=date.today().isoformat(), help="Date YYYY-MM-DD")
-    parser.add_argument("--fresh-shoes", action="store_true", help="Bust Strava shoe cache before fetching")
     args = parser.parse_args()
-    if args.fresh_shoes:
-        bust_shoes_cache()
 
     _refresh_muscle_log()
 

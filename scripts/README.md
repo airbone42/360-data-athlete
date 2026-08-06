@@ -53,9 +53,6 @@ through `app/utils/paths.py` — set `COACH_HOME`, `CONFIG_DIR`,
 | `build_sub_laps.py` | Build sub-lap windows with surface data | `echo '<streams+records JSON>' \| python3 scripts/build_sub_laps.py` | stdin | stdout JSON |
 | `extract_run_dynamics.py` | Garmin running dynamics for a video time window | `--activity-id ... --start-s 600 --end-s 720` | FIT file | stdout JSON |
 | `analyse_video.py` | Video form check via Gemini (OpenRouter) | `--video <path> --exercise "<name>"` | video file, `OPENROUTER_API_KEY` | stdout markdown |
-| `strava_pending.py` | List Strava activities pending title/insights update | `--days 2` or `--activity-id i...` | Strava + intervals.icu APIs | stdout JSON (+ optional intervals.icu rename with `--apply-iv-rename`) |
-| `strava_coupling.py` | Same-day Koppeleinheit (ride/legs/double-run) before an activity | `--activity-id i...` | intervals.icu API | stdout JSON |
-| `strava_apply.py` | Push title/description to a Strava activity (idempotency safety net) | `--activity-id 12345 --title "..." --description-stdin` | stdin (optional) | Strava API |
 
 ## Wellness, HRV, planning
 
@@ -87,8 +84,6 @@ through `app/utils/paths.py` — set `COACH_HOME`, `CONFIG_DIR`,
 
 | Script | Purpose | Typical invocation | Reads | Writes |
 |--------|---------|--------------------|-------|--------|
-| `strava_auth.py` | One-time Strava OAuth2 flow | `python3 scripts/strava_auth.py` | browser redirect | `.env` (manual) |
-| `fetch_shoes.py` | Strava shoes + profile check against `equipment.md` | (no args) | Strava API + config | stdout report |
 | `shoe_recommend.py` | Shoe recommendation given today's workouts | `--date YYYY-MM-DD` | shoe state + workouts | stdout JSON |
 | `save_feedback.py` | Persist athlete feedback to intervals.icu NOTE | `--date YYYY-MM-DD --note "..."` | — | intervals.icu API |
 | `training_flow.py` | End-to-end training flow orchestration (debug / batch) | `--date YYYY-MM-DD` | full context | full plan push |
@@ -99,15 +94,13 @@ through `app/utils/paths.py` — set `COACH_HOME`, `CONFIG_DIR`,
 
 ## Notes for external users
 
-- **No keys, no calls.** Most scripts call intervals.icu / Strava / Garmin
+- **No keys, no calls.** Most scripts call intervals.icu / Garmin
   / Gemini. Without the corresponding `.env` keys they will fail at the
   HTTP layer with a clear error.
 - **Alex Demo dry run.** `fetch_context.py --date <today>` works without
   any API keys against the bundled `config.example/` demo profile —
   it returns a static context, no live data.
-- **Idempotence.** `log_muscle_load.py --backfill`, `strava_apply.py`
-  (via the configured footer suffix `INSIGHTS_ANCHOR` — see
-  `app/config.py` — and the duplicate-anchor refusal), and
+- **Idempotence.** `log_muscle_load.py --backfill` and
   `push_workouts.py` are idempotent by design. Re-running them does
   not produce duplicates.
 - **Exit codes.** `validate_plan.py` exits `2` on a hard ERROR finding;

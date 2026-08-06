@@ -12,6 +12,9 @@ These tests lock in the backend-neutral join (``profile_gear_key``) and
 the "no silent skip" property: a profile without a backend-side join key
 must surface as its own ``shoe_profile_missing_gear_key`` finding.
 
+The only active backend is now intervals.icu; the strava backend is gone.
+``missing_key_field`` is therefore always ``icu_gear_id``.
+
 All fixtures are synthetic (made-up gear ids / km / dates), never real
 athlete data.
 """
@@ -46,7 +49,6 @@ def test_intervals_backend_joins_icu_only_profile_without_keyerror() -> None:
     shoes = [
         {
             "gear_key": "iAAA111",
-            "strava_id": "iAAA111",  # gear_to_shoes mirrors id to strava_id
             "name": "Synthetic Trainer",
             "distance_km": 120.0,
             "retired": False,
@@ -61,43 +63,6 @@ def test_intervals_backend_joins_icu_only_profile_without_keyerror() -> None:
 
     assert findings == [], (
         "backend=intervals + icu_gear_id-only profile must join cleanly and "
-        f"produce no findings; got {findings!r}"
-    )
-
-
-# ── Backend symmetry: same logic works for backend='strava' ─────────────────
-
-
-def test_strava_backend_joins_strava_only_profile() -> None:
-    """Backend-symmetry: strava profile joins on strava_id at backend=strava.
-
-    Guards against a fix that just flipped the hardcoded key from
-    ``strava_id`` to ``icu_gear_id``; the join must be *backend-neutral*,
-    not hardcoded to intervals.
-    """
-    profiles = [
-        {
-            "strava_id": "gBBB222",
-            "name": "Synthetic Racer",
-            "type": "race",
-            "role": "race",
-            "terrain": "asphalt",
-            "threshold_km": 400,
-        },
-    ]
-    shoes = [
-        {
-            "strava_id": "gBBB222",  # Strava-native shape carries no gear_key
-            "name": "Synthetic Racer",
-            "distance_km": 42.0,
-            "retired": False,
-        },
-    ]
-    with patch("app.graphs.shoe_advisor.load_shoe_profiles", return_value=profiles):
-        findings = audit_consistency.check_shoes(shoes, backend="strava")
-
-    assert findings == [], (
-        "backend=strava + strava_id-only profile must join cleanly and "
         f"produce no findings; got {findings!r}"
     )
 
@@ -133,7 +98,6 @@ def test_profile_without_backend_key_surfaces_missing_gear_key_finding() -> None
     shoes = [
         {
             "gear_key": "iDDD444",
-            "strava_id": "iDDD444",
             "name": "Synthetic Good Trainer",
             "distance_km": 50.0,
             "retired": False,

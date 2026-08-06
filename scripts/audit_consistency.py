@@ -1,7 +1,7 @@
 """Consistency scanner for the coach knowledge base.
 
 Mechanical drift checks between `config/`, `agents/`, `prompts/`,
-`exercise_muscle_mapping.json` and external sources (intervals.icu, Strava).
+`exercise_muscle_mapping.json` and external sources (intervals.icu).
 
 Output: JSON to stdout — consumed by the config-auditor agent.
 
@@ -335,17 +335,15 @@ def _zone_keywords(zone_name: str) -> list[str]:
 
 
 def check_shoes(shoes: list[dict] | None, backend: str = "intervals") -> list[dict]:
-    """Verify equipment.md shoe profiles against the active-backend gear list.
+    """Verify equipment.md shoe profiles against the intervals.icu gear list.
 
-    Backend-neutral: the join key comes from
-    ``app.graphs.shoe_advisor.profile_gear_key(profile, backend)`` — intervals
-    reads ``icu_gear_id`` (fallback neutral ``gear_id``), strava reads
-    ``strava_id``. Shoe dicts join on their ``gear_key`` alias (both the
-    intervals-native ``gear_to_shoes`` output and the Strava-native
-    ``list_shoes`` output carry an id we can resolve). A profile without a
-    join key for the active backend does **not** silently disappear — it
-    surfaces as its own ``shoe_profile_missing_gear_key`` finding so the
-    audit still points at the misconfiguration.
+    The join key comes from
+    ``app.graphs.shoe_advisor.profile_gear_key(profile, backend)`` —
+    ``icu_gear_id`` with fallback to the neutral ``gear_id``. Shoe dicts join
+    on their ``gear_key`` alias. A profile without a join key does **not**
+    silently disappear — it surfaces as its own
+    ``shoe_profile_missing_gear_key`` finding so the audit still points at
+    the misconfiguration.
     """
     if shoes is None:
         return []
@@ -363,7 +361,7 @@ def check_shoes(shoes: list[dict] | None, backend: str = "intervals") -> list[di
 
     findings: list[dict] = []
     profile_map: dict[str, dict] = {}  # backend-side join key -> profile
-    missing_key_field = "icu_gear_id" if backend == "intervals" else "strava_id"
+    missing_key_field = "icu_gear_id"
     for p in profiles:
         key = profile_gear_key(p, backend)
         if not key:
@@ -393,12 +391,7 @@ def check_shoes(shoes: list[dict] | None, backend: str = "intervals") -> list[di
         profile_map[key] = p
 
     def _shoe_key(s: dict) -> str:
-        return str(
-            s.get("gear_key")
-            or s.get("strava_id")
-            or s.get("icu_gear_id")
-            or ""
-        )
+        return str(s.get("gear_key") or s.get("icu_gear_id") or "")
 
     profiled_ids = set(profile_map)
     active = [s for s in shoes if not s.get("retired")]
@@ -1403,13 +1396,12 @@ def check_prompt_drift() -> list[dict]:
     return findings
 
 
-# ── Online: intervals.icu + Strava fetchen ───────────────────────────
+# ── Online: intervals.icu fetchen ────────────────────────────────────
 
 
 async def _fetch_online() -> dict[str, Any]:
     from app.api.intervals_cache import CachedIntervalsClient
     from app.api.intervals_client import IntervalsClient as RawIntervalsClient
-    from app.api.strava_client import StravaClient
     from app.config import settings
     from app.graphs.shoe_advisor import gear_to_shoes
 
@@ -1423,20 +1415,9 @@ async def _fetch_online() -> dict[str, Any]:
     newest = today.isoformat()
 
     async def _shoes() -> list[dict]:
-        # Fetch from the active shoe-tracking backend so the join key
-        # matches what load_shoe_profiles() will produce for the same
-        # backend (see check_shoes → profile_gear_key).
         if backend == "off":
             return []
-        if backend == "strava":
-            if not settings.strava_client_id or not settings.strava_refresh_token:
-                return []
-            try:
-                return await StravaClient().list_shoes()
-            except Exception as e:
-                logger.warning("strava fetch failed: %s", e)
-                return []
-        # Default: intervals.icu native gear (uncached — small payload).
+        # intervals.icu native gear (uncached — small payload).
         try:
             gear = await RawIntervalsClient(athlete_id).list_gear()
             return gear_to_shoes(gear)
@@ -1797,7 +1778,7 @@ def _human_summary(report: dict) -> str:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0] if __doc__ else "")
-    parser.add_argument("--offline", action="store_true", help="Skip intervals.icu + Strava")
+    parser.add_argument("--offline", action="store_true", help="Skip intervals.icu")
     parser.add_argument("--human", action="store_true", help="Readable summary instead of JSON")
     parser.add_argument("--check", choices=list(CHECK_MAP.keys()), help="Run a single check only")
     parser.add_argument("--log-level", default="WARNING")

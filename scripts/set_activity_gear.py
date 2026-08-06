@@ -1,7 +1,6 @@
 """Assign a shoe (gear) to a finished intervals.icu activity.
 
-This is the intervals.icu-backend replacement for the old Strava shoe
-footer: instead of writing a text recommendation onto the planned event,
+Instead of only writing a text recommendation onto the planned event,
 the coach sets the recommended shoe on the *completed* activity, and
 intervals.icu accumulates that shoe's mileage natively.
 
@@ -50,12 +49,13 @@ from app.graphs.shoe_advisor import (
     load_shoe_profiles,
 )
 
-# Markers written by push_workouts._format_shoe_footer onto the planned event
-# (intervals backend). The machine marker carries the gear id directly; the
-# human line is the legacy/strava fallback (name → gear id lookup).
-# Gear ids are not uniformly ``g``-prefixed: Strava-backed items carry a ``g``
-# prefix, while gear created natively in intervals.icu is purely numeric.
-# Match both, or the marker is missed and the pick is silently re-derived.
+# Markers written by push_workouts._format_shoe_footer onto the planned event.
+# The machine marker carries the gear id directly; the human line is the
+# legacy fallback (name → gear id lookup).
+# Gear ids are not uniformly ``g``-prefixed: items imported from an external
+# gear source may carry a ``g`` prefix, while gear created natively in
+# intervals.icu is purely numeric. Match both, or the marker is missed and
+# the pick is silently re-derived.
 _GEAR_MARKER_RE = re.compile(r"\[coach-gear:\s*([A-Za-z0-9_-]+)\s*\]")
 _SHOE_REC_RE = re.compile(r"Shoe recommendation:\s*([^\n(—]+)")
 

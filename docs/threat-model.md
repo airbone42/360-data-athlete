@@ -8,7 +8,7 @@ this is the long form.
 
 The Coach is a multi-agent system that:
 
-- Reads from external APIs (intervals.icu, Strava, Garmin) controlled by
+- Reads from external APIs (intervals.icu, Garmin) controlled by
   the athlete's accounts
 - Receives messages from a Telegram chat (when the plugin is enabled),
   optionally from a single allowed user ID
@@ -25,11 +25,11 @@ into its prompts) and **the local file system + connected services**.
 
 ### 1. Prompt injection via external text
 
-**Vector.** Notes saved on intervals.icu, activity names/descriptions on
-Strava and Garmin, parsed exercise lines from workout descriptions, and
-the Gemini video-analysis response all eventually appear in some LLM's
-context window — either directly in the planner prompt or indirectly via
-files that specialists later read.
+**Vector.** Notes saved on intervals.icu, activity names/descriptions
+from Garmin and other third-party sync sources, parsed exercise lines
+from workout descriptions, and the Gemini video-analysis response all
+eventually appear in some LLM's context window — either directly in
+the planner prompt or indirectly via files that specialists later read.
 
 **Defence.** The `app.utils.sanitize.escape_for_prompt()` helper truncates
 to a max length and backslash-escapes a small set of characters that
@@ -100,13 +100,14 @@ terminal-side confirmation is good enough for a single-operator system.
 
 ### Compromised athlete accounts
 
-If an attacker controls the Telegram chat, the intervals.icu account, or
-the Strava account, they can shape the Coach's behaviour. Examples:
+If an attacker controls the Telegram chat or the intervals.icu account,
+they can shape the Coach's behaviour. Examples:
 
 - A malicious NOTE in intervals.icu can flow into `athleteFeedback` and
   influence the planner. Sanitization stops the most common payloads but
   not natural-language injections.
-- A modified Strava activity name can mislead the post-activity analyst.
+- A modified activity name from a third-party sync (e.g. Garmin) can
+  mislead the post-activity analyst.
 - A spoofed Telegram message from the allowed user ID can drive
   arbitrary requests.
 

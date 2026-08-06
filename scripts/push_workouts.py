@@ -208,15 +208,13 @@ def _format_coach_plan_marker(planned_workout: dict) -> str:
 async def _enrich_with_shoes(events: list[dict], workouts: list[dict], weather: str, date_str: str) -> None:
     """Append shoe-recommendation footer to Run event descriptions in-place.
 
-    Both backends write the footer onto the planned event:
-    - **strava**: human-readable recommendation only (mileage tracked in Strava).
-    - **intervals**: recommendation **plus** a ``[coach-gear:<id>]`` marker, so
-      ``/analyse`` step 6.55 assigns *exactly* the push-time pick to the
-      finished activity (deterministic, full-context) instead of re-deriving it.
-      The native mileage still accrues on the finished activity, not the plan.
+    The footer carries the recommendation **plus** a ``[coach-gear:<id>]``
+    marker, so ``/analyse`` step 6.55 assigns *exactly* the push-time pick to
+    the finished activity (deterministic, full-context) instead of
+    re-deriving it. The native mileage accrues on the finished activity, not
+    the plan.
     """
-    backend = settings.shoe_tracking_backend
-    if backend not in ("strava", "intervals"):
+    if settings.shoe_tracking_backend != "intervals":
         return
     if not any(w.get("type") == "Run" for w in workouts):
         return

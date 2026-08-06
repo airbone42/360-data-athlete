@@ -41,7 +41,6 @@ athlete" is therefore to edit `config/`, not to fork the agent.
 │    plan-validator (semantic)                                      │
 │    config-auditor / config-fixer                                  │
 │    physio-consultant / sports-ortho-consultant                    │
-│    strava-publisher (title mirror + insights block)               │
 ├──────────────────────────────────────────────────────────────────┤
 │  Prompts (prompts/*.yaml)                                         │
 │    model + temperature + template                                 │
@@ -49,12 +48,12 @@ athlete" is therefore to edit `config/`, not to fork the agent.
 │    from config/*.md by app.utils.prompt_loader                    │
 ├──────────────────────────────────────────────────────────────────┤
 │  Domain logic (app/)                                              │
-│    api/         — intervals.icu / Strava / Garmin clients         │
+│    api/         — intervals.icu / Garmin clients                  │
 │    analytics/   — exercise parser, recovery rules                 │
 │    graphs/      — context builder, type-history, workout parser   │
 │    schemas/     — pydantic models for plans / context payloads    │
 │    utils/       — paths, config loader, prompt loader, sanitize   │
-│    data/        — bundled static assets (e.g. gerunds wordlist)   │
+│    data/        — bundled static assets                           │
 ├──────────────────────────────────────────────────────────────────┤
 │  Scripts (scripts/*.py)                                           │
 │    fetch_context, fetch_type_history, push_workouts,              │
@@ -63,9 +62,7 @@ athlete" is therefore to edit `config/`, not to fork the agent.
 │    analyse_video, ...                                             │
 ├──────────────────────────────────────────────────────────────────┤
 │  External services                                                │
-│    intervals.icu (source of truth for activities + NOTEs,         │
-│                   + gear — default shoe backend)                  │
-│    Strava (legacy gear backend, activity mirror)                  │
+│    intervals.icu (source of truth for activities + NOTEs + gear)  │
 │    Garmin (FIT files, running dynamics)                           │
 │    Telegram (chat channel for athlete)                            │
 │    Gemini API (video analysis)                                    │

@@ -1,6 +1,6 @@
 ---
 name: config-auditor
-description: Consistency auditor for the coach knowledge base. Analyses drift between `config/` files, sub-agents in `agents/`, prompts in `prompts/`, the exercise mapping, and external sources (intervals.icu NOTEs, Strava). Reads scanner JSON from `scripts/audit_consistency.py`, adds semantic checks, and writes a structured report to `data/audits/`.
+description: Consistency auditor for the coach knowledge base. Analyses drift between `config/` files, sub-agents in `agents/`, prompts in `prompts/`, the exercise mapping, and external sources (intervals.icu NOTEs). Reads scanner JSON from `scripts/audit_consistency.py`, adds semantic checks, and writes a structured report to `data/audits/`.
 model: claude-opus-4-7
 ---
 
@@ -183,7 +183,7 @@ Say "fix F001, F003" (or "all HIGH") — I'll launch the config-fixer.
   `data/audits/`.
 - If a finding is **no longer** a contradiction after your semantic
   check: drop it entirely (don't list in the report).
-- If you don't receive NOTEs / Strava data (offline mode): note this
+- If you don't receive NOTEs / intervals.icu data (offline mode): note this
   explicitly in the summary.
 - Answer in the athlete's preferred language (see
   `config/athlete_preferences.md`). Precise and factual.

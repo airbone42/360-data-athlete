@@ -28,23 +28,13 @@ class Settings(BaseSettings):
     gemini_model: str = "google/gemini-2.0-flash-001"
     garmin_email: str = ""
     garmin_password: str = ""
-    strava_client_id: str = ""
-    strava_client_secret: str = ""
-    strava_refresh_token: str = ""
     # Source of truth for shoe data (gear list, mileage, active/retired,
     # last-used rotation) feeding the shoe advisor.
     #   intervals (default) — read native intervals.icu gear; mileage is
     #     accumulated by intervals.icu itself from each activity's gear_id.
-    #     No Strava calls. The coach sets the recommended shoe on the
-    #     finished activity (see scripts/set_activity_gear.py).
-    #   strava (legacy) — read shoes from the Strava gear API, append a
-    #     text recommendation footer to Run events, fall back to the local
-    #     shoe_log.json. Requires the STRAVA_* credentials above. Kept for
-    #     consumers who still have Strava API access.
+    #     The coach sets the recommended shoe on the finished activity
+    #     (see scripts/set_activity_gear.py).
     #   off — shoe advisor disabled (empty shoe list).
-    # The Strava API moves behind a paid tier; `intervals` is the default
-    # so a fresh consumer needs no Strava app at all. One-time migration of
-    # an existing Strava gear fleet: scripts/migrate_shoes_strava_to_intervals.py
     shoe_tracking_backend: str = "intervals"
     # Whether a shoe already attached to a finished activity by the recording
     # device / import counts as a real assignment.
@@ -61,37 +51,6 @@ class Settings(BaseSettings):
     # shoe. `--force` remains the per-call override in either mode; an
     # explicit `--gear-id` is unaffected.
     shoe_ignore_device_gear: bool = False
-    # Master on/off switch for the Strava title/insights publishing feature
-    # (the write path in `strava_apply.py` and the discovery path in
-    # `strava_pending.py`). Default OFF: Strava has moved activity writes
-    # behind its updated developer-program access, so `PUT /activities/{id}`
-    # returns 403 Forbidden for apps without write access — a failure mode
-    # unrelated to the athlete's own Strava subscription. Enabling the
-    # feature only makes sense once your Strava app actually holds the
-    # `activity:write` scope. Set `STRAVA_PUBLISH_ENABLED=true` to turn the
-    # title/insights sync back on; when false, `strava_apply.py` skips the
-    # write as a clean no-op (exit 0) and `strava_pending.py` reports no
-    # pending activities, so `/strava` and `/analyse` step 6.6 short-circuit
-    # without ever calling Strava. Independent of the shoe backend
-    # (`SHOE_TRACKING_BACKEND`) and of the insights-block sub-toggle below.
-    strava_publish_enabled: bool = False
-    # Insights-Block on/off toggle for the strava-publisher agent.
-    # Default on: every endurance push gets the 2–4 line block + footer.
-    # Set `STRAVA_PUBLISHER_FOOTER_ENABLED=false` to opt out — the agent
-    # then mirrors only the activity title and skips the insights block
-    # entirely (no body lines, no random-gerund footer). Title-only mode
-    # is the right setting if you don't want any third-party signature
-    # on your Strava feed; note that without the footer there is no
-    # idempotency anchor, which is why the whole block is gated.
-    strava_publisher_footer_enabled: bool = True
-    # Suffix appended after the random gerund in the Strava insights
-    # footer. Default carries the project brand `by 360° Data Athlete`
-    # so consumer pushes also surface the project in follower feeds —
-    # this is intentional public attribution, not a private athlete
-    # marker. Override per wrapper via `STRAVA_PUBLISHER_FOOTER_SUFFIX`
-    # if you prefer a different signature. The string also doubles as
-    # the re-run idempotency anchor (see `strava_pending.py`).
-    strava_publisher_footer_suffix: str = "by 360° Data Athlete (https://github.com/airbone42/360-data-athlete/)"
     # OpenRouter `X-Title` header — surfaces on the API account dashboard.
     # Override per wrapper to label requests with the consumer's app name.
     openrouter_x_title: str = "aicoach-framework"

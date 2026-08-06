@@ -11,9 +11,9 @@ the system to data you care about.
 | Threat | Mitigation |
 |--------|------------|
 | Prompt injection via athlete notes from intervals.icu | `app.utils.sanitize.escape_for_prompt()` at the `_format_notes` and `_format_events` boundaries in `context_builder` |
-| Prompt injection via Strava / Garmin activity names and descriptions | Sanitized at every write boundary that lands in a prompt: `_summarize_activity` (`name`, `coaching_notes`), `_summarize_today_workouts` (`name`), and `history_fetcher._format_activity` (`name`, `description`, message `content`) |
+| Prompt injection via Garmin activity names and descriptions | Sanitized at every write boundary that lands in a prompt: `_summarize_activity` (`name`, `coaching_notes`), `_summarize_today_workouts` (`name`), and `history_fetcher._format_activity` (`name`, `description`, message `content`) |
 | Prompt injection via third-party weather descriptions | OpenWeather `description` text is sanitized in `_build_weather_info` before it flows into the planner context as `weatherInfo` (defense-in-depth — small attack surface, but cost is zero) |
-| Prompt injection via auto-surfaced drift findings (`configDrift`) | `evidence` strings produced by `check_log_vs_history` carry Activity-Description-derived text and are sanitized in `fetch_context.py` before being attached to the planner context, so a Strava-roundtrip-injected exercise line cannot break the planner prompt |
+| Prompt injection via auto-surfaced drift findings (`configDrift`) | `evidence` strings produced by `check_log_vs_history` carry Activity-Description-derived text and are sanitized in `fetch_context.py` before being attached to the planner context, so a third-party-sync-roundtrip-injected exercise line cannot break the planner prompt |
 | Prompt injection via parsed exercise lines in workout descriptions | `escape_for_prompt()` applied before persisting to `data/muscles/_unmapped.jsonl` (which can later be loaded into a review context) |
 | Prompt injection via Gemini video-analysis output | `escape_for_prompt()` applied before writing to `config/exercise_log.md` |
 | Hidden / un-audited config edits by `config-fixer` | Mandatory approval log (`data/approvals/YYYY-MM-DD-config-fixer.jsonl`) per edit, with finding ID + diff hash + athlete approval text |
@@ -22,9 +22,8 @@ the system to data you care about.
 ### What we explicitly do NOT defend against
 
 - **Compromised athlete accounts.** If an attacker controls the Telegram
-  bot, the intervals.icu account, or the Strava account, they can push
-  the Coach in arbitrary directions. The Coach treats authenticated
-  channels as authoritative.
+  bot or the intervals.icu account, they can push the Coach in arbitrary
+  directions. The Coach treats authenticated channels as authoritative.
 - **Compromised Claude setup.** The Coach trusts Claude Code's
   permissions enforcement and the underlying model. Settings file
   tampering, plugin compromise, or malicious agent definitions are out of
@@ -36,7 +35,7 @@ the system to data you care about.
 - **Data exfiltration through the LLM.** Configs are loaded directly into
   prompts. Treat anything in `config/` as data the LLM provider sees.
 - **Supply chain.** The framework pulls in pydantic, requests, gemini SDK,
-  intervals.icu/Strava clients, etc. Dependency vulnerabilities are not
+  intervals.icu client, etc. Dependency vulnerabilities are not
   tracked by this project.
 
 ### Why the sanitization is best-effort
@@ -86,8 +85,6 @@ history (private repo) it must be considered exposed and rotated. The
 following are sensitive in this codebase:
 
 - `INTERVALS_ICU_API_KEY` — intervals.icu API access
-- `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET`, `STRAVA_REFRESH_TOKEN` —
-  Strava OAuth
 - `GARMIN_EMAIL`, `GARMIN_PASSWORD` — Garmin web scraping fallback
 - `TELEGRAM_BOT_ACCESS_TOKEN` — Telegram bot
 - `OPENROUTER_API_KEY` — model provider (Gemini and others, proxied via OpenRouter)

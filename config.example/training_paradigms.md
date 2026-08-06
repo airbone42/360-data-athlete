@@ -130,18 +130,14 @@ than a naive pace × elevation mix.
 
 | Source | avg-pace | Native GAP | Distance smoothing | Use |
 |--------|----------|-----------|--------------------|-----|
-| **Strava** | smoothed | ✓ native | ✓ (typically +5%) | **Canonical for GAP** — industry-established algorithms |
-| **intervals.icu** | raw FIT | optional (`gap_model`) | no | Secondary source; GAP only if sport setting is enabled |
+| **intervals.icu** (gap_model enabled) | raw FIT | ✓ (`gap_model`) | no | **Canonical for GAP** — enable in sport settings |
 | **Garmin Connect** | raw FIT | ✗ (Connect-IQ third-party only) | no | Good for raw pace, no GAP |
 
 **Operational rule (head coach + specialists):**
-- Run analysis with elevation (≥30 m/km) → **Strava GAP** as the primary
-  pace reference
-- Raw FIT pace (intervals.icu default) only as a secondary value, never
+- Run analysis with elevation (≥30 m/km) → **GAP (Grade Adjusted Pace, intervals.icu)** as the primary
+  pace reference; requires `gap_model` enabled in intervals.icu sport settings
+- Raw FIT pace (intervals.icu default without `gap_model`) only as a secondary value, never
   as a sole efficiency statement
-- On discrepancy Strava vs. intervals.icu (distance +5%, pace −15 s/km
-  typical): treat Strava as canonical, name the intervals.icu delta
-  explicitly in the analysis ("Strava smoothing differs")
 - Always distrust FIT-lap elevation — on conflict with the activity
   summary (intervals.icu `total_elevation_gain`), follow the activity
   summary
@@ -150,15 +146,11 @@ than a naive pace × elevation mix.
 
 **Typical drift patterns that motivate this rule:**
 - Z2 run on a hilly forest path; avg-pace gets praised as "economical"
-  while FIT-lap-ascent is GPS-drift-inflated, GAP is significantly
-  stretched against avg-pace, and the downhill share inflates the avg
-  number.
-- Brick Z2 on a forest path; intervals.icu avg-pace and intervals.icu
-  GAP are cited — Strava returns clearly different values (typically
-  15–20 s/km delta due to GPS smoothing); the athlete spots the gap
-  empirically by comparing the two views.
-- Takeaway: Strava GAP is the canonical source for any pace assessment
-  involving elevation.
+  while FIT-lap-ascent is GPS-drift-inflated, GAP (Grade Adjusted Pace, intervals.icu)
+  is significantly stretched against avg-pace, and the downhill share inflates
+  the avg number.
+- Takeaway: GAP (Grade Adjusted Pace, intervals.icu) is the canonical source for any
+  pace assessment involving elevation.
 
 **A number quoted in a past analysis is not a source (MANDATORY).**
 The rules above govern how a figure is derived *the first time*. They do
@@ -175,7 +167,7 @@ figures inside persisted prose as narrative, not as data. When such a
 figure is found to be wrong, correct the persisted text as well —
 otherwise the same error is re-imported on the next comparison.
 
-**Research anchor:** [Strava vs. intervals.icu GAP — algorithm differences & canonicity](../research/strava-vs-intervals-gap.md)
+**Research anchor:** [GAP (Grade Adjusted Pace) — intervals.icu gap_model & canonicity](../research/strava-vs-intervals-gap.md)
 
 ## HRV readiness (`hrvReadiness` — 7d-rolling ln-rMSSD vs 60d normal band)
 

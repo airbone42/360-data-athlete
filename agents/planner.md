@@ -36,8 +36,7 @@ Before producing the plan:
    **No calendar-week references in workout names** (e.g. "KW21",
    "Week 21", "Woche 21"). The activity timestamp already carries
    the date and the calendar week is derivable from it — the marker
-   adds no information for the athlete in the activity feed and is
-   pure noise on Strava once the title is mirrored. Use the
+   adds no information for the athlete in the activity feed. Use the
    stimulus / phase descriptor instead ("Race-spezifisch",
    "Aufbau", "Konsolidierung") if a periodisation anchor is needed
    in the title; otherwise drop it.
