@@ -1,0 +1,4 @@
+{
+  "_doc": "R024 tag-content adequacy (validate_plan.py): per workout tag, a whitelist of exercise names that count toward the tagged pillar and the minimum number of DISTINCT whitelist entries that must appear (case-insensitive substring) in the workout description. Empty default = rule off; each athlete defines their own pillars in the wrapper's config/exercise_tag_mapping.json. Example shape: {\"tags\": {\"grip\": {\"min_exercises\": 2, \"exercises\": [\"Farmer Hold\", \"Dead Hang\", \"Pinch Grip\"]}}}",
+  "tags": {}
+}

@@ -99,6 +99,7 @@ Configuration files live in `config/` (athlete-specific) with fallback to
 | `recovery_protocol.md` | Deload-week rules (framework defaults) |
 | `training_paradigms.md` | HR zones, polarized/pyramidal, intensity rules |
 | `injury_locks.json` | Configurable injury-lock activation keywords per body zone (used by validator R002) |
+| `exercise_tag_mapping.json` | Per-tag exercise whitelist + minimum count for tag-content adequacy (validator R024; empty default = off) |
 
 Path resolution is governed by `app/utils/paths.py` (see `COACH_HOME`,
 `CONFIG_DIR`, `DATA_DIR`, `CONFIG_FALLBACK`).
@@ -1771,6 +1772,10 @@ Two-layer architecture:
    R002 (shoulder lock) reads activation keywords from
    `config/injury_locks.json` — see `config.example/injury_locks.json`
    for schema and defaults.
+   R024 (tag-content adequacy) reads the per-tag exercise whitelist from
+   `config/exercise_tag_mapping.json` — a tagged pillar must be covered
+   by a minimum number of whitelisted exercises in the description
+   (advisory WARNING; empty default = off).
 2. **Semantic validator** — `plan-validator` subagent (fresh context).
    Runs in step 3.5b after specialists. Checks pillar rotation, stimulus
    adequacy vs. wellness, weekly volume jump, progression consistency,

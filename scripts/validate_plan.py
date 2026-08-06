@@ -63,6 +63,8 @@ class Context:
     recent_activities: list[dict] = field(default_factory=list)
     sport_settings: list[dict] = field(default_factory=list)
     injury_locks: dict[str, list[str]] = field(default_factory=dict)
+    # R024 — per-tag exercise whitelist + minimum count (config/exercise_tag_mapping.json)
+    tag_content_map: dict[str, dict] = field(default_factory=dict)
     # Per-zone allow-patterns (regex strings) that exempt a matching exercise
     # line from the zone's lock — athlete-specific clearances documented in
     # config/injury_locks.json (e.g. a cleared passive Dead Hang). The
@@ -2395,6 +2397,63 @@ def check_impact_day_streak(workouts: list[dict], ctx: Context) -> list[Finding]
     return findings
 
 
+
+def check_tag_content_adequacy(workouts: list[dict], ctx: Context) -> list[Finding]:
+    """R024 — Tag-content adequacy: a tagged pillar must be covered by content.
+
+    The pillar-rotation checks answer "which pillar is due today"; nothing
+    verified that the workout CONTENT actually delivers the tagged pillar
+    (canonical incident: `tags=[core, grip]` with a single Farmer Hold as
+    the only grip exercise — the athlete spotted it, no validator did).
+
+    Config: `config/exercise_tag_mapping.json` maps a tag to a whitelist of
+    exercise names and a minimum count of DISTINCT whitelist entries that
+    must appear (case-insensitive substring) in the workout description.
+    Tags absent from the config are not checked; the framework default is
+    an empty map, so the rule is opt-in per athlete. Advisory WARNING —
+    content adequacy is a quality signal, not a safety gate.
+    """
+    findings: list[Finding] = []
+    tag_map = ctx.tag_content_map or {}
+    if not tag_map:
+        return findings
+    for w in workouts:
+        desc = _description(w) or ""
+        if not desc.strip():
+            continue
+        desc_low = desc.lower()
+        for tag in (w.get("tags") or []):
+            cfg = tag_map.get(str(tag).lower())
+            if not isinstance(cfg, dict):
+                continue
+            whitelist = [str(e) for e in (cfg.get("exercises") or []) if str(e).strip()]
+            if not whitelist:
+                continue
+            min_n = int(cfg.get("min_exercises", 1))
+            hits = sorted({e for e in whitelist if e.lower() in desc_low})
+            if len(hits) < min_n:
+                findings.append(Finding(
+                    rule_id="R024",
+                    severity=SEVERITY_WARNING,
+                    workout=_workout_name(w),
+                    message=(
+                        f"Tag '{tag}' claims the pillar, but only "
+                        f"{len(hits)}/{min_n} whitelisted exercise(s) found "
+                        f"in the description"
+                        + (f" ({', '.join(hits)})" if hits else "")
+                        + "."
+                    ),
+                    suggestion=(
+                        f"Add exercises from the '{tag}' whitelist in "
+                        "config/exercise_tag_mapping.json, extend the "
+                        "whitelist if a legitimate exercise is missing from "
+                        "it, or drop the tag so the pillar rotation does "
+                        "not count this session as covered."
+                    ),
+                ))
+    return findings
+
+
 RULES: list[tuple[str, Callable[[list[dict], Context], list[Finding]]]] = [
     ("R001", check_reps_ceiling),
     ("R002", check_injury_locks_shoulder),
@@ -2419,6 +2478,7 @@ RULES: list[tuple[str, Callable[[list[dict], Context], list[Finding]]]] = [
     ("R021", check_stride_block_order),
     ("R022", check_impact_day_streak),
     ("R023", check_press_lap_duration_cue),
+    ("R024", check_tag_content_adequacy),
 ]
 
 
@@ -2528,6 +2588,20 @@ def _load_injury_lock_allows() -> dict[str, list[str]]:
     return result
 
 
+def _load_tag_content_map() -> dict[str, dict]:
+    """Load config/exercise_tag_mapping.json for R024 (empty default = rule off)."""
+    from app.utils.paths import resolve_config
+    try:
+        path = resolve_config("exercise_tag_mapping.json")
+        data = json.loads(path.read_text())
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+    tags = data.get("tags") if isinstance(data, dict) else None
+    if not isinstance(tags, dict):
+        return {}
+    return {str(k).lower(): v for k, v in tags.items() if isinstance(v, dict)}
+
+
 def load_context(target_date: str, fetch_remote: bool = True) -> Context:
     ctx = Context(
         target_date=target_date,
@@ -2538,6 +2612,7 @@ def load_context(target_date: str, fetch_remote: bool = True) -> Context:
         competition_plan=_read_config("competition_plan.md"),
         injury_locks=_load_injury_locks(),
         injury_lock_allows=_load_injury_lock_allows(),
+        tag_content_map=_load_tag_content_map(),
     )
     if fetch_remote:
         # Fail-soft per source: a failed fetch never crashes the validator,
