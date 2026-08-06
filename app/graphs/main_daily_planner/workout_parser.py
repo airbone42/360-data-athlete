@@ -7,6 +7,8 @@ import re
 
 from pydantic import ValidationError
 
+from app import sports
+
 logger = logging.getLogger(__name__)
 
 # Matches time patterns that intervals.icu parses as workout step durations.
@@ -32,7 +34,7 @@ _STRETCH_KEYWORDS_RE = re.compile(
 )
 _STRETCH_DURATION_RE = re.compile(r"\b([4-9]\d|[1-9]\d{2,})\s*s\b")  # ≥40s
 
-VALID_TYPES = ["Run", "Ride", "WeightTraining", "Workout"]
+VALID_TYPES = sports.VALID_TYPES
 REQUIRED_FIELDS = ["type", "name", "duration_min", "workout_type"]
 # Canonical workout_type enum — documented identically in CLAUDE.md,
 # agents/planner.md and prompts/daily_planner.yaml. RACE is part of the
@@ -163,7 +165,7 @@ def _sort_key(w: dict) -> int:
 
 
 _STRENGTH_TYPES = {"WeightTraining", "Workout"}
-_ENDURANCE_TYPES = {"Run", "Ride"}
+_ENDURANCE_TYPES = sports.ENDURANCE_TYPES
 # Bilingual leg-tag synonyms ("beine" = legacy German, "legs" = new canonical).
 _LEG_TAGS = {"beine", "legs", "plyo"}
 

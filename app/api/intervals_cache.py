@@ -25,6 +25,7 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
+from app import sports
 from app.api.intervals_client import IntervalsClient
 from app.utils.activity_helpers import activity_date
 from app.utils.alerts import notify_error
@@ -271,9 +272,9 @@ class IntervalsFileCache:
         idx = self.load_index()
         from collections import defaultdict
 
-        SWIM_TYPES = {"Swim", "OpenWaterSwim", "SwimPool"}
-        BIKE_TYPES = {"Ride", "VirtualRide"}
-        RUN_TYPES  = {"Run", "VirtualRun"}
+        SWIM_TYPES = sports.all_types_for("Swim")
+        BIKE_TYPES = sports.BIKE_TYPES
+        RUN_TYPES = sports.RUN_TYPES
 
         by_day: dict[str, list[dict]] = defaultdict(list)
         for a in idx["activities"]:

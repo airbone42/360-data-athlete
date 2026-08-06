@@ -7,9 +7,13 @@ from __future__ import annotations
 
 from datetime import date, timedelta
 
+from app import sports
+
 from app.utils.activity_helpers import activity_date
 
-CARDIO_TYPES = {"Run", "Ride", "VirtualRide", "VirtualRun"}
+# Run + bike variants from the sport registry (excludes Swim on purpose:
+# swim HR zones are not comparable to the run/bike zone model used here).
+CARDIO_TYPES = sports.RUN_TYPES | sports.BIKE_TYPES
 
 
 def _correct_cardiac_drift(zone_times: list[int], moving_time_secs: int) -> list[int]:

@@ -6,6 +6,7 @@ import asyncio
 import logging
 from datetime import date, timedelta
 
+from app import sports
 from app.api.intervals_cache import CachedIntervalsClient
 from app.utils.activity_helpers import activity_date
 
@@ -14,23 +15,19 @@ logger = logging.getLogger(__name__)
 # "beine" is the legacy German form of "legs" — both are accepted during the
 # migration so historical activities still match.
 COMPLEMENTARY_TAGS = {"legs", "beine", "plyo", "core", "balance", "mobility", "grip", "ninja", "upperbody"}
-ENDURANCE_TYPES = {"Run", "Ride"}
+ENDURANCE_TYPES = sports.ENDURANCE_TYPES
 
-# Activity-type aliases — intervals.icu stores indoor sessions under Virtual* types,
-# but the planner / specialist directive uses the simple "Run" / "Ride" labels. Without
-# this map, indoor sessions silently disappear from type history. The documented failure
-# mode: a Rønnestad 30/15 logged as VirtualRide became invisible to fetch_type_history
-# --type Ride, leading to the same protocol being re-prescribed despite a compliance
-# drop in the prior session.
-TYPE_ALIASES: dict[str, set[str]] = {
-    "Run": {"Run", "VirtualRun", "TrailRun"},
-    "Ride": {"Ride", "VirtualRide"},
-}
+# Activity-type aliases come from the sport registry — intervals.icu stores
+# indoor sessions under Virtual* types, but the planner / specialist directive
+# uses the simple "Run" / "Ride" labels. Without the alias map, indoor
+# sessions silently disappear from type history (documented failure mode: a
+# Rønnestad 30/15 logged as VirtualRide became invisible to
+# fetch_type_history --type Ride, leading to the same protocol being
+# re-prescribed despite a compliance drop in the prior session).
 
 
 def _matches_type(act_type: str, dir_type: str) -> bool:
-    aliases = TYPE_ALIASES.get(dir_type, {dir_type})
-    return act_type in aliases
+    return act_type in sports.all_types_for(dir_type)
 
 
 def _compute_primary_zone(activity: dict) -> str | None:

@@ -53,6 +53,7 @@ from app.analytics.load_cycles import (  # noqa: F401 — re-exported for caller
     _is_deload_week,
     _safe_float,
 )
+from app import sports
 from app.analytics.hrv import (  # noqa: F401 — re-exported for callers/tests
     HRV_BAND_HOLD_DAYS,
     HRV_BAND_K,
@@ -409,9 +410,9 @@ def build_context(state: AthleteContextState) -> dict:
     # systemPrompt shoe block are dropped (recommendation stays {} anyway —
     # the push-time advisor in push_workouts/shoe_recommend fetches gear
     # itself, independent of this context field).
-    _RUN_RIDE_TYPES = ("Run", "VirtualRun", "Ride", "VirtualRide")
     run_or_ride_today = any(
-        (w.get("type") or "") in _RUN_RIDE_TYPES for w in today_workouts
+        (w.get("type") or "") in (sports.RUN_TYPES | sports.BIKE_TYPES)
+        for w in today_workouts
     )
     if not run_or_ride_today:
         shoe_ctx = {
@@ -1674,7 +1675,7 @@ def _compute_previous_day_exercises(activities: list[dict], today: date) -> str:
     import re
 
     yesterday = today - timedelta(days=1)
-    cardio = {"Run", "Ride", "VirtualRide", "VirtualRun", "Swim"}
+    cardio = sports.CARDIO_TYPES
     # ÄÖÜ in the character class catches German exercise names (e.g. "Übung")
     # written by an athlete using a German config; ASCII A-Z covers all
     # English-language descriptions.
