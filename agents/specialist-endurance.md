@@ -685,6 +685,21 @@ known to the athlete — do NOT repeat their content in the `focus` field.
 }
 ```
 
+**Keep the `intervals_icu` cues terse (mandatory)**
+
+For Run/Ride the `intervals_icu` text **becomes** the description — the
+prose `description` is discarded at push time. Everything the athlete
+needs mid-session therefore has to ride inline after the `—` on a step,
+and everything else has to stay out.
+
+A cue is an instruction, not an explanation: `Stride 20s — ~90% effort,
+no sprint, stop if the first two feel flat`. Not a paragraph on why the
+rep count is what it is. Progression rationale, history and
+justifications go in `focus`. Steps read on a watch mid-run are the least
+forgiving surface in the whole plan — a cue that does not fit on a glance
+will not be read at all. Full rule: `CLAUDE.md` → "Workout descriptions
+are execution aids, not decision records".
+
 **Indoor-ride intensity steering (mandatory)**
 
 For indoor cycling, **power (Watt) + RPE are the primary anchors**, HR is

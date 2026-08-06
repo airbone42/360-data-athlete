@@ -1305,6 +1305,63 @@ Plan directive (planner output):
   for shoe choice.
 - Non-endurance: strip time patterns from descriptions
 
+### Workout descriptions are execution aids, not decision records (mandatory)
+
+The `description` field is read **during** the session — on the gym floor
+between sets, at the trailhead, often on a phone or watch. It has to be
+scannable in seconds. The rationale behind the session belongs in `focus`
+(and in the plan presentation in chat, and in
+`config/exercise_progressions.md`), **not** in the description. The schema
+already separates the two; the failure mode is duplicating the reasoning
+into the description "so the athlete sees why".
+
+**Default shape — one line per exercise:**
+
+```
+Name: sets×reps/duration @ load | RPE or target | ≤1 cue, or the one thing that is new today
+```
+
+**Belongs in `description`:**
+- What to do, how much, at what load.
+- The single form cue that matters most for *this* exercise.
+- Stop criteria — as a short list, not a paragraph.
+- What feedback is wanted back, stated as a question the athlete can
+  answer in a few words.
+
+**Does NOT belong in `description`** — every item below is a real pattern
+that has bloated real plans:
+- Progression *rationale*. "3×8" is the instruction; why it is 8 and not 7
+  is not needed to execute it.
+- History recaps and counter bookkeeping ("the counter stood at 2/2",
+  "last done N days ago", "frozen not reset").
+- Explanations of what is **not** in today's plan and why. That belongs in
+  the plan presentation, where the athlete can respond to it — see
+  [Never silently drop or replace standing prescriptions](#never-silently-drop-or-replace-standing-prescriptions-mandatory),
+  which requires a **named replacement slot**, not a paragraph of
+  justification inside the workout.
+- Meta-commentary about the coach's own decision process.
+- Re-stating standing restrictions at length. A restriction the athlete has
+  lived with for weeks needs a keyword, not a recap.
+
+**Why this is a correctness rule and not a style preference:** a long
+description gets skimmed, and what gets skipped is not evenly distributed —
+it is the line in the middle, which is exactly where a load change, a
+changed rep target or a stop criterion tends to sit. Terseness protects the
+instruction that actually differs from last time. Practice anchor from real
+use: an athlete asked for short keyword reminders instead of prose, with
+the explicit note that questions would be raised directly if anything was
+unclear.
+
+**Budget as a sanity check, not a hard limit:** if a strength/core block's
+description runs past roughly 1200 characters, or any single exercise past
+roughly two lines, the rationale has leaked in — move it to `focus`.
+Endurance `intervals_icu` steps carry their cue inline after the `—` and
+follow the same rule: the cue is an instruction, not an explanation.
+
+**Corollary — do not compensate by moving prose into the workout *name*.**
+Names stay short; see the naming guidance in the specialist agent
+definitions.
+
 ### Shoe tracking backend
 
 `SHOE_TRACKING_BACKEND` (in `.env`, default `intervals`) selects where the

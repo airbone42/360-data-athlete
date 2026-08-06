@@ -302,10 +302,25 @@ Respond with valid JSON only. Start directly with `{`.
     }
   ],
   "description": "WARM-UP (5 min)\nCat-cow 10x, hip circles 10x/side, leg swings 10x\n\nMAIN (20 min)\n60 s rest between exercises\n\nGoblet Squat: 3x12 @ 16kg | RPE 7 | last week 12 kg (easy) → +4 kg\n\nBox Jumps: 3x8 | RPE 7 | level 1 bilateral, soft landing\n\nDead Bug: 3x10/side | slow eccentric\n\nPlank: 3x45s | last week 30 s → +15 s\n\nCOOL-DOWN (3 min)\nFoam roller quads 60 s/side, calf stretch 30 s",
-  "focus": "3–5 sentences of coaching prose: goal of the session, focus points, progression rationale.",
+  "focus": "3–5 sentences of coaching prose: goal of the session, focus points, progression rationale. THIS is where the reasoning goes — never duplicated into `description`.",
   "duration_note": "Optional: justification if total duration falls outside the allowed range (max 1 sentence)."
 }
 ```
+
+### Keep `description` terse (MANDATORY)
+
+The example above is the target density, not a minimum — one line per
+exercise, `Name: sets×reps @ load | RPE | ≤1 cue or the one thing new
+today`. The description is read between sets; the rationale goes in
+`focus`.
+
+Do not write progression justifications, counter bookkeeping, history
+recaps, explanations of what was left out, or restatements of standing
+restrictions into `description`. If a strength/core block's description
+runs past roughly 1200 characters, or a single exercise past two lines,
+reasoning has leaked in — move it to `focus`. Full rule and rationale:
+`CLAUDE.md` → "Workout descriptions are execution aids, not decision
+records".
 
 ---
 
