@@ -26,6 +26,33 @@ language) from `config/` at runtime via `app.utils.prompt_loader`. The
 canonical pattern for "I want this agent to behave differently for my
 athlete" is therefore to edit `config/`, not to fork the agent.
 
+## Plugin consumption & config override
+
+When this CLAUDE.md is loaded as part of a plugin install
+(`/plugin install aicoach-framework@360-data-athlete`), all `config/`
+files referenced throughout this document live in **the consumer's
+project root**, not inside the plugin install directory at
+`~/.claude/plugins/.../aicoach-framework/`. The loader
+(`app/utils/paths.py`) reads `config/` from the consumer's repo first
+and falls back to the plugin's `config.example/` for any file not
+overridden.
+
+- **Generic improvements** (new rules, validator checks, agents,
+  paradigms, doc fixes): open a PR against
+  [airbone42/360-data-athlete](https://github.com/airbone42/360-data-athlete).
+  See `CONTRIBUTING.md` for scope.
+- **Athlete-specific edits** (zones, PRs, injuries, restrictions,
+  language, equipment, incident anchors): belong in the consumer's
+  `config/*.md` and the consumer's project-level `CLAUDE.md` — never
+  in the plugin install directory. `/plugin update` would wipe such
+  edits.
+
+A scaffold for a fresh wrapper repo lives at `wrapper.example/` in
+this plugin — copy its contents into a private repo and customise
+`config/` to start.
+
+---
+
 ## Layers
 
 ```
@@ -69,6 +96,24 @@ athlete" is therefore to edit `config/`, not to fork the agent.
 │    LangSmith (optional tracing)                                   │
 └──────────────────────────────────────────────────────────────────┘
 ```
+
+## Module map (`app/`)
+
+- `app/api/` — intervals.icu HTTP client + file cache (`cache/`)
+- `app/utils/` — FIT parser, Garmin download, prompt loader, HR zones,
+  windowing, **path resolution (`paths.py`)**, **prompt sanitization (`sanitize.py`)**
+- `app/graphs/` — context builder, type-history fetcher, workout parser
+- Prompts: `prompts/*.yaml` (template + model + temperature).
+  `agents/<name>.md` is the **authoritative** agent definition. The
+  `prompts/*.yaml` files are **simplified reference templates** for the
+  code path (renderable via `scripts/load_prompt.py --name <prompt>`) —
+  they are deliberate subsets, NOT content-identical copies: the agent
+  .md files carry the full rule sets (e.g. the coach-analyst mandatory
+  exclusion rules) that the YAMLs omit. Only `daily_planner.yaml` runs
+  in production (it assembles the `systemPrompt` in `context_builder`);
+  wiring any other YAML into a production path requires porting the
+  corresponding agent's mandatory rules first.
+- Config: `config/*.md` (auto-injected as placeholders into prompts)
 
 ## Path resolution (`app/utils/paths.py`)
 

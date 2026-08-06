@@ -19,3 +19,19 @@ Wenn die Zonen unsicher sind (siehe Trigger unten), erhält der Athlet beim näc
 5. Post-hoc-Analyse: RR-Daten aus der Gurt-App exportieren → Kubios HRV (kostenlos) für präzise Auswertung
 
 **Wann wiederholen:** alle 8–10 Wochen, nach Pausen > 3 Wochen, nach CTL-Sprung > 15%.
+
+## Pre-check before suggesting a DFA-α1 analysis (mandatory)
+
+Before suggesting a DFA-α1 analysis to the athlete, verify all of:
+
+| Criterion | Requirement |
+|-----------|-------------|
+| Protocol | Stepped test, ≥ 6 min steady per step — no free run |
+| Surface | Treadmill or hard flat surface — no soft ground / trail |
+| Recording | HR strap (e.g. Polar H10) + recording app started before warm-up |
+| Recent training | No intense session in the last 48 h |
+| Warm-up | ≥ 10 min below the lowest test step; exclude the first 2 min of each step from analysis |
+| Step range | Start below suspected VT1 |
+
+Default step protocol lives in `config.example/zone_validation_protocol.md`
+(or `config/`). Athlete-specific step ranges in `athlete_status.md`.

@@ -10,22 +10,13 @@ athlete history and feedback.
 
 ## MANDATORY: read the type history
 
-Before planning anything, read the type history in full and extract the
-current progression state per exercise:
+Before planning anything, read the type history in full:
 
-1. **Scan `description` fields** for `-> Feedback:` and `-> Athlete:`
-   annotations — this is the primary progression memory. Example:
-   `Kneeling Push-ups — 3x12 -> RPE 6` means: next session = Kneeling
-   (or progression to Standard only if RPE ≤7 AND no pain reported).
+1. **Scan `description` fields** for `-> Feedback:` / `-> Athlete:` annotations — primary progression memory.
 2. **Scan `messages` arrays** for athlete feedback between sessions.
-3. **Remember per exercise:** last variant used + last RPE feedback +
-   whether pain / abort was reported.
-4. **Never regress** without explicit reason: if session N−1 used
-   Kneeling Push-ups, session N plans Kneeling (or progression) — never
-   back to Standard without justification.
-5. **Injury feedback is cumulative:** "shoulder doesn't cooperate",
-   "pulling sensation", "abandoned" remains valid until explicitly
-   reversed with "pain-free".
+3. **Remember per exercise:** last variant + last RPE + pain/abort status.
+4. **Never regress** without explicit reason (e.g. session N−1 Kneeling Push-ups → session N is Kneeling or progression, never Standard without justification).
+5. **Injury feedback is cumulative:** "shoulder doesn't cooperate", "abandoned" remains valid until explicitly reversed with "pain-free".
 
 ## MANDATORY: progression vector from `config/exercise_progressions.md`
 
@@ -316,44 +307,26 @@ today`. The description is read between sets; the rationale goes in
 
 Do not write progression justifications, counter bookkeeping, history
 recaps, explanations of what was left out, or restatements of standing
-restrictions into `description`. If a strength/core block's description
-runs past roughly 1200 characters, or a single exercise past two lines,
-reasoning has leaked in — move it to `focus`. Full rule and rationale:
-`CLAUDE.md` → "Workout descriptions are execution aids, not decision
-records".
+restrictions into `description`. If a block's description runs past
+roughly 1200 characters, or a single exercise past two lines, reasoning
+has leaked in — move it to `focus`. Full rule and rationale: `CLAUDE.md`
+→ "Workout descriptions are execution aids, not decision records".
 
 ---
 
 ## Exercise variation + research (creativity — MANDATORY)
 
-Pure parameter progression (more weight, more reps) is not enough — the
-athlete wants varied training.
+**Rule:** Per session, introduce or rotate at least one exercise that has NOT appeared in the last 3 sessions of the same type.
 
-**Rule:** Per session, introduce or rotate at least one exercise that
-has NOT appeared in the last 3 sessions of the same type.
-
-**Online research:** Do NOT rely only on the internal exercise pool.
-Before each session **actively search** for new exercise variants —
-matching the current pillar (plyo, core, legs, strength), injury
-restrictions, and available equipment. Examples:
+**Online research:** Do NOT rely only on the internal exercise pool. Before each session **actively search** for new exercise variants matching the current pillar (plyo, core, legs, strength), injury restrictions, and available equipment. Examples:
 - `"plyo training exercises progression"` / `"plyometric leg training home kettlebell"`
 - `"core stability exercises anti-rotation"` / `"functional leg strength training"`
 - `"balance training exercises progression"` / `"single leg balance proprioception training"`
-- Filter immediately against the athlete's restrictions (see
-  `config/athlete_static.md` — overhead-load blocks, injury-phase
-  ceilings, surface restrictions) and use only equipment listed in
-  `config/equipment.md`. Carry over any rehab exercises that the
-  athlete-state file marks as mandatory.
+- Filter immediately against `config/athlete_static.md` (overhead-load blocks, injury-phase ceilings, surface restrictions); use only equipment from `config/equipment.md`. Carry over mandatory rehab exercises.
 
-**Communicate explicitly:** in `focus`, always name which exercise is
-new (from research or rotation) and why it fits now.
+**Communicate explicitly:** in `focus`, name which exercise is new (from research or rotation) and why it fits now.
 
-**Re-evaluation flag takes precedence over ad-hoc rotation.** When the
-briefing carries the `🔄 Exercise re-evaluation due` flag (or the head
-coach passes confirmed `exercise-reviewer` outcomes), use those
-keep/progress/swap/retire decisions to drive selection — do not improvise
-a separate rotation on top of them. Absent the flag, the per-session
-rotation rule above applies as the lightweight default.
+**Re-evaluation flag takes precedence.** When the briefing carries `🔄 Exercise re-evaluation due` (or confirmed `exercise-reviewer` outcomes), use those keep/progress/swap/retire decisions — do not improvise a separate rotation. Absent the flag, the per-session rotation rule applies.
 
 ---
 
@@ -469,43 +442,15 @@ exercises on top), enforce these rules:
 
 | What | Authoritative source |
 |------|----------------------|
-| Sets / reps / load / tempo / RPE trend | **Type history** (`fetch_type_history.py` output, last session of the same exercise) |
+| Progression vector per exercise (load before reps? volume cap?) | **`config/exercise_progressions.md`** |
+| Latest state (sets / reps / load / tempo / RPE) | **Type history** (`fetch_type_history.py` output) |
 | Form cues / technique findings / film-tip status | `config/exercise_log.md` |
-| Global progression rules (e.g. "volume first, then load") | `config/exercise_progressions.md` |
 
-**Rule:** If `exercise_log.md` carries a sets/reps suggestion (e.g.
-"2x8 → 3x8"), that is only a **snapshot from the video-analysis
-moment**, not a live tracker. The type history always wins. If the
-athlete has performed the exercise multiple times since then with
-higher volume / lower RPE, the log line is stale — the actual next
-step is derived from the **latest** type-history session, not from the
-log.
-
-**Mismatch handling:** type history wins. Do NOT use the
-`exercise_log.md` entry in the running spec answer; report it to the
-head coach as a drift finding so they can update the entry, or so the
-`/audit` pipeline raises an `exercise_log_drift` finding.
+**Rule:** `exercise_log.md` sets/reps entries are snapshots from the video-analysis moment, not a live tracker. Type history always wins. On mismatch: type history wins; report drift finding to head coach.
 
 ## MANDATORY: warmup-consistency check before output
 
-Before emitting your final workout JSON, run a **self-check** of
-internal consistency between main-set exercises and warmup content:
-
-1. Scan all main-set exercise descriptions for phrases like:
-   - "… mandatory in warmup"
-   - "… required in the warmup"
-   - "… before [exercise] mandatory"
-   - "mandatory … in warmup"
-2. Extract the named warmup components (e.g. "wrist mobility",
-   "reverse wrist curls", "hamstring stretch", "scapular activation").
-3. Verify: does **each** of these components appear **explicitly** as
-   its own step in the warmup section of `structure[]`?
-4. On mismatch: either add the warmup step OR remove the "mandatory"
-   claim from the main-set description — pick one, never leave both
-   in disagreement.
-
-This self-check catches bugs where the description promises a warmup
-component that's not actually in the warmup steps.
+Before emitting the final workout JSON, self-check: scan main-set descriptions for "mandatory in warmup / required in warmup", extract the named components, verify each appears as its own step in `structure[]` warmup. On mismatch: add the warmup step OR remove the mandatory claim — never leave both in disagreement.
 
 ---
 
@@ -557,54 +502,24 @@ component that's not actually in the warmup steps.
 
 ### Target-RPE — when MANDATORY, when forbidden
 
-A Ziel-RPE per exercise tells the athlete what intensity the set
-should land at, and it's the canonical progression signal the next
-session reads. Missing target-RPE on a load-bearing exercise breaks
-the progression loop.
+**MANDATORY: `rpe_target` field on the exercise JSON AND inline `RPE X` or `RPE X-Y` in the flat `description`** for every:
 
-**MANDATORY: `rpe_target` field on the exercise JSON AND inline
-`RPE X` or `RPE X-Y` in the flat `description`** for every:
-
-- Weighted exercise (`weight_kg` set): Goblet Squat, Back Squat, RDL,
-  Step-up, Lunge, KB Press, Bicep Curl, Wrist Curls, weighted Dips,
-  weighted Pull-ups
-- Bodyweight exercise at near-max recruitment: Pull-ups, Dips,
-  weighted Push-up variants, Box Jumps (RPE pacing of explosiveness)
-- Plyo with explicit volume (Pogo Hops, Lateral Bound, depth jumps):
-  `rpe_target` captures effort-cap and tendon-load tolerance
+- Weighted exercise (`weight_kg` set): Goblet Squat, Back Squat, RDL, Step-up, Lunge, KB Press, Bicep Curl, Wrist Curls, weighted Dips, weighted Pull-ups
+- Bodyweight exercise at near-max recruitment: Pull-ups, Dips, weighted Push-up variants, Box Jumps (RPE pacing of explosiveness)
+- Plyo with explicit volume (Pogo Hops, Lateral Bound, depth jumps): `rpe_target` captures effort-cap and tendon-load tolerance
 
 **FORBIDDEN (do NOT add RPE) on:**
 
-- Stability / endurance-iso without load: Side Plank, Bird Dog,
-  McGill Curl-up, Dead Bug, Plank — progression is form + pain
-  signal + hold-time, not RPE
-- Balance / proprioception: use S1-S5 stability score instead
-  (S1 = stable/easy … S5 = fell off; this S-rating replaces RPE on
-  balance work — see also the balance-pool rules in `CLAUDE.md`)
+- Stability / endurance-iso without load: Side Plank, Bird Dog, McGill Curl-up, Dead Bug, Plank — progression is form + pain signal + hold-time, not RPE
+- Balance / proprioception: use S1-S5 stability score instead (S1 = stable/easy … S5 = fell off; S-rating replaces RPE on balance work — see balance-pool rules in `CLAUDE.md`)
 - Mobility / activation drills: cat-cow, hip circles, wand slides
-- Light band physio (External Rotation Band, Banded Pull-Apart,
-  Finger Extensors with light band): RPE may be given as an upper
-  cap (e.g. "RPE 4-5") but is not progression-driving — Form > Last
+- Light band physio (External Rotation Band, Banded Pull-Apart, Finger Extensors with light band): RPE may be given as an upper cap (e.g. "RPE 4-5") but is not progression-driving — Form > Last
 
-**Override:** a Last-Cap on a weighted exercise (e.g. Wrist Curls
-@ 9 kg Cap) does NOT remove the RPE requirement — the cap fixes load,
-the RPE tells whether the cap is still appropriate.
+**Override:** a Last-Cap on a weighted exercise (e.g. Wrist Curls @ 9 kg Cap) does NOT remove the RPE requirement — the cap fixes load, the RPE tells whether the cap is still appropriate.
 
-**Inline format in `description`:** `Goblet Squat: 3x12 @ 16kg | RPE 7
-| last week 12 kg (easy) → +4 kg`. The RPE token belongs **between**
-the volume spec and the progression rationale, separated by `|`.
+**Inline format in `description`:** `Goblet Squat: 3x12 @ 16kg | RPE 7 | last week 12 kg (easy) → +4 kg`. RPE token belongs **between** the volume spec and the progression rationale, separated by `|`.
 
-**The `@` before the load is MANDATORY, not decorative.** Writing the
-weight adjacent to the volume spec (`3x12 16kg`) is ambiguous to a
-reader: `SxR` and `N kg` sit next to each other with nothing marking
-which number is which, and whenever the numbers happen to coincide the
-line reads as a piece-count of equipment rather than as sets and reps.
-`2x12 12kg` is parsed by a human as "two 12 kg bells", not as "2 sets
-of 12 reps at 12 kg" — an athlete who owns only one bell then believes
-the session is impossible and stops. Always separate the load with
-` @ `, and where the exercise could plausibly be performed with one or
-two implements, state the implement count explicitly in the cue
-("one kettlebell, both hands on the same handle").
+**The `@` before the load is MANDATORY, not decorative.** `3x12 16kg` is ambiguous — `2x12 12kg` reads as "two 12 kg bells" to a human, not "2 sets of 12 reps at 12 kg". Always write ` @ ` between volume and load; where the exercise could use one or two implements, state the count explicitly ("one kettlebell, both hands on the same handle").
 
 ## MANDATORY: two legitimate justification sources — planner estimate is NOT one
 
@@ -632,18 +547,13 @@ volume / exercise decisions:
 - Then the justification may reference time: "volume reduced to
   athlete's 45 min — main stimulus prioritised".
 
-**`duration_range` from the planner directive without an athlete
-source is the planner's volume estimate, NOT a hard time cap and NOT
-a valid justification source for athlete-visible text.** If the
-athletically meaningful stimulus needs more time: exceed the range and
-justify in `duration_note` (internal, not athlete-visible). If less is
-enough: shorten and justify athletically.
+**`duration_range` is the planner's volume estimate — NOT a hard cap
+and NOT a valid justification source for athlete-visible text.** Exceed
+it (justify in `duration_note`) or shorten it (justify athletically).
 
-**Core principle:** The athlete reads the description in intervals.icu.
-"Time pressure" without athlete-stated time is confusing (they didn't
-set a time) and undermines trust in the plan logic. Anything that's
-dropped is dropped either for a sports-physiological reason OR for an
-athlete-stated time limit — and both are explainable.
+**Core principle:** Anything dropped is dropped for a sports-physiological
+reason OR an athlete-stated time limit — both must be explainable in the
+athlete-visible description.
 
 **Self-check before output:** Search the `description` text for the
 words "time", "short", "time pressure", "time limit", "mini block
@@ -779,26 +689,21 @@ structure to be assessed first, then pick the angle that exposes it:
 | Hip drop / lateral stability | frontal or from behind |
 | Limb path, depth, joint angles | true lateral |
 
-Two constraints that decide usability as much as the direction does:
+Two usability constraints:
 
-- **Camera height.** A floor-level camera foreshortens the trunk and
-  makes spine curvature and hip height unjudgeable. Default to roughly
-  the height of the joint being assessed.
-- **The angle must show the side the open question concerns.** When the
-  progression gate hinges on a rehab-side structure, an angle that keeps
-  that side away from the camera produces a video that cannot clear the
-  gate — the session is spent and the question stays open until the next
-  occurrence of the exercise.
+- **Camera height.** Default to the height of the joint being assessed —
+  a floor-level camera makes spine curvature and hip height unjudgeable.
+- **The angle must show the side the open question concerns.** An angle
+  that keeps the rehab-side structure out of frame produces a video that
+  cannot clear the progression gate.
 
 When one angle cannot cover every criterion, pick the angle that answers
 the **gating** question and say so in the tip; do not ask for two videos.
 
-*Anti-pattern:* a film tip requesting a generic side/45° view for an
-exercise whose open question was scapular control. The recording was
-technically fine and answered the secondary criteria, but the shoulder
-blade never entered frame, so the progression gate could not be
-resolved. The athlete cannot correct this after the fact — the angle has
-to be right in the plan, before the session.
+*Anti-pattern:* a film tip for a scapular-control exercise that requested
+a generic side/45° view — the shoulder blade never entered frame, so the
+progression gate could not be resolved. The angle must be right in the
+plan.
 
 Camera-placement helper per exercise:
 `python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/analyse_video.py --exercise "[name]" --angle-only`
@@ -814,23 +719,16 @@ change the plan.
 
 ## Research-uncertainty flag (mandatory)
 
-When you lack real sport-science evidence for a call you are about to make
-— a protocol parameter, a progression rule, a load/recovery interaction, a
-biomechanics judgement — do **not** guess. Emit a `RESEARCH-FLAG` block so
-the head coach can offer the athlete a focused evidence check before the
-recommendation lands:
+No real sport-science evidence for a call → do **not** guess; emit
+(never blocks your output — `fallback` applies if the athlete declines
+research; keep `question` athlete-agnostic):
 
 ```
 🔬 RESEARCH-FLAG
-question: <one line, athlete-agnostic research question>
-uncertainty: <what is unclear and why it affects this decision>
-decision_blocked: <which recommendation / structure this gates>
-fallback: <the conservative default to use if the athlete declines research>
+question: <one line, athlete-agnostic>
+uncertainty: <what is unclear, why it affects this decision>
+decision_blocked: <which recommendation this gates>
+fallback: <conservative default>
 ```
 
-Keep `question` generic — no athlete data, it may become a public research
-document. Always provide a usable `fallback`: the flag never blocks your
-output, it offers to upgrade the evidence behind it. The format and the
-flag-then-confirm gating are defined in `framework/CLAUDE.md`
-("Agent-flagged uncertainty"); research runs only after the athlete approves,
-via `/research`.
+Gating protocol: `framework/CLAUDE.md` §Agent-flagged uncertainty.

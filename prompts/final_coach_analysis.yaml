@@ -1,3 +1,9 @@
+# REFERENCE TEMPLATE ONLY — no production code path loads this prompt.
+# The authoritative analysis contract is agents/coach-analyst.md, which
+# carries mandatory exclusion rules this template omits (cardiac startup
+# drift, stride pace, heat-driven pace loss, Z1-on-recovery, elevation
+# route-baseline). Do NOT wire this into a production path without
+# porting those rules.
 metadata:
   version: "1.0.0"
   model: "anthropic/claude-opus-4-6"

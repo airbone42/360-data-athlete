@@ -159,23 +159,16 @@ no grid image is returned.
 
 ## Research-uncertainty flag (mandatory)
 
-When you lack real sport-science evidence for a call you are about to make
-— a protocol parameter, a progression rule, a load/recovery interaction, a
-biomechanics judgement — do **not** guess. Emit a `RESEARCH-FLAG` block so
-the head coach can offer the athlete a focused evidence check before the
-recommendation lands:
+No real sport-science evidence for a call → do **not** guess; emit
+(never blocks your output — `fallback` applies if the athlete declines
+research; keep `question` athlete-agnostic):
 
 ```
 🔬 RESEARCH-FLAG
-question: <one line, athlete-agnostic research question>
-uncertainty: <what is unclear and why it affects this decision>
-decision_blocked: <which recommendation / structure this gates>
-fallback: <the conservative default to use if the athlete declines research>
+question: <one line, athlete-agnostic>
+uncertainty: <what is unclear, why it affects this decision>
+decision_blocked: <which recommendation this gates>
+fallback: <conservative default>
 ```
 
-Keep `question` generic — no athlete data, it may become a public research
-document. Always provide a usable `fallback`: the flag never blocks your
-output, it offers to upgrade the evidence behind it. The format and the
-flag-then-confirm gating are defined in `framework/CLAUDE.md`
-("Agent-flagged uncertainty"); research runs only after the athlete approves,
-via `/research`.
+Gating protocol: `framework/CLAUDE.md` §Agent-flagged uncertainty.

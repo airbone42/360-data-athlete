@@ -18,30 +18,14 @@ plugin. No standalone scheduler.
 
 ---
 
-## For plugin consumers
+## For plugin consumers (pointer)
 
-When this CLAUDE.md is loaded as part of a plugin install
-(`/plugin install aicoach-framework@360-data-athlete`), all `config/`
-files referenced throughout this document live in **the consumer's
-project root**, not inside the plugin install directory at
-`~/.claude/plugins/.../aicoach-framework/`. The loader
-(`app/utils/paths.py`) reads `config/` from the consumer's repo first
-and falls back to the plugin's `config.example/` for any file not
-overridden.
-
-- **Generic improvements** (new rules, validator checks, agents,
-  paradigms, doc fixes): open a PR against
-  [airbone42/360-data-athlete](https://github.com/airbone42/360-data-athlete).
-  See `CONTRIBUTING.md` for scope.
-- **Athlete-specific edits** (zones, PRs, injuries, restrictions,
-  language, equipment, incident anchors): belong in the consumer's
-  `config/*.md` and the consumer's project-level `CLAUDE.md` — never
-  in the plugin install directory. `/plugin update` would wipe such
-  edits.
-
-A scaffold for a fresh wrapper repo lives at `wrapper.example/` in
-this plugin — copy its contents into a private repo and customise
-`config/` to start.
+`config/` files referenced in this document resolve from the **consumer's
+project root** first, with fallback to the plugin's `config.example/`
+(`app/utils/paths.py`). Generic improvements go as PRs to the framework
+repo; athlete-specific edits belong in the consumer's wrapper — never in
+the plugin install directory. Full install/override/contribution guide:
+[docs/architecture.md](docs/architecture.md).
 
 ---
 
@@ -140,47 +124,18 @@ verbatim everywhere; the regression test
 blocks any bare `python3 scripts/...` from sneaking back into
 `commands/` or `agents/`.
 
-| Script | Purpose |
-|--------|---------|
-| `fetch_context.py` | Full athlete context (wellness, activities, weather, events, shoes) |
-| `fetch_type_history.py` | Last N sessions of a given type + activity messages |
-| `push_workouts.py` | Push workouts as events to intervals.icu |
-| `delete_workouts.py` | Delete workout events |
-| `post_message.py` | Post coaching note on activity, or NOTE event on date |
-| `fetch_activity.py` | Activity detail + streams + linked planned workout |
-| `download_fit.py` | Download FIT file from Garmin |
-| `parse_fit.py` | Parse FIT (laps + records) |
-| `build_sub_laps.py` | Sub-lap windows with surface data |
-| `set_activity_gear.py` | Assign the recommended shoe to a finished activity (intervals backend, `/analyse` 6.55) |
-| `shoe_recommend.py` | Shoe recommendation after plan push |
-| `sync_description_drift.py` | Sync athlete description edits back into `config/exercise_progressions.md` (sets/reps/duration/weight + hold-time/TUT vector) |
-| `extract_run_dynamics.py` | Garmin running dynamics for video time window |
-| `warmup_cache.py` | Pre-populate intervals.icu file cache |
-| `analyse_hrv_dfa.py` | DFA-α1 coefficient from RR data |
-| `analyse_video.py` | Video form check via Gemini |
-| `log_muscle_load.py` | Log per-muscle load from an activity |
-| `muscle_overview.py` | Muscle fatigue overview (30-day window) |
-| `audit_consistency.py` | Drift scanner across configs/agents/prompts |
-| `get_balance_rotation.py` | Daily balance rotation (A/B/C/D) |
-| `hrv_readiness.py` | HRV readiness classification (7d-rolling ln-rMSSD vs 60d normal band) |
+Full script catalogue with one-line purposes:
+[scripts/README.md](scripts/README.md). The scripts an agent or command
+needs are named directly in its own definition.
 
 ---
 
-## Local modules (`app/`)
+## `fetch_context.py` output schema
 
-- `app/api/` — intervals.icu HTTP client + file cache (`cache/`)
-- `app/utils/` — FIT parser, Garmin download, prompt loader, HR zones,
-  windowing, **path resolution (`paths.py`)**, **prompt sanitization (`sanitize.py`)**
-- `app/graphs/` — context builder, type-history fetcher, workout parser
-- Prompts: `prompts/*.yaml` (template + model + temperature).
-  `agents/<name>.md` is the authoritative agent definition; the
-  `prompts/*.yaml` files are their code-path counterparts (manually
-  renderable as reference prompts via `scripts/load_prompt.py --name
-  <prompt>`) and are kept content-identical — drift is checked by the
-  test suite and `/audit`.
-- Config: `config/*.md` (auto-injected as placeholders into prompts)
+Code layout (`app/api`, `app/utils`, `app/graphs`, prompts, config
+injection): [docs/architecture.md](docs/architecture.md).
 
-**`fetch_context.py` output schema (key fields):**
+**Key fields:**
 
 ```
 hrvContext, hrv, rhr, sleep, sleepHours,
@@ -252,23 +207,11 @@ otherwise                         →  specialist-complementary
 | `physio-consultant` | Injury consultation (physiotherapy view) |
 | `sports-ortho-consultant` | Injury consultation (orthopaedic view) |
 
-### Collaborative pane model
+### Specialist briefing (pane start prompt)
 
-Agents are not downstream pipelines — they are teammates in panes:
-
-1. **Planning.** The head coach launches `planner` in a pane. Planner
-   presents a proposal in chat. The head coach and specialists can react
-   and adjust directly.
-2. **Specialist delegation.** For each workout, the head coach launches the
-   matching specialist in a pane. Specialists load `config/` themselves and
-   present their structure.
-3. **Cross-workout coordination.** The head coach reviews all specialist
-   outputs together. On conflicts (e.g. duplicate drill warm-ups), the head
-   coach gives targeted feedback to the respective pane.
-4. **Analysis.** `data-scientist` produces a factual lap chronicle,
-   `coach-analyst` builds the coaching feedback on top.
-5. **Mental.** `mental-coach` triggers automatically — rather too often
-   than too rarely while tuning.
+Agents are pane-based teammates, not a pipeline — the collaboration
+shape is documented in [docs/architecture.md](docs/architecture.md)
+§Pane model. Operational part:
 
 **Context passed to a specialist (pane start prompt):**
 
@@ -521,15 +464,10 @@ earlier.
   athlete-reported acute symptom). "The last few runs were short" is
   **not** a trigger.
 
-**Drift incident pattern** (canonical case to learn from): post-race
-rebuild, the last 3 runs were short re-entry sessions; the long-run
-anchor defaulted to the longest of those three and the plan proposed a
-long run well below the athlete's demonstrated capability from a few
-weeks earlier — which sat just *outside* the 3-session briefing window.
-The athlete had to challenge the conservatism. Fix: representative
-look-back + demonstrated-capability anchoring at both the head-coach
-briefing layer and in `specialist-endurance` ("Long-run / volume
-anchoring").
+**Drift incident pattern:** a post-race rebuild anchored the long run on
+the short re-entry sessions inside the 3-session window; the athlete's
+demonstrated capability sat just outside it and the athlete had to
+challenge the conservatism.
 
 *Enforcement: mechanical validator hook `validate_plan.py::check_easy_run_conservatism` (R014). Primary anchor — when `competition_plan.md` documents a per-phase easy-run band keyed by CTL ("Lauf-Dauer-Logik pro Phase"), an easy run below the phase-band floor (mapped via current CTL) with no documented recovery trigger is a hard ERROR; heat is a reason to run slower (HR-capped), not shorter, and indoor/brick runs are exempt. Fallback anchor — without a phase-band table or when CTL is offline, easy runs below 70% of the 30d easy median without a documented recovery reason surface as a WARNING. Plus head-coach judgment for the other drift classes, including pacing / race-strategy conservatism and long-run/volume anchoring (not fully mechanizable — the demonstrated-longest-run anchor depends on a representative history window the coach must request).*
 
@@ -608,12 +546,9 @@ prescription and the new instruction, propose the additive
 interpretation, and ask one yes/no question. Do NOT present a 3-option
 menu (see "Coach decisiveness rule").
 
-**Drift incident pattern** (canonical case to learn from): A new
-daily prescription was added in a real session. The two following
-routine-labeled sessions silently dropped the existing atomic
-multi-exercise routine — for over a week. The new daily layer should
-have been added on top; the atomic block should have continued on its
-existing cadence. This is exactly the failure mode this rule prevents.
+**Drift incident pattern:** a newly added daily prescription silently
+displaced an existing atomic routine for over a week — the new layer
+should have stacked on top of the continuing block.
 
 **Audit-time correlate:** `config-auditor` and `plan-validator` should
 flag plans that contain a new physio layer while the underlying
@@ -660,20 +595,12 @@ change reaches the athlete:
   Threshold-Reps, plyometric set/rep) after a documented drop without
   reading why the drop happened.
 
-**Drift incident pattern that motivated this rule:**
-- First session: Athlete ran a Rønnestad 30/15 protocol at a target
-  watt. Compliance dropped below 95%, decoupling above 10%, last set
-  abandoned mid-set.
-- A few days later: Coach proposed the same protocol at the same
-  intensity range without consulting the prior session's compliance,
-  and without questioning the underlying paradigm (high-%FTP targets
-  for 30/15) which the literature doesn't actually support —
-  Rønnestad's protocol is ~100% MAP (≈105-120% FTP), and intensifying
-  above MAP REDUCES time-above-90% VO2max (Frontiers 2024).
-- Fix: the [vo2max-short-intervals research document](research/vo2max-short-intervals.md)
-  was created, both `training_paradigms.md` paradigm entries were
-  corrected, and this rule was added so the same drift doesn't repeat
-  silently for the next protocol.
+**Drift incident pattern:** the same 30/15 protocol was re-proposed
+unchanged days after a documented compliance drop, without consulting
+the evidence — which does not support the assumed high-%FTP targets in
+the first place. The fix produced
+[vo2max-short-intervals.md](research/vo2max-short-intervals.md),
+corrected `training_paradigms.md`, and this rule.
 
 *Enforcement: head-coach judgment — requires consulting
 `framework/research/` and persisting new findings there before applying
@@ -869,16 +796,12 @@ verifiable from the listed sources, the entry is removed.
 
 ### Leg-quality cross-modality DOMS spacing (mandatory)
 
-A leg-driven endurance **quality** session — bike VO2max / threshold, or a
-hard (interval or > ~30 min) run — recruits the same musculature (quads,
-hamstrings, calves) as a heavy **eccentric** leg-strength or plyometric
-session. When that strength / plyo session falls within the **24–48 h
-DOMS-peak window** *before* the endurance quality (DOMS timeline:
-[doms-peak-timing.md](research/doms-peak-timing.md)), the quality reps are
-paid on pre-fatigued legs: the power/pace target is met with a 1–2 point RPE
-inflation, the limiter flips back to local muscular endurance instead of the
-cardiovascular system, and the session is no longer a clean, comparable
-stimulus against the last fresh-legs effort of the same format.
+A leg-driven endurance **quality** session (bike VO2max / threshold, hard
+or > ~30 min run) inside the **24–48 h DOMS-peak window** after a heavy
+eccentric leg / plyo day is paid on pre-fatigued legs: RPE inflates 1–2
+points, the limiter flips to local muscular endurance, and the session
+stops being a comparable stimulus (timeline:
+[doms-peak-timing.md](research/doms-peak-timing.md)).
 
 **Rule:** Do not schedule a leg-driven endurance quality inside the 24–48 h
 DOMS window of a heavy eccentric leg / plyo day. Either
@@ -900,17 +823,11 @@ and under-restricts slow-eccentric work. Classify before spacing:
 | **Slow eccentric at long muscle length** | RDL, Nordic curl, downhill running, heavy split squat, slow-tempo squat | Long lengthening excursion at or near peak stretch | **≥ 72 h** |
 | **Concentric-dominant at short muscle length, no external load** | Bodyweight hip thrust / glute bridge, concentric isolation at the shortened end | No controlled eccentric excursion under tension; peak force at the shortest muscle length; bodyweight only | **≥ 24 h** |
 
-This third class is the lowest-damage modality in the leg-strength palette —
-not an exception to the spacing rule but its bottom rung. All three damage
-multipliers (contraction mode, muscle length at peak force, absolute load) are
-minimal at once, so **a first exposure in this class is not a reason to reach
-for the 72 h floor**: the repeated-bout effect protects against
-eccentric-triggered damage, and a stimulus that barely produces any has no
-protection gap to worry about. The class shifts up the moment slow eccentric
-**or** external load **or** peak stretch enters — then read the row above. The
-operative failure mode here is volume overshoot, not load overshoot: cap a
-first exposure at 6–10 reps, ~3 sets on the target side, RPE ≤ 6–7, and
-progress via volume rather than load. Derivation and sources:
+The third class is the palette's bottom rung, not an exception — **a first
+exposure in this class is no reason for the 72 h floor**. It shifts up the
+moment slow eccentric **or** external load **or** peak stretch enters. Its
+failure mode is volume, not load: cap a first exposure at 6–10 reps, ~3
+sets per side, RPE ≤ 6–7, progress via volume. Derivation:
 [concentric-glute-first-exposure-before-longrun.md](research/concentric-glute-first-exposure-before-longrun.md).
 
 Two corollaries the coach must not get backwards:
@@ -937,13 +854,11 @@ legitimate; substituting permanently removes an adaptation the athlete needs.
 
 **Research anchor:** [ballistic-hip-hinge-vs-eccentric-rdl-before-longrun.md](research/ballistic-hip-hinge-vs-eccentric-rdl-before-longrun.md).
 
-The bike itself is near-purely **concentric** and barely DOMS-inducing
-([concurrent-training-interference.md](research/concurrent-training-interference.md));
-the constraint is the **residual DOMS from the prior eccentric session**, not
-damage from the bike. This rule is distinct from the same-day
-concurrent-interference spacing (≥ 3 h / ≥ 6 h leg-strength → run in
-`training_paradigms.md`), which protects the *strength* adaptation — this one
-protects the *endurance quality* on the following day(s).
+The bike itself is near-purely concentric and barely DOMS-inducing
+([concurrent-training-interference.md](research/concurrent-training-interference.md))
+— the constraint is the residual DOMS, not the bike. Distinct from the
+same-day concurrent-interference spacing in `training_paradigms.md` (that
+protects the *strength* adaptation; this protects the *endurance quality*).
 
 **Override only with a named trigger.** Green wellness plus an explicit
 athlete request to run the quality anyway is a legitimate reason to proceed
@@ -965,27 +880,18 @@ unusually long walk on hard ground, a downhill hike. Nothing in
 that — only `athleteFeedback` does. Treat such a report as a real
 spacing input rather than as colour.
 
-The order of operations differs from the table above in one important
-way: **classify before you space.** Lower-leg soreness after an unusual
-exposure has three candidate explanations that present alike on day one
-and diverge by weeks — exposure DOMS (peak 24–72 h, gone by day 5–7),
-medial tibial stress syndrome (posteromedial, weeks-scale graded
-return), and exertional compartment syndrome (exertion-locked, needs a
-specialist). Applying a 48–72 h spacing rule to the second of those
-produces a confident, wrong release. Route the differential to the
-physio consultant when the soreness sits in the lower leg, and treat a
-48–72 h deferral as valid **only** once the DOMS reading holds.
+**Classify before you space:** lower-leg soreness after an unusual
+exposure has three lookalike explanations that diverge by weeks —
+exposure DOMS (peak 24–72 h, gone day 5–7), MTSS (weeks-scale graded
+return), exertional compartment syndrome (specialist). Route lower-leg
+soreness to the physio consultant; a 48–72 h deferral is valid **only**
+once the DOMS reading holds.
 
-One correction worth stating explicitly, because the intuitive version
-is wrong and sounds right: when sore *stabilisers* are the concern
-(peroneals and an ankle history), do **not** argue from protective
-reflex latency. That reflex is too slow to prevent an inversion event
-in the first place, so slowing it further changes little. What the
-evidence supports is narrower — an athlete with a **recurrent**
-instability history loses their protective landing compensation under
-fatigue, where an athlete whose single injury healed does not. Argue
-from that, or argue from plain exposure reduction; do not dress either
-up as reflex protection. Details and sources:
+For sore *stabilisers* (peroneals + ankle history): do **not** argue from
+protective reflex latency (too slow to matter). The evidence supports
+only: a **recurrent**-instability athlete loses protective landing
+compensation under fatigue — argue from that or from plain exposure
+reduction. Sources:
 [peroneal-doms-inversion-defense-and-mtss-differential.md](research/peroneal-doms-inversion-defense-and-mtss-differential.md).
 
 *Enforcement: `plan-validator` S8 surfaces it (WARNING) when a heavy
@@ -1846,19 +1752,10 @@ show no fatigue → use intervals or tempo runs for the fatigued section.
 
 ## DFA-α1 zone validation pre-check (mandatory)
 
-Before suggesting a DFA-α1 analysis to the athlete, verify all of:
-
-| Criterion | Requirement |
-|-----------|-------------|
-| Protocol | Stepped test, ≥ 6 min steady per step — no free run |
-| Surface | Treadmill or hard flat surface — no soft ground / trail |
-| Recording | HR strap (e.g. Polar H10) + recording app started before warm-up |
-| Recent training | No intense session in the last 48 h |
-| Warm-up | ≥ 10 min below the lowest test step; exclude the first 2 min of each step from analysis |
-| Step range | Start below suspected VT1 |
-
-Default step protocol lives in `config.example/zone_validation_protocol.md`
-(or `config/`). Athlete-specific step ranges in `athlete_status.md`.
+Before suggesting a DFA-α1 analysis, verify the protocol prerequisites
+(stepped test, HR strap, surface, warm-up, no intense session in 48 h)
+in `config.example/zone_validation_protocol.md` — athletes without the
+required recording setup get no DFA suggestion.
 
 ---
 
