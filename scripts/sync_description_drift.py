@@ -119,6 +119,10 @@ def _section_mapping_key(header: str, mapping: dict) -> str | None:
     token-set equal) stays unmatched and is simply not synced.
     """
     cleaned = re.sub(r"\s*\([^)]*\)", "", header).strip()
+    # Drop spaced em/en-dash annotations ("TRX Plank — Physio-Protokoll ab
+    # 27.07.2026" → "TRX Plank") — they are section metadata, not part of
+    # the exercise name, and would defeat the strict token-set match.
+    cleaned = re.sub(r"\s+[—–]\s+.*$", "", cleaned).strip()
     normalised = normalise_exercise_name(cleaned)
     return match_to_mapping_key(normalised, mapping, strict=True)
 

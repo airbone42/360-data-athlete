@@ -129,6 +129,7 @@ Eccentric-Multiplier: 1.4 bei `eccentric_dominant: true` (Nordic Curl, Depth Dro
 | supraspinatus | Obergrätenmuskel (Rotatorenmanschette) | medium | — | — | Stab | Stab |
 | infraspinatus | Untergrätenmuskel (Rotatorenmanschette) | medium | — | — | Stab | Stab |
 | teres_minor | Kleiner runder Armmuskel | medium | — | — | Stab | S |
+| subscapularis | Unterschulterblattmuskel (Rotatorenmanschette, Innenrotation) | medium | — | — | Stab | Stab |
 
 ### Oberarm
 

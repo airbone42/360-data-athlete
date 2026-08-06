@@ -184,6 +184,10 @@ def _process_strength(
             continue
 
         ex_mapping = mapping[mapping_key]
+        # Deliberately-not-logged entries (stretches, priming, cool-downs):
+        # recognised so they don't pollute the unmapped queue, but no load.
+        if ex_mapping.get("_type") == "no_log":
+            continue
         load_mode = ex_mapping.get("load_mode", "free_weight")
         eccentric_dominant = ex_mapping.get("eccentric_dominant", False)
         lever_factor = ex_mapping.get("lever_factor", 1.0)

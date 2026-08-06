@@ -504,7 +504,8 @@
       "l-sit tuck hold",
       "l-sit tuck",
       "l sit tuck hold",
-      "l sit tuck"
+      "l sit tuck",
+      "l-sit parallettes tuck hold"
     ],
     "primary": [
       {
@@ -707,7 +708,9 @@
     "aliases": [
       "dead bug",
       "dead bug kb",
-      "dead bug kurzhantel"
+      "dead bug kurzhantel",
+      "dead bug contralateral",
+      "dead bug contralateral kb"
     ],
     "primary": [
       {
@@ -751,7 +754,8 @@
       "pallof press",
       "pallof-press",
       "kabelrotation",
-      "anti-rotation press"
+      "anti-rotation press",
+      "pallof press band"
     ],
     "primary": [
       {
@@ -854,7 +858,8 @@
     "aliases": [
       "plank",
       "unterarmstütz",
-      "forearm plank"
+      "forearm plank",
+      "trx plank"
     ],
     "primary": [
       {
@@ -917,7 +922,9 @@
     "aliases": [
       "side plank",
       "seitstütz",
-      "lateral plank"
+      "lateral plank",
+      "side plank mit drehung nach unten",
+      "side plank t-reach"
     ],
     "primary": [
       {
@@ -1904,7 +1911,9 @@
       "physio außenrotation",
       "schulter außenrotation",
       "band außenrotation",
-      "er band"
+      "er band",
+      "external rotation band",
+      "er band stand"
     ],
     "primary": [
       {
@@ -3868,5 +3877,653 @@
     ],
     "eccentric_dominant": false,
     "notes": "Tandem stance on firm ground with an externally triggered perturbation (wall-rebound catch, partner push). Reduced base of support in the sagittal plane plus a genuinely unanticipated stimulus — higher frontal-plane and peroneal demand than tandem_stand_gaze_stab, whose perturbation is sensory rather than mechanical. Distinct entry because the surface stays firm: the difficulty comes from the perturbation, not the base."
+  },
+  "band_er_90_90": {
+    "aliases": [
+      "90/90 bow & arrow",
+      "bow & arrow",
+      "bow and arrow",
+      "90/90 bow and arrow",
+      "90/90 external rotation band",
+      "band er 90/90"
+    ],
+    "primary": [
+      {
+        "muscle": "infraspinatus",
+        "intensity": 1.0
+      },
+      {
+        "muscle": "teres_minor",
+        "intensity": 0.9
+      }
+    ],
+    "secondary": [
+      {
+        "muscle": "deltoideus_posterior",
+        "intensity": 0.4
+      },
+      {
+        "muscle": "trapezius_lower",
+        "intensity": 0.4
+      }
+    ],
+    "stabilizer": [
+      {
+        "muscle": "serratus_anterior",
+        "intensity": 0.2
+      }
+    ],
+    "load_mode": "band",
+    "eccentric_dominant": false,
+    "base_exercise": null,
+    "variant_factor": 1.0
+  },
+  "w_raise": {
+    "aliases": [
+      "w-raise",
+      "w raise",
+      "w-raises",
+      "w raises",
+      "prone w-raise",
+      "w-raise band"
+    ],
+    "primary": [
+      {
+        "muscle": "trapezius_lower",
+        "intensity": 1.0
+      },
+      {
+        "muscle": "infraspinatus",
+        "intensity": 0.7
+      },
+      {
+        "muscle": "deltoideus_posterior",
+        "intensity": 0.7
+      }
+    ],
+    "secondary": [
+      {
+        "muscle": "trapezius_mid",
+        "intensity": 0.5
+      },
+      {
+        "muscle": "rhomboideus_major",
+        "intensity": 0.5
+      }
+    ],
+    "stabilizer": [
+      {
+        "muscle": "serratus_anterior",
+        "intensity": 0.2
+      }
+    ],
+    "load_mode": "band",
+    "eccentric_dominant": false,
+    "base_exercise": null,
+    "variant_factor": 1.0
+  },
+  "scapular_pullup": {
+    "aliases": [
+      "scapular pullups",
+      "scapular pullup",
+      "scapular pull-ups",
+      "scapular pull-up",
+      "scapula pullups",
+      "scap pullups"
+    ],
+    "primary": [
+      {
+        "muscle": "trapezius_lower",
+        "intensity": 1.0
+      },
+      {
+        "muscle": "latissimus_dorsi",
+        "intensity": 0.8
+      }
+    ],
+    "secondary": [
+      {
+        "muscle": "rhomboideus_major",
+        "intensity": 0.6
+      },
+      {
+        "muscle": "trapezius_mid",
+        "intensity": 0.5
+      },
+      {
+        "muscle": "serratus_anterior",
+        "intensity": 0.4
+      }
+    ],
+    "stabilizer": [
+      {
+        "muscle": "flexor_digitorum_profundus",
+        "intensity": 0.3
+      },
+      {
+        "muscle": "flexor_digitorum_superficialis",
+        "intensity": 0.25
+      }
+    ],
+    "load_mode": "bodyweight",
+    "eccentric_dominant": false,
+    "base_exercise": null,
+    "variant_factor": 1.0
+  },
+  "trx_back_press": {
+    "aliases": [
+      "trx rücken-hochdrücken",
+      "trx ruecken-hochdruecken",
+      "trx rücken hochdrücken",
+      "trx back press",
+      "trx scapular press-back"
+    ],
+    "primary": [
+      {
+        "muscle": "trapezius_mid",
+        "intensity": 0.9
+      },
+      {
+        "muscle": "rhomboideus_major",
+        "intensity": 0.8
+      },
+      {
+        "muscle": "deltoideus_posterior",
+        "intensity": 0.7
+      }
+    ],
+    "secondary": [
+      {
+        "muscle": "trapezius_lower",
+        "intensity": 0.5
+      },
+      {
+        "muscle": "rhomboideus_minor",
+        "intensity": 0.4
+      },
+      {
+        "muscle": "infraspinatus",
+        "intensity": 0.35
+      }
+    ],
+    "stabilizer": [
+      {
+        "muscle": "erector_spinae",
+        "intensity": 0.15
+      },
+      {
+        "muscle": "transversus_abdominis",
+        "intensity": 0.15
+      }
+    ],
+    "load_mode": "bodyweight",
+    "eccentric_dominant": false,
+    "base_exercise": null,
+    "variant_factor": 1.0
+  },
+  "step_down": {
+    "aliases": [
+      "step-down",
+      "step down",
+      "step-downs",
+      "step downs",
+      "lateral step-down",
+      "lateraler step-down",
+      "forward step-down"
+    ],
+    "primary": [
+      {
+        "muscle": "vastus_medialis",
+        "intensity": 1.0
+      },
+      {
+        "muscle": "vastus_lateralis",
+        "intensity": 0.8
+      },
+      {
+        "muscle": "gluteus_maximus",
+        "intensity": 0.7
+      }
+    ],
+    "secondary": [
+      {
+        "muscle": "gluteus_medius",
+        "intensity": 0.6
+      },
+      {
+        "muscle": "rectus_femoris",
+        "intensity": 0.5
+      }
+    ],
+    "stabilizer": [
+      {
+        "muscle": "gluteus_minimus",
+        "intensity": 0.2
+      },
+      {
+        "muscle": "erector_spinae",
+        "intensity": 0.15
+      }
+    ],
+    "load_mode": "bodyweight",
+    "eccentric_dominant": true,
+    "base_exercise": null,
+    "variant_factor": 1.0
+  },
+  "side_lying_hip_abduction": {
+    "aliases": [
+      "side-lying hip abduction",
+      "side lying hip abduction",
+      "gewichtete side-lying hip abduction",
+      "seitliche hüftabduktion",
+      "seitliche hueftabduktion",
+      "hip abduction seitlage"
+    ],
+    "primary": [
+      {
+        "muscle": "gluteus_medius",
+        "intensity": 1.0
+      },
+      {
+        "muscle": "gluteus_minimus",
+        "intensity": 0.8
+      }
+    ],
+    "secondary": [
+      {
+        "muscle": "tensor_fasciae_latae",
+        "intensity": 0.4
+      }
+    ],
+    "stabilizer": [
+      {
+        "muscle": "obliquus_externus",
+        "intensity": 0.15
+      }
+    ],
+    "load_mode": "weighted",
+    "eccentric_dominant": false,
+    "base_exercise": null,
+    "variant_factor": 1.0
+  },
+  "single_leg_hip_thrust": {
+    "aliases": [
+      "single-leg hip thrust",
+      "single leg hip thrust",
+      "sl hip thrust",
+      "einbeiniger hip thrust",
+      "single-leg glute bridge"
+    ],
+    "primary": [
+      {
+        "muscle": "gluteus_maximus",
+        "intensity": 1.0
+      },
+      {
+        "muscle": "gluteus_medius",
+        "intensity": 0.8
+      }
+    ],
+    "secondary": [
+      {
+        "muscle": "biceps_femoris_long",
+        "intensity": 0.5
+      },
+      {
+        "muscle": "adductor_magnus",
+        "intensity": 0.4
+      },
+      {
+        "muscle": "semitendinosus",
+        "intensity": 0.4
+      },
+      {
+        "muscle": "semimembranosus",
+        "intensity": 0.4
+      }
+    ],
+    "stabilizer": [
+      {
+        "muscle": "transversus_abdominis",
+        "intensity": 0.2
+      },
+      {
+        "muscle": "erector_spinae",
+        "intensity": 0.2
+      },
+      {
+        "muscle": "obliquus_externus",
+        "intensity": 0.15
+      }
+    ],
+    "load_mode": "free_weight",
+    "eccentric_dominant": false,
+    "base_exercise": "hip_thrust",
+    "variant_factor": 1.3
+  },
+  "cross_body_stretch": {
+    "_type": "no_log",
+    "aliases": [
+      "cross-body",
+      "cross body",
+      "cross-body stretch",
+      "cross body stretch",
+      "cross-body dehnung"
+    ]
+  },
+  "hip_flexor_reset": {
+    "_type": "no_log",
+    "aliases": [
+      "gekoppelter hueftbeuger-reset",
+      "gekoppelter hüftbeuger-reset",
+      "hueftbeuger-reset",
+      "hüftbeuger-reset",
+      "hueftbeuger-reset + glute-squeeze",
+      "hüftbeuger-reset + glute-squeeze",
+      "hip flexor reset"
+    ]
+  },
+  "ir_mobi_hand_behind_back": {
+    "_type": "no_log",
+    "aliases": [
+      "hand-hinter-ruecken aktive ir-mobi",
+      "hand-hinter-rücken aktive ir-mobi",
+      "hand hinter rücken ir-mobi",
+      "aktive ir-mobi",
+      "active ir mobility hand behind back"
+    ]
+  },
+  "cooldown_shakeout": {
+    "_type": "no_log",
+    "aliases": [
+      "füße locker ausschütteln, waden",
+      "füße locker ausschütteln",
+      "fuesse locker ausschuetteln",
+      "füße ausschütteln",
+      "waden ausstreichen"
+    ]
+  },
+  "internal_rotation_band": {
+    "aliases": [
+      "internal rotation band (theraband)",
+      "internal rotation band",
+      "ir band",
+      "band innenrotation",
+      "schulter innenrotation",
+      "internal rotation theraband"
+    ],
+    "primary": [
+      {
+        "muscle": "subscapularis",
+        "intensity": 1.0
+      }
+    ],
+    "secondary": [
+      {
+        "muscle": "pectoralis_major",
+        "intensity": 0.3
+      },
+      {
+        "muscle": "teres_major",
+        "intensity": 0.3
+      }
+    ],
+    "stabilizer": [
+      {
+        "muscle": "serratus_anterior",
+        "intensity": 0.15
+      }
+    ],
+    "load_mode": "band",
+    "eccentric_dominant": false,
+    "base_exercise": null,
+    "variant_factor": 1.0
+  },
+  "bws_extension_roll": {
+    "_type": "no_log",
+    "aliases": [
+      "bws-extension über die rolle (gegenrichtung)",
+      "bws-extension über die rolle",
+      "bws extension rolle",
+      "bws-extension",
+      "thoracic extension foam roller"
+    ]
+  },
+  "balance_function_check": {
+    "_type": "no_log",
+    "aliases": [
+      "einbeinstand fester boden — funktions-check, rechts zuerst",
+      "einbeinstand funktions-check",
+      "einbeinstand fester boden funktions-check",
+      "funktions-check einbeinstand",
+      "single-leg stand function check"
+    ]
+  },
+  "back_squat": {
+    "aliases": [
+      "back squat",
+      "lh back squat",
+      "langhantel back squat",
+      "barbell back squat",
+      "langhantel-kniebeuge",
+      "langhantel kniebeuge"
+    ],
+    "primary": [
+      {
+        "muscle": "vastus_medialis",
+        "intensity": 1.0
+      },
+      {
+        "muscle": "vastus_lateralis",
+        "intensity": 1.0
+      },
+      {
+        "muscle": "vastus_intermedius",
+        "intensity": 0.9
+      },
+      {
+        "muscle": "gluteus_maximus",
+        "intensity": 0.9
+      },
+      {
+        "muscle": "rectus_femoris",
+        "intensity": 0.7
+      }
+    ],
+    "secondary": [
+      {
+        "muscle": "adductor_magnus",
+        "intensity": 0.6
+      },
+      {
+        "muscle": "biceps_femoris_long",
+        "intensity": 0.4
+      },
+      {
+        "muscle": "erector_spinae",
+        "intensity": 0.5
+      }
+    ],
+    "stabilizer": [
+      {
+        "muscle": "transversus_abdominis",
+        "intensity": 0.25
+      },
+      {
+        "muscle": "obliquus_externus",
+        "intensity": 0.2
+      },
+      {
+        "muscle": "gluteus_medius",
+        "intensity": 0.2
+      }
+    ],
+    "load_mode": "free_weight",
+    "eccentric_dominant": false,
+    "base_exercise": null,
+    "variant_factor": 1.0
+  },
+  "squat_jump": {
+    "aliases": [
+      "squat jump",
+      "squat jump beidbeinig",
+      "squat jumps",
+      "jump squat",
+      "jump squats",
+      "countermovement jump"
+    ],
+    "primary": [
+      {
+        "muscle": "vastus_medialis",
+        "intensity": 0.9
+      },
+      {
+        "muscle": "vastus_lateralis",
+        "intensity": 0.9
+      },
+      {
+        "muscle": "gluteus_maximus",
+        "intensity": 0.9
+      },
+      {
+        "muscle": "rectus_femoris",
+        "intensity": 0.7
+      },
+      {
+        "muscle": "gastrocnemius",
+        "intensity": 0.6
+      }
+    ],
+    "secondary": [
+      {
+        "muscle": "biceps_femoris_long",
+        "intensity": 0.4
+      },
+      {
+        "muscle": "adductor_magnus",
+        "intensity": 0.3
+      }
+    ],
+    "stabilizer": [
+      {
+        "muscle": "erector_spinae",
+        "intensity": 0.2
+      },
+      {
+        "muscle": "transversus_abdominis",
+        "intensity": 0.15
+      }
+    ],
+    "load_mode": "bodyweight",
+    "eccentric_dominant": true,
+    "base_exercise": null,
+    "variant_factor": 1.0
+  },
+  "pelvic_tilt_quadruped": {
+    "_type": "no_log",
+    "aliases": [
+      "vierfüßler becken-kippungen (kleine range)",
+      "vierfüßler becken-kippungen",
+      "vierfuessler becken-kippungen",
+      "becken-kippungen",
+      "quadruped pelvic tilt",
+      "cat-cow klein"
+    ]
+  },
+  "scapular_depression_band": {
+    "aliases": [
+      "scapular depression band (rechts)",
+      "scapular depression band",
+      "scapular depression",
+      "skapula-depression band",
+      "schulterblatt-depression band"
+    ],
+    "primary": [
+      {
+        "muscle": "trapezius_lower",
+        "intensity": 1.0
+      },
+      {
+        "muscle": "serratus_anterior",
+        "intensity": 0.5
+      }
+    ],
+    "secondary": [
+      {
+        "muscle": "latissimus_dorsi",
+        "intensity": 0.4
+      }
+    ],
+    "stabilizer": [
+      {
+        "muscle": "trapezius_mid",
+        "intensity": 0.15
+      }
+    ],
+    "load_mode": "band",
+    "eccentric_dominant": false,
+    "base_exercise": null,
+    "variant_factor": 1.0
+  },
+  "band_row": {
+    "aliases": [
+      "row (gummiband)",
+      "row gummiband",
+      "band row",
+      "banded row",
+      "gummiband-row",
+      "gummiband rudern",
+      "theraband row"
+    ],
+    "primary": [
+      {
+        "muscle": "latissimus_dorsi",
+        "intensity": 0.9
+      },
+      {
+        "muscle": "rhomboideus_major",
+        "intensity": 1.0
+      },
+      {
+        "muscle": "rhomboideus_minor",
+        "intensity": 1.0
+      },
+      {
+        "muscle": "trapezius_mid",
+        "intensity": 0.9
+      }
+    ],
+    "secondary": [
+      {
+        "muscle": "biceps_brachii",
+        "intensity": 0.5
+      },
+      {
+        "muscle": "brachialis",
+        "intensity": 0.5
+      },
+      {
+        "muscle": "deltoideus_posterior",
+        "intensity": 0.4
+      },
+      {
+        "muscle": "teres_major",
+        "intensity": 0.4
+      }
+    ],
+    "stabilizer": [
+      {
+        "muscle": "trapezius_lower",
+        "intensity": 0.15
+      },
+      {
+        "muscle": "serratus_anterior",
+        "intensity": 0.15
+      }
+    ],
+    "load_mode": "band",
+    "eccentric_dominant": false,
+    "base_exercise": "trx_row",
+    "variant_factor": 0.7
   }
 }

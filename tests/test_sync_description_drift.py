@@ -103,6 +103,20 @@ def test_section_to_mapping_key_handles_simple_name(mapping):
     assert key == "wrist_curl"
 
 
+def test_section_to_mapping_key_strips_dash_annotation(mapping):
+    """Spaced em-dash suffixes are section metadata, not exercise name."""
+    key = sdd._section_mapping_key(
+        "TRX Plank (Arme angewinkelt) — Physio-Protokoll ab 27.07.2026", mapping
+    )
+    assert key == "plank"
+
+
+def test_section_to_mapping_key_rejects_fuzzy_only(mapping):
+    """strict: a header that only fuzzy-matches must stay unmatched, not
+    attach to a foreign exercise's key (write-path corruption guard)."""
+    assert sdd._section_mapping_key("Pallof Press Deficit Ultra", mapping) is None
+
+
 # ── formatting helpers ─────────────────────────────────────────────────────
 
 

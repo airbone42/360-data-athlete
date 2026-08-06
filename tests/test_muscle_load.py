@@ -171,3 +171,33 @@ def test_secondary_less_than_primary():
     fat_p = compute_set_fatigue(result, primary, e1rm)
     fat_s = compute_set_fatigue(result, secondary, e1rm)
     assert fat_p > fat_s
+
+
+def test_no_log_mapping_entry_is_skipped():
+    """_type: no_log entries are recognised (no unmapped-queue noise) but
+    produce no muscle load and no exercise-log row."""
+    import json
+    from pathlib import Path
+    import importlib
+    import sys
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+    lml = importlib.import_module("log_muscle_load")
+
+    mapping = {
+        "cooldown_shakeout": {"_type": "no_log", "aliases": ["füße ausschütteln"]},
+        "plank": {
+            "aliases": ["plank"],
+            "primary": [{"muscle": "rectus_abdominis", "intensity": 1.0}],
+            "secondary": [], "stabilizer": [],
+            "load_mode": "isometric", "eccentric_dominant": False,
+        },
+    }
+    activity = {"description": "Plank: 3x45s | RPE 6\nFüße ausschütteln: 2x20s\n"}
+    result = lml._process_strength(activity, mapping, {}, "2026-08-06", "i0", silent=True)
+    keys = [e["mapping_key"] for e in result["exercises"]]
+    assert "plank" in keys
+    assert "cooldown_shakeout" not in keys
+    assert result.get("unmapped") in (None, [], {}) or all(
+        "ausschütteln" not in str(u) for u in result["unmapped"]
+    )
