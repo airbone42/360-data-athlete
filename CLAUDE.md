@@ -1317,6 +1317,17 @@ Everything in chat:
 Acceptance phrases push to intervals.icu — list configurable per athlete
 in `athlete_preferences.md`.
 
+**Read in-unit feedback before asking (mandatory):** Athletes can record
+post-session feedback directly in intervals.icu — as a `Feedback:` line
+in the event/activity description or as an activity message. When the
+athlete reports a session as done, or when an analysis / progression
+decision needs post-session data (S-ratings, RPE, symptoms), **first
+re-fetch the unit** (`fetch_type_history.py` — descriptions carry the
+`-> Feedback:` annotations — or `fetch_activity.py`) and ask the athlete
+only for what is still missing. Asking for values the athlete already
+logged in the unit is a context violation — same class as ignoring
+`athleteFeedback` from `fetch_context.py`.
+
 **Daily balance rotation (mandatory after main workout push):**
 On every training day — including rest days — a balance unit runs as a
 third, separate workout. `push_workouts.py` enforces this in code: after
