@@ -632,6 +632,32 @@ for the full case.
 - From 20 °C: +5 s/km per 5 °C above 20 °C
 - Strong headwind (>5 m/s): HR-driven instead of pace-driven
 
+**Distance estimate on time-anchored runs (mandatory):** When a workout
+is steered by time + HR (the km number is a *derived estimate*, not a
+target), the athlete still plans a route from that number — so a wrong
+estimate becomes a route problem mid-run (forced extra loop, or a run
+cut short).
+
+- **Weather-normalize the pace anchor.** Do not derive expected paces
+  from reference sessions that ran heat-slowed (or into strong wind)
+  when the planned session runs in cool conditions — reverse the
+  weather adjustment above before estimating. A cool-morning session on
+  fresh legs runs the same HR band 15–30 s/km faster than a midday-heat
+  reference.
+- **State a km range with an explicit upper bound** in the `focus` or
+  step description (e.g. "expect 20–21.5 km in 106 min"), not a single
+  number.
+- **Add the route cue:** plan the route toward the *upper* bound with a
+  shortcut option — never toward the lower bound with a forced add-on
+  loop at the end. Cutting a route short is free; improvising extra
+  distance at the end of a long run lands on the most fatigued
+  kilometres.
+
+*Drift incident pattern:* a time-anchored long run estimated "~20 km"
+from heat-slowed reference paces; the athlete ran the same HR bands
+~15 s/km faster in morning cool, overshot the estimate by >1 km and had
+to bolt an unplanned loop onto the end of the route.
+
 **Wellness correction (within the planner's intensity directive):**
 - HRV substantially below baseline (>10 % deviation): shift zone down
 - TSB strongly negative (<−15): volume −10 %, avoid Z3+
