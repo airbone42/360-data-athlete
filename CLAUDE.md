@@ -1370,6 +1370,23 @@ python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/get_balance_rotation.py --date YYYY-M
   if the pool entry carries one. Never push a duplicate Single-Leg RDL
   on top of a 14 kg+ strength SL RDL — the balance stimulus needs no
   load.
+- **Next-day quality conflict awareness:** The same inspection duty
+  covers the **following** day. Pool entries may carry a conditional
+  `trailing_note` addressed to the coach ("if a leg-heavy quality is
+  scheduled tomorrow, drop exercises X/Y"). The auto-balance push
+  renders that note **verbatim into the athlete-facing description
+  without evaluating it** — evaluation is the head coach's job at push
+  time. Before the day's push, check whether tomorrow carries a
+  leg-driven quality session (mesocycle table in `competition_plan.md`
+  / weekly Hard-Reize outlook — same-day planning means it is not yet
+  an intervals.icu event). If yes, resolve the condition **now**: drop
+  the slow-eccentric leg exercises the note names and substitute the
+  note's stability-drill fallback, so the athlete receives a decided
+  plan, not an unevaluated if-then addressed to themselves. Shipping
+  the raw conditional counts as a planning miss, not as delegation.
+  (Drift incident pattern: a rotation with TRX single-leg squats plus
+  its trailing note went out unevaluated the day before a race-pace
+  run; the athlete had to raise the conflict mid-session.)
 - **Equipment availability (travel / limited kit):** The pool contains
   equipment-dependent exercises (balance board, kettlebell loading, TRX),
   each declaring an `equipment` list and an optional `travel_fallback` in
@@ -1390,7 +1407,10 @@ python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/get_balance_rotation.py --date YYYY-M
   strength block is not yet mechanized — the head coach must still
   inspect the auto-selected rotation for posterior-chain-load overlap
   (see "Leg-strength conflict awareness" above) before piping it into
-  `push_workouts.py`.
+  `push_workouts.py`. The same applies to conditional `trailing_note`
+  evaluation (next-day quality): `get_balance_rotation.py` does not yet
+  resolve the condition or swap exercises — head-coach judgment until
+  mechanized.
 
 **Push discipline — always push the complete day set (mandatory):**
 `push_workouts.py`'s pre-push dedup matches existing WORKOUT events by
