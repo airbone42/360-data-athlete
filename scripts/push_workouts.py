@@ -235,7 +235,7 @@ async def _enrich_with_shoes(events: list[dict], workouts: list[dict], weather: 
         plan_wo = plan_wo.model_dump() if hasattr(plan_wo, "model_dump") else dict(plan_wo)
     footer = _format_shoe_footer(
         shoe_ctx,
-        include_gear_marker=(backend == "intervals"),
+        include_gear_marker=(settings.shoe_tracking_backend == "intervals"),
         planned_workout=plan_wo,
     )
     if not footer:
