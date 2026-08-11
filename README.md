@@ -1,21 +1,60 @@
 # 360° Data Athlete
 
-> ⚠️ **Experimental project. Not intended for unsupervised training.**
->
-> This is a coding experiment with multi-agent systems, using sport
-> training as the problem domain. It does **not** replace a coach or
-> sports-medical advice. Use only with a solid training background, at
-> your own risk. No warranty, no support, no audit.
-
-An **AI coach for endurance and strength athletes**, distributed as a
-[Claude Code](https://claude.com/claude-code) plugin. A team of
+An **AI coach for endurance and strength athletes** that runs entirely
+inside [Claude Code](https://claude.com/claude-code). A team of
 specialised sub-agents (planner, three workout specialists, mental
 coach, video analyst, post-activity analyst, data scientist, plan
 validator, config auditor, two clinical consultants) collaborate to
 plan, push, and review training — grounded in intervals.icu, Garmin
 and (optionally) Telegram.
 
-### Framing
+This repository is the **open-source engine**, free to self-host. A
+managed, turnkey version — same coaching core, no setup — is hosted at
+[360dataathlete.com](https://www.360dataathlete.com) for people who'd
+rather not run it themselves.
+
+> **Experimental, self-hosted, and not medical advice.** It began as a
+> coding experiment with multi-agent systems, with sport training as the
+> problem domain, and still evolves weekly. On the self-hosted path there
+> is no warranty, no support, and no audit — and it does **not** replace
+> a coach or sports-medical advice. Use it with a solid training
+> background, at your own risk.
+
+---
+
+## What it does
+
+Six things you actually get out of it — each grounded in the mechanism
+that produces it:
+
+- **A fresh plan every day.** Produced *same-day* from your morning HRV,
+  CTL / ATL / TSB, sleep, weather and race calendar — never a pre-baked
+  weekly block. The plan reflects how you actually woke up.
+- **Ask it anything.** The coach *is* a chat session. Plan today, question
+  a session, report a niggle, adjust on the fly — plain language, in the
+  terminal or (optionally) Telegram.
+- **Fits real life.** Travelled, slept badly, missed a day? It re-plans
+  same-day around the disruption instead of guilting you back onto a fixed
+  schedule.
+- **Understands your runs.** `/analyse` turns a finished activity into a
+  factual lap chronicle (HR zones, pace / GAP, running dynamics) plus
+  concise coaching feedback.
+- **Keeps you healthy.** HRV-gated intensity, evidence-based deload weeks,
+  active injury locks, and a mechanical + semantic validator that blocks a
+  bad plan before it can reach you. Two clinical-consultant agents (physio
+  / ortho) act as debate partners — *not* a substitute for real care.
+- **The right shoe, every run.** A shoe advisor rotates your fleet by
+  surface and accumulated mileage, so no single pair takes all the load.
+
+Under the hood there's also a **video form check** (Gemini, for strength /
+core / ninja and running), **per-muscle 30-day load tracking**, and a
+**consistency audit** that catches drift across configs and agents — with
+the exercise-log slice auto-surfaced at every session start, so stale
+progression entries don't wait for `/audit` to be noticed.
+
+---
+
+## Framing
 
 This is not a multi-agent example. For pure multi-agent orchestration
 there are better-fitting frameworks (LangChain / LangGraph, AutoGen,
@@ -37,26 +76,6 @@ If you came for the agent design, the
 [architecture doc](docs/architecture.md), `agents/*.md`, and
 `framework/CLAUDE.md` are the interesting parts. If you came for
 training: read on.
-
----
-
-## What it does
-
-- **Daily planning** that respects HRV, CTL / ATL / TSB, sleep, weather,
-  races on the calendar, and active injury restrictions
-- **Specialist delegation** — each workout type has its own pane with the
-  right context (type history, exercise progressions, validator rules)
-- **Pre-push validation** — mechanical (`scripts/validate_plan.py`,
-  rule-based) and semantic (`plan-validator` subagent)
-- **Post-activity analysis** — factual lap chronicle + coaching feedback,
-  HRV-response review
-- **Video form check** via Gemini for strength / core / ninja and running
-- **Per-muscle load tracking** with a 30-day fatigue overview
-- **Consistency audit** that scans for drift across configs, agents,
-  prompts — with the exercise-log slice auto-surfaced at every session
-  start, so stale progression entries don't wait for `/audit` to be
-  noticed
-- **Optional Telegram channel** for use away from the terminal
 
 ---
 
@@ -676,7 +695,9 @@ a plugin), see
 
 ## What this is NOT
 
-- Not a product, not a service, not training advice
+- **This repository** is the open-source engine — not the managed
+  product. On the self-hosted path there is no SLA, no support, and no
+  training or medical advice.
 - Not for beginners or anyone without a solid endurance / strength
   training background and medical clearance
 - Not hardened against active abuse — see [SECURITY.md](SECURITY.md)
@@ -730,8 +751,11 @@ To report a security issue, open an issue or email
 (sub-3 marathon, sub-10h Ironman, both with a human trainer), licensed
 fitness trainer and AI enthusiast.
 
-Built for the maintainer's own training. The point of going public is
-*not* to recruit users.
+Built first for the maintainer's own training, and still used for it
+daily. The hosted service at
+[360dataathlete.com](https://www.360dataathlete.com) grew out of it;
+this repository is the same engine, kept open so you can read exactly
+how the coach reasons — and self-host it if you want to.
 
 The interesting question this project asks isn't "can LLMs coach an
 athlete?" — that's obviously a long way off. It's **"how far can Claude
