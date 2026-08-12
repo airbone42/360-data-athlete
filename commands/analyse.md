@@ -58,6 +58,16 @@ python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/fetch_activity.py --activity-id {ID}
 Read in parallel: `config/athlete_static.md`, `config/athlete_status.md`,
 `config/equipment.md`.
 
+**Check athlete-entered feedback BEFORE asking (MANDATORY).** Athletes
+log per-exercise feedback (RPE, symptoms, notes — e.g. `-> Feedback:`
+annotations) directly on the activity description in intervals.icu after
+training. Read the activity `description` first — for strength/core
+sessions this is the primary RPE source. Only ask the athlete for
+feedback that is genuinely missing after that read; asking for RPEs that
+already sit in the description wastes the athlete's time and erodes
+trust in the flow. The same check applies outside `/analyse` whenever
+the coach is about to ask about a completed session.
+
 ### Step 2: Fetch athlete context
 
 ```bash
