@@ -56,7 +56,7 @@ async def _fake_push(athlete_id, events, dry_run, date_str, incremental=False):
 def test_auto_push_balance_forwards_travel_true(monkeypatch):
     captured: dict = {}
 
-    def fake_build_rotation_workout(target_date, travel=False):
+    def fake_build_rotation_workout(target_date, travel=False, leg_conflict=False):
         captured["travel"] = travel
         return "A", {"type": "Workout", "name": "stub", "tags": ["balance"], "description": "x"}
 
@@ -72,7 +72,7 @@ def test_auto_push_balance_forwards_travel_true(monkeypatch):
 def test_auto_push_balance_forwards_travel_false_by_default(monkeypatch):
     captured: dict = {}
 
-    def fake_build_rotation_workout(target_date, travel=False):
+    def fake_build_rotation_workout(target_date, travel=False, leg_conflict=False):
         captured["travel"] = travel
         return "A", {"type": "Workout", "name": "stub", "tags": ["balance"], "description": "x"}
 
@@ -92,7 +92,7 @@ def test_cli_parses_travel_flag(monkeypatch):
     mocked out so this stays a pure argument-plumbing test."""
     captured_calls: list[bool] = []
 
-    def fake_auto_push_balance(target_date, workouts, athlete_id, travel=False):
+    def fake_auto_push_balance(target_date, workouts, athlete_id, travel=False, leg_conflict=False):
         captured_calls.append(travel)
 
     monkeypatch.setattr(pw, "_auto_push_balance", fake_auto_push_balance)
@@ -127,7 +127,7 @@ def test_cli_parses_travel_flag(monkeypatch):
 def test_cli_no_equipment_alias_sets_travel(monkeypatch):
     captured_calls: list[bool] = []
 
-    def fake_auto_push_balance(target_date, workouts, athlete_id, travel=False):
+    def fake_auto_push_balance(target_date, workouts, athlete_id, travel=False, leg_conflict=False):
         captured_calls.append(travel)
 
     monkeypatch.setattr(pw, "_auto_push_balance", fake_auto_push_balance)
@@ -161,7 +161,7 @@ def test_cli_no_equipment_alias_sets_travel(monkeypatch):
 def test_cli_travel_defaults_off(monkeypatch):
     captured_calls: list[bool] = []
 
-    def fake_auto_push_balance(target_date, workouts, athlete_id, travel=False):
+    def fake_auto_push_balance(target_date, workouts, athlete_id, travel=False, leg_conflict=False):
         captured_calls.append(travel)
 
     monkeypatch.setattr(pw, "_auto_push_balance", fake_auto_push_balance)

@@ -1371,22 +1371,18 @@ python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/get_balance_rotation.py --date YYYY-M
   on top of a 14 kg+ strength SL RDL — the balance stimulus needs no
   load.
 - **Next-day quality conflict awareness:** The same inspection duty
-  covers the **following** day. Pool entries may carry a conditional
-  `trailing_note` addressed to the coach ("if a leg-heavy quality is
-  scheduled tomorrow, drop exercises X/Y"). The auto-balance push
-  renders that note **verbatim into the athlete-facing description
-  without evaluating it** — evaluation is the head coach's job at push
-  time. Before the day's push, check whether tomorrow carries a
-  leg-driven quality session (mesocycle table in `competition_plan.md`
-  / weekly Hard-Reize outlook — same-day planning means it is not yet
-  an intervals.icu event). If yes, resolve the condition **now**: drop
-  the slow-eccentric leg exercises the note names and substitute the
-  note's stability-drill fallback, so the athlete receives a decided
-  plan, not an unevaluated if-then addressed to themselves. Shipping
-  the raw conditional counts as a planning miss, not as delegation.
-  (Drift incident pattern: a rotation with TRX single-leg squats plus
-  its trailing note went out unevaluated the day before a race-pace
-  run; the athlete had to raise the conflict mid-session.)
+  covers the **following** day. Before the day's push, check whether
+  tomorrow carries a leg-driven quality / long session (mesocycle table
+  in `competition_plan.md` / weekly Hard-Reize outlook — same-day
+  planning means it is not yet an intervals.icu event). If yes, pass
+  `--leg-conflict` so the flagged slow-eccentric leg exercises are
+  swapped mechanically (see "Leg-conflict routing" below). The athlete
+  must receive a decided plan — shipping an unevaluated if-then
+  addressed to themselves counts as a planning miss, not as delegation.
+  (Drift incident pattern, twice: a rotation with a TRX single-leg
+  squat plus its conditional trailing note went out unevaluated the day
+  before a leg-priority run; the athlete had to raise the conflict —
+  which is why the swap is now a code path, not description text.)
 - **Equipment availability (travel / limited kit):** The pool contains
   equipment-dependent exercises (balance board, kettlebell loading, TRX),
   each declaring an `equipment` list and an optional `travel_fallback` in
@@ -1402,15 +1398,25 @@ python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/get_balance_rotation.py --date YYYY-M
   to the auto-balance push. Default is off — the head coach passes
   `--travel` explicitly on travel / limited-kit days; nothing infers
   travel status automatically.
-- **Leg-conflict routing remains future work.** Unlike the equipment
-  swap, `--avoid-tag legs` routing around a same-day `legs`-tagged
-  strength block is not yet mechanized — the head coach must still
-  inspect the auto-selected rotation for posterior-chain-load overlap
-  (see "Leg-strength conflict awareness" above) before piping it into
-  `push_workouts.py`. The same applies to conditional `trailing_note`
-  evaluation (next-day quality): `get_balance_rotation.py` does not yet
-  resolve the condition or swap exercises — head-coach judgment until
-  mechanized.
+- **Leg-conflict routing (mechanized, coach-triggered):** Pool exercises
+  that load the legs through a slow eccentric (TRX-assisted single-leg
+  squat, slow step-down variants) declare `"leg_conflict": true` and an
+  optional `leg_conflict_fallback` (same shape as the exercise entry).
+  `get_balance_rotation.py --leg-conflict` — forwarded end-to-end via
+  `push_workouts.py --leg-conflict` to the auto-balance push — swaps every
+  flagged exercise for its declared fallback (a pure stability drill); a
+  flagged exercise without a fallback gets a generic
+  single-leg-stand-eyes-closed substitute, surfaced with a note. The
+  output carries a visible mode marker. **Detection stays head-coach
+  duty:** set the flag whenever today carries a leg-strength block OR
+  tomorrow carries a leg-driven quality / long session — the next-day
+  plan is often not an intervals.icu event yet, so nothing can infer the
+  conflict mechanically. What is gone is the manual text-surgery on the
+  rendered description: the conditional trailing note addressed to the
+  coach is no longer an acceptable carrier for this rule (drift incident
+  pattern: the note went out verbatim, unevaluated, the day before a
+  long run — twice). Pools should migrate such notes into
+  `leg_conflict` flags + fallbacks.
 
 **Push discipline — always push the complete day set (mandatory):**
 `push_workouts.py`'s pre-push dedup matches existing WORKOUT events by

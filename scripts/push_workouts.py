@@ -323,6 +323,15 @@ def main() -> None:
              "exercises (balance board / kettlebell / TRX) for bodyweight / soft-surface "
              "fallbacks. Default off.",
     )
+    parser.add_argument(
+        "--leg-conflict",
+        dest="leg_conflict",
+        action="store_true",
+        help="Forwarded to the auto-balance rotation: swap leg_conflict-flagged "
+             "(slow-eccentric leg-loading) balance exercises for pure stability "
+             "drills. Set when today has a leg-strength block or tomorrow has a "
+             "leg-driven quality / long session (>=48h DOMS spacing). Default off.",
+    )
     args = parser.parse_args()
 
     if args.file:
@@ -400,12 +409,21 @@ def main() -> None:
 
     if not args.dry_run:
         if not args.no_auto_balance:
-            _auto_push_balance(args.date, workouts, athlete_id, travel=args.travel)
+            _auto_push_balance(
+                args.date, workouts, athlete_id,
+                travel=args.travel, leg_conflict=args.leg_conflict,
+            )
         _warn_on_warmup_overlap(args.date)
         _warn_on_mental_coach_triggers(workouts, args.date)
 
 
-def _auto_push_balance(target_date: str, current_workouts: list, athlete_id: str, travel: bool = False) -> None:
+def _auto_push_balance(
+    target_date: str,
+    current_workouts: list,
+    athlete_id: str,
+    travel: bool = False,
+    leg_conflict: bool = False,
+) -> None:
     """Push the daily balance rotation as a third workout if none exists yet.
 
     Implements the SSOT for the "Daily balance rotation (mandatory)" rule from
@@ -423,6 +441,11 @@ def _auto_push_balance(target_date: str, current_workouts: list, athlete_id: str
     `travel` is forwarded to `build_rotation_workout` — swaps equipment-
     dependent exercises (balance board / kettlebell / TRX) for bodyweight /
     soft-surface fallbacks (see `get_balance_rotation.py --travel`).
+
+    `leg_conflict` is forwarded likewise — swaps `leg_conflict`-flagged
+    (slow-eccentric leg-loading) exercises for pure stability drills when
+    today carries a leg-strength block or tomorrow carries a leg-driven
+    quality / long session (see `get_balance_rotation.py --leg-conflict`).
     """
     try:
         for w in current_workouts:
@@ -439,7 +462,9 @@ def _auto_push_balance(target_date: str, current_workouts: list, athlete_id: str
             logger.debug("Auto-balance: balance event already exists for %s, skipping", target_date)
             return
 
-        rotation, workout = build_rotation_workout(_date.fromisoformat(target_date), travel=travel)
+        rotation, workout = build_rotation_workout(
+            _date.fromisoformat(target_date), travel=travel, leg_conflict=leg_conflict
+        )
         logger.info("Auto-balance: pushing rotation %s for %s", rotation, target_date)
         events = prepare_workout_events([workout], target_date)
         asyncio.run(_push(athlete_id, events, dry_run=False, date_str=target_date))
