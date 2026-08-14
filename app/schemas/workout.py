@@ -16,7 +16,12 @@ class Exercise(BaseModel):
 
     name: str
     sets: int | None = None
-    reps: int | None = None
+    # str covers rep schemes a single integer cannot express — descending
+    # pyramids ("6/4/2"), asymmetric side splits ("3R/2L"). The description
+    # renderer is duck-typed and prints the value verbatim; forcing an int
+    # here made a coach encode a pyramid as a misleading placeholder rep
+    # count once ("3x4" for a 6/4/2 pyramid — athlete had to ask).
+    reps: int | str | None = None
     per_side: bool = False
     weight_kg: float | None = None
     duration_s: int | None = None
