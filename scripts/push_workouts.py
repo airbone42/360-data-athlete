@@ -45,7 +45,9 @@ logger = configure(__name__)
 configure_tracing()
 
 
-async def _dedup_existing_events(athlete_id: str, date_str: str, events: list[dict]) -> int:
+async def _dedup_existing_events(
+    athlete_id: str, date_str: str, events: list[dict], incremental: bool = False
+) -> int:
     """Delete existing intervals.icu events on `date_str` that match name+type
     of any to-be-pushed event.
 
@@ -54,6 +56,13 @@ async def _dedup_existing_events(athlete_id: str, date_str: str, events: list[di
     repeated push calls would otherwise pile up duplicates (pattern from
     real usage). This pre-push sweep guarantees `push_workouts.py` is safe
     to call twice in a row.
+
+    `incremental=True` narrows the sweep to exact (name, type) matches: the
+    push ADDS events to an already-planned day instead of regenerating it, so
+    same-type siblings pushed earlier must survive. Use for late add-ons
+    (a gated block released by the athlete, a reaction block after a symptom
+    report). The default full-regeneration sweep would delete those siblings —
+    that is the correct semantic only when the whole day is re-planned.
 
     Returns the number of events deleted.
     """
@@ -89,13 +98,37 @@ async def _dedup_existing_events(athlete_id: str, date_str: str, events: list[di
     def _is_balance(ev: dict) -> bool:
         return "balance" in (ev.get("tags") or [])
 
-    push_keys = {(e.get("type"), _is_balance(e)) for e in events if e.get("type")}
-    to_delete = [
-        ev for ev in existing
-        if ev.get("category") == "WORKOUT"
-        and (ev.get("type"), _is_balance(ev)) in push_keys
-        and not ev.get("paired_activity_id")
-    ]
+    if incremental:
+        # Add-on semantics: replace only an event this push re-sends by exact
+        # (name, type) — never same-type siblings from an earlier push.
+        push_keys = {(e.get("name"), e.get("type")) for e in events if e.get("type")}
+        to_delete = [
+            ev for ev in existing
+            if ev.get("category") == "WORKOUT"
+            and (ev.get("name"), ev.get("type")) in push_keys
+            and not ev.get("paired_activity_id")
+        ]
+    else:
+        push_keys = {(e.get("type"), _is_balance(e)) for e in events if e.get("type")}
+        to_delete = [
+            ev for ev in existing
+            if ev.get("category") == "WORKOUT"
+            and (ev.get("type"), _is_balance(ev)) in push_keys
+            and not ev.get("paired_activity_id")
+        ]
+        # Heads-up when the full-regeneration sweep is about to remove events
+        # the push set does not re-send by name: correct on a true re-plan,
+        # but the signature of a forgotten --incremental on an add-on push
+        # (pattern from real usage: a late mobility block deleted the day's
+        # already-pushed core session).
+        push_names = {e.get("name") for e in events}
+        collateral = [ev.get("name") for ev in to_delete if ev.get("name") not in push_names]
+        if collateral:
+            logger.warning(
+                "Pre-push dedup will DELETE same-type event(s) not re-sent by this push: %s — "
+                "intended only for a full day re-plan; use --incremental to add to an existing day.",
+                collateral,
+            )
     if not to_delete:
         return 0
     logger.info(
@@ -113,11 +146,13 @@ async def _dedup_existing_events(athlete_id: str, date_str: str, events: list[di
     return len(to_delete)
 
 
-async def _push(athlete_id: str, events: list[dict], dry_run: bool, date_str: str) -> list[dict]:
+async def _push(
+    athlete_id: str, events: list[dict], dry_run: bool, date_str: str, incremental: bool = False
+) -> list[dict]:
     if dry_run:
         logger.info("[DRY-RUN] Would create %d event(s): %s", len(events), [e.get("uid") for e in events])
         return [{"uid": e["uid"], "dry_run": True} for e in events]
-    await _dedup_existing_events(athlete_id, date_str, events)
+    await _dedup_existing_events(athlete_id, date_str, events, incremental=incremental)
     client = CachedIntervalsClient(athlete_id)
     created = await client.post_events_bulk(events)
     return created
@@ -263,6 +298,14 @@ def main() -> None:
         help="Skip automatic shoe-recommendation footer for Run events",
     )
     parser.add_argument(
+        "--incremental",
+        action="store_true",
+        help="Add to an already-planned day: the pre-push dedup replaces only "
+             "exact (name, type) matches instead of sweeping all same-type "
+             "planned events. Required for late add-ons (gated blocks, "
+             "reaction blocks) so earlier-pushed siblings survive.",
+    )
+    parser.add_argument(
         "--skip-validation",
         action="store_true",
         help="Skip validate_plan pre-push check (emergency bypass — document explicitly!)",
@@ -346,7 +389,7 @@ def main() -> None:
         workout_count=len(workouts),
         dry_run=args.dry_run,
     ):
-        created = asyncio.run(_push(athlete_id, events, args.dry_run, args.date))
+        created = asyncio.run(_push(athlete_id, events, args.dry_run, args.date, incremental=args.incremental))
         ids = [e.get("uid") or e.get("id") for e in created]
         set_span_io(
             input={"date": args.date, "workouts": workout_names, "dry_run": args.dry_run},

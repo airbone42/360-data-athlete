@@ -49,7 +49,7 @@ class _StubClient:
         return []
 
 
-async def _fake_push(athlete_id, events, dry_run, date_str):
+async def _fake_push(athlete_id, events, dry_run, date_str, incremental=False):
     return [{"uid": "fake"}]
 
 
@@ -100,7 +100,7 @@ def test_cli_parses_travel_flag(monkeypatch):
     monkeypatch.setattr(pw, "_warn_on_mental_coach_triggers", lambda *a, **k: None)
     monkeypatch.setattr(pw, "prepare_workout_events", lambda workouts, date_str: [])
 
-    async def fake_push(athlete_id, events, dry_run, date_str):
+    async def fake_push(athlete_id, events, dry_run, date_str, incremental=False):
         return []
 
     monkeypatch.setattr(pw, "_push", fake_push)
@@ -135,7 +135,7 @@ def test_cli_no_equipment_alias_sets_travel(monkeypatch):
     monkeypatch.setattr(pw, "_warn_on_mental_coach_triggers", lambda *a, **k: None)
     monkeypatch.setattr(pw, "prepare_workout_events", lambda workouts, date_str: [])
 
-    async def fake_push(athlete_id, events, dry_run, date_str):
+    async def fake_push(athlete_id, events, dry_run, date_str, incremental=False):
         return []
 
     monkeypatch.setattr(pw, "_push", fake_push)
@@ -169,7 +169,7 @@ def test_cli_travel_defaults_off(monkeypatch):
     monkeypatch.setattr(pw, "_warn_on_mental_coach_triggers", lambda *a, **k: None)
     monkeypatch.setattr(pw, "prepare_workout_events", lambda workouts, date_str: [])
 
-    async def fake_push(athlete_id, events, dry_run, date_str):
+    async def fake_push(athlete_id, events, dry_run, date_str, incremental=False):
         return []
 
     monkeypatch.setattr(pw, "_push", fake_push)

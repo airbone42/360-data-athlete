@@ -89,3 +89,64 @@ async def test_paired_activity_never_deleted(monkeypatch):
     stub = _events([done], monkeypatch)
     await pw._dedup_existing_events("i1", "2026-07-15", [{"type": "Workout", "tags": ["balance"]}])
     assert stub.deleted == []  # completed/paired event is protected
+
+
+# ── incremental mode (add-on push) ──────────────────────────────────────────
+
+_CORE = {"id": 11, "category": "WORKOUT", "type": "Workout", "tags": ["core"], "name": "Core-Block"}
+_MOBILITY = {"id": 12, "category": "WORKOUT", "type": "Workout", "tags": ["mobility"], "name": "Mobility-Block"}
+
+
+async def test_incremental_push_spares_same_type_siblings(monkeypatch):
+    # Regression: a late add-on Workout must NOT delete the day's existing
+    # same-type sibling (pattern from real usage: a reaction mobility block
+    # deleted the already-pushed core session).
+    stub = _events([_CORE, _BALANCE], monkeypatch)
+    n = await pw._dedup_existing_events(
+        "i1", "2026-07-15",
+        [{"type": "Workout", "tags": ["mobility"], "name": "Mobility-Block"}],
+        incremental=True,
+    )
+    assert stub.deleted == []
+    assert n == 0
+
+
+async def test_incremental_push_is_idempotent_by_name_and_type(monkeypatch):
+    # Re-sending the same add-on replaces its own previous event only.
+    stub = _events([_CORE, _MOBILITY, _BALANCE], monkeypatch)
+    n = await pw._dedup_existing_events(
+        "i1", "2026-07-15",
+        [{"type": "Workout", "tags": ["mobility"], "name": "Mobility-Block"}],
+        incremental=True,
+    )
+    assert stub.deleted == [12]
+    assert n == 1
+
+
+async def test_incremental_paired_activity_never_deleted(monkeypatch):
+    done = {
+        "id": 13, "category": "WORKOUT", "type": "Workout",
+        "tags": ["mobility"], "name": "Mobility-Block", "paired_activity_id": 555,
+    }
+    stub = _events([done], monkeypatch)
+    await pw._dedup_existing_events(
+        "i1", "2026-07-15",
+        [{"type": "Workout", "tags": ["mobility"], "name": "Mobility-Block"}],
+        incremental=True,
+    )
+    assert stub.deleted == []
+
+
+async def test_default_sweep_warns_on_collateral_names(monkeypatch, caplog):
+    # Full-regeneration semantics stay the default, but deleting a same-type
+    # event the push does not re-send by name must be announced loudly.
+    stub = _events([_CORE, _BALANCE], monkeypatch)
+    import logging
+
+    with caplog.at_level(logging.WARNING, logger=pw.logger.name):
+        await pw._dedup_existing_events(
+            "i1", "2026-07-15",
+            [{"type": "Workout", "tags": ["mobility"], "name": "Mobility-Block"}],
+        )
+    assert stub.deleted == [11]  # default semantics unchanged
+    assert any("--incremental" in r.message for r in caplog.records)
