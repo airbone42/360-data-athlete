@@ -97,6 +97,35 @@ def test_recommend_derives_race_window_and_picks_race_shoe(monkeypatch, _profile
     )
 
 
+def test_set_activity_gear_fallback_derives_race_window(monkeypatch, _profiles):
+    """The analysis-time fallback pick (unpaired activity) must apply the
+    same race-window logic as the push path — it previously hardcoded
+    race_in_days=None and assigned a daily trainer to a race-pace run."""
+    import set_activity_gear
+
+    monkeypatch.setattr(set_activity_gear, "load_shoe_profiles", lambda: _profiles)
+    fake = _FakeClient()
+
+    activity = {
+        "type": "Run",
+        "start_date_local": "2025-03-15T10:00:00",
+        "tags": ["run", "intervals"],
+    }
+    plan = {
+        "surface": "forest-path",
+        "tags": ["run", "intervals"],
+        "workout_type": "INTERVALS",
+        "intensity": "high",
+        "description": "",
+    }
+    gear_list = asyncio.run(fake.list_gear())
+    rec = asyncio.run(
+        set_activity_gear._recommend_gear_for_activity(fake, activity, plan, gear_list)
+    )
+    assert rec is not None
+    assert rec.get("gear_id") == "gRACE1"
+
+
 def test_recommend_survives_events_fetch_failure(monkeypatch, _profiles):
     fake = _FakeClient()
 

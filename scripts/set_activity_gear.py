@@ -48,6 +48,8 @@ from app.graphs.shoe_advisor import (
     is_retired,
     load_shoe_profiles,
 )
+from app.graphs.sub_athlete_context.context_builder import _days_to_next_race
+from shoe_recommend import RACE_LOOKAHEAD_DAYS
 
 # Markers written by push_workouts._format_shoe_footer onto the planned event.
 # The machine marker carries the gear id directly; the human line is the
@@ -145,13 +147,27 @@ async def _recommend_gear_for_activity(
         recent = await icu.get_activities(oldest, today_str)
     except Exception:
         recent = []
+    # Distance to the next race gates the race shoe's eligibility
+    # (race-day lock / prep window). A hardcoded None disqualified the
+    # designated race shoe on this fallback path — same defect as the
+    # former push-time path in shoe_recommend.py; both now derive the
+    # window from upcoming RACE_A/B/C events via the shared helper.
+    race_in_days = None
+    try:
+        newest = (
+            date.fromisoformat(today_str) + timedelta(days=RACE_LOOKAHEAD_DAYS)
+        ).isoformat()
+        upcoming = await icu.get_events(today_str, newest)
+        race_in_days = _days_to_next_race(upcoming, date.fromisoformat(today_str))
+    except Exception:
+        pass
     ctx = build_shoe_context(
         shoes=shoes,
         profiles=profiles,
         activities=recent,
         planned_workouts=planned,
         weather_info="",
-        race_in_days=None,
+        race_in_days=race_in_days,
         today_str=today_str,
         backend="intervals",
     )
