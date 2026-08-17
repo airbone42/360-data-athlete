@@ -12,7 +12,7 @@ import asyncio
 import json
 import logging
 import sys
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -25,9 +25,15 @@ from app.graphs.shoe_advisor import (
     gear_to_shoes,
     load_shoe_profiles,
 )
+from app.graphs.sub_athlete_context.context_builder import _days_to_next_race
 from app.utils.date_windows import cutoff_iso
 
 logger = logging.getLogger(__name__)
+
+# How far ahead to scan the calendar for the next race. Race-prep shoe
+# windows (`race_prep_days`) are a few weeks at most, so 90 days covers
+# every window with margin.
+RACE_LOOKAHEAD_DAYS = 90
 
 
 async def recommend(workouts: list[dict], weather: str, date_str: str) -> dict:
@@ -61,13 +67,27 @@ async def recommend(workouts: list[dict], weather: str, date_str: str) -> dict:
     except Exception as exc:
         logger.warning("intervals.icu activities fetch failed (rotation degraded): %s", exc)
         recent_activities = []
+    # The distance to the next race decides whether the designated race
+    # shoe is eligible at all (race-day lock / race-prep window in
+    # `_score_shoe`). A hardcoded None here silently disqualified the race
+    # shoe on every push except RACE-typed workouts — race-pace habituation
+    # sessions got a trainer recommended instead. Same helper as
+    # fetch_context's `raceInDays`, so both paths cannot diverge.
+    race_in_days = None
+    try:
+        today = date.fromisoformat(date_str)
+        newest = (today + timedelta(days=RACE_LOOKAHEAD_DAYS)).isoformat()
+        upcoming_events = await client.get_events(date_str, newest)
+        race_in_days = _days_to_next_race(upcoming_events, today)
+    except Exception as exc:
+        logger.warning("intervals.icu events fetch failed (race window unknown): %s", exc)
     return build_shoe_context(
         shoes=shoes,
         profiles=profiles,
         activities=recent_activities,
         planned_workouts=run_workouts,
         weather_info=weather,
-        race_in_days=None,
+        race_in_days=race_in_days,
         today_str=date_str,
     )
 

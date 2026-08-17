@@ -434,6 +434,21 @@ def _score_shoe(
     if keys.intersection({str(t).lower() for t in rec_tags}):
         score += 6.0
 
+    # Primary-race priority: inside its race-prep window (or on a RACE-typed
+    # workout) the designated race shoe is being deliberately habituated —
+    # sessions matching its recommended_tags belong to it, and the
+    # rotation-freshness bonus below (up to +28) must not hand a race-pace
+    # slot to a fresher trainer. Easy sessions keep rotating: the bonus
+    # requires a tag match.
+    if profile.get("primary_race") in (True, "true") and keys.intersection(
+        {str(t).lower() for t in rec_tags}
+    ):
+        prep_days = int(profile.get("race_prep_days", 7))
+        if workout_type.upper() == "RACE" or (
+            race_in_days is not None and race_in_days <= prep_days
+        ):
+            score += 50.0
+
     # Mileage penalty: deprioritise worn shoes for hard sessions
     if pct >= 0.9:
         score -= 20.0
