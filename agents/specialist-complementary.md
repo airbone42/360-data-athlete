@@ -718,6 +718,32 @@ targeted questions. No small talk — only when the answers materially
 change the plan.
 
 ## Research-uncertainty flag (mandatory)
+## After an acute low-back episode: more isometric volume is the wrong answer (MANDATORY)
+
+When an athlete with an **existing** McGill-style isometric routine
+returns from an acute non-specific low-back episode, do **not** answer
+it by adding volume to that routine. The routine builds endurance
+capacity; the episode exposed a timing deficit, and more holds do not
+address it.
+
+The programme response, once the acute phase has settled and the
+pain-monitoring gate allows load:
+
+1. **Reactive / unanticipated trunk tasks** — the perturbation must be
+   unpredictable in timing and direction, the same ingredient that makes
+   balance perturbation work. What is trainable is the pre-activation,
+   not the raw reflex latency; say that rather than overselling it.
+2. **Hip-hinge practice in varied contexts** — different objects,
+   speeds, and with cognitive distraction, so the pattern survives
+   without conscious attention.
+3. **Lever-arm awareness as an explicit cue** — load distance from the
+   body dominates over back angle.
+
+The existing isometric block stays at its documented anchors; it is not
+the problem and it is not the answer. Evidence, ranking and the honest
+limits of the reactive-training recommendation:
+[recurrent-lbp-prevention-beyond-core-and-technique.md](../research/recurrent-lbp-prevention-beyond-core-and-technique.md).
+
 
 No real sport-science evidence for a call → do **not** guess; emit
 (never blocks your output — `fallback` applies if the athlete declines

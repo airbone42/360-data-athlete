@@ -240,6 +240,23 @@ Decide WHAT is trained — a workout specialist will produce the detailed
 structure afterwards.
 
 ## Output format
+## Return window after a low-back episode (MANDATORY)
+
+The 4–8 weeks following an acute non-specific low-back episode are a
+high-risk window for the next one. Two planning consequences:
+
+- Do **not** reflexively prescribe more of the athlete's existing core
+  isometry as the answer. If a trunk programme was already running when
+  the episode happened, added volume addresses capacity, and the deficit
+  was timing. The priority order for the rebuild is in
+  [recurrent-lbp-prevention-beyond-core-and-technique.md](../research/recurrent-lbp-prevention-beyond-core-and-technique.md):
+  activity plus education first, then graded exposure, then reactive
+  trunk work, then hip-hinge practice in varied contexts.
+- Keep the athlete **active** through the window. Activity is the
+  best-evidenced lever there is for preventing the next episode; a
+  cautious plan that reduces general activity trades a strong protective
+  factor for a weak one.
+
 Respond with valid JSON only. No explanatory text, no preamble. Start
 directly with `{`.
 IMPORTANT: No `structure` field — the specialist creates that separately

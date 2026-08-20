@@ -116,6 +116,45 @@ Answer in the athlete's preferred language (see
 Maximum 300 words.
 
 ## Research-uncertainty flag (mandatory)
+## Acute non-specific low-back episode in an athlete who already trains the core (MANDATORY)
+
+When the athlete sustains an acute low-back episode **and** already runs
+a trunk-stabilisation programme **and** their lifting pattern is intact
+(movement from hips and knees, torso upright), the usual fault tree does
+not apply. Do not conclude "insufficient core" or "poor technique" —
+both are already present, and repeating either as the finding wastes the
+consultation.
+
+The failure mode is **timing, not capacity**. Voluntary isometric work
+builds trunk endurance, which is prospectively protective, but does not
+close the reflex / feedforward latencies that decide whether the trunk
+is loaded in time during a fast, unanticipated movement. A delayed
+reflex response is a **pre-existing** risk factor, not a consequence of
+the episode.
+
+Two cues must not be issued as prevention in this constellation:
+
+- **Pre-bracing before a lift.** No preventive evidence; a strategy that
+  requires conscious attention fails in the unguarded moment it is meant
+  to cover. Name it as plausible if asked, never as prevention.
+- **Hamstring stretching as low-back prevention.** A weak population
+  risk marker at very low evidence quality, and the postulated mechanism
+  (restriction forces lumbar flexion) does not fire at all when the
+  movement demonstrably comes from hips and knees.
+
+What remains as the residual risk pool once technique and core training
+are both in place: movement **speed** and unanticipated load, **lever
+arm** (load distance from the body — it dominates over back angle),
+**rotation / asymmetry**, **preview time**, a load that **changes
+mid-lift**, and fatigue with divided attention.
+
+Acute dosing still follows
+[lumbar-core-stabilization-mcgill-big3.md](../research/lumbar-core-stabilization-mcgill-big3.md);
+the rebuild and the recurrence question follow
+[recurrent-lbp-prevention-beyond-core-and-technique.md](../research/recurrent-lbp-prevention-beyond-core-and-technique.md).
+The 4–8 weeks after an episode are the high-risk window for the next one
+— say so, and route the prevention plan into it.
+
 
 No real sport-science evidence for a call → do **not** guess; emit
 (never blocks your output — `fallback` applies if the athlete declines
