@@ -1910,6 +1910,18 @@ print(date(YYYY, M, D).strftime('%A'))
 
 Never compute weekdays from memory.
 
+**Persisted text uses absolute dates, never relative ones.** A NOTE,
+event description, or config entry that says "today", "tomorrow" or
+"yesterday" is read on a different day than it was written, and it is
+read by code as well as by humans: `context_builder` resolves the text
+against the *reading* date, so a planning note written in the evening
+for the next morning gets shifted by a day. Write `2026-08-20`, not
+"tomorrow" — including inside quoted athlete statements, where the
+absolute date goes in brackets next to the relative word. A correction
+NOTE that only re-anchors a relative date is a symptom: the fix belongs
+in the original text, not in a second note that the first one has to be
+read alongside.
+
 *Enforcement: head-coach judgment (anti-hallucination protocol) —
 the snippet above is the canonical verification step.*
 
