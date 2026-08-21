@@ -1,5 +1,7 @@
 # 360° Data Athlete
 
+[![Skillselion Top 25](https://skillselion.com/badge/marketplace/airbone42/360-data-athlete.svg?award=1)](https://skillselion.com/marketplace/airbone42/360-data-athlete)
+
 An **AI coach for endurance and strength athletes** that runs entirely
 inside [Claude Code](https://claude.com/claude-code). A team of
 specialised sub-agents (planner, three workout specialists, mental
