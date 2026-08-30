@@ -34,10 +34,10 @@ def _categories(findings: list[dict]) -> list[str]:
 
 
 def test_parses_anchor_with_line_number():
-    text = "intro\n\n[hr-anchor:i69665243 lthr=154]\n\n| a | b |\n"
+    text = "intro\n\n[hr-anchor:i12345678 lthr=154]\n\n| a | b |\n"
     anchors = ac._parse_hr_anchors(text)
     assert anchors == [
-        {"activity_id": "i69665243", "declared_lthr": 154, "line": 3}
+        {"activity_id": "i12345678", "declared_lthr": 154, "line": 3}
     ]
 
 
@@ -48,7 +48,7 @@ def test_parses_multiple_anchors_on_one_line():
 
 def test_ignores_malformed_marker():
     # missing lthr= is not an anchor; a bare activity mention is not either
-    text = "[hr-anchor:i69665243]\nsiehe i69665243\n"
+    text = "[hr-anchor:i12345678]\nsiehe i12345678\n"
     assert ac._parse_hr_anchors(text) == []
 
 
@@ -67,7 +67,7 @@ def test_matching_lthr_is_no_finding():
 
 
 def test_mismatched_lthr_is_high():
-    anchor = {"activity_id": "i69665243", "declared_lthr": 166, "line": 1}
+    anchor = {"activity_id": "i12345678", "declared_lthr": 166, "line": 1}
     payload = ac.evaluate_hr_anchor(
         anchor, {"lthr": 154, "average_heartrate": 155, "max_heartrate": 163}
     )
@@ -119,23 +119,23 @@ def test_activity_without_lthr_field_is_low():
 def test_clean_anchor_produces_no_findings(isolated_configs):
     _fb, cd = isolated_configs
     (cd / "athlete_status.md").write_text(
-        "## HM-Profil\n\n[hr-anchor:i69665243 lthr=154]\n\n"
+        "## HM-Profil\n\n[hr-anchor:i12345678 lthr=154]\n\n"
         "| Abschnitt | % LTHR (154) |\n|---|---|\n| Schluss | 104 % |\n",
         encoding="utf-8",
     )
-    findings = ac.check_percent_anchors({"i69665243": {"lthr": 154}})
+    findings = ac.check_percent_anchors({"i12345678": {"lthr": 154}})
     assert findings == []
 
 
 def test_drifted_anchor_is_reported_with_file_and_line(isolated_configs):
     _fb, cd = isolated_configs
     (cd / "athlete_status.md").write_text(
-        "## HM-Profil\n\n[hr-anchor:i69665243 lthr=166]\n\n"
+        "## HM-Profil\n\n[hr-anchor:i12345678 lthr=166]\n\n"
         "| Abschnitt | % LTHR (166) |\n|---|---|\n| Schluss | 96 % |\n",
         encoding="utf-8",
     )
     findings = ac.check_percent_anchors(
-        {"i69665243": {"lthr": 154, "average_heartrate": 155, "max_heartrate": 163}}
+        {"i12345678": {"lthr": 154, "average_heartrate": 155, "max_heartrate": 163}}
     )
     assert _categories(findings) == ["percent_anchor_drift"]
     assert findings[0]["source_file"] == "config/athlete_status.md"

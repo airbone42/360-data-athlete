@@ -1700,7 +1700,7 @@ def check_policy_workflow_coverage() -> list[dict]:
 # record.
 #
 # Marker syntax, anywhere in a config file:
-#     [hr-anchor:i69665243 lthr=154]
+#     [hr-anchor:i12345678 lthr=154]
 #
 # Two findings:
 #   * `percent_anchor_drift`   — declared lthr != the activity's stored lthr.
