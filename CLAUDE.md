@@ -443,6 +443,31 @@ Absent such a trigger, match the recommendation to the athlete's
 demonstrated capability. Sport-science backing:
 [race-pacing-and-load-metrics.md](research/race-pacing-and-load-metrics.md).
 
+**A stored percentage is only as good as the denominator it was computed
+with.** When a past race's HR curve is filed as %LTHR (or a power curve as
+%FTP), the threshold value **in force at the time of that race** belongs in
+the same row. Otherwise the table ages silently: the denominator is revised
+upward at the next validation, every percentage in the row becomes too low,
+and every band derived from it inherits the deficit. The failure mode is
+perverse — each threshold increase makes the derived prescription *more*
+conservative, in the opposite direction to the athlete's development, and
+nothing in the table looks wrong while it happens. Before reusing a
+historical %-anchor, read the threshold stored on the source activity
+itself and recompute. The cheapest tell that a denominator has drifted is a
+max HR in the source race that is implausible against the current threshold
+— an all-out effort whose peak sits below today's threshold was not run
+against today's threshold.
+
+**A rehearsal that comes back far easier than the band predicts is evidence
+against the band.** When an exposure run at the prescribed race band returns
+an RPE well below expectation, the first hypothesis is that the prescription
+is wrong — not that the athlete is unusually fresh or has gained form.
+Rehearsals executed inside a faulty band cannot falsify it; they reproduce
+it, and their HR ceilings then read as confirmation. That makes the
+subjective signal the only independent evidence available before the race
+itself. Treat a persistent RPE-below-expectation at the prescribed band as a
+trigger to re-derive the band, not as a note about form.
+
 **The same discipline governs volume / long-run duration — anchor on
 demonstrated capability, not on the most recent sessions.** The
 briefing window (last 3 endurance sessions by default) is
