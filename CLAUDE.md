@@ -458,6 +458,15 @@ max HR in the source race that is implausible against the current threshold
 — an all-out effort whose peak sits below today's threshold was not run
 against today's threshold.
 
+*Enforcement: `audit_consistency.py::check_percent_anchors` (audit check
+`PERCENT_ANCHORS`, online). Bind a stored %-anchor to its source activity
+with a marker next to the table — `[hr-anchor:<activity-id> lthr=<value>]` —
+and the check recomputes the claim against the `lthr` the activity itself
+carries: a mismatch is HIGH (`percent_anchor_drift`), a `% LTHR (nnn)`
+header with no anchor nearby is MEDIUM (`percent_anchor_missing`), and an
+activity that cannot be fetched or carries no threshold is LOW rather than
+silently passing. Tests: `tests/test_percent_anchors.py`.*
+
 **A rehearsal that comes back far easier than the band predicts is evidence
 against the band.** When an exposure run at the prescribed race band returns
 an RPE well below expectation, the first hypothesis is that the prescription

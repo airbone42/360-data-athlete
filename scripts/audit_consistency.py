@@ -1426,12 +1426,28 @@ async def _fetch_online() -> dict[str, Any]:
             logger.warning("intervals.icu gear fetch failed: %s", e)
             return []
 
+    async def _anchor_activities() -> dict[str, dict]:
+        """Fetch the source activities behind `[hr-anchor:...]` markers.
+
+        These are deliberately outside the 4-week audit window — an anchor
+        race is years old by design, which is precisely why its denominator
+        drifts unnoticed.
+        """
+        out: dict[str, dict] = {}
+        for aid in collect_hr_anchor_ids():
+            try:
+                out[aid] = await icu.get_activity(aid)
+            except Exception as e:
+                logger.warning("anchor activity %s fetch failed: %s", aid, e)
+        return out
+
     try:
-        notes, athlete_settings, shoes, activities = await asyncio.gather(
+        notes, athlete_settings, shoes, activities, anchors = await asyncio.gather(
             icu.get_notes(oldest, newest),
             icu.get_athlete_settings(),
             _shoes(),
             icu.get_activities(oldest, newest),
+            _anchor_activities(),
         )
     except Exception as e:
         logger.warning("online fetch failed: %s", e)
@@ -1440,6 +1456,7 @@ async def _fetch_online() -> dict[str, Any]:
             "athlete_settings": None,
             "shoes": None,
             "activities": None,
+            "anchor_activities": None,
             "shoe_backend": backend,
             "error": str(e),
         }
@@ -1449,6 +1466,7 @@ async def _fetch_online() -> dict[str, Any]:
         "athlete_settings": athlete_settings,
         "shoes": shoes,
         "activities": activities,
+        "anchor_activities": anchors,
         "shoe_backend": backend,
     }
 
@@ -1664,6 +1682,226 @@ def check_policy_workflow_coverage() -> list[dict]:
     return findings
 
 
+# ── %-Anker gegen Quell-Aktivität ────────────────────────────────────
+#
+# A percentage is a division, and a division that is filed without its
+# divisor rots in a way that stays invisible. Race HR curves are commonly
+# stored as "% LTHR"; the moment the threshold is revalidated, every such
+# percentage refers to a denominator that no longer exists, and any band
+# derived from the table inherits the error. The perverse part is the
+# direction: each threshold *increase* makes the derived prescription more
+# conservative, so the system grows more timid exactly as the athlete gets
+# fitter, and nothing in the file looks wrong.
+#
+# The fix is to bind the percentage to its source activity, because
+# intervals.icu stores the threshold that was in force when the activity
+# was recorded (`lthr` on the activity itself). The config declares what it
+# believes that threshold was; this check compares the belief against the
+# record.
+#
+# Marker syntax, anywhere in a config file:
+#     [hr-anchor:i69665243 lthr=154]
+#
+# Two findings:
+#   * `percent_anchor_drift`   — declared lthr != the activity's stored lthr.
+#   * `percent_anchor_missing` — a "% LTHR (nnn)" table header with no
+#     verified anchor in the same section.
+
+_HR_ANCHOR_RE = re.compile(
+    r"\[hr-anchor:(?P<activity>i\d+)\s+lthr=(?P<lthr>\d{2,3})\]"
+)
+# "% LTHR (166)" / "%LTHR (154, korrekt)" — a stated denominator in a header.
+#
+# The parenthetical after "% LTHR" is used for two different things in
+# practice: the denominator ("% LTHR (166)") and the resulting bpm band
+# ("89–95 % LTHR (148–158)"). A single number is read as a denominator; a
+# range is read as a bpm band and ignored, because a threshold is one value
+# and a band is two. Without that split the check would nag about every
+# prose line that spells out what a percentage means in beats.
+_PERCENT_DENOM_RE = re.compile(
+    r"%\s*LTHR\s*\((?P<lthr>\d{2,3})(?!\d)(?!\s*[-–—]\s*\d)",
+    re.IGNORECASE,
+)
+
+
+def _parse_hr_anchors(text: str) -> list[dict[str, Any]]:
+    """Extract `[hr-anchor:iNNN lthr=NNN]` markers with their line numbers."""
+    anchors: list[dict[str, Any]] = []
+    for lineno, line in enumerate(text.splitlines(), 1):
+        for m in _HR_ANCHOR_RE.finditer(line):
+            anchors.append({
+                "activity_id": m.group("activity"),
+                "declared_lthr": int(m.group("lthr")),
+                "line": lineno,
+            })
+    return anchors
+
+
+def _parse_stated_denominators(text: str) -> list[dict[str, Any]]:
+    """Extract `% LTHR (NNN)` occurrences with their line numbers."""
+    out: list[dict[str, Any]] = []
+    for lineno, line in enumerate(text.splitlines(), 1):
+        for m in _PERCENT_DENOM_RE.finditer(line):
+            out.append({"lthr": int(m.group("lthr")), "line": lineno})
+    return out
+
+
+def _anchor_covers(anchor_line: int, denom_line: int, window: int = 25) -> bool:
+    """An anchor vouches for denominators in its immediate neighbourhood.
+
+    Config tables put the marker next to the table it belongs to; a fixed
+    window is cruder than section parsing but has no false-negative mode
+    that silently drops a check, which is the property that matters here.
+    """
+    return abs(anchor_line - denom_line) <= window
+
+
+def evaluate_hr_anchor(anchor: dict[str, Any], activity: dict | None) -> dict | None:
+    """Compare one declared anchor against the source activity's own LTHR.
+
+    Returns a finding dict payload (severity/category/evidence) or None when
+    the anchor is consistent. Pure — the fetch happens in the caller.
+    """
+    if not activity:
+        return {
+            "severity": LOW,
+            "category": "percent_anchor_unverified",
+            "evidence": (
+                f"Aktivität {anchor['activity_id']} nicht abrufbar — "
+                f"Anker lthr={anchor['declared_lthr']} bleibt ungeprüft."
+            ),
+        }
+    stored = activity.get("lthr")
+    if stored in (None, 0):
+        return {
+            "severity": LOW,
+            "category": "percent_anchor_unverified",
+            "evidence": (
+                f"Aktivität {anchor['activity_id']} trägt kein `lthr`-Feld — "
+                f"Anker lthr={anchor['declared_lthr']} bleibt ungeprüft."
+            ),
+        }
+    if int(stored) != int(anchor["declared_lthr"]):
+        avg_hr = activity.get("average_heartrate")
+        max_hr = activity.get("max_heartrate")
+        detail = ""
+        if avg_hr:
+            detail = (
+                f" ⌀HF {avg_hr} entspricht {avg_hr / int(stored) * 100:.0f} % "
+                f"des hinterlegten LTHR, aber "
+                f"{avg_hr / int(anchor['declared_lthr']) * 100:.0f} % des deklarierten."
+            )
+        if max_hr and int(max_hr) < int(anchor["declared_lthr"]):
+            detail += (
+                f" maxHF {max_hr} liegt UNTER dem deklarierten LTHR "
+                f"{anchor['declared_lthr']} — eine Volllast-Einheit gegen diese "
+                f"Schwelle ist damit ausgeschlossen."
+            )
+        return {
+            "severity": HIGH,
+            "category": "percent_anchor_drift",
+            "evidence": (
+                f"{anchor['activity_id']}: Config deklariert lthr="
+                f"{anchor['declared_lthr']}, die Aktivität trägt {int(stored)}."
+                f"{detail}"
+            ),
+        }
+    return None
+
+
+def _config_md_names() -> list[str]:
+    return sorted(
+        {p.name for p in CONFIG_DIR.glob("*.md")}
+        | {p.name for p in CONFIG_FALLBACK.glob("*.md")}
+    )
+
+
+def _resolve_config_md(name: str) -> Path:
+    """Wrapper override wins over framework default, mirroring resolve_config.
+
+    Resolved against the module globals rather than `resolve_config` so the
+    check stays testable against isolated temp config dirs.
+    """
+    override = CONFIG_DIR / name
+    return override if override.exists() else CONFIG_FALLBACK / name
+
+
+def collect_hr_anchor_ids() -> list[str]:
+    """Activity IDs referenced by `[hr-anchor:...]` markers across configs."""
+    ids: list[str] = []
+    for name in _config_md_names():
+        for anchor in _parse_hr_anchors(_read(_resolve_config_md(name))):
+            if anchor["activity_id"] not in ids:
+                ids.append(anchor["activity_id"])
+    return ids
+
+
+def check_percent_anchors(anchor_activities: dict[str, dict] | None = None) -> list[dict]:
+    """%LTHR-Anker in den Configs gegen die Quell-Aktivitäten prüfen."""
+    findings: list[dict] = []
+    seen: dict[str, dict | None] = dict(anchor_activities or {})
+
+    for name in _config_md_names():
+        text = _read(_resolve_config_md(name))
+        if not text:
+            continue
+        anchors = _parse_hr_anchors(text)
+        denominators = _parse_stated_denominators(text)
+
+        for anchor in anchors:
+            aid = anchor["activity_id"]
+            payload = evaluate_hr_anchor(anchor, seen.get(aid))
+            if not payload:
+                continue
+            findings.append(_finding(
+                payload["severity"],
+                payload["category"],
+                f"config/{name}",
+                source_line=anchor["line"],
+                evidence=payload["evidence"],
+                canonical_source=f"intervals.icu activity {aid} (Feld `lthr`)",
+                suggested_action="recompute",
+                fix_hint=(
+                    "Prozentwerte mit dem LTHR der Quell-Aktivität neu rechnen "
+                    "und den Anker auf diesen Wert setzen. Den alten Wert nicht "
+                    "still überschreiben — die falsche Spalte zur Nachverfolgung "
+                    "danebenstehen lassen."
+                ),
+                description=(
+                    "Ein als %LTHR abgelegter Renn-Anker wurde mit einem anderen "
+                    "Nenner gerechnet, als die Quell-Aktivität trägt. Jede daraus "
+                    "abgeleitete Vorgabe erbt den Fehler."
+                ),
+            ))
+
+        for denom in denominators:
+            if any(_anchor_covers(a["line"], denom["line"]) for a in anchors):
+                continue
+            findings.append(_finding(
+                MEDIUM,
+                "percent_anchor_missing",
+                f"config/{name}",
+                source_line=denom["line"],
+                evidence=(
+                    f"`% LTHR ({denom['lthr']})` ohne `[hr-anchor:iNNN "
+                    f"lthr={denom['lthr']}]` in der Umgebung."
+                ),
+                canonical_source="intervals.icu activity (Feld `lthr`)",
+                suggested_action="annotate",
+                fix_hint=(
+                    "Marker `[hr-anchor:<activity-id> lthr=<wert>]` neben die "
+                    "Tabelle setzen, damit der Nenner maschinell prüfbar wird."
+                ),
+                description=(
+                    "Ein Prozentwert ohne prüfbaren Nenner altert still weiter: "
+                    "wird die Schwelle neu validiert, zeigt die Tabelle auf einen "
+                    "Nenner, den es nicht mehr gibt."
+                ),
+            ))
+
+    return findings
+
+
 CHECK_MAP = {
     "HR_ZONES": ("check_hr_zones", True),       # online
     "ORPHAN_MUSCLES": ("check_orphan_muscles", False),
@@ -1679,6 +1917,7 @@ CHECK_MAP = {
     "OVERRIDE_DRIFT": ("check_override_drift", False),
     "PROMPT_DRIFT": ("check_prompt_drift", False),
     "POLICY_COVERAGE": ("check_policy_workflow_coverage", False),
+    "PERCENT_ANCHORS": ("check_percent_anchors", True),  # online (braucht Quell-Aktivitäten)
 }
 
 
@@ -1727,6 +1966,8 @@ def run_audit(offline: bool, only: str | None) -> dict[str, Any]:
                 results = check_prompt_drift()
             elif name == "POLICY_COVERAGE":
                 results = check_policy_workflow_coverage()
+            elif name == "PERCENT_ANCHORS":
+                results = check_percent_anchors(online_data.get("anchor_activities"))
             else:
                 results = []
             raw_findings.extend(results)
