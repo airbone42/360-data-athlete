@@ -1426,6 +1426,26 @@ async def _fetch_online() -> dict[str, Any]:
             logger.warning("intervals.icu gear fetch failed: %s", e)
             return []
 
+    async def _rpe_hr_streams(acts: list[dict], note_list: list[dict]) -> dict[str, list]:
+        """HR streams for the few days where an RPE meets a quality session.
+
+        Session averages cannot see a ten-minute block inside an easy hour,
+        so the peak sustained window has to come from the stream. Only
+        candidate days are fetched — typically none or one per audit run.
+        """
+        from app.utils import band_rpe as br
+        out: dict[str, list] = {}
+        for cand in br.select_candidates(acts or [], note_list or []):
+            aid = str(cand["activity"].get("id"))
+            try:
+                detail = await icu.get_streams(aid, types="time,heartrate")
+                hr = (detail or {}).get("heartrate")
+                if hr:
+                    out[aid] = hr
+            except Exception as e:
+                logger.warning("stream fetch for %s failed: %s", aid, e)
+        return out
+
     async def _anchor_activities() -> dict[str, dict]:
         """Fetch the source activities behind `[hr-anchor:...]` markers.
 
@@ -1461,12 +1481,19 @@ async def _fetch_online() -> dict[str, Any]:
             "error": str(e),
         }
 
+    try:
+        rpe_streams = await _rpe_hr_streams(activities, notes)
+    except Exception as e:
+        logger.warning("rpe stream fetch failed: %s", e)
+        rpe_streams = {}
+
     return {
         "notes": notes,
         "athlete_settings": athlete_settings,
         "shoes": shoes,
         "activities": activities,
         "anchor_activities": anchors,
+        "rpe_hr_streams": rpe_streams,
         "shoe_backend": backend,
     }
 
@@ -1902,6 +1929,105 @@ def check_percent_anchors(anchor_activities: dict[str, dict] | None = None) -> l
     return findings
 
 
+# ── RPE gegen Herzfrequenz: kommt die Einheit zu leicht zurück? ──────
+#
+# Companion to PERCENT_ANCHORS. That check catches a band whose arithmetic
+# is wrong; this one catches a band that is simply set too low, using the
+# only channel that stays independent of the band itself — the athlete's
+# effort report. Sessions run inside a faulty band reproduce it; their HR
+# ceilings then read as confirmation.
+#
+# Calibration and every threshold: research/rpe-vs-percent-lthr-endurance-run.md
+# The check is deliberately hard to trip. The literature gives a corridor
+# roughly two CR10 wide with a between-athlete SD near one point, so a
+# tighter trigger would fire on noise, and a noisy check gets ignored —
+# which is worse than none. Consequence worth knowing before reading a
+# quiet report as an all-clear: in the threshold bands, outdoors, the
+# corridor is discounted twice and the check is close to unreachable.
+
+def check_rpe_hr_discrepancy(
+    activities: list[dict] | None,
+    notes: list[dict] | None,
+    hr_streams: dict[str, list] | None = None,
+) -> list[dict]:
+    """Qualifizierende Quality-Blöcke gegen den RPE-Erwartungs-Korridor."""
+    from app.utils import band_rpe as br
+
+    findings: list[dict] = []
+    candidates = br.select_candidates(activities or [], notes or [])
+    streams = hr_streams or {}
+    window_s = br.MIN_BLOCK_MIN * 60
+
+    recent_primaries: list[date] = []
+    for cand in candidates:
+        act = cand["activity"]
+        aid = str(act.get("id"))
+        hr = streams.get(aid)
+        if not hr:
+            continue
+        peak = br.best_rolling_mean(hr, window_s)
+        pct = br.pct_of_threshold(peak, act.get("lthr"))
+        try:
+            day = date.fromisoformat(cand["date"])
+        except ValueError:
+            continue
+        prior = sum(
+            1 for d in recent_primaries
+            if 0 <= (day - d).days <= br.RECURRENT_WINDOW_DAYS
+        )
+        verdict = br.evaluate_block(
+            pct_lthr=pct,
+            rpe=cand["rpe"],
+            duration_min=br.MIN_BLOCK_MIN,
+            outdoor=br.is_outdoor(act),
+            temp_c=act.get("average_weather_temp"),
+            prior_low_primaries=prior,
+        )
+        if not verdict:
+            continue
+        if verdict["verdict"].startswith("RPE_LOW"):
+            recent_primaries.append(day)
+
+        severity = MEDIUM if verdict["verdict"] == "RPE_LOW_STRONG" else LOW
+        confounders = ", ".join(verdict["confounders_applied"]) or "keine"
+        is_low = verdict["verdict"].startswith("RPE_LOW")
+        findings.append(_finding(
+            severity,
+            verdict["verdict"].lower(),
+            f"intervals.icu activity {aid}",
+            evidence=(
+                f"{cand['date']} \u201e{act.get('name', '?')}\u201c: bestes "
+                f"{br.MIN_BLOCK_MIN}-min-Fenster bei {verdict['pct_lthr']} % LTHR, "
+                f"zurückgemeldet RPE {verdict['rpe']} — Korridor nach "
+                f"Confounder-Abzug {verdict['corridor'][0]}–{verdict['corridor'][1]} "
+                f"(angewandt: {confounders}), Abweichung {verdict['delta']} CR10."
+            ),
+            canonical_source="research/rpe-vs-percent-lthr-endurance-run.md",
+            suggested_action=(
+                "recalibrate_band" if verdict["verdict"] == "RPE_LOW_STRONG"
+                else "observe"
+            ),
+            fix_hint=(
+                "Vorgabe-Band als Erstverdacht prüfen, nicht die Form des "
+                "Athleten. Vorher die Confounder ausschliessen, die der Check "
+                "nicht sehen kann: Koffein, Schlaf, Streckenprofil, "
+                "HF-Messqualität."
+                if is_low
+                else "Readiness-Pfad (HRV/RHR-Overload), NICHT Band-Rekalibrierung."
+            ),
+            description=(
+                "Die Einheit kam deutlich leichter zurück, als ihr HF-Anteil "
+                "erwarten lässt. Einheiten innerhalb eines falschen Bandes "
+                "können es nicht widerlegen — die Fremdmeldung ist das einzige "
+                "unabhängige Signal."
+                if is_low
+                else "Die Einheit kam deutlich schwerer zurück als erwartet — "
+                     "das ist ein Readiness-Signal, kein Band-Signal."
+            ),
+        ))
+    return findings
+
+
 CHECK_MAP = {
     "HR_ZONES": ("check_hr_zones", True),       # online
     "ORPHAN_MUSCLES": ("check_orphan_muscles", False),
@@ -1918,6 +2044,7 @@ CHECK_MAP = {
     "PROMPT_DRIFT": ("check_prompt_drift", False),
     "POLICY_COVERAGE": ("check_policy_workflow_coverage", False),
     "PERCENT_ANCHORS": ("check_percent_anchors", True),  # online (braucht Quell-Aktivitäten)
+    "RPE_HR_DISCREPANCY": ("check_rpe_hr_discrepancy", True),  # online (braucht Streams)
 }
 
 
@@ -1968,6 +2095,12 @@ def run_audit(offline: bool, only: str | None) -> dict[str, Any]:
                 results = check_policy_workflow_coverage()
             elif name == "PERCENT_ANCHORS":
                 results = check_percent_anchors(online_data.get("anchor_activities"))
+            elif name == "RPE_HR_DISCREPANCY":
+                results = check_rpe_hr_discrepancy(
+                    online_data.get("activities"),
+                    online_data.get("notes"),
+                    online_data.get("rpe_hr_streams"),
+                )
             else:
                 results = []
             raw_findings.extend(results)

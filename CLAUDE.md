@@ -477,6 +477,31 @@ subjective signal the only independent evidence available before the race
 itself. Treat a persistent RPE-below-expectation at the prescribed band as a
 trigger to re-derive the band, not as a note about form.
 
+**"Well below expectation" is a measured quantity, not a coach's
+impression** — and it is a larger gap than intuition suggests. The evidence
+supports only a corridor about two CR10 points wide, with a between-athlete
+SD near one point and a test-retest SEM up to one point, so a session that
+feels "a bit easier than planned" is inside the noise and says nothing. A
+report two points under the corridor floor is the smallest defensible
+suspicion; three points at once, or two points twice inside 14 days, is the
+band-recalibration signal. Read the reverse direction differently: an RPE
+above the corridor is a readiness signal that belongs in the HRV/RHR
+overload path, not a reason to touch the band. Derivation, sources and the
+confounder list (heat, cardiac drift, outdoor vs. treadmill, caffeine,
+blocks under 8 min, HR data quality):
+[rpe-vs-percent-lthr-endurance-run.md](research/rpe-vs-percent-lthr-endurance-run.md).
+
+*Enforcement: `audit_consistency.py::check_rpe_hr_discrepancy` (audit check
+`RPE_HR_DISCREPANCY`, online) with the pure logic in
+`app/utils/band_rpe.py`. It compares the peak sustained 8-minute HR window
+of a qualifying block — session averages hide a short block inside an easy
+hour — against the RPE reported for that day, and only where attribution is
+unambiguous: exactly one quality session and exactly one reported value.
+Know its blind spot before reading silence as an all-clear: in the
+threshold bands outdoors the corridor is discounted twice, which leaves the
+check close to unreachable there. Tests: `tests/test_band_rpe.py`,
+`tests/test_rpe_hr_discrepancy_check.py`.*
+
 **The same discipline governs volume / long-run duration — anchor on
 demonstrated capability, not on the most recent sessions.** The
 briefing window (last 3 endurance sessions by default) is
