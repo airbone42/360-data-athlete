@@ -68,6 +68,42 @@ python3 scripts/check_prescription_compliance.py [--date YYYY-MM-DD] [--json]
 verfolgt. Das hält die Meldung kurz — sie soll auf die wenigen stehenden
 Verschreibungen zeigen, nicht auf jeden Eintrag der Datei.
 
+## ROM-Status-Feld (Bewegungsumfang als eigene Progressionsachse)
+
+Optional, standardmäßig leer. Zu setzen nur, wenn eine Übung am
+**Endbereich** ein Symptom provoziert und der Bewegungsumfang deshalb
+bewusst begrenzt gefahren wird.
+
+Der Zweck des Feldes ist, **Last und ROM als getrennte Achsen sichtbar zu
+halten**. Ohne es passiert regelmäßig eines von beidem: Entweder verschmelzen
+die zwei Achsen zu einer und ein Last-Deckel wird auf eine ROM-Frage gegatet
+(dann steht die Last still, obwohl ihr Kriterium längst grün ist), oder die
+ROM-Begrenzung wird bei der nächsten Last-Erhöhung stillschweigend
+mitaufgehoben. Beides ist im Nachhinein nicht mehr von einer bewussten
+Entscheidung zu unterscheiden.
+
+```
+ROM-Status: <welcher Bereich ist begrenzt, und woran wird gestoppt>
+Öffnung geplant nach: <die Kriterien, die ALLE halten müssen>
+Öffnungs-Schritt: <ein Increment; Last dabei am Anker halten, nicht koppeln>
+```
+
+Konventionen:
+
+- **`Öffnungs-Schritt` verändert nie gleichzeitig die Last.** Ein Schritt pro
+  Session, sonst ist bei einer Reaktion nicht zuordenbar, welche Achse sie
+  ausgelöst hat.
+- **`Öffnung geplant nach` nennt Kriterien, keine Termine.** Ein Datum gehört
+  nur dort hin, wo der Slot gemeint ist, nicht die Freigabe.
+- Fehlt das Feld, gilt die Übung als **uneingeschränkt in vollem ROM** —
+  das ist der Default und der Normalfall.
+
+Regel-Kontext und Evidenz: `framework/CLAUDE.md` → „Load before range of
+motion on an irritable tendon" und
+`framework/research/end-range-loading-tendon-buildup-rom-vs-load.md`.
+
+---
+
 ## Re-Eval-Feld (WHY-Persistenz für die Re-Evaluations-Kadenz)
 
 Damit die Übungsauswahl nicht „blind" Session für Session übernommen,

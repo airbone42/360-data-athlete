@@ -1152,6 +1152,69 @@ pillar main stimulus and defer it to a later weekday.
 therapy-scope note in `config/athlete_static.md` and the
 sibling-workout treatment in step 2.*
 
+### Load before range of motion on an irritable tendon (mandatory)
+
+When an exercise provokes a symptom **at the end position** of the
+movement rather than under fatigue in mid-range, the reflex to lower the
+load is usually the wrong lever, and a load cap left in place for months
+is the expensive version of that mistake. Three findings govern the
+decision:
+
+1. **Long muscle-tendon length is the stronger adaptation stimulus, not
+   the risk.** Isometric training at the long MTC length raises tendon
+   stiffness where the same work at short length does nothing. Training
+   away from the end position is a real cost, not a free precaution.
+2. **The exception is compression, not stretch.** Where the end position
+   presses the tendon against bone, capsule or retinaculum, end-range
+   loading aggravates rather than adapts. That is the one class where
+   "cap the range, hold the load" is the correct lever — because it keeps
+   the tensile stimulus and drops only the compressive component. In the
+   purely tensile class the opposite is standard: full range under heavy
+   slow resistance. **Ask which class the structure is in before choosing
+   the lever.**
+3. **Pain during the set is not the criterion; the 24-hour response is.**
+   Loading with symptom up to ~5/10 during the set is acceptable while
+   the next morning returns to ~≤2/10 with no stiffness jump and no
+   week-over-week escalation. The structure delivers the verdict itself,
+   on the following morning — the sensation inside the set does not.
+
+**Operational rule:**
+
+- **Load and range are two separate progression steps. Never advance both
+  in the same session**, and never gate one on the other's criterion. A
+  load cap is released by the 24-hour pain gate; a range restriction is
+  released by its own criteria (symptom stable in the current range
+  across two sessions, quiet morning, no strength regression at the
+  anchor, no new neurological signs).
+- **A cap waiting on an unanswered question is a drop, not a cap.** When
+  a load ceiling is gated on an external answer — a practitioner's
+  verdict, a pending appointment — and that answer does not arrive across
+  two scheduled opportunities, the gate has failed as a mechanism. Either
+  re-derive the criterion from evidence or escalate the question; do not
+  let the cap stand indefinitely by default.
+- **Silence is not a data point.** A progression counter advances on a
+  *documented* clean session. Where the athlete's convention treats an
+  unreported session as symptom-free, that convention must be written
+  down and applied consistently — otherwise the counter drifts in
+  whichever direction the coach happens to prefer.
+- **Know the limit of this rule.** It supplies the framework — stimulus
+  class, lever, release criteria — not the classification. Distinguishing
+  tendinopathy from an entrapment, an enthesopathy or a capsular problem
+  requires hands-on testing. When the 24-hour response stops fitting the
+  pattern across two reaction cycles, or neurological signs appear, the
+  next step is a `physio-consultant` / `sports-ortho-consultant` handover,
+  **not** another research pass.
+
+**Research anchor:**
+[end-range-loading-tendon-buildup-rom-vs-load.md](research/end-range-loading-tendon-buildup-rom-vs-load.md).
+
+*Enforcement: head-coach and specialist judgment. Machine-readable
+support: the `ROM-Status:` / `Öffnung geplant nach:` / `Öffnungs-Schritt:`
+fields on the exercise entry in `config/exercise_progressions.md` (schema
+in `config.example/exercise_progressions.md`, empty by default) — they put
+the range criterion where the specialist reads it, next to the load
+anchor, so the two cannot silently merge back into one lever.*
+
 ### Per-exercise last-seen verification (mandatory)
 
 Specialists must check the `exercises_seen` field on each session in the
