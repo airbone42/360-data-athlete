@@ -343,6 +343,12 @@ Vorsicht besonders relevant ist:
 > exercises […] may be highly provocative and deleterious within this
 > reactive stage."
 
+*(⚠️ Zitat-Audit 2026-09-01: Der Wortlaut des letzten Satzes konnte im
+zugänglichen PDF nicht bestätigt werden; die Quelle formuliert an der
+entsprechenden Stelle „high-load elastic or eccentric loading… will tend to
+aggravate tendons in this stage". Die Aussage trägt, der Zitatstatus dieses
+Satzes ist unsicher — als Paraphrase lesen.)*
+
 Erste Wiederbelastung nach Pause = klassisches Reaktiv-Stage-Trigger-
 Fenster. Genau das rechtfertigt die deutliche Zurückhaltung in Session 1,
 nicht die Sorge um „verlorene Kraft".

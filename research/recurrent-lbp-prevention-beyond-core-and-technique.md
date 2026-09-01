@@ -227,10 +227,12 @@ Bewegungsbeginn" keinen direkten Effekt.
   Wichtig: der Effekt ist unspezifisch für die Übungsform.
 - **Cochrane 2011 (Verbeek et al., CD005958)** — Manual-Handling-/
   Lifting-Technik-Training: 9 RCTs, N = 20 101; 9 CCTs, N = 1 280.
-  *"None of the included RCTs and CCTs provided evidence that training
-  and provision of assistive devices prevented low back pain when
-  compared to no intervention or another intervention."* Moderate
-  Qualität. → **Lifting-Technik-Coaching als isolierte Intervention
+  *"There is moderate quality evidence that MMH advice and training
+  with or without assistive devices does not prevent back pain or back
+  pain-related disability when compared to no intervention or
+  alternative interventions."* (Wortlaut korrigiert 2026-09-01 — die
+  frühere Fassung gab den Inhalt richtig wieder, war aber nicht der
+  Originalsatz.) → **Lifting-Technik-Coaching als isolierte Intervention
   wirkt nicht.** Der oft populäre Ratschlag "richtig heben lernen"
   ist auf Populations-Ebene wirkungslos, weil die tatsächlichen
   Risikofaktoren (Volumen, Frequenz, unantizipierte Momente,

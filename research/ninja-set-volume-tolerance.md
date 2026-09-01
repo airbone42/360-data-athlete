@@ -4,7 +4,14 @@
 
 ## TL;DR
 
-1. **RP Strength (Renaissance Periodization) + Stronger by Science consensus:** forearm volume tolerance is low due to connective-tissue adaptation limits. "Training volume that muscle tissue can tolerate is often more than connective tissue can safely absorb over weeks and months."
+> ⚠️ **ZITAT-AUDIT 2026-09-01 — dieses Dokument ist das am schwersten betroffene der Bibliothek.**
+> Von den geprüften Nicht-Fachquellen war **jede einzelne** fehlerhaft: zwei zugeschriebene
+> Zitate stehen in den verlinkten Artikeln nicht, eine Wiederholungszahl widerspricht der
+> Quelle. Die Peer-Review-Quellen der Bibliothek waren im selben Durchlauf unauffällig.
+> **Behandle die Aussagen unten als Praktiker-Konvention ohne Beleg**, bis sie neu
+> recherchiert sind — nicht als evidenzgestützt zitieren.
+
+1. **RP Strength + Stronger by Science:** Unterhypothese, dass die Unterarm-Volumentoleranz durch Bindegewebs-Adaptation begrenzt ist. ⚠️ Der hierfür früher zitierte Satz („Training volume that muscle tissue can tolerate is often more than connective tissue can safely absorb over weeks and months") **steht im verlinkten Artikel nicht** und ist am 2026-09-01 entfernt worden. Die Aussage bleibt als unbelegte Arbeitshypothese stehen.
 2. **Practice recommendations:**
    - **Max 1 forearm exercise per session** (RP Strength)
    - **2-3 different forearm exercises per week** (spread across sessions)
@@ -26,8 +33,8 @@
 - Tendons + joint capsule adapt more slowly than muscle (weeks vs. days)
 - → overtraining shows up later (weeks scale), not acutely
 
-**OCR/ninja-specific (Mud Run Guide, OCRWC):**
-- 3×/week grip-specific is the ceiling, with 48h spacing
+**OCR/ninja-specific:**
+- ⚠️ **UNBELEGT (Zitat-Audit 2026-09-01):** „3×/Woche ist die Decke, 48 h Abstand" war der Kern-Datenpunkt dieses Abschnitts und dem Mud-Run-Guide-Artikel zugeschrieben. Der Artikel enthält **überhaupt keine Frequenz- oder Pausenangabe** (zweifach direkt geprüft). Die 3×/Woche-Praxis läuft damit als Konvention ohne Beleg weiter — nicht als Evidenz zitieren, vor einer Frequenz-Entscheidung neu belegen.
 - Variation of grip modes (static-hold, crush, pinch, support) reduces cumulative single-pattern load
 - For ninja-race preparation: peak volume conservatively 3-4 weeks pre-race, then taper
 
@@ -40,9 +47,9 @@
 
 | Author / year | Title | Publisher / link | Key quote |
 |---------------|-------|------------------|-----------|
-| RP Strength / Mike Israetel et al — n.d. | Forearm Training Guide: Volume, Exercises & Hypertrophy Tips | [rpstrength.com](https://rpstrength.com/blogs/articles/forearm-hypertrophy-training-tips) | "include no more than 1 forearm exercise per training session" |
-| Stronger by Science / Greg Nuckols — n.d. | The Evidence-Based Guide to Grip Strength Training & Forearm Muscle Development | [strongerbyscience.com](https://www.strongerbyscience.com/grip/) | "Training volume that muscle tissue can tolerate is often more than connective tissue can safely absorb" |
-| Mud Run Guide — 2015 | Grip Training for OCR | [mudrunguide.com](https://www.mudrunguide.com/2015/10/grip-training-for-ocr/) | 3×/week max for grip-specific |
+| RP Strength / Mike Israetel et al — n.d. | Forearm Training Guide: Volume, Exercises & Hypertrophy Tips | [rpstrength.com](https://rpstrength.com/blogs/articles/forearm-hypertrophy-training-tips) | "include no more than 1 forearm exercise per training session" — ⚠️ **zwei weitere Zuschreibungen an diese Quelle zurückgezogen (2026-09-01):** „Avoid: forearm + heavy pull on the same day" steht dort nicht, und die Wiederholungsbereiche der Quelle (schwer 5–10, moderat 10–20, leicht 20–30) **widersprechen** dem früher zitierten „5–8 für Kraft". |
+| ⚠️ **ZURÜCKGEZOGEN 2026-09-01** — Stronger by Science, zitiert als „Greg Nuckols" | Der Artikel existiert, ist aber von **Cameron Gill (Feb 2024)** und heißt „The Evidence-Based Guide to Grip Strength Training…" | [strongerbyscience.com](https://www.strongerbyscience.com/grip/) | Das zugeschriebene Zitat kommt dort **nicht** vor, ebensowenig eine Aussage zu Bindegewebs- vs. Muskel-Erholungszeit. Der Artikel behandelt Volumen (10–12 Sätze / 2–3 Sessions), Muskellänge und Handhaut-Erholung. |
+| ⚠️ **ZURÜCKGEZOGEN 2026-09-01** — Mud Run Guide 2015 | Grip Training for OCR | [mudrunguide.com](https://www.mudrunguide.com/2015/10/grip-training-for-ocr/) | Die zugeschriebene Frequenzgrenze „3×/Woche max" steht im Artikel **nicht** — er enthält keine Frequenz- oder Pausenangaben, nur Technik- und Variantentipps. |
 | OCRWC | How to Train for the OCRWC: Grip Obstacles | [ocrworldchampionships.com](https://ocrworldchampionships.com/how-to-train-for-the-ocrwc-grip-obstacles/) | OCR-specific variation strategy |
 | GripStrength.com | Periodized Grip Training: 8-12 Week CoC Progression Guide | [gripstrength.com](https://gripstrength.com/blogs/grip-strength-info/periodized-grip-training) | 8-12 week block periodisation for grip |
 

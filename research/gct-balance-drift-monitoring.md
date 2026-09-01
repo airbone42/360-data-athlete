@@ -77,7 +77,7 @@ Sechs Teilfragen:
   speziell für den **Balance-Kanal** in feld-relevanten Bedingungen
   fehlt in der Peer-Reviewed-Literatur.
 - **Praktische Rausch-Untergrenze:** Garmins eigenes drei-Stufen-Rating
-  („Good ≤ 50.7 %, Fair 50.8–52.2 %, Poor > 52.2 %") ist eine
+  (Good ≤ 50.7 %, Fair 50.8–52.2 %, Poor > 52.2 % — ⚠️ Zitat-Audit 2026-09-01: die Zahlen stimmen, Garmin liefert sie aber als Tabelle mit getrennten L/R-Zeilen, nicht als zusammenhängenden Satz; die Anführungszeichen sind entfernt, weil sie einen Originalwortlaut suggerierten) ist eine
   populations-perzentile Einteilung, **keine** validierte
   Fehler-/Signalgrenze. Sie taugt für eine grobe „ist der Wert
   überhaupt auffällig"-Frage, aber nicht als Abbruch-Schwelle.

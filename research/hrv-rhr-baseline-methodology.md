@@ -10,7 +10,7 @@
 
 2. **The methodologically recommended approach would be a combination:** 60-d baseline + 7-d rolling average as daily comparison value + Smallest Worthwhile Change (0.5-1.0 × within-athlete CV) instead of a fixed % threshold. That would have two effects: less day-to-day noise (7d smoothing) and athlete-specific sensitivity (CV instead of fixed %).
 
-3. **RHR baseline: currently we compare 3-d average (days 1-3) vs. 3-d average (days 5-7), trigger `delta > 3 bpm` → warning.** That is conservatively calibrated. The literature converges on **+5 bpm against a 3-week baseline as a robust overload marker**; the earlier signal `+3 bpm against a 4-day comparison period` is sensible as an early warning but has a higher false-positive rate (daily sleep-quality drift produces similar values).
+3. **RHR baseline: currently we compare 3-d average (days 1-3) vs. 3-d average (days 5-7), trigger `delta > 3 bpm` → warning.** ⚠️ **Diese Einordnung ist am 2026-09-01 zusammengebrochen (Zitat-Audit).** Der einzige Beleg für „die Literatur konvergiert auf +5 bpm gegen eine 3-Wochen-Baseline" war ein Coach-Artikel, in dem der zugeschriebene Satz **nicht vorkommt** und der sachlich eher das Gegenteil sagt („your resting heart rate is likely not all that useful of a measurement"); die dort referierten Studien nennen reale RHR-Anstiege von **unter 2 bpm**, nicht 5. Damit ist die Aussage „unser 3-bpm-Trigger ist konservativer als die Literatur" **nicht mehr gedeckt** — sie könnte ebenso gut zu unempfindlich sein. Die Schwelle selbst wurde nicht geändert (das wäre eine Trainingsentscheidung, keine Redaktion); sie läuft bis zur Neurecherche als **unbelegte Konvention**. Frühere Formulierung: the earlier signal `+3 bpm against a 4-day comparison period` is sensible as an early warning but has a higher false-positive rate (daily sleep-quality drift produces similar values).
 
 4. **Both baselines are stable in single-athlete practice**, but at season changes (massive volume increase, altitude training, longer pause) the 90-d baseline drifts along. That is intended — but prevents "real" adaptation drifts (HRV rises through aerobic adaptation over weeks) from being assessed against a fixed anchor.
 
@@ -88,18 +88,18 @@ if tsb < -10:
 
 ### 3. RHR thresholds — literature
 
-**Consensus picture (RunnersConnect, TrainingPeaks, Outside Online, MDPI 2025):**
-- **+5 bpm against a 3-week baseline** = robust overload signal (RunnersConnect: "A resting heart rate increase of 5 BPM or more is a strong sign of overtraining")
+**Angebliches Konsensbild (⚠️ Beleglage 2026-09-01 geprüft und in Teilen widerlegt):**
+- **+5 bpm gegen eine 3-Wochen-Baseline** als robustes Overload-Signal — ⚠️ **ZURÜCKGEZOGEN.** Der als Beleg zitierte Satz („A resting heart rate increase of 5 BPM or more is a strong sign of overtraining") steht im verlinkten Artikel **nicht** (zweifach unabhängig geprüft). Der Artikel kommt zum gegenteiligen Tenor. Die 5-bpm-Zahl ist damit unbelegt.
 - **+7 bpm acute** = not-fully-recovered signal (single day)
 - **Trend over 2-3 weeks rising** = adaptation risk / overtraining onset
-- **Minimum data:** "be sure to record at least three weeks of data" for a valid baseline
+- **Minimum data:** ⚠️ auch dieser Satz („be sure to record at least three weeks of data") ist im verlinkten Artikel **nicht auffindbar** — zurückgezogen 2026-09-01.
 
 **Source:** "How Fatigue, Illness, and Overtraining Impact Your Resting Heart Rate." Runners Connect. → [runnersconnect.net](https://runnersconnect.net/overtraining-resting-heart-rate/)
 
 **Our framework: 3-day average (days 1-3) vs. 3-day average (days 5-7), trigger `delta > 3 bpm`.**
 
 Assessment:
-- **More sensitive than the literature standard** (3 bpm vs. 5 bpm) → more early warnings, but higher false-positive rate
+- **Verhältnis zum „Literatur-Standard" offen** (3 bpm vs. 5 bpm) — der 5-bpm-Vergleichswert ist seit dem Zitat-Audit 2026-09-01 unbelegt. Ob unser 3-bpm-Trigger empfindlicher oder unempfindlicher als der Stand der Evidenz ist, lässt sich derzeit nicht sagen.
 - **Very short comparison window (4 days between recent and earlier)** — can be distorted by single stressors (bad night, cycle day, alcohol)
 - **Counter-argument:** early warning is explicitly desired — the coach can ignore the hint if the athlete names an obvious explanatory confounder
 
@@ -126,11 +126,11 @@ Our 90-d-median approach is neutral on this: it drifts slowly (~quarterly resolu
 
 | Author / year | Title | Publisher / link | Key quote |
 |---------------|-------|------------------|-----------|
-| Plews DJ, Buchheit M et al — 2013 | Training adaptation and heart rate variability in elite endurance athletes: opening the door to effective monitoring | [PubMed 23852425](https://pubmed.ncbi.nlm.nih.gov/23852425/) | "correlations with running performance could only be observed using the average of at least 3-4 days" |
+| ⚠️ *(nur Abstract prüfbar, Volltext paywalled — der zitierte Satz steht nicht im Abstract; nicht widerlegt, aber unbestätigt, Stand 2026-09-01)* Plews DJ, Buchheit M et al — 2013 | Training adaptation and heart rate variability in elite endurance athletes: opening the door to effective monitoring | [PubMed 23852425](https://pubmed.ncbi.nlm.nih.gov/23852425/) | "correlations with running performance could only be observed using the average of at least 3-4 days" |
 | Altini M — n.d. | The Ultimate Guide to Heart Rate Variability (HRV): Part 2 | [Medium](https://medium.com/@altini_marco/the-ultimate-guide-to-heart-rate-variability-hrv-part-2-323a38213fbc) | "we need to shift from a 'higher is better' to a 'normal is better' mentality. … when the daily scores or the baseline are below the band, then it means we have significant stress." |
 | MDPI Sensors 2026 | Monitoring Training Adaptation and Recovery Status in Athletes Using HRV via Mobile Devices | [MDPI](https://www.mdpi.com/1424-8220/26/1/3) | "RMSSDMEAN and RMSSDCV should be calculated from a completed 7-day block of daily RMSSD values" |
 | Buchheit M — 2014 | Monitoring training status with HR measures: do all roads lead to Rome? | [PMC 3936188](https://pmc.ncbi.nlm.nih.gov/articles/PMC3936188/) | "HRV and HRR respond well to acute changes in training load" |
-| Schäfer / RunnersConnect — n.d. | How Fatigue, Illness, and Overtraining Impact Your Resting Heart Rate | [runnersconnect.net](https://runnersconnect.net/overtraining-resting-heart-rate/) | "A resting heart rate increase of 5 BPM or more is a strong sign of overtraining. … record at least three weeks of data" |
+| ⚠️ **ZURÜCKGEZOGEN 2026-09-01** — Schäfer / RunnersConnect | How Fatigue, Illness, and Overtraining Impact Your Resting Heart Rate | [runnersconnect.net](https://runnersconnect.net/overtraining-resting-heart-rate/) | **Beide zugeschriebenen Sätze kommen im Artikel nicht vor** (Live-Abruf + Proxy, zweifach). Der Artikel sagt sinngemäß das Gegenteil und nennt reale RHR-Anstiege < 2 bpm. Diese Quelle trägt weder die 5-bpm-Schwelle noch die 3-Wochen-Mindestdatenmenge. |
 | EliteHRV — n.d. | Improving HRV Data Interpretation: Coefficient of Variation | [elitehrv.com](https://elitehrv.com/improving-hrv-data-interpretation-coefficient-variation) | CV = SD/Mean × 100 as additional stress marker |
 
 ---
