@@ -303,6 +303,7 @@ def build_context(state: AthleteContextState) -> dict:
         hrv_baseline_float_for_signal,
         rhr_baseline_float_for_signal,
         today,
+        _parse_rhr_overload_bpm(_read_optional_config("athlete_status.md")),
     )
 
     # HRV readiness classifier (7d-rolling ln-rMSSD vs 60d normal band) —
@@ -1236,6 +1237,31 @@ def _compute_complementary_due(activities: list[dict], today: date) -> str | Non
 # schedule come from config/ (athlete_status.md re-eval block) so no
 # athlete specifics live in framework code.
 _REEVAL_STALENESS_WEEKS_DEFAULT = 6
+
+
+def _parse_rhr_overload_bpm(status_content: str | None) -> float:
+    """Read the athlete's RHR overload step from ``athlete_status.md``.
+
+    Key: ``rhr_overload_bpm`` (default 5). This is the bpm rise above the RHR
+    baseline that, **together with** an HRV value below baseline, counts as one
+    overload day in ``_compute_combined_overload_signal``.
+
+    It is athlete configuration rather than framework policy for the same reason
+    ``impact_streak_max`` is: the right value depends on the athlete's own RHR
+    variability, and the framework default is a convention, not a measured
+    threshold — the citation that once justified 5 bpm was retracted on
+    2026-09-01 after a source audit.
+    """
+    if not status_content:
+        return 5.0
+    import re as _re
+    m = _re.search(r"rhr_overload_bpm[:*\s=]*([0-9]+(?:[.,][0-9]+)?)", status_content, _re.IGNORECASE)
+    if not m:
+        return 5.0
+    try:
+        return float(m.group(1).replace(",", "."))
+    except ValueError:
+        return 5.0
 
 
 def _parse_reeval_config(status_content: str | None) -> dict:

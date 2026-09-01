@@ -65,3 +65,22 @@ Empty by default — fill in per athlete:
 ## Notes on this template
 This file is consumed by the planner. Keep field labels stable — the parser
 reads them. Add prose freely *after* a field block.
+
+## RHR overload threshold (machine-readable)
+
+- **rhr_overload_bpm:** 5
+
+The bpm rise above the RHR baseline that, **together with** an HRV value below
+baseline, counts as one overload day in `_compute_combined_overload_signal`.
+Three consecutive such days produce a `deload` verdict.
+
+**This default is a convention, not a literature value.** It was documented as
+literature-anchored until a source audit found the attributed sentence absent
+from the cited article. The number was kept because changing a readiness gate is
+a training decision, but it is athlete configuration — like `impact_streak_max`
+— because the right value depends on the athlete's own RHR variability.
+
+What makes the signal specific is the conjunction (HRV low AND RHR elevated)
+plus the consecutive-day requirement, not the size of the bpm step. Lower the
+value for a more sensitive gate, raise it if the verdict fires on days that feel
+unremarkable.

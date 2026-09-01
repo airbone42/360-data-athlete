@@ -122,14 +122,27 @@ def _compute_combined_overload_signal(
     hrv_baseline_float: float | None,
     rhr_baseline_float: float | None,
     today: date,
+    rhr_overload_bpm: float = 5.0,
 ) -> dict | None:
-    """Combined HRV+RHR overload trigger (Buchheit 2014 + RunnersConnect).
+    """Combined HRV+RHR overload trigger.
 
     For each of the last N days, check whether **both** signals fired:
       - HRV below 90d-median (any negative deviation counts; SWC-based
         filtering happens elsewhere)
-      - RHR ≥ baseline + 5 bpm (literature-anchored robust overload
-        threshold, more specific than the 3-bpm 7d short-window warning)
+      - RHR ≥ baseline + ``rhr_overload_bpm``
+
+    **The bpm threshold is a convention, not a literature value.** It was
+    previously documented as "literature-anchored" on the strength of a single
+    coaching article; a citation audit found the attributed sentence absent from
+    that source, so the justification has been withdrawn (see the research doc
+    below). The default of 5 bpm is kept because changing an athlete's readiness
+    gate is a training decision, not a redaction — but it is now overridable per
+    athlete via ``rhr_overload_bpm`` in ``config/athlete_status.md``, the same
+    split already used for ``impact_streak_max``.
+
+    What actually makes this signal specific is the **conjunction** (HRV below
+    baseline AND RHR elevated) plus the **consecutive-day** requirement — not
+    the size of the bpm step.
 
     Returns a dict ``{verdict, days, message}`` or ``None`` when neither
     baseline is available. ``verdict``:
@@ -139,8 +152,8 @@ def _compute_combined_overload_signal(
       - ``"clear"``   — today is symptom-free
 
     Reference: ``framework/research/hrv-rhr-baseline-methodology.md``
-    section "RHR and HRV — together or separately?" (Buchheit 2014;
-    RunnersConnect overtraining-resting-heart-rate review).
+    section "RHR and HRV — together or separately?" (Buchheit 2014). The
+    RunnersConnect reference formerly cited here was retracted on 2026-09-01.
     """
     if hrv_baseline_float is None or rhr_baseline_float is None:
         return None
@@ -158,7 +171,7 @@ def _compute_combined_overload_signal(
         if hrv_val is None or rhr_val is None:
             break
         hrv_below = hrv_val < hrv_baseline_float
-        rhr_elevated = rhr_val >= rhr_baseline_float + 5
+        rhr_elevated = rhr_val >= rhr_baseline_float + rhr_overload_bpm
         if hrv_below and rhr_elevated:
             streak += 1
         else:
@@ -171,7 +184,7 @@ def _compute_combined_overload_signal(
             "verdict": "deload",
             "days": streak,
             "message": (
-                f"⛔ Combined overload: HRV below baseline AND RHR ≥ +5 bpm "
+                f"⛔ Combined overload: HRV below baseline AND RHR ≥ +{rhr_overload_bpm:g} bpm "
                 f"for {streak} consecutive days — deload trigger active."
             ),
         }
@@ -179,7 +192,7 @@ def _compute_combined_overload_signal(
         "verdict": "watch",
         "days": streak,
         "message": (
-            f"⚠️ Combined drift watch: HRV below baseline AND RHR ≥ +5 bpm "
+            f"⚠️ Combined drift watch: HRV below baseline AND RHR ≥ +{rhr_overload_bpm:g} bpm "
             f"for {streak} day(s) — monitor for deload at 3d."
         ),
     }
