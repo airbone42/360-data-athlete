@@ -1287,6 +1287,60 @@ power, with legs as the limiter long before HR catches up.
 
 **Research anchor:** [cross-sport-hr-differential.md](research/cross-sport-hr-differential.md)
 
+### Race surface is a training demand, not only a routing default (mandatory)
+
+The `surface` field has two readers, and only one of them is mechanical. The
+shoe advisor reads it to pick a shoe. The **athlete's tissue** reads it as a
+loading pattern: hard even ground, compliant uneven ground and a banked track
+load the foot, tendon and ankle differently, and the tolerance for each is
+trained, not assumed. A plan that treats `surface` purely as advisor input has
+a training variable it never decides.
+
+**When a target race is selected, or its surface changes, the coach re-derives
+the surface for every run category — easy, long, recovery, quality — and
+records the decision per category.** The failure mode is not a wrong choice; it
+is an *unaddressed* one. A category nobody mentions keeps whatever default it
+had, and that default was set for the previous race.
+
+**Why the quality sessions cannot carry terrain specificity alone.** A race
+block typically holds a handful of race-pace sessions. They buy pace, rhythm
+and race-shoe familiarity — that is *tempo* specificity, and a handful of
+exposures is the right dose for it. Tolerance to a surface's loading pattern is
+a tissue adaptation, and tissue adapts to **repetition**. The recurring easy and
+long volume is the only place in the plan where that repetition exists. Booking
+terrain specificity exclusively into the quality slots therefore looks complete
+on paper and delivers a fraction of the exposure.
+
+**Conflicts with a tissue restriction are normal — resolve them as a split, not
+a default.** A tendon or joint rehab protocol may recommend a compliant surface
+while the race is on hard ground. Both claims are legitimate, so the answer is a
+**named ratio** (e.g. which sessions per week run on race surface, which stay on
+the protective one), not a blanket default that silently gives one side
+everything. Whichever side loses volume, **name what that costs** in the plan
+presentation. The trade belongs to the athlete as principal; the coach's job is
+to make it visible and decidable rather than to settle it by omission.
+
+**Evidence limit, stated rather than papered over.** The direction above —
+surface exposure builds surface tolerance, and repetition is the mechanism — is
+consistent with the load-adaptation logic used elsewhere in this document, but
+the framework carries **no dose-response evidence** for how much easy volume
+must sit on the race surface. Do not present a specific ratio as
+evidence-backed. When a concrete dose has to be defended, that is a
+`RESEARCH-FLAG` (see *Research-before-scaling-or-new-protocol*), not a number
+pulled from the coach's intuition.
+
+**Drift incident pattern** (canonical case to learn from): a target race changed
+to a different surface than the previous one. The coach correctly moved the
+race-pace work and the race-pace segments of the long run onto the new surface
+and documented that decision. The easy runs were never named in it, so they kept
+running on the old surface week after week — until the athlete asked why the
+plan was still routing him onto the previous race's terrain. The specificity
+decision had covered *pace* and been read as covering *terrain*.
+
+*Enforcement: head-coach judgment. Mechanical support is limited to the
+mandatory `surface` field on Run/Ride, which makes the per-session choice
+visible but cannot tell whether it was decided or inherited.*
+
 ---
 
 ## Workout JSON format

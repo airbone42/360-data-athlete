@@ -755,6 +755,18 @@ Allowed values:
 routes, pick the dominant surface (>60 %); if truly 50/50, mention in
 `focus` and pick trail if trail share ≥ 40 % (safety bias).
 
+**The field is also a training variable, not only advisor input.** Surface
+decides the loading pattern the athlete's foot, tendon and ankle actually
+get, so it is part of race specificity — and terrain tolerance is built by
+repetition, which lives in the recurring easy and long volume, not in the
+handful of quality sessions. When the directive names a target-race surface
+or the config documents one, do not leave an easy run on an inherited
+default: either match the race surface or state in `focus` which
+restriction outranks it. Full rule, including how to resolve a conflict with
+a rehab surface recommendation as a named ratio rather than a blanket
+default: `CLAUDE.md` → *Race surface is a training demand, not only a
+routing default*.
+
 ---
 
 ## Rules for the `intervals_icu` field
