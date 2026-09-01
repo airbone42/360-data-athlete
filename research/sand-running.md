@@ -45,39 +45,60 @@ track at matched speeds:
 The energy-cost / mechanical-work ratio is the operative finding: in
 running, the extra energetic cost is *not* explained by extra mechanical
 work alone. The mechanism is the **loss of elastic energy storage and
-return in the muscle-tendon units** (esp. triceps surae / Achilles) —
-sand absorbs the stored elastic energy that a stiff surface would return.
-The runner has to pay metabolically what the tendon recoil normally pays
-for free. This is the mechanistic anchor for the calf/Achilles overload
-finding in §3.
+return in the muscle-tendon units** — a compliant substrate absorbs the
+stored elastic energy that a stiff surface would return, and the runner
+pays metabolically what tendon recoil normally pays for free.
+
+**Correction — this energetic finding does NOT locate the extra work at
+the calf.** The whole-body energy cost and the joint at which the added
+work appears are two different questions, and this document previously
+ran them together. Where compliant-substrate work has been partitioned by
+joint, the plantarflexors do **less** negative work and total ankle work
+*falls* relative to hard ground, while the added mechanical work appears
+at the **hip and knee** (measured in walking — Grant et al. 2022, *J R Soc
+Interface*; the running partition has not been published, so treat the
+direction as indicative rather than settled). The elastic-return
+explanation for the metabolic cost stands; the inference "therefore the
+Achilles works harder per stride" does not follow from it and must not be
+cited as if it did. The Achilles risk signal in §3 rests on the
+epidemiology and the dorsiflexion-ROM argument, **not** on this
+energetics finding.
 
 ### 2. Impact and loading
 
 - **Peak vertical and medio-lateral GRF are lower on sand** than on
   stable/firm ground (Mohammadi-Rad et al. 2022, *Front Physiol*). Sand is
   genuinely lower-peak-impact.
-- **EMG / muscle activation shifts upward** in the lower leg and hip:
+- **EMG / muscle activation shifts upward**, but the segment matters:
   Pinnington et al. (2005, *Eur J Appl Physiol*) report increased activity
-  in the triceps surae and a kinematic shift consistent with reduced
-  elastic return.
+  in **hip and knee** musculature. The claim that this work shows higher
+  *triceps surae* activation could not be verified against the paper and
+  has been removed — do not repeat it.
 - Practitioner-side reports of **increased calf and quad girth** after
   6-week sand-running blocks (Pinnington/Dawson line of work) are
   consistent with the higher muscular workload.
 - Hip stabilisers (gluteus medius) and peroneals are loaded more on sand
   than on stable ground due to the unstable substrate.
 
-Net: peak impact is *down*, but per-stride muscular work in the
-calf/Achilles/foot/hip-stabiliser chain is *up*. "Low impact" is true at
-the joint-reaction level, **not** at the soft-tissue / tendon level.
+Net: peak impact is *down*, and per-stride muscular work is *up* — but
+the added work sits mainly at the **hip and knee** and at the stabilisers
+working against the unstable substrate, not demonstrably at the
+plantarflexors. "Low impact" is true at the joint-reaction level, **not**
+at the soft-tissue level; the segment carrying that soft-tissue cost
+should not be asserted as the calf on energetic grounds alone.
 
 ### 3. Injury risk
 
-- **Achilles tendinopathy:** A case-control study in masters runners
-  found running on sand associated with an approximately **10-fold
-  higher risk of Achilles tendinopathy**, while running on asphalt was
-  associated with ~53% lower risk. Mechanism: more dorsiflexion ROM at
-  the ankle (foot sinks), repeated high tendon stress without the
-  stiffness benefit, and increased per-stride calf work.
+- **Achilles tendinopathy:** Knobloch et al. (2008) report running on
+  sand associated with an approximately **10-fold higher risk** of
+  mid-portion Achilles tendinopathy (RR ≈ 10), asphalt with ~53 % lower
+  risk. **Read the interval before acting on the point estimate: the 95 %
+  CI runs 1.12–92.8**, the estimate is unadjusted for volume, pace or
+  training history, and it has not been replicated. It is a real signal
+  and a very imprecise one. Plausible mechanism: more dorsiflexion ROM at
+  the ankle as the foot sinks, and repeated tendon stress without the
+  stiffness benefit — **not** the per-stride calf-work claim, which the
+  energetics do not support (see §1 correction).
 - **Calf strain / overuse:** Common consequence of a sudden volume jump
   on sand without progression.
 - **Plantar fascia / foot intrinsics:** Loaded more, especially barefoot

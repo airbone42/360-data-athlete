@@ -1306,28 +1306,48 @@ had, and that default was set for the previous race.
 block typically holds a handful of race-pace sessions. They buy pace, rhythm
 and race-shoe familiarity — that is *tempo* specificity, and a handful of
 exposures is the right dose for it. Tolerance to a surface's loading pattern is
-a tissue adaptation, and tissue adapts to **repetition**. The recurring easy and
-long volume is the only place in the plan where that repetition exists. Booking
-terrain specificity exclusively into the quality slots therefore looks complete
-on paper and delivers a fraction of the exposure.
+a tissue adaptation, and the tissue-adaptation literature's dose variables are
+load **magnitude** and its **novelty**, accumulated over **weeks** — not a
+handful of exposures. The recurring easy and long volume is the only place in
+the plan where that accumulation exists. Booking terrain specificity exclusively
+into the quality slots therefore looks complete on paper and delivers a fraction
+of the exposure.
 
 **Conflicts with a tissue restriction are normal — resolve them as a split, not
 a default.** A tendon or joint rehab protocol may recommend a compliant surface
-while the race is on hard ground. Both claims are legitimate, so the answer is a
+while the race is on hard ground. Both claims are legitimate — and neither is
+evidence-backed; the compliant-surface recommendation is convention just as much
+as the specificity claim is — so the answer is a
 **named ratio** (e.g. which sessions per week run on race surface, which stay on
 the protective one), not a blanket default that silently gives one side
 everything. Whichever side loses volume, **name what that costs** in the plan
 presentation. The trade belongs to the athlete as principal; the coach's job is
 to make it visible and decidable rather than to settle it by omission.
 
-**Evidence limit, stated rather than papered over.** The direction above —
-surface exposure builds surface tolerance, and repetition is the mechanism — is
-consistent with the load-adaptation logic used elsewhere in this document, but
-the framework carries **no dose-response evidence** for how much easy volume
-must sit on the race surface. Do not present a specific ratio as
-evidence-backed. When a concrete dose has to be defended, that is a
-`RESEARCH-FLAG` (see *Research-before-scaling-or-new-protocol*), not a number
-pulled from the coach's intuition.
+**Evidence limit — and it is larger than "no dose-response".** No study has
+trained one group on one surface and measured tolerance *to* that surface; the
+number does not exist to be looked up. Two corrections to the direction stated
+above follow from the evidence that does exist. First, **the runner cancels much
+of the surface effect within a single step** — leg stiffness is re-tuned on the
+first step after a transition, and interface hardness explains under 10 % of the
+variance in tibial acceleration against 25–48 % for the runner's own knee angle
+and muscle pre-activation. Whatever surface tolerance is worth training lives in
+the slow tissues, not in coordination. Second, **both sides of the conflict above
+are conventions**: the compliant-surface recommendation is called unfounded in a
+2024 scoping review and appears in no tendinopathy guideline at any evidence
+grade, just as surface has never reached the strong-evidence tier as an injury
+risk factor. Do not present a ratio as evidence-backed in either direction.
+
+What replaces the ratio is a **monitoring criterion**: ramp the race-surface
+share like any other novel load, change only **one variable at a time** (surface,
+race shoe and race pace are three), and let the **24-hour tissue response** decide
+whether the share rises, holds or falls. One consequence is worth stating
+separately, because it changes what the exposures are *for*: in a block shorter
+than roughly 8–12 weeks the honest rationale is **verification, not adaptation**
+— finding out whether the tissue carries the race loading pattern while there is
+still time to react. That makes the **early** exposures the informative ones, not
+the ones nearest the race. Derivation:
+[race-surface-exposure-in-easy-volume.md](research/race-surface-exposure-in-easy-volume.md).
 
 **Drift incident pattern** (canonical case to learn from): a target race changed
 to a different surface than the previous one. The coach correctly moved the
