@@ -5,7 +5,7 @@
 ## TL;DR
 
 1. **Eccentric calf loading pre-interval ≠ PAP facilitation.** Classical PAP (post-activation potentiation) is triggered by *short, near-maximal concentric activation* (e.g. heavy back squat) with 6-12 min rest — not by eccentric loading with tendon stretching. Eccentric calf work before a run quality session causes residual fatigue + tendon tension, no performance boost.
-2. **Doma & Deakin 2013 (JSCR):** "running economy decreased within 8 hours after lower limb strength training" — the effect is measurable across 8 h for a session loaded primarily eccentrically.
+2. **Doma & Deakin 2013:** "running economy decreased within 8 hours after lower limb strength training" ⚠️ **[Zitat-Audit 2026-09-01: Journal falsch — die Arbeit erschien in *Applied Physiology, Nutrition, and Metabolism*, nicht im JSCR. Die "8 Stunden" stehen nicht im Abstract; das beschriebene Protokoll arbeitet mit 6 h Abstand und misst die Laufoekonomie am Folgetag. Derselbe Fehler stand identisch in drei Dokumenten — vermutlich eine gemeinsame fehlerhafte Notiz.]** — the effect is measurable across 8 h for a session loaded primarily eccentrically.
 3. **Mechanisms** (Doma & Deakin 2013, Doma et al. 2017): (a) impaired neural recruitment, (b) kinematic alteration (hip ROM, knee flexion), (c) muscle soreness (acute onset), (d) reduced glycogen stores.
 4. **Practical anchor:** eccentric heel raises (with or without load) at least **24h before Z4/Z5 interval sessions** — with +10 kg load or more, rather 48h. Consistent with observations from real application (eccentric heel raises +10 kg before Z4 → calves flat by interval 4).
 
@@ -39,7 +39,7 @@ PAP facilitation is also volume-sensitive. Excess volume → fatigue > potentiat
 
 | Author / year | Title | Publisher / link | Key quote |
 |---------------|-------|------------------|-----------|
-| Doma K, Deakin GB — 2013 | The effects of strength training and endurance training order on running economy and performance | (JSCR) | "running economy decreased within 8 hours after lower limb strength training" |
+| Doma K, Deakin GB — 2013 | The effects of strength training and endurance training order on running economy and performance | ⚠️ *Appl Physiol Nutr Metab* (2026-09-01 korrigiert; zuvor faelschlich JSCR) | "running economy decreased within 8 hours after lower limb strength training" |
 | Doma K, Deakin GB, Bentley DJ — 2017 | Implications of Impaired Endurance Performance Following Single Bouts of Resistance Training: An Alternate Concurrent Training Perspective | [PubMed 28702901](https://pubmed.ncbi.nlm.nih.gov/28702901/) | Detailed mechanism overview on acute endurance-performance impairment |
 | Tillin NA, Bishop D — 2009 | Factors Modulating Post-Activation Potentiation and its Effect on Performance of Subsequent Explosive Activities | Sports Medicine 39(2):147-166 | PAP foundation: myosin-light-chain phosphorylation, 5-20 min window |
 | Healey KC et al — 2018 | Effect of Volume on Eccentric Overload-Induced Postactivation Potentiation of Jumps | [PubMed 32109884](https://pubmed.ncbi.nlm.nih.gov/32109884/) | Volume sensitivity: optimum 1-3 sets, more reverses PAP to fatigue |

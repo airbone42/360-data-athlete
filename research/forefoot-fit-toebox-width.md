@@ -246,8 +246,12 @@ Marathon Handbook).
   im Stehen. Erfasst die *Höhe UND die Breite* — Brannock misst nur die
   Weite und **verpasst systematisch das Volumen**.
 
-Explizit dokumentierte Brannock-Grenze (Shoe Snob 2023, in
-Übereinstimmung mit den Herstellerangaben der Brannock-Company): „the
+Explizit dokumentierte Brannock-Grenze (Shoe Snob, in
+Übereinstimmung mit den Herstellerangaben der Brannock-Company) — ⚠️ *Zitat-Audit
+2026-09-01: der Gedanke ist in zwei Wayback-Snapshots belegt, aber in anderer
+Formulierung („A foot can be wide side-to-side, or it can be thick top-to-bottom …
+Yet the Brannock device can only measure one of them"); der Wortlaut unten ist
+damit eine **Paraphrase**, und die Jahresangabe 2023 liess sich nicht bestaetigen*: „the
 device only measures the width of the foot at the joint, rather than the
 actual girth ... a foot can be wide side-to-side, or it can be thick top-
 to-bottom, and these are very different fits but often get treated the

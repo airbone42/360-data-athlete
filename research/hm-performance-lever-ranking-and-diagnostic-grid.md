@@ -84,6 +84,12 @@ Halbmarathon), die zusammen den wirksamen Umfangs-Bereich abdecken:**
   jenseits von 50–60 km/Woche — der obere Teil der Kurve ist nicht sauber
   aufgelöst.
 - **Marathon (relevant als obere Extrapolation für sub-elite HM-Läufer)**
+  ⚠️ **ZUORDNUNG KORRIGIERT 2026-09-01:** Die folgenden Beta-Werte stammen **nicht**
+  aus der Doherty-Meta-Regression, sondern woertlich aus dem Abstract von
+  **Fokkema et al. 2020** (Marathon-Subkohorte, N = 441). Dohertys Abstract nennt
+  keine Einzel-Beta-Werte. Folge fuer die Hebel-Rangfolge: Umfang und Fokkema sind
+  **ein** Evidenzstrang, nicht zwei unabhaengige — die Belegstaerke von Hebel 1 ist
+  entsprechend geringer als hier dargestellt. Urspruenglich zugeschrieben an
   (Doherty 2019 Meta-Regression, 85 Studien, 137 Kohorten): „> 65 km/wk
   … related to a faster finish time (β −14,09 min, 95 % CI −22,47;
   −5,72)" vs. „< 40 km/wk … slower finish time (β +6,33 min)". Der
@@ -115,7 +121,7 @@ Läufer, der einen chronisch entzogenen Umfang zurückholt, ist der Effekt
 in dieser Größenordnung realistisch; für einen Läufer, der bereits im
 Zielbereich läuft, deutlich kleiner.
 
-**HIIT als partieller Ersatz:** Ein 2020 RCT (Vasquez-Bonilla,
+**HIIT als partieller Ersatz:** ⚠️ **UNBELEGT (2026-09-01):** Die hier zitierte Arbeit war ueber PubMed und Crossref nicht auffindbar und fehlt zudem in der Quellentabelle — die folgende Aussage ist bis zur Klaerung als unbelegt zu fuehren. Ein 2020 RCT (Vasquez-Bonilla,
 mittelalt-weibliche Läuferinnen) zeigte, dass eine HIIT-Gruppe mit **21 %
 weniger Distanz und 17 % weniger Zeit** dieselbe 2–3 %ige HM-Zeit-
 Verbesserung erreichte wie eine kontinuierliche Gruppe — HIIT kann einen
@@ -169,7 +175,7 @@ für weniger als 4 Wochen im aktuellen Block hatte:**
 |-------------|-----------------|----------------|--------------------|
 | **Threshold-/Sub-LT2-Arbeit** (Norwegian-Double-Threshold-Grundgedanke, 3–5 × 8–12 min @ ~LT2 oder Fast-Continuous 20–40 min @ ~LT1–LT2) | +LT1/LT2-Pace, verschiebt %HRmax bei Renn-Pace nach unten — HM-Effekt tendenziell **1–3 % Zeit** in einem 8–12-Wochen-Block, wenn die Pace bei der Anker-HF sichtbar wandert | 6–12 Wochen | [vo2max-long-intervals.md](vo2max-long-intervals.md) §Threshold, [hm-race-hr-and-training-hr.md](hm-race-hr-and-training-hr.md) |
 | **VO2max-Intervalle (Helgerud 4 × 4 min @ 90–95 % HRmax)** | Helgerud 2007: **+7,2 % VO2max in 8 Wochen** bei Untrainiert-bis-Trainiert; bei bereits gut trainierten Läufern eher **+3–5 %**; HM-Zeit typisch **1–2 %** in einem 8-Wochen-Block | 6–8 Wochen | [vo2max-long-intervals.md](vo2max-long-intervals.md) |
-| **VO2max-Kurzintervalle (30/15, 30/30)** | Zeit-oberhalb-90 %-VO2max niedriger als bei 4×4 (Skovgaard 2024: ≈ 3,4 min vs. 5,5 min); Effekt kleiner-gleich Helgerud, aber leichter recovery-verträglich | 6–8 Wochen | [vo2max-short-intervals.md](vo2max-short-intervals.md) |
+| **VO2max-Kurzintervalle (30/15, 30/30)** | Zeit-oberhalb-90 %-VO2max niedriger als bei 4×4 (Fleckenstein, Braunstein & Walter 2025 — bis 2026-09-01 hier falsch als Skovgaard 2024 gefuehrt: ≈ 3,4 min vs. 5,5 min); Effekt kleiner-gleich Helgerud, aber leichter recovery-verträglich | 6–8 Wochen | [vo2max-short-intervals.md](vo2max-short-intervals.md) |
 | **Race-Pace-/HM-Pace-Blöcke im Long Run** (Canova-„Specific Long", Fast-Finish 4–8 km am Ende) | Spezifische Ermüdungsresistenz an der HM-Pace; primär in der **Specific-/Race-Prep-Phase** (letzte 6–10 Wochen) sinnvoll; in der Basis-Phase liefert Trennung von Long-Run und Threshold saubere Reize (siehe [long-run-quality-embedding-vs-separation.md](long-run-quality-embedding-vs-separation.md)) | 4–6 Wochen im Race-Prep-Block | [long-run-quality-embedding-vs-separation.md](long-run-quality-embedding-vs-separation.md) |
 | **Long Run selbst (Z2, 90–150 min)** | Wichtig für Substrat-Toleranz und muskuloskelettale Durability; Fokkema-β für „longest run > 21 km": **−3,9 min HM-Zeit** vs. darunter | 6–12 Wochen | [long-run-quality-embedding-vs-separation.md](long-run-quality-embedding-vs-separation.md) |
 | **Hügel-Repeats (kurz 30–90 s, mittel 4–6 % Gradient)** | Steinmetz 2023: **+42 % Zeit-oberhalb-90 %-VO2max** vs. flache Variante bei gleichem RPE; Verletzungs-sparender wegen weniger exzentrischer Bergab-Last | 6–10 Wochen | [hill-repeats.md](hill-repeats.md) |
@@ -187,7 +193,7 @@ Strategie im Framework (`training_paradigms.md`,
 
 **Zwei Meta-Analysen bilden die belastbare Basis:**
 
-- **Blagrove et al. 2018** (Sports Medicine): schwere Kraft + Plyo →
+- **Blagrove et al. 2018** (Sports Medicine) ⚠️ **Zitat zurueckgezogen 2026-09-01** — weder der Satz zur "large beneficial effect on running economy" noch das 3:1-Verhaeltnis noch die 40-70-%-1RM-Kombination stehen im Volltext (PMC5889786); belegt sind dort Oekonomie-Verbesserungen von 2-8 %. Mit dieser Einschraenkung: schwere Kraft + Plyo →
   große beneficial Effekte auf Laufökonomie bei hoch trainierten Läufern
   in 8–12-Wochen-Programmen bei 3:1 Endurance:Kraft-Verhältnis.
 - **Llanos-Lagos 2024 / Alcaraz-Ibáñez 2024** (Sports Medicine, aktuellste
@@ -450,16 +456,16 @@ weitere Progression ist inkrementell.
 
 | Autor(en) / Jahr | Titel | Journal / Link | Kernzitat |
 |------------------|-------|----------------|-----------|
-| Doherty et al. 2019 | An evaluation of the training determinants of marathon performance: A meta-analysis with meta-regression | J Sci Med Sport / [ScienceDirect](https://www.sciencedirect.com/science/article/abs/pii/S1440244018313100) | „> 65 km/wk … related to a faster finish time (β −14,09 min, 95 % CI −22,47; −5,72)"; „< 40 km/wk … slower finish time (β +6,33 min)" |
+| ⚠️ **Zahlen falsch zugeordnet (2026-09-01), gehoeren zu Fokkema 2020** — Doherty et al. 2019 | An evaluation of the training determinants of marathon performance: A meta-analysis with meta-regression | J Sci Med Sport / [ScienceDirect](https://www.sciencedirect.com/science/article/abs/pii/S1440244018313100) | „> 65 km/wk … related to a faster finish time (β −14,09 min, 95 % CI −22,47; −5,72)"; „< 40 km/wk … slower finish time (β +6,33 min)" |
 | Fokkema, van Poppel et al. 2020 | Training for a (half-)marathon: Training volume and longest endurance run related to performance and running injuries | Scand J Med Sci Sports / [PMC7496388](https://pmc.ncbi.nlm.nih.gov/articles/PMC7496388/) | „a training volume of more than 32 km/wk … were associated with a faster finish time (β −4,19, 95 % CI −6,52; −1,85)"; „a longest endurance run of more than 21 km … a faster finish time (β −3,87)" |
 | Helgerud et al. 2007 | Aerobic high-intensity intervals improve VO2max more than moderate training | Med Sci Sports Exerc | 4×4 min @ 90–95 % HRmax, 3×/Woche, 8 Wochen → **+7,2 % VO2max** vs. 15/15 → +5,5 % vs. LSD |
-| Skovgaard et al. 2024 | Time above 90 % VO2max in different interval formats | Front Physiol | 4×3 min @ 95 % vVO2max → **≈ 5,5 min > 90 % VO2max**; 24×30 s @ 100 % → ≈ 3,4 min |
-| Blagrove et al. 2018 | Effects of Strength Training on the Physiological Determinants of Middle- and Long-Distance Running Performance: A Systematic Review | Sports Med | „Large beneficial effect on running economy in highly trained runners" bei 3:1 Endurance:Krafttraining-Verhältnis über 8–12 Wochen; 40–70 % 1RM plus plyometrische Elemente |
+| ⚠️ **Autor/Jahr/Journal korrigiert 2026-09-01** — richtig: Fleckenstein D, Braunstein B, Walter N (2025), *Frontiers in Sports and Active Living*, [10.3389/fspor.2024.1507957](https://doi.org/10.3389/fspor.2024.1507957); zuvor gefuehrt als Skovgaard et al. 2024, Front Physiol. Die Zahlen sind exakt korrekt. | 4×3 min @ 95 % vVO2max → **≈ 5,5 min > 90 % VO2max**; 24×30 s @ 100 % → ≈ 3,4 min |
+| ⚠️ **Zitat zurueckgezogen 2026-09-01** — Blagrove et al. 2018 | Effects of Strength Training on the Physiological Determinants of Middle- and Long-Distance Running Performance: A Systematic Review | Sports Med | „Large beneficial effect on running economy in highly trained runners" bei 3:1 Endurance:Krafttraining-Verhältnis über 8–12 Wochen; 40–70 % 1RM plus plyometrische Elemente |
 | Llanos-Lagos et al. 2024 | Effect of Strength Training Programs in Middle- and Long-Distance Runners' Economy at Different Running Speeds: A Systematic Review with Meta-analysis | Sports Med / [PMC11052887](https://pmc.ncbi.nlm.nih.gov/articles/PMC11052887/) | „Combined methods induced moderate improvements (ES = −0,426, p = 0,018)"; „High load training induced small improvements (ES = −0,266, p = 0,039)"; „Plyometric training improved running economy at speeds ≤12,00 km/h" |
 | Denadai et al. 2022 | Heavy Resistance Training Versus Plyometric Training for Improving Running Economy and Running Time Trial Performance | Sports Med / [PMC9653533](https://pmc.ncbi.nlm.nih.gov/articles/PMC9653533/) | „Heavy resistance training: g = −0,32 [−0,55; −0,10] on RE"; „Plyometric: g = −0,13 [−0,47; 0,21], trivial"; average 9,6 Wochen |
 | Bosquet et al. 2022 | The Impact of Training on the Loss of Cardiorespiratory Fitness in Aging Masters Endurance Athletes | Front Physiol / [PMC9517884](https://pmc.ncbi.nlm.nih.gov/articles/PMC9517884/) | „Male masters who maintained near-normal training volume … VO2max decline of between −5 % and −6,5 % per decade"; „54 % of the variance in the observed VO2max decline was explained by training-volume changes" |
 | Tanaka H. 1994 | Effects of cross-training. Transfer of training effects on VO2max between cycling, running and swimming | Sports Med | „Cross-training effects never exceed those induced by the sport-specific training mode … especially for highly trained athletes"; Netto-Transfer 40–70 % im modality-fremden Test |
-| Coyle et al. 1984 / Mujika & Padilla 2000 | Detraining reviews | J Appl Physiol / Sports Med | „−7 % decline of VO2max … just 12 days after training interruption" |
+| Coyle et al. 1984 / Mujika & Padilla 2000 | Detraining reviews | J Appl Physiol / Sports Med | "−7 % decline of VO2max" — ⚠️ korrigiert 2026-09-01: das Paper verortet den Abfall "during the first 21 days", nicht bei Tag 12 |
 | Paavolainen et al. 1999 | Explosive-strength training improves 5-km running time by improving running economy and muscle power | J Appl Physiol | 9 Wochen explosive Kraft (32 % des Volumens ersetzt), 5-km-Zeit signifikant schneller, VO2max unverändert |
 | Emig & Peltonen 2020 | Human running performance from real-world big data | Nature Commun / [Article](https://www.nature.com/articles/s41467-020-18737-6) | 14 000 Athleten, 1,6 Mio. Sessions; zwei Indizes (aerober + Endurance-Index) tragen die Rennleistung, gewachsen durch chronische Belastung |
 | Bassett & Howley 2000 | Limiting factors for maximum oxygen uptake and determinants of endurance performance | Med Sci Sports Exerc | Klassische Rahmensetzung: VO2max × %VO2max-an-LT2 × Laufökonomie = Renn-Pace |

@@ -122,7 +122,7 @@ Our script outputs a `recent_compare` block with `--json` (forecast vs. actual f
 | Kiviniemi AM et al — 2007/2010 | Endurance training guided individually by daily heart rate variability measurements | (Original studies, foundation for HRV-guided) | Daily rMSSD vs. baseline-decision-rule established as standard |
 | MDPI Sensors 2026 (Narrative Review) | Monitoring Training Adaptation and Recovery Status in Athletes Using HRV via Mobile Devices | [MDPI](https://www.mdpi.com/1424-8220/26/1/3) | "RMSSDMEAN and RMSSDCV should be calculated from a completed 7-day block of daily RMSSD values" |
 | Frontiers Sports 2025 | Mapping HRV in sports science: from monitoring to machine learning | [Frontiers DOI](https://www.frontiersin.org/journals/sports-and-active-living/articles/10.3389/fspor.2025.1714962/full) | Method landscape from decision rules through regression to ML |
-| EliteHRV (practitioner resource) | Improving HRV Data Interpretation: Coefficient of Variation | [elitehrv.com](https://elitehrv.com/improving-hrv-data-interpretation-coefficient-variation) | SWC = 0.5-1.0 × within-athlete CV as practicable daily threshold |
+| ⚠️ **ZUORDNUNG KORRIGIERT 2026-09-01** — EliteHRV (practitioner resource) | Improving HRV Data Interpretation: Coefficient of Variation | [elitehrv.com](https://elitehrv.com/improving-hrv-data-interpretation-coefficient-variation) | Die Formel „SWC = 0.5–1.0 × within-athlete CV" steht auf dieser Seite **nicht** (Volltext-Abgleich; „smallest worthwhile change" erscheint dort einmal als Abbildungsbeschriftung, ohne Formel). Sie gehört zur **Plews/Buchheit**-Methodik, die im selben Dokument bereits mit eigener Quelle belegt ist. Diese Zeile trägt die Formel nicht. |
 
 ---
 

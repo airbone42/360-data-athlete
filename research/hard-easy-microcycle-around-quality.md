@@ -94,6 +94,12 @@ Both coach-literature and peer-reviewed sources converge:
 > sessions, and simultaneously prepare you for the next hard
 > workout." — TrainerRoad ([Polarized Training](https://www.trainerroad.com/blog/polarized-training-for-cyclists-what-it-is-and-how-to-try-it/))
 
+> ⚠️ **[Zitat zurueckgezogen 2026-09-01 — steht so nicht in der verlinkten
+> Zusammenfassung. Belegt ist dort: "quality days … should be laid out over the
+> course of the week and are to be interspersed by easy days (E)" — ohne
+> "most important" und ohne Erholungs-Begruendung. Die Sache traegt, der
+> Wortlaut nicht.]**
+>
 > "The three quality training sessions are the most important, with
 > hopefully **one day of rest or easy running in between each** to
 > allow the body to recover." — Daniels' Running Formula
@@ -118,7 +124,15 @@ Adequately](https://www.trainingpeaks.com/blog/are-you-recovering-adequately-bet
 |--------------|----------------|-------------|----------------|
 | Threshold | **48–72 h** | 24–36 h | 6–12 h |
 | VO2max | 6–12 h | **36–48 h** | 24–36 h |
-| Anaerobic | 36–48 h | 24–36 h | **24–36 h** |
+| Anaerobic | ⚠️ 36–48 h | ⚠️ 24–36 h | ⚠️ **24–36 h** |
+
+> ⚠️ **KORREKTUR 2026-09-01 — diese Zeile gibt die Quelle falsch wieder.** Die
+> Quelltabelle nennt fuer "Anaerobic (letzte Session)" **12–24 h / 24–36 h /
+> 48–72 h**. Besonders der Diagonalwert Anaerobic→Anaerobic steht hier mit
+> 24–36 h, tatsaechlich sind es **48–72 h** — die Tabelle unterstellt also eine
+> deutlich kuerzere Erholung, als die Quelle hergibt. Das ist keine
+> Zitierformalie, sondern eine planungsrelevante Verzerrung in die riskante
+> Richtung. Bis zur Neuaufnahme der ganzen Matrix gilt der Quellwert.
 
 The "Threshold→Threshold = 48–72 h" applies to comparable Quality
 intensities. A Long Run *with elevation / race-specific Quality

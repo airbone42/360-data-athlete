@@ -211,6 +211,12 @@ Running Economy in Humans", TheScientificWorldJournal) fasst die
 verfügbare Evidenz zusammen. Zentraler Datenpunkt für unsere Frage:
 
 **Ballistische Belastung — 100 Drop Jumps:**
+> ⚠️ **[Zuordnung falsch, korrigiert 2026-09-01: Die 100-Drop-Jump-Studie mit
+> unveraenderter Laufoekonomie bei 70 % VO2max gehoert im Review zu **Marcora
+> und Bosio**, nicht zu Chen et al.; Chen et al. steht dort fuer eine andere
+> Downhill-Studie. Der Wortlaut "The RE was not modified" stammt zudem aus
+> einer dritten Arbeit (Paschalis et al.). Dreifache Verwechslung beim
+> Exzerpieren der Sekundaerquelle — die Aussage selbst bleibt belegt.]**
 > „The RE was not modified" (Chen et al.). Getestet bei ~70 % VO₂max
 > post 100 Drop Jumps.
 
@@ -289,7 +295,7 @@ DOMS etwa **1/3 bis 1/2** der DOMS-Magnitude eines volumen-
 
 ### 4. Sequenzierung im Wochenzyklus — 48 h Abstand ist der dominante Puffer
 
-Doma & Deakin 2013:
+Doma & Deakin 2013: ⚠️ **[Zitat-Audit 2026-09-01: Journal falsch — die Arbeit erschien in *Applied Physiology, Nutrition, and Metabolism*, nicht im JSCR. Die "8 Stunden" stehen nicht im Abstract; das beschriebene Protokoll arbeitet mit 6 h Abstand und misst die Laufoekonomie am Folgetag. Derselbe Fehler stand identisch in drei Dokumenten — vermutlich eine gemeinsame fehlerhafte Notiz.]**
 > „Running economy decreased within 8 hours after lower limb strength
 > training."
 

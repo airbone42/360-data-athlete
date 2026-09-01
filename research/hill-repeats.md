@@ -50,7 +50,7 @@ From the coach literature (TriTrainingHarder, Coach Parry, RunnersConnect — co
 
 ### 2. Uphill HIIT vs. flat HIIT — time-above-90% VO2max
 
-**Steinmetz et al. 2023 (Frontiers in Physiology, n=17, well-trained, VO2max 63.3±4.2):** crossover test, 4×5min isoeffort, 90s passive between reps. Compared 1% (horizontal) vs. 8% (uphill).
+**Held, Rappelt, Giesen, Wiedenmann, Deutsch, Wicker & Donath (2023, Frontiers in Physiology, n=17, well-trained, VO2max 63.3±4.2)** — ⚠️ bis 2026-09-01 hier falsch als "Steinmetz et al." gefuehrt; Titel, DOI und alle Zahlen sind korrekt, nur die Autoren waren falsch: crossover test, 4×5min isoeffort, 90s passive between reps. Compared 1% (horizontal) vs. 8% (uphill).
 
 > "uphill HIIT revealed higher … accumulated time ≥90% VO2max (uphill: 9.1 ± 4.6 vs. horizontal: 6.4 ± 4.0 min; SMD = 0.62)" — corresponds to **+42% time-above-90% VO2max** at the same RPE, same HR and same lactate.
 
@@ -58,7 +58,7 @@ Mechanistic explanation by the authors: "the use of elastic energy may be compro
 
 Practical implication of the authors: over a 6-week intervention the gain in time-above-90% VO2max would be **~30 minutes additional** to the flat variant — equivalent to 5 additional flat sessions.
 
-**Source:** Steinmetz, Bauer, Schega et al. (2023). "Increased oxygen uptake in well-trained runners during uphill high intensity running intervals: A randomized crossover testing." Frontiers in Physiology. → [Frontiers DOI](https://www.frontiersin.org/journals/physiology/articles/10.3389/fphys.2023.1117314/full)
+**Source:** Held S, Rappelt L, Giesen R, Wiedenmann T, Deutsch J-P, Wicker P, Donath L (2023) — *(Autorenangabe korrigiert 2026-09-01; zuvor faelschlich "Steinmetz, Bauer, Schega et al.")*. "Increased oxygen uptake in well-trained runners during uphill high intensity running intervals: A randomized crossover testing." Frontiers in Physiology. → [Frontiers DOI](https://www.frontiersin.org/journals/physiology/articles/10.3389/fphys.2023.1117314/full)
 
 ### 3. Performance endpoints — uphill is *complementary*, not a replacement
 
@@ -87,7 +87,7 @@ The authors warn that uphill stimuli are metabolically stronger, but for **speci
 Uphill pace cannot be directly compared with track pace (an 8% gradient costs about 4-5%/% gradient in pace, so at 8% one structurally runs ~30% slower than on flat at the same effort). Recommendation from the coach literature (Magness, Daniels, TriTrainingHarder) consistent:
 
 - **HR anchor:** Z4-mid to top of Z4 on long reps (2-4 min), Z5 entry on short reps (30-90s). The Frontiers study showed: HR is almost identical between uphill and horizontal at the same RPE → HR is a valid cross-format anchor.
-- **RPE anchor:** isoeffort across all reps (Steinmetz protocol). Don't force pace.
+- **RPE anchor:** isoeffort across all reps (protocol from Held et al. 2023). Don't force pace.
 - **Pace anchor (secondary):** "10-15s/km slower than 5K-PR pace on long reps; near 5K pace on short reps" (Coach Parry).
 
 ---
