@@ -767,6 +767,29 @@ a rehab surface recommendation as a named ratio rather than a blanket
 default: `CLAUDE.md` → *Race surface is a training demand, not only a
 routing default*.
 
+**`treadmill` is not a neutral fallback — it decouples the two axes.**
+Compliance and evenness are independent, and the belt is the one option
+that is *even like a road* while loading *less than any of them*. The only
+instrumented comparison (tibial bone staple, n = 3, matched speed) found
+axial compression and tension strains and strain rates **48–285 % higher
+overground than on the treadmill**, and its authors read that in both
+directions at once: lower stress-fracture risk **and** less bone
+strengthening. Treat the belt accordingly:
+
+- **Right choice** when the session's job is aerobic volume at reduced
+  structural cost — heat, a week already dense in impact days, a time
+  window too short to get outside, a return-to-run step.
+- **Wrong choice** when the session is supposed to carry race-surface
+  exposure for a firm-ground race. It supplies the evenness and withholds
+  the load magnitude, and magnitude is the variable tissue actually adapts
+  to. Substituting it there looks like a neutral swap and quietly removes
+  the stimulus the session existed for.
+- **State which of the two you are doing** in `focus` whenever a planned
+  outdoor run moves to the belt. The evidence limits belong with the
+  finding: n = 3, strain inferred toward outcome rather than measured, and
+  belt mechanics confound the comparison. Derivation:
+  `research/race-surface-exposure-in-easy-volume.md`.
+
 ---
 
 ## Rules for the `intervals_icu` field
