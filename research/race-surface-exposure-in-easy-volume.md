@@ -25,11 +25,12 @@ with loading *intensity* over ≥ 8–12 weeks and not with contraction type
 the customary loading environment** (Turner 1998). Surface appears as a
 variable in neither. (3) Where the evidence is explicit, it points against the
 usual assumption, not for it: surface has never reached the strong-evidence
-tier in any running-injury review (van Gent 2007), was pre-specified in a
-prospective cohort and dropped out of every model (Taunton 2003), and a 2024
-scoping review states plainly that the soft-surface recommendation is
-**"unfounded"** (George 2024) — while the same authors warn that the null may
-be an artefact of exposure measurement too crude to detect a real effect. The
+tier in any running-injury review (van Gent 2007), was pre-specified as a
+predictor in a prospective cohort and is absent from its reported associations
+(Taunton 2003), and a 2024 scoping review states plainly that the soft-surface
+recommendation is **"unfounded"** (George 2024) — though the null must be read
+against an exposure measure (a single "which surface do you mostly use?" item)
+too crude to resolve a moderate effect. The
 tendinopathy guidelines carry no surface recommendation at any grade, and
 surface is not among the risk factors that survive review (van der Vlist 2019).
 (4) **The two sides of the conflict turn out to be one finding read from
@@ -243,10 +244,12 @@ The epidemiological answer is consistent across four decades and is a null:
   associated with running injuries seem age, gender, body mass index, running
   hills, **running on hard surfaces**, participation in other sports, time of
   the year and time of the day."
-- **Taunton et al. (2003)** is the strongest test available, because surface
-  was a **pre-specified** predictor in a prospective cohort — and it dropped
-  out: "Factors such as previous activity, arch height, cross training, and
-  **running surface were not significant for either sex in any model**."
+- **Taunton et al. (2003)** is the strongest test available, because
+  "predominant running surface" was one of eight **pre-specified** predictors
+  in a prospective cohort of 844 runners, entered into sex-stratified logistic
+  regression — and it **does not appear among the reported associations**. The
+  factors that did: "age, BMI, running frequency (days a week), and running
+  shoe age were associated with injury".
 - **van Gent et al. (2007)** found "strong evidence that a long training
   distance per week in male runners and a history of previous injuries were
   risk factors" — surface reaches no evidence level at all.
@@ -256,10 +259,12 @@ The epidemiological answer is consistent across four decades and is a null:
   statistically insignificant results associated with the majority of factors
   hindered our ability to draw any definitive conclusions."
 - The two **meta-analyses** on the injuries the hard-surface folk theory is
-  usually invoked for — MTSS (Newman 2013) and lower-limb stress fracture
-  (Wright 2015) — could not pool surface at all; it is absent from their
-  variable sets. Wright: "only previous history of stress fracture and female
-  sex are risk factors … strongly supported by the data."
+  usually invoked for pooled no surface variable. Newman et al. (2013) on MTSS:
+  the measures "with sufficient data for meta-analysis" were anthropometric and
+  biomechanical (BMI, ankle range of motion, navicular drop) — surface is not
+  among them. Wright et al. (2015) on lower-limb stress fracture: "only
+  previous history of stress fracture and female sex are risk factors for lower
+  extremity stress fractures strongly supported by the data."
 
 The two positive findings both come from designs that cannot separate cause
 from consequence. van der Worp et al. (2015) report that "running on a concrete
@@ -271,16 +276,16 @@ self-reported questionnaires — where an injured runner who *moved onto* a
 different surface produces exactly this association without any causal path.
 
 **The null must be read with its own caveat, and this is the honest centre of
-the epidemiology.** Taunton's authors say why their model may have missed a
-real effect: "The apparent lack of effect of training surface may stem from the
-difficulty of adequately quantifying the time and intensity of running spent on
-each of the running surfaces." Surface exposure is measured by asking runners
-what they mostly run on. In Taunton's own cohort 69.1 % answered "roads" and
-12.3 % answered grass/track/treadmill combined — an exposure variable that
-crude cannot resolve a moderate effect. Nielsen et al. (2012) put the same
-verdict on the surrounding training-error literature: mean methodological
-quality 44.1 %, and "It was not possible to identify which training errors were
-related to running related injuries."
+the epidemiology.** Surface exposure in these studies is a questionnaire item —
+runners are asked which surface they *predominantly* use, not how many
+kilometres they ran on each. Taunton's authors put the general form of the
+problem in their own conclusion: the results "do not take into account an
+adequate measure of exposure time to injury, running experience, or previous
+injury and should thus be viewed accordingly." An exposure variable that crude
+cannot resolve a moderate effect. Nielsen et al. (2012) reach the same verdict
+on the surrounding training-error literature: mean methodological quality
+44.1 %, and "It was not possible to identify which training errors were related
+to running related injuries."
 
 So the defensible statement is **not** "surface does not matter". It is:
 **surface has never been shown to matter, in a literature whose measurement of
@@ -518,18 +523,19 @@ matters: it makes the *early* exposures the informative ones, and it makes the
 | George ERM, Sheerin KR, Reid D — 2024 | Criteria and Guidelines for Returning to Running Following a Tibial Bone Stress Injury: A Scoping Review | Sports Med 54:2247–2265, [10.1007/s40279-024-02051-y](https://doi.org/10.1007/s40279-024-02051-y) · [PMC11393297](https://pmc.ncbi.nlm.nih.gov/articles/PMC11393297/) | "There is a lack of evidence for running on softer surfaces, which is a common presumption and recommendation; therefore, at this stage, this recommendation is unfounded." (50 studies; "recommendations … are based on level IV evidence") |
 | van Gent RN, Siem D, van Middelkoop M, van Os AG, Bierma-Zeinstra SMA, Koes BW — 2007 | Incidence and determinants of lower extremity running injuries in long distance runners: a systematic review | Br J Sports Med 41(8):469–480, [10.1136/bjsm.2006.033548](https://doi.org/10.1136/bjsm.2006.033548) | "There was strong evidence that a long training distance per week in male runners and a history of previous injuries were risk factors for injuries" — **surface is not among the strong-evidence factors** |
 | van Mechelen W — 1992 | Running injuries. A review of the epidemiological literature | Sports Med 14(5):320–335, [10.2165/00007256-199214050-00004](https://doi.org/10.2165/00007256-199214050-00004) | "Significantly not associated with running injuries seem age, gender, body mass index, running hills, **running on hard surfaces**, participation in other sports, time of the year and time of the day." |
-| Taunton JE, Ryan MB, Clement DB, McKenzie DC, Lloyd-Smith DR, Zumbo BD — 2003 | A prospective study of running injuries: the Vancouver Sun Run "In Training" clinics | Br J Sports Med 37(3):239–244, [PMC1724633](https://pmc.ncbi.nlm.nih.gov/articles/PMC1724633/) | "Factors such as previous activity, arch height, cross training, and running surface were not significant for either sex in any model." … "The apparent lack of effect of training surface may stem from the difficulty of adequately quantifying the time and intensity of running spent on each of the running surfaces." — **surface pre-specified in a prospective model and dropped out; authors name the measurement problem themselves** |
+| Taunton JE, Ryan MB, Clement DB, McKenzie DC, Lloyd-Smith DR, Zumbo BD — 2003 | A prospective study of running injuries: the Vancouver Sun Run "In Training" clinics | Br J Sports Med 37(3):239–244, [10.1136/bjsm.37.3.239](https://doi.org/10.1136/bjsm.37.3.239) · PMID 12782549 | Predictor variables included "predominant running surface"; reported associations were "age, BMI, running frequency (days a week), and running shoe age" — **surface pre-specified in a prospective model and absent from the results**. Authors' own limitation: results "do not take into account an adequate measure of exposure time to injury, running experience, or previous injury". *(Abstract-verified only; full text not retrievable — do not attribute discussion-section wording to this paper.)* |
+| Newman P, Witchalls J, Waddington G, Adams R — 2013 | Risk factors associated with medial tibial stress syndrome in runners: a systematic review and meta-analysis | Open Access J Sports Med 4:229–241, [10.2147/OAJSM.S39331](https://doi.org/10.2147/OAJSM.S39331) · PMID 24379729 | "Measures with sufficient data for meta-analysis included dichotomous and continuous variables of body mass index (BMI), ankle …" — **no surface variable in the poolable set** |
 | Saragiotto BT, Yamato TP, Hespanhol Junior LC, Rainbow MJ, Davis IS, Lopes AD — 2014 | What are the main risk factors for running-related injuries? | Sports Med 44(8):1153–1163, [10.1007/s40279-014-0194-6](https://doi.org/10.1007/s40279-014-0194-6) | "A total of 4,671 pooled participants were analysed and 60 different predictive factors were investigated. The main risk factor reported was previous injury (last 12 months)" — surface not named |
 | Hulme A, Nielsen RO, Timpka T, Verhagen E, Finch C — 2017 | Risk and Protective Factors for Middle- and Long-Distance Running-Related Injury | Sports Med 47(5):869–886, [10.1007/s40279-016-0636-4](https://doi.org/10.1007/s40279-016-0636-4) | "The varied effect directions and/or a number of statistically insignificant results associated with the majority of factors hindered our ability to draw any definitive conclusions about their relationship to RRI risk." |
 | Wright AA, Taylor JB, Ford KR, Siska L, Smoliga JM — 2015 | Risk factors associated with lower extremity stress fractures in runners: a systematic review with meta-analysis | Br J Sports Med 49(23):1517–1523, [10.1136/bjsports-2015-094828](https://doi.org/10.1136/bjsports-2015-094828) | "Currently, only previous history of stress fracture and female sex are risk factors for lower extremity stress fractures strongly supported by the data." — **surface not in the poolable variable set** |
 | van der Worp MP, ten Haaf DS, van Cingel R, de Wijer A, Nijhuis-van der Sanden MW, Staal JB — 2015 | Injuries in runners; a systematic review on risk factors and sex differences | PLoS One 10(2):e0114937, [PMC4338213](https://pmc.ncbi.nlm.nih.gov/articles/PMC4338213/) | "Age, previous sports activity, running on a concrete surface … were associated with a greater risk of injury **in women than in men**." — a sex-*ratio* statement; the authors' own conclusion names only previous injury and orthotics |
-| Mousavi SH, Hijmans JM, Minoonejad H, Rajabi R, Zwerver J — 2021 | Factors Associated With Lower Limb Injuries in Recreational Runners: A Cross-Sectional Survey | J Sports Sci Med 20(2):204–215, [PMC8057706](https://pmc.ncbi.nlm.nih.gov/articles/PMC8057706/) | "hard-surface running (OR:1.37; CI:1.17-1.59)" — **cross-sectional, 804 self-reported questionnaires; reverse causation uncontrolled** |
+| Mousavi SH, Hijmans JM, Minoonejad H, Rajabi R, Zwerver J — 2021 | Factors Associated With Lower Limb Injuries in Recreational Runners: A Cross-Sectional Survey Including Mental Aspects and Sleep Quality | J Sports Sci Med 20(2):204–215, [10.52082/jssm.2021.204](https://doi.org/10.52082/jssm.2021.204) · [PMC8057706](https://pmc.ncbi.nlm.nih.gov/articles/PMC8057706/) | "hard-surface running (OR:1.37; CI:1.17-1.59)" — **cross-sectional, 804 self-reported questionnaires; reverse causation uncontrolled** |
 | Nielsen RO, Buist I, Sørensen H, Lind M, Rasmussen S — 2012 | Training errors and running related injuries: a systematic review | Int J Sports Phys Ther 7(1):58–75, [PMC3290924](https://pmc.ncbi.nlm.nih.gov/articles/PMC3290924/) | "The mean quality score was 44.1%." … "It was not possible to identify which training errors were related to running related injuries." |
 | Nielsen RØ, Parner ET, Nohr EA, Sørensen H, Lind M, Rasmussen S — 2014 | Excessive progression in weekly running distance and risk of running-related injuries | J Orthop Sports Phys Ther 44(10):739–747, [10.2519/jospt.2014.5164](https://doi.org/10.2519/jospt.2014.5164) | ">30% compared with those who progressed less than 10% (hazard ratio = 1.59; 95% confidence interval: 0.96, 2.66; **P = .07**)" — even the *distance*-change rule is weaker than its reputation |
 | Harper-Hanigan K, Gruber AH — 2022 | The Missing Link in Running Injury Research: Nonrunning Physical Activity | J Orthop Sports Phys Ther 52(11):705–708, [10.2519/jospt.2022.11288](https://doi.org/10.2519/jospt.2022.11288) | "a singular focus on running-related factors such as gait, **running surface change**, sudden change in running volume … make it difficult to identify reliable mechanisms of load-related running injury" — the only peer-reviewed naming of surface *change* as an exposure, and it names it as unproductive |
 | Viljoen C, Janse van Rensburg DCC, van Mechelen W, Verhagen E, et al. — 2022 | Trail running injury risk factors: a living systematic review | Br J Sports Med 56(10):577–587, [10.1136/bjsports-2021-104858](https://doi.org/10.1136/bjsports-2021-104858) | "Significant extrinsic factors associated with injury are neglecting warm-up, no specialised running plan, **training on asphalt**, double training sessions per day and physical labour occupations." — **abstract-only verification; the closest epidemiological signal for surface specificity, graded weak** |
 | Vincent HK, Brownstein M, Vincent KR — 2022 | Injury Prevention, Safe Training Techniques, Rehabilitation, and Return to Sport in Trail Runners | Arthrosc Sports Med Rehabil 4(1):e151–e162, [PMC8811510](https://pmc.ncbi.nlm.nih.gov/articles/PMC8811510/) | "More than 70% are due to overuse, and ankle sprains are the most common acute injury." … "Trail surface materials (gravel, dirt, or paving) are not associated with differential tibial impact forces, and are not likely a primary injury mechanism." (narrative review) |
-| Viljoen CT, Janse van Rensburg DC, Verhagen E, van Mechelen W, Tomás R, et al. — 2021 | Epidemiology of Injury and Illness Among Trail Runners: A Systematic Review | Sports Med 51(5):917–943, [10.1007/s40279-020-01418-1](https://doi.org/10.1007/s40279-020-01418-1) | "Skin lacerations/abrasions were the most common injury diagnoses followed by skin blisters, muscle strains, muscle cramping, and ligament sprains." |
+| Viljoen CT, Janse van Rensburg DC, Verhagen E, van Mechelen W, Tomás R, Schoeman M, Scheepers S, Korkie E — 2021 | Epidemiology of Injury and Illness Among Trail Runners: A Systematic Review | Sports Med 51(5):917–943, [10.1007/s40279-020-01418-1](https://doi.org/10.1007/s40279-020-01418-1) · PMID 33538997 (a published correction exists: Sports Med 2022;52:191–192) | "Skin lacerations/abrasions were the most common injury diagnoses followed by skin blisters, muscle strains, muscle cramping, and ligament sprains." |
 | Ridge ST, Johnson AW, Mitchell UH, Hunter I, Robinson E, Rich BSE, Brown SD — 2013 | Foot bone marrow edema after a 10-wk transition to minimalist running shoes | Med Sci Sports Exerc 45(7):1363–1368, [10.1249/MSS.0b013e3182874769](https://doi.org/10.1249/MSS.0b013e3182874769) | "more subjects in the Vibram group (10 of 19) showed increases in bone marrow edema in at least one bone after 10 wk of running than that in the control group (P = 0.009)" — a **gradual** 10-week transition still produced tissue response |
 | Grant B, Charles J, Geraghty B, Gardiner J, D'Août K, Falkingham PL, Bates KT — 2022 | Why does the metabolic cost of walking increase on compliant substrates? | J R Soc Interface 19:20220483, [10.1098/rsif.2022.0483](https://doi.org/10.1098/rsif.2022.0483) · [PMC9709563](https://pmc.ncbi.nlm.nih.gov/articles/PMC9709563/) | "our computer simulations suggest there is no increase in the mechanical work done by the TA, MG, LG and SOL during mid-stance to push-off on these compliant substrates compared with the hard floor." Hip/knee extensor work up; plantarflexor negative work 0.13 (foam) vs 0.25 (floor) J kg⁻¹. **Walking, not running** |
 | Grant BF, Charles JP, D'Août K, Falkingham PL, Bates KT — 2024 | Human walking biomechanics on sand substrates of varying foot sinking depth | J Exp Biol 227(21):jeb246787, [10.1242/jeb.246787](https://doi.org/10.1242/jeb.246787) | "there were slightly higher activations of the MG and the SOL on the sands during the propulsive phase of stride compared with the floor, these differences were not found to be statistically significant." **Walking** |
