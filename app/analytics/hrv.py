@@ -80,9 +80,10 @@ def _compute_rhr_baseline(
     Mirrors ``_compute_hrv_baseline`` semantics so RHR drift surfaces in the
     same shape as HRV drift. Complements the short-window ``_compute_rhr_trend``
     (3d-vs-3d) which is an early warning, while this long-window baseline is
-    the literature-anchored overload reference (RunnersConnect: +5 bpm vs
-    3-week baseline as robust overload marker — see
-    ``framework/research/hrv-rhr-baseline-methodology.md``).
+    the long-window overload reference. **Its bpm step is a convention, not a
+    literature value** — the citation that once justified it was retracted on
+    2026-09-01 (see ``framework/research/hrv-rhr-baseline-methodology.md``);
+    the athlete-configurable threshold lives in ``rhr_overload_bpm``.
 
     Returns ``(baseline_str, deviation_str, rhr_context_str)``. ``deviation``
     is signed integer percent; ``rhr_context_str`` is the human-readable
