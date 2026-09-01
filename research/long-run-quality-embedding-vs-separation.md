@@ -46,9 +46,13 @@ Der eingebettete HM-/M-Pace-Block ist bei Canova und Pfitzinger explizit
 Long-Run-Format:
 
 - **Canova** trennt Fundamental (Basis) → Specific → Special. In der
-  **Fundamental-Phase** laufen Long Runs bei ~80% Marathon-Pace
+  **Fundamental-Phase** laufen Long Runs bei ⚠️ ~80% Marathon-Pace *(Zitat-Audit
+  2026-09-01: weder „80 %" noch „Specific Long" noch „30–35 km" stehen im
+  verlinkten PDF; die Quelle beschreibt Pace-Baender AeT-basiert und nennt fuer
+  „Special training" rund 90 % der Wettkampfgeschwindigkeit. Zahl und Rahmen
+  sind damit unbelegt.)*
   („extensive endurance"); die Progression Richtung Race-Pace + die
-  „Specific Long"-Formate (30–35 km @ M-Effort oder knapp darunter)
+  ⚠️ „Specific Long"-Formate (30–35 km @ M-Effort oder knapp darunter) *(Zitat-Audit 2026-09-01: Begriff und Distanzangabe sind in beiden dafuer zitierten Quellen nicht auffindbar — als Praktiker-Konvention lesen, nicht als Beleg)*
   gehören ausdrücklich in die **Specific-/Special-Phase** — inklusive
   der Special Blocks alle 3–4 Wochen. Zweck: Adaptation an
   Race-spezifische Ermüdungsresistenz, wenn die aerobe Basis bereits
@@ -94,7 +98,13 @@ peaken"), ist die Trennung reizphysiologisch klar überlegen.
 
 ### 3. Verletzungslast — ITBS-Risiko auf monoton flachem Terrain
 
-Systematic Reviews zu ITBS-Risikofaktoren nennen konsistent:
+⚠️ **AUSSAGE UMGEKEHRT — korrigiert 2026-09-01.** Die als Beleg fuer
+*Konsistenz* zitierte Arbeit stellt ausdruecklich das Gegenteil fest:
+„The results of these different systematic reviews are not consistent and
+reveal a reduced (16) or increased maximum hip adduction (17) in ITBS
+subjects" — samt offener Kontroverse zur Richtung der Innenrotation. Die
+Quelle benennt also gerade das **Fehlen** eines konsistenten Befundes. Frueher
+stand hier: Systematic Reviews zu ITBS-Risikofaktoren nennen konsistent:
 
 - **Fatigue-related biomechanical drift** (späte Lauf-Kilometer): Hip-
   Abduktoren-/Glute-Med-Ermüdung → erhöhte peak hip adduction und peak
@@ -153,13 +163,13 @@ Trennung nur schwach:
 | Titel | Autoren | Jahr | Journal/Publisher | Key Quote |
 |---|---|---|---|---|
 | Biomechanical risk factors associated with iliotibial band syndrome in runners: a systematic review | Aderem J, Louw QA | 2015 | BMC Musculoskeletal Disorders ([Link](https://bmcmusculoskeletdisord.biomedcentral.com/articles/10.1186/s12891-015-0808-7)) | „Female shod runners who went on to develop ITBS presented with increased peak hip adduction and increased peak knee internal rotation during stance." |
-| Intrinsic risk factors associated with iliotibial band syndrome: A systematic review | — | 2023 | Turkish J Sports Med 58(2) ([Link](https://journalofsportsmedicine.org/full-text/702/eng)) | „Modifiable risk factors include running on a tilted surface, hill running, errors in training technique, and abrupt changes in training intensity." |
+| ⚠️ **Zwei Probleme, 2026-09-01: (a) die Arbeit belegt keine Konsistenz, sondern deren Fehlen; (b) das Zitat „Modifiable risk factors include running on a tilted surface, hill running…" stammt nicht von hier, sondern aus der StatPearls-Quelle** — Intrinsic risk factors associated with iliotibial band syndrome: A systematic review | — | 2023 | Turkish J Sports Med 58(2) ([Link](https://journalofsportsmedicine.org/full-text/702/eng)) | „Modifiable risk factors include running on a tilted surface, hill running, errors in training technique, and abrupt changes in training intensity." |
 | Iliotibial Band Syndrome — StatPearls | Hadeed A, Tapscott DC | 2023 | NCBI Bookshelf ([Link](https://www.ncbi.nlm.nih.gov/books/NBK542185/)) | „Potential risk factors … include preexisting iliotibial band tightness, high weekly mileage, time spent walking or running on a track, interval training, and muscular weakness of knee extensors, flexors, and hip abductors." |
-| The Methods of Renato Canova | Canova R (via Magness) | 2011 | ([Link](https://runningscience.co.za/wp-content/uploads/2017/01/The-Methods-of-Renato-Canova.pdf)) | Fundamental-Phase-Long-Runs starten bei ~80% Marathon-Pace, Progression Richtung Race-Pace + „Specific Long" (30–35 km @ M-Effort) ist der Specific-Phase vorbehalten. |
+| ⚠️ **Kernbegriffe im Volltext nicht auffindbar (2026-09-01): „80 %", „Specific Long", „30–35 km"** — The Methods of Renato Canova | Canova R (via Magness) | 2011 | ([Link](https://runningscience.co.za/wp-content/uploads/2017/01/The-Methods-of-Renato-Canova.pdf)) | Fundamental-Phase-Long-Runs starten bei ~80% Marathon-Pace, Progression Richtung Race-Pace + „Specific Long" (30–35 km @ M-Effort) ist der Specific-Phase vorbehalten. |
 | Canova Marathon Training vs. Pfitzinger's Advanced Marathoning | Jenkins N | 2018 | nateruns.blogspot.com ([Link](http://nateruns.blogspot.com/2018/07/canova-marathon-training-vs-pfitzingers.html)) | „Pfitzinger does incorporate some marathon paced running in his specific phase long runs but not nearly with the same frequency as Canova." |
 | Pfitzinger Marathon Plans Explained | Rock | 2024 | RunningWithRock ([Link](https://runningwithrock.com/pfitz-marathon-training-explained/)) | „Five mesocycles: mileage establishment, lactate threshold endurance, race preparation, taper and race, and recovery" — MP-Segmente in Long Runs sind race-preparation-lastig. |
 | Canova's Special Block Training | RunnersConnect | — | ([Link](https://runnersconnect.net/special-block-training/)) | „The 'Specific Long' run is typically 30 to 35K at marathon effort … The special block occurs every 3 to 4 weeks and consists of two sessions within the Specific Period." |
-| Jack Daniels' Running Formula — Phase II / Intensity | Daniels J | 2013/2023 (2. + 3. Aufl.) | Human Kinetics; Zusammenfassung: ([Link](https://www.coachray.nz/2023/05/03/jack-daniels-running-intensity/)) | „There's an optimal intensity for each workout and running it harder is wasteful and/or risky without additional benefit." — Quality-Reize werden nach Effort und Zweck sortiert, nicht kumuliert in eine Session. |
+| ⚠️ **Zitat zurueckgezogen 2026-09-01** („There's an optimal intensity for each workout and running it harder is wasteful and/or risky" kommt auf der verlinkten Seite in keiner Form vor) — Jack Daniels' Running Formula — Phase II / Intensity | Daniels J | 2013/2023 (2. + 3. Aufl.) | Human Kinetics; Zusammenfassung: ([Link](https://www.coachray.nz/2023/05/03/jack-daniels-running-intensity/)) | „There's an optimal intensity for each workout and running it harder is wasteful and/or risky without additional benefit." — Quality-Reize werden nach Effort und Zweck sortiert, nicht kumuliert in eine Session. |
 
 Ergänzend intern konsistent mit:
 [hard-easy-microcycle-around-quality.md](hard-easy-microcycle-around-quality.md),
