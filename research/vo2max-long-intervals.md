@@ -67,7 +67,7 @@ at LT2).
 The authors explicitly recommended the 4×4 over the 15/15 on
 practical grounds: the 47-rep short-interval set is hard to administer
 mid-session and easy to mis-pace. **Source:**
-[Helgerud J, Hoff J, Wisløff U et al. 2007](https://pubmed.ncbi.nlm.nih.gov/17414804/)
+[⚠️ *(Autoren korrigiert 2026-09-01: Wisløff ist kein Autor dieser Arbeit)* Helgerud J, Høydal K, Wang E et al. 2007](https://pubmed.ncbi.nlm.nih.gov/17414804/)
 | Recovery-intensity description corroborated by the CERG/myworkout
 publication summary →
 [myworkout.com](https://www.myworkout.com/en/blog/hit-intervals-improve-vo2max-more-than-moderate-training).
@@ -230,7 +230,7 @@ for those profiles.
 | Author / year | Title | Publisher / link | Key quote |
 |---------------|-------|------------------|-----------|
 | Helgerud J, Hoff J, Wisløff U et al — 2007 | Aerobic high-intensity intervals improve VO2max more than moderate training | [PubMed 17414804](https://pubmed.ncbi.nlm.nih.gov/17414804/) | 4×4 @ 90–95 % HRmax → +7.2 % VO2max in 8 weeks |
-| Skovgaard C et al — 2024 | Faster intervals, faster recoveries — intensified short VO2max running intervals are inferior to traditional long intervals | [Frontiers / PMC 11743937](https://pmc.ncbi.nlm.nih.gov/articles/PMC11743937/) | 4×3 min @ 95 % vVO2max → 328 s above 90 % VO2max vs 24×30 s @ 100 % vVO2max → 201 s |
+| ⚠️ **Autoren korrigiert 2026-09-01 — richtig: Fleckenstein D, Braunstein H, Walter N (2025)**, zuvor gefuehrt als Skovgaard C et al — 2024 | Faster intervals, faster recoveries — intensified short VO2max running intervals are inferior to traditional long intervals | [Frontiers / PMC 11743937](https://pmc.ncbi.nlm.nih.gov/articles/PMC11743937/) | 4×3 min @ 95 % vVO2max → 328 s above 90 % VO2max vs 24×30 s @ 100 % vVO2max → 201 s |
 | Rønnestad BR, Hansen J — 2013 | Optimizing interval training at power output associated with peak oxygen uptake in well-trained cyclists | [PubMed 23942167](https://pubmed.ncbi.nlm.nih.gov/23942167/) | 30/15 at MAP optimises time at MAP and ≥ 90 % VO2peak |
 | Bakken M (various) | Norwegian double-threshold framework explained | [runningwritings.com 2024](https://runningwritings.com/2024/09/marius-bakken-double-threshold.html) | Sub-LT2 lactate-controlled double-threshold for high-volume runners |
 | CERG / Myworkout — n.d. | Aerobic high-intensity intervals improve VO2max more than moderate training (clinical summary) | [myworkout.com](https://www.myworkout.com/en/blog/hit-intervals-improve-vo2max-more-than-moderate-training) | Protocol description corroboration for Helgerud 4×4 |

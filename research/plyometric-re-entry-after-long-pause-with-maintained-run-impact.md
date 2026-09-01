@@ -259,7 +259,7 @@ Teilfragen:
 **Sehnensteifigkeit hält deutlich besser — solange irgendein Loading-
 Reiz bleibt.**
 
-- Kubo K, Ikebukuro T et al. 2010 JSCR ([PubMed 20130475](https://pubmed.ncbi.nlm.nih.gov/20130475/)):
+- Kubo K, Ikebukuro T et al. 2010 JSCR ([PubMed 19996769](https://pubmed.ncbi.nlm.nih.gov/19996769/)) — ⚠️ *PMID korrigiert 2026-09-01; die zuvor angegebene 20130475 fuehrte zu einem fachfremden Rheumatologie-Paper. Der zitierte Wortlaut steht im korrekten Abstract.*:
   vollständige Entlastung führt zu Sehnensteifigkeits-Reversion auf
   Baseline nach ~1 Monat (Knee-Extensor-Studie), ~2 Monate (Achilles-
   Follow-up-Studie 2012, [PubMed 22105708](https://pubmed.ncbi.nlm.nih.gov/22105708/)).

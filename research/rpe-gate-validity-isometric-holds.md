@@ -275,7 +275,7 @@ Begrenzer, nicht der Muskel. Drei Konsequenzen:
 
 1. **Die Last-Achse ist die richtige Achse, um zu entblocken.** Die
    Sehnenadaptation ist **intensitätsgetrieben**: in der Metaanalyse von
-   Bohm/Mersmann/Arampatzis (37 Studien) lag die Effektstärke bei
+   Bohm/Mersmann/Arampatzis (27 Studien mit 37 Interventionen *(praezisiert 2026-09-01)*) lag die Effektstärke bei
    > 70 % MVC bei SMD 0,90 gegenüber 0,04 bei niedriger Intensität
    (Anker bereits im Bestand, siehe
    [tendon-reload-after-substitute-block.md](tendon-reload-after-substitute-block.md)).

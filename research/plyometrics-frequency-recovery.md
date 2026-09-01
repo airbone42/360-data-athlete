@@ -13,7 +13,7 @@
 
 **Frequency optima:**
 - Recreational/well-trained runners: **2×/week** is the gold standard (Markovic 2010 meta-analysis over >40 plyo studies).
-- 3×/week shows in a 4-week study: weeks 2-3 performance drop, weeks 4-5 only rebound to baseline → no net added value (PMC 12515833, regional-level jumpers).
+- 3×/week shows in a 4-week study: weeks 2-3 performance drop, weeks 4-5 ⚠️ *(korrigiert 2026-09-01: die Studie lief nur 4 Wochen; der Rebound erfolgte laut Volltext „by Week 4" — eine Woche 5 existiert nicht)* only rebound to baseline → no net added value (PMC 12515833, regional-level jumpers).
 - 1×/week shows adaptation, but slower (50-70% of the 2× effects over 10 weeks).
 
 **Recovery time per intensity level:**
@@ -46,7 +46,7 @@
 | Markovic G, Mikulic P — 2010 | Neuro-musculoskeletal and Performance Adaptations to Lower-Extremity Plyometric Training | Sports Medicine 40(10):859-895 | Foundational review for plyo adaptations + frequency recommendations |
 | Sole CJ, Suchomel TJ — 2024 | Can weekly frequency of plyometric training impair strength and power? | [PMC 12515833](https://pmc.ncbi.nlm.nih.gov/articles/PMC12515833/) | "3 × week experienced performance impairments during weeks 2 and 3 … by week 4 returned to baseline levels" |
 | Davies G, Riemann BL, Manske R — 2015 | Current Concepts of Plyometric Exercise | [PMC 4637913](https://pmc.ncbi.nlm.nih.gov/articles/PMC4637913/) | 48-72h recovery standard for high-intensity plyo |
-| Marathon Handbook | Plyometric Exercises For Runners | [marathonhandbook.com](https://marathonhandbook.com/plyometric-exercises-for-runners/) | "One to two sessions per week is optimal for most runners, with at least 48 hours between plyometric sessions" |
+| ⚠️ **Zitat zurueckgezogen 2026-09-01** (weder live noch im Wayback-Snapshot auffindbar; der Artikel empfiehlt stattdessen „Begin with one session per week") — Marathon Handbook | Plyometric Exercises For Runners | [marathonhandbook.com](https://marathonhandbook.com/plyometric-exercises-for-runners/) | "One to two sessions per week is optimal for most runners, with at least 48 hours between plyometric sessions" |
 | Bosse C | How often should you do Plyometric Training? | [christianbosse.com](https://christianbosse.com/how-often-should-you-do-plyometric-training/) | CNS adaptation explanation 48-96h |
 
 ## Application in framework

@@ -102,7 +102,17 @@ bei 24–30 °C überhaupt das richtige Steuerinstrument ist.
 Die Standard-Empfehlung aus dem ISSN-Position-Stand (Kerksick 2017)
 und aus dem ACSM-Pre-Event-Meals-Current-Comment ist eine
 KH-Zufuhr von **1–4 g/kg KG in einem Zeitfenster von 1–4 h vor
-Belastung**. Für eine Schwellen-Einheit am späten Vormittag lässt sich
+Belastung**.
+
+> ⚠️ **BEDINGUNG DER QUELLE WAR WEGGEFALLEN — korrigiert 2026-09-01.** Der
+> ISSN-Position-Stand knuepft diese Empfehlung an Belastungen **> 90 min bei
+> ≥ 70 % VO2max**, nicht an **> 60 min**. Beide Qualifikationen fehlten hier.
+> Das ist fuer genau dieses Dokument relevant, weil es eine ~70-min-Einheit
+> kalibriert — die nach dem Wortlaut der Quelle die Schwelle fuer diese
+> Empfehlung **nicht** erreicht. Die Vorgabe wird deshalb nicht stillschweigend
+> weitergefuehrt: Sie gilt hier als **Uebertragung unterhalb der Quell-Schwelle**
+> und braucht entweder einen eigenen Beleg fuer das 60–90-min-Fenster oder eine
+> bewusste Athleten-Entscheidung. Für eine Schwellen-Einheit am späten Vormittag lässt sich
 das als kohlenhydratbetontes Frühstück (~1–2 g/kg KG) 3–4 h vorher
 operationalisieren.
 
@@ -468,9 +478,9 @@ das im Rucksack mitgeführte Getränk während der Rückfahrt gedeckt.
 |---|---|---|---|---|
 | International society of sports nutrition position stand: nutrient timing | Kerksick CM, Arent S, Schoenfeld BJ, et al. | 2017 | *J Int Soc Sports Nutr* 14:33 / [tandfonline.com/doi/full/10.1186/s12970-017-0189-4](https://www.tandfonline.com/doi/full/10.1186/s12970-017-0189-4) | "Endogenous glycogen stores are maximized by following a high-carbohydrate diet (8–12 g/kg/d); pre-exercise carbohydrate 1–4 g/kg BM in the 1–4 h before exercise lasting > 60 min" |
 | Carbohydrate feeding during exercise | Jeukendrup AE | 2008 | *Eur J Sport Sci* 8(2):77–86 / [tandfonline.com/doi/full/10.1080/17461390801918971](https://www.tandfonline.com/doi/full/10.1080/17461390801918971) | "Carbohydrate ingestion is unlikely to be beneficial for bouts of exercise of about 60 minutes or less, although some benefits have been seen with a carbohydrate mouth rinse" |
-| A step towards personalized sports nutrition: carbohydrate intake during exercise | Jeukendrup AE | 2014 | *Sports Med* 44(Suppl 1):S25–S33 / [PMC3990692](https://pmc.ncbi.nlm.nih.gov/articles/PMC3990692/) | Duration-dose table: < 30 min not needed; 30–75 min mouth-rinse; 60–150 min 30 g/h; 150–180 min 60 g/h; > 180 min 60–90 g/h multi-transportable |
+| A step towards personalized sports nutrition: carbohydrate intake during exercise | Jeukendrup AE | 2014 | ⚠️ *Link korrigiert 2026-09-01: die zuvor angegebene PMC-ID fuehrte zu einem fachfremden Genetik-Paper; korrekt ist [PMC4008807](https://pmc.ncbi.nlm.nih.gov/articles/PMC4008807/).* | *Sports Med* 44(Suppl 1):S25–S33 / [PMC3990692](https://pmc.ncbi.nlm.nih.gov/articles/PMC3990692/) | Duration-dose table: < 30 min not needed; 30–75 min mouth-rinse; 60–150 min 30 g/h; 150–180 min 60 g/h; > 180 min 60–90 g/h multi-transportable |
 | Training the Gut for Athletes | Jeukendrup AE | 2017 | Gatorade Sports Sci Exchange 178 / [gssiweb.org](https://www.gssiweb.org/docs/default-source/sse-docs/jeukendrup_sse_178.pdf?sfvrsn=2) | "The GI tract is highly adaptable; training with high carbohydrate intake once a week will improve tolerance within 6–10 weeks; adaptations include upregulation of SGLT1 and GLUT5 transporters" |
-| Association between pre-exercise food ingestion timing and reactive hypoglycemia: insights from a large database of continuous glucose monitoring data | Zignoli A, Fornasiero A, Torresani ME, et al. | 2023 | *Eur J Sport Sci* 23(12):2340–2349 / [tandfonline.com](https://www.tandfonline.com/doi/abs/10.1080/17461391.2023.2233468) | "Reactive hypoglycemia was detected in 8.34 ± 3.04% of the total events; the majority found with pre-exercise food timing between 30 and 90 min, peak at ≈ 60 min; for 8 in 100 individuals timing meaningfully impacts likelihood" |
+| Association between pre-exercise food ingestion timing and reactive hypoglycemia: insights from a large database of continuous glucose monitoring data | ⚠️ *Autorenliste korrigiert 2026-09-01 (zuvor faelschlich „Zignoli A, Fornasiero A, Torresani ME, et al."):* Zignoli A, Fontana FY, Lipman DJ, Skroce K, Maturana FM, Zisser HC | 2023 | *Eur J Sport Sci* 23(12):2340–2349 / [tandfonline.com](https://www.tandfonline.com/doi/abs/10.1080/17461391.2023.2233468) | "Reactive hypoglycemia was detected in 8.34 ± 3.04% of the total events; the majority found with pre-exercise food timing between 30 and 90 min, peak at ≈ 60 min; for 8 in 100 individuals timing meaningfully impacts likelihood" |
 | Pre-exercise ingestion of carbohydrate and transient hypoglycemia during exercise | Jeukendrup AE, Killer SC | 1999 | reviewed in *Int J Sports Med* / [pubmed 10376478](https://pubmed.ncbi.nlm.nih.gov/10376478/) | "Carbohydrate ingested 30–60 min before exercise may result in hypoglycaemia during exercise, often called rebound or reactive hypoglycaemia" |
 | Preexercise Carbohydrate Ingestion and Transient Hypoglycemia: Fasting versus Feeding | Marchand A, Manolopoulos K, Anderson SR | 2018 | *Medicina (Kaunas)* / [PMC6310457](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6310457/) | Occurrence of hypoglycemia determined by combination of high insulin sensitivity, small ingested glucose dose, and low sympathetic activity — individual-dependent, not universal |
 | ACSM Position Stand: Exercise and Fluid Replacement | Sawka MN, Burke LM, Eichner ER, et al. | 2007 | *Med Sci Sports Exerc* 39(2):377–390 / [ResearchGate PDF](https://www.researchgate.net/publication/6526394_American_College_of_Sports_Medicine_position_stand_Exercise_and_Fluid_Replacement) | "Prehydrating with beverages should be initiated when needed at least several hours before activity … Inclusion of sodium (0.5–0.7 g per liter of water) in the rehydration solution ingested during exercise lasting longer than 1 hour is recommended" |

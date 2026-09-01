@@ -57,6 +57,15 @@ The literature converges on a TSB staging:
 | TSB value | Meaning | Recovery recommendation |
 |-----------|---------|--------------------------|
 | ≥ +5 to +15 | Race form / peaking | Race day |
+
+> ⚠️ **DIESE TABELLE GIBT IHRE QUELLE FALSCH WIEDER — Zitat-Audit 2026-09-01.**
+> Der zitierte Coach-Blog kennt **keine** fuenfstufige Leiter. Er nennt zwei
+> grobe Baender: Peak-Performance-TSB **+15 bis +25** (nicht +5 bis +15) und
+> eine einzige „ideal training zone" von **−10 bis −30**, ab −30 „extreme
+> strain". Die Zwischenstufen und die Begriffe „tipping point", „approaching
+> fatigue limit" und „diminishing returns" stehen dort nicht. Das ist
+> planungsrelevant, weil diese Tabelle Deload-Schwellen begruendet — bis zu
+> einer Neuaufnahme gelten die beiden Quell-Baender, nicht die Leiter.
 | -10 to +5 | Productive build | Continue building |
 | -20 to -10 | "Tipping point", standard build | Normal build, monitor |
 | -25 to -20 | "Approaching fatigue limit" | Observe, monitor RPE — at rising RPE: deload |
@@ -112,7 +121,7 @@ Our framework currently has this TSB signal only as a single-day check (`TSB < -
 | Coggan AR, Allen H — 2019 | Training and Racing with a Power Meter (3rd ed) | Velo Press, book | TSB stages, CTL operationalisation, deload recommendations |
 | Issurin VB — 2008 | Block periodization versus traditional training theory: a review | J Sports Med Phys Fitness; systematic review: [PMC 6802561](https://pmc.ncbi.nlm.nih.gov/articles/PMC6802561/) | "2-4 weeks mesocycles with highly concentrated workloads … accumulation → transmutation → realization" |
 | Meeusen R et al — 2013 | Prevention, diagnosis, and treatment of the overtraining syndrome: joint consensus statement of ECSS and ACSM | Med Sci Sports Exerc | "no single reliable diagnostic marker for OTS exists — diagnosis requires the convergence of multiple indicators over time" |
-| TrainingPeaks Coach Blog — 2019 | A Coach's Guide to ATL, CTL & TSB | [trainingpeaks.com](https://www.trainingpeaks.com/coach-blog/a-coachs-guide-to-atl-ctl-tsb/) | TSB ≤ -25 = approaching fatigue limit; ≤ -30 = diminishing returns |
+| ⚠️ **Tabelle gibt diese Quelle falsch wieder (2026-09-01)** — TrainingPeaks Coach Blog — 2019 | A Coach's Guide to ATL, CTL & TSB | [trainingpeaks.com](https://www.trainingpeaks.com/coach-blog/a-coachs-guide-to-atl-ctl-tsb/) | TSB ≤ -25 = approaching fatigue limit; ≤ -30 = diminishing returns |
 | TrainerRoad Blog — 2021 | Training Periodization: Macro, Meso, & Microcycles | [trainerroad.com](https://www.trainerroad.com/blog/training-periodization-macro-meso-microcycles-of-training/) | 3:1 microcycle as standard endurance structure |
 | NSCA — Kinetic Select | Functional and Nonfunctional Overreaching and Overtraining | [nsca.com](https://www.nsca.com/education/articles/kinetic-select/functional-and-nonfunctional-overreaching-and-overtraining/) | FOR vs NFOR vs OTS definitions + recovery times |
 

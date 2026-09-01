@@ -27,11 +27,11 @@ Practical implication: for actively training masters athletes (< 60 y, training 
 | Population group | Recommendation | Source |
 |------------------|----------------|--------|
 | Young athletes (general) | 1.4–1.7 g/kg/d | ISSN consensus |
-| Master endurance athletes | 1.7–1.8 g/kg/d | Moore 2021 (GSSI) |
+| ⚠️ Master endurance athletes | 1.7–1.8 g/kg/d | **Moore 2021 sagt das Gegenteil (2026-09-01):** „Current protein recommendations for resistance and endurance trained younger adults are applicable to Master athletes" — also **kein** altersbedingt erhoehter Bedarf. Die Darstellung „Masters > Junge" kehrt die These der Quelle um. |
 | Master strength athletes (>60 y) | 1.8–2.0 g/kg/d | Deutz et al. 2017 |
 | Conservative safety margin | ≤ 2.0 g/kg/d | Moore 2021 |
 
-Deutz et al. (2017) in a consensus statement: "Older adults should consume 1.0–1.2 g protein/kg BW/day" (inactive seniors) and "physically active older adults should aim for 1.2–1.6 g/kg/day" — athletic populations clearly higher. The 2.0 g/kg figure for > 60-year-old athletes (strength-focused) has recently been moderated by Moore 2021 to ~1.8 g/kg (endurance).
+Deutz et al. (2017) in a consensus statement: "Older adults should consume 1.0–1.2 g protein/kg BW/day" (inactive seniors) and — ⚠️ **ZURUECKGEZOGEN 2026-09-01: eine Kategorie „physically active older adults" mit 1,2–1,6 g/kg existiert in der Quelle nicht.** Das Papier kennt genau zwei Gruppen: gesunde Aeltere 1,0–1,2 g/kg und kranke/mangelernaehrte Aeltere 1,2–1,5 g/kg. Zuvor zitiert als — "physically active older adults should aim for 1.2–1.6 g/kg/day" — athletic populations clearly higher. The 2.0 g/kg figure for > 60-year-old athletes (strength-focused) has recently been moderated by Moore 2021 to ~1.8 g/kg (endurance).
 
 ### 3. Per-meal dose and leucine threshold
 
@@ -100,7 +100,7 @@ Mitchell et al. (2017, Clinical Science) confirmed: MPS kinetics return to basel
 Differences endurance vs. strength:
 - Endurance: higher protein-oxidation risk during training → higher need per session
 - Endurance: myofibrillar protein-turnover rate lower, but mitochondrial protein synthesis more important
-- Masters endurance athletes: Moore (2021) recommends 1.7–1.8 g/kg/d (endurance) vs. ~1.6 g/kg/d (strength) — i.e. slightly higher for endurance
+- ⚠️ **Masters endurance athletes (Darstellung korrigiert 2026-09-01):** Moore (2021) fuehrt zwar Zahlen in dieser Groessenordnung, seine Kernaussage ist aber ausdruecklich, dass die Empfehlungen fuer **juengere** Ausdauer- und Kraftsportler auf Masters **uebertragbar** sind — ein altersbedingter Mehrbedarf laesst sich daraus **nicht** ableiten
 - Endurance-specific per-meal data are almost entirely missing for the masters population
 
 ## Primary sources
@@ -112,7 +112,7 @@ Differences endurance vs. strength:
 | Mitchell, C.J. et al. (2017) | Human skeletal muscle is refractory to the anabolic effects of leucine during the postprandial period | *Clinical Science* 131(21):2643–2654; [PMC5869244](https://pmc.ncbi.nlm.nih.gov/articles/PMC5869244/) | "MPS was at baseline 3–4 h despite anabolic signaling remaining elevated — muscle-full refractoriness confirmed, independent of signal depletion" |
 | Churchward-Venne, T.A. et al. (2012) | Supplementation of a suboptimal protein dose with leucine or EAA: effects on myofibrillar protein synthesis | *J Physiol* 590(11):2751–2765; [PubMed 22451437](https://pubmed.ncbi.nlm.nih.gov/22451437/) | "6.25 g whey + leucine was as effective as 25 g whey at rest; only complete protein sustained post-exercise MPS" |
 | Witard, O.C. et al. (2016) | Protein Considerations for Optimising Skeletal Muscle Mass in Healthy Young and Older Adults | *Nutrients* 8(4):181; [PMC4848650](https://pmc.ncbi.nlm.nih.gov/articles/PMC4848650/) | "Older adults require ≥ 2 g leucine per meal (≈ 20 g high-quality protein) to stimulate MPS; ~0.40 g/kg per serving for older adults" |
-| Deutz, N.E.P. et al. (2017) | Protein intake and exercise for optimal muscle function with aging: Recommendations from the ESPEN Expert Group | *Clinical Nutrition* 36(6):1823–1831 | "Physically active older adults: 1.2–1.6 g/kg/day; athletes potentially higher. Balanced per-meal distribution across 3–4 meals recommended." |
+| ⚠️ **Metadaten korrigiert 2026-09-01** — Deutz, N.E.P. et al. (**2014**) | Protein intake and exercise for optimal muscle function with aging: Recommendations from the ESPEN Expert Group | *Clinical Nutrition* **33(6):929–936**, PMID 24814383 (zuvor faelschlich 2017, 36(6):1823–1831) | "Physically active older adults: 1.2–1.6 g/kg/day; athletes potentially higher. Balanced per-meal distribution across 3–4 meals recommended." |
 
 ## Application in framework
 

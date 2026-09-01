@@ -45,7 +45,7 @@
 | Early recovery | 72-120h | Myofibrillar repair starts (day 3+) |
 | Late recovery | 120-168h (5-7d) | Full function restored; repeated-bout adaptation established |
 
-**Connolly DA, Sayers SE, McHugh MP (2003):** "Treatment and prevention of delayed onset muscle soreness." JSCR. Confirms the timeline + practical consequences for program periodisation.
+**Connolly DA, Sayers SP *(korrigiert 2026-09-01)*, McHugh MP (2003):** "Treatment and prevention of delayed onset muscle soreness." JSCR. Confirms the timeline + practical consequences for program periodisation.
 
 **Sweet spot for highly eccentric workouts:**
 - At least **48-72h spacing** between hard eccentric sessions on the same muscle group

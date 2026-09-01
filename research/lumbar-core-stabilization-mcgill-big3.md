@@ -44,12 +44,18 @@ Lumbalflexion?
   (APTA Low Back Pain CPG, NHS Fife flare-up Leaflets) empfehlen **frühe
   aktive Bewegung** statt Schonung — Bettruhe ist obsolet, Aktivität im
   schmerzarmen Bereich beschleunigt Recovery.
-- **Prospektive Meta-Analyse (Niederer & Mueller 2020, MDPI J Clin Med)**:
-  Stabilisations-Übung reduziert Schmerz und Disability dosisabhängig;
-  Effekt wächst mit Frequenz (≥3× / Woche) und Dauer (≥6 Wochen), klinisch
-  relevant ab ~4 Wochen.
-- **McGill-Big-3-spezifisch**: Systematische Reviews (Patwardhan et al.
-  2022 medRxiv; IJPRCP 2023) bestätigen Wirksamkeit bei chronischem LBP,
+- ⚠️ **ZURUECKGEZOGEN 2026-09-01 — Prospektive Meta-Analyse (Niederer &
+  Mueller 2020)**: Behauptet war „Effekt waechst mit Frequenz (≥3×/Woche) und
+  Dauer (≥6 Wochen), klinisch relevant ab ~4 Wochen". **Die Arbeit findet in
+  ihrer eigenen Multilevel-Meta-Regression sowohl die Interventionsdauer als
+  auch die Interventionsfrequenz als NICHT signifikante Praediktoren.** Die
+  Formulierungen „clinically relevant" und „4 weeks" kommen im Volltext nicht
+  vor. Es gibt hier also **keine belegte Dosis-Wirkungs-Beziehung fuer
+  Frequenz** — die Arbeit belegt die Wirksamkeit der Uebungsklasse, nicht die
+  Ueberlegenheit einer hoeheren Frequenz.
+- **McGill-Big-3-spezifisch**: Systematische Reviews (⚠️ *Autor korrigiert
+  2026-09-01: die medRxiv-Arbeit ist von Laurin, Minerbi, Besemann, Courchesne
+  und Gupta, nicht von „Patwardhan"* — 2022 medRxiv; IJPRCP 2023) bestätigen Wirksamkeit bei chronischem LBP,
   flaggen aber begrenzte RCT-Qualität — die generische Motor-Control-Evidenz
   trägt das Konstrukt stärker als Big-3-spezifische RCTs.
 
@@ -146,9 +152,9 @@ die LWS, das Hüft-Komplement adressiert die kausale Statik-Kette.
 
 | Title | Authors | Year | Journal / Link | Key quote |
 |---|---|---|---|---|
-| Motor control exercise for chronic non-specific low-back pain (Cochrane Review) | Saragiotto BT, Maher CG, Yamato TP, et al. | 2016 | Cochrane Database Syst Rev; [PubMed 26742533](https://pubmed.ncbi.nlm.nih.gov/26742533/) | "There is low to moderate quality evidence that motor control exercise … may be superior to other forms of exercise … for chronic non-specific LBP." |
+| ⚠️ **ZITAT SINNVERKEHRT, korrigiert 2026-09-01: der Review sagt „NOT superior to other forms of exercise" bzw. „provides similar outcomes to other forms of exercises" — das frueher hier gefuehrte „may be superior" kehrt die Aussage um** — Motor control exercise for chronic non-specific low-back pain (Cochrane Review) | Saragiotto BT, Maher CG, Yamato TP, et al. | 2016 | Cochrane Database Syst Rev; [PubMed 26742533](https://pubmed.ncbi.nlm.nih.gov/26742533/) | "There is low to moderate quality evidence that motor control exercise … may be superior to other forms of exercise … for chronic non-specific LBP." |
 | Motor control exercises reduces pain and disability in chronic and recurrent low back pain: a meta-analysis | Bystrom MG, Rasmussen-Barr E, Grooten WJA | 2013 | Spine; [PubMed 23492976](https://pubmed.ncbi.nlm.nih.gov/23492976/) | "Stabilisation exercises … were significantly more effective than … general exercise in reducing pain and disability." |
-| Motor Control Stabilisation Exercise for Patients with Non-Specific Low Back Pain: A Prospective Meta-Analysis with Multilevel Meta-Regressions | Niederer D, Mueller J | 2020 | J Clin Med 9(9):3058; [PMC7564352](https://pmc.ncbi.nlm.nih.gov/articles/PMC7564352/) | "Stabilisation exercise … leads to clinically relevant pain and disability reductions … dose-dependent on frequency and total duration." |
+| ⚠️ **Dosis-Wirkungs-Auslegung zurueckgezogen 2026-09-01 (Dauer und Frequenz sind in der Arbeit NICHT signifikant)** — Motor Control Stabilisation Exercise for Patients with Non-Specific Low Back Pain: A Prospective Meta-Analysis with Multilevel Meta-Regressions | Niederer D, Mueller J | 2020 | J Clin Med 9(9):3058; [PMC7564352](https://pmc.ncbi.nlm.nih.gov/articles/PMC7564352/) | "Stabilisation exercise … leads to clinically relevant pain and disability reductions … dose-dependent on frequency and total duration." |
 | The McGill Approach to Core Stabilization in the Treatment of Chronic Low Back Pain: A Review | Patwardhan et al. | 2022 | medRxiv; [doi:10.1101/2022.01.21.22269311](https://www.medrxiv.org/content/10.1101/2022.01.21.22269311v1) | "The McGill Big 3 … applies minimal loads on the spine to reduce and prevent LBP … shows promise in pain and functional disability." |
 | Intervertebral disc herniation: studies on a porcine model exposed to highly repetitive flexion/extension motion with compressive force | Callaghan JP, McGill SM | 2001 | Clin Biomech 16(1):28-37 | "Repeated flexion under modest compressive load consistently produced disc herniation in this in vitro model." |
 | Low Back Disorders: Evidence-Based Prevention and Rehabilitation (textbook, 3rd ed.) | McGill SM | 2015 | Human Kinetics | "Spinal stability is achieved through muscular endurance, not strength. The Big Three exercises are dosed in descending pyramids of brief isometric holds." |

@@ -85,7 +85,7 @@ the load doesn't trigger a recovery requirement.
 
 ### 2. Systematic-review evidence — scapular therapeutic exercises
 
-Bury et al. 2024 / Stuart et al. (Effectiveness of specific scapular
+⚠️ *(Autoren korrigiert 2026-09-01: Erstautorin ist Melo AS; weitere Moreira JS, Afreixo V, Moreira-Gonçalves D, Donato H, Cruz EB)* Melo AS et al. 2024 / Stuart et al. (Effectiveness of specific scapular
 therapeutic exercises in patients with shoulder pain — systematic
 review with meta-analysis):
 
@@ -242,6 +242,6 @@ phase-appropriate frequency, not a global block-level frequency.
 | Author / publication | Title | Link | Key quote |
 |----------------------|-------|------|-----------|
 | AAOS — OrthoInfo | Rotator Cuff & Shoulder Conditioning Program | [orthoinfo.aaos.org](https://orthoinfo.aaos.org/en/recovery/rotator-cuff-and-shoulder-conditioning-program/) | "Sleeper stretch 4 reps 3× a day [daily]; pendulum/crossover stretches [5-6 ×/week]; combined IR/ER + trapezius [3-5 ×/week]; band rows + scapular strengthening [3 ×/week, non-consecutive]" |
-| Stuart et al. 2024 (sys-review, meta-analysis) | Effectiveness of specific scapular therapeutic exercises in patients with shoulder pain | [PMC11065746](https://pmc.ncbi.nlm.nih.gov/articles/PMC11065746/) | "scapular stabilization 7×/week (84 sessions/12 weeks) more effective than other interventions … optimal frequency depends on rehab phase and load intensity" |
+| Stuart et al. 2024 (sys-review, meta-analysis) | Effectiveness of specific scapular therapeutic exercises in patients with shoulder pain | [PMC11065746](https://pmc.ncbi.nlm.nih.gov/articles/PMC11065746/) | "scapular stabilization 7×/Woche ⚠️ *(Einordnung ergaenzt 2026-09-01: diese Angabe stammt im Review aus einer **einzelnen** Primaerstudie, die der Review selbst als „a high ROB study" kennzeichnet — kein Review-Gesamtbefund)* (84 sessions/12 weeks) more effective than other interventions … optimal frequency depends on rehab phase and load intensity" |
 | Naunton et al. 2022 (Co-creation survey) | Co-creation of an exercise inventory to improve scapular stabilization and control among individuals with rotator cuff-related shoulder pain | [PMC9003989](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9003989/) | "activation / stabilisation / strengthening categorisation — load up = frequency down" |
 | UCSF Sports Medicine | Rotator Cuff Injuries Protocol | [sportsrehab.ucsf.edu](https://sportsrehab.ucsf.edu/sites/g/files/tkssra10961/files/Rotator%20Cuff%20Injuries%20Protocol.pdf) | "daily mobility + 3×/week strengthening pattern" |
