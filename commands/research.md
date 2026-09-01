@@ -43,6 +43,43 @@ Pass `question`, `context`, and `date`. The agent:
 4. Updates the index table in `framework/research/README.md`.
 5. Returns TL;DR + key sources + derivation + proposed downstream edits.
 
+### Step 2.5: Verify the citations (MANDATORY — before the athlete sees anything)
+
+Launch the `citation-verifier` agent **as a separate subagent with fresh
+context**. Never the agent that wrote the document, and never the head coach
+pane: an author checking its own citations reproduces its own reading.
+
+Pass: the path of the newly persisted `framework/research/<topic>.md`, and the
+note that `WebSearch` may be exhausted (the verifier works over `curl` against
+the NCBI, Crossref and archive APIs).
+
+The verifier checks every quotation, number and identifier against the actual
+source and returns findings with one verdict each — `NOT_FOUND`, `REVERSED`,
+`WRONG_SOURCE`, `CONDITION_DROPPED`, `METADATA`, `ABSTRACT_ONLY` — plus a
+release verdict.
+
+**Gate:**
+
+- **`NOT_FOUND` or `REVERSED` on a load-bearing claim → the document is not
+  presented as evidence** until it is corrected. A reversed citation is worse
+  than no citation, because it looks like support.
+- `WRONG_SOURCE`, `CONDITION_DROPPED`, `METADATA` → correct before step 3.
+- `ABSTRACT_ONLY` is **not** a defect: label the row as abstract-verified in
+  the document and attribute no discussion-section wording to that source.
+- **No findings is a legitimate outcome** — record it and move on.
+
+**Why this step is not optional.** A library audit found roughly one citation
+in ten did not hold, and the worst class was not missing quotes but reversed
+ones: the phrase was findable, the conclusion was the opposite. That class
+survives any self-review by the author and any plain text search. It is caught
+by a second reader with fresh context, or not at all.
+
+The corrections belong to the caller, not to the verifier — it reports and does
+not edit, so that everything reaching a public repository has been seen by the
+coach before it is written.
+
+---
+
 ### Step 3: Present the research feedback to the athlete
 
 Show the agent's summary block 1:1: **what** was researched (sources),
