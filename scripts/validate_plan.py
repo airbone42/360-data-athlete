@@ -73,6 +73,10 @@ class Context:
     # starts fully locked.
     injury_lock_allows: dict[str, list[str]] = field(default_factory=dict)
     weekly_hard_reize_balance: str = ""
+    # Days until the next race (RACE_A/B/C on the calendar), None when none is
+    # scheduled within the lookahead or the fetch failed. Used by R025 to keep
+    # a sauna out of the pre-race dehydration window.
+    race_days_ahead: int | None = None
     # Current fitness (CTL) — fetched fail-soft from intervals.icu wellness;
     # None when offline / fetch failed. Used by R014 to map onto the
     # per-phase easy-run band in competition_plan.md.
@@ -2455,6 +2459,129 @@ def check_tag_content_adequacy(workouts: list[dict], ctx: Context) -> list[Findi
     return findings
 
 
+SAUNA_PATTERNS = [
+    r"\bsauna\b",
+    r"\bbanya\b",
+    r"\bhot\s*water\s*immersion\b",
+    r"\bheat\s*acclimat",
+]
+
+# A session whose readiness a sauna within 12 h would measurably cost.
+QUALITY_PATTERNS = [
+    r"\b(?:interval|intervall)",
+    r"\bthreshold\b|\bschwelle",
+    r"\bvo2\s*max\b",
+    r"\btempo\b",
+    r"\brace[-\s]?pace\b|\brenntempo\b",
+    r"\bl(?:ong|ang)[-\s]?run\b",
+]
+
+
+def _is_sauna(w: dict) -> bool:
+    haystack = f"{_workout_name(w)} {' '.join(str(t) for t in (w.get('tags') or []))}"
+    return _matches_any(haystack, SAUNA_PATTERNS)
+
+
+def _is_quality(w: dict) -> bool:
+    if _is_sauna(w):
+        return False
+    wt = str(w.get("workout_type") or "")
+    if wt.upper() in {"THRESHOLD", "VO2MAX", "LONG", "RACE"}:
+        return True
+    haystack = f"{_workout_name(w)} {' '.join(str(t) for t in (w.get('tags') or []))}"
+    return _matches_any(haystack, QUALITY_PATTERNS)
+
+
+def check_sauna_placement(workouts: list[dict], ctx: Context) -> list[Finding]:
+    """R025 — sauna slots must respect their three documented buffers.
+
+    Anchor: `framework/research/sauna-dosis-und-platzierung-endurance.md`.
+
+    A sauna is not a stimulus, so it never needs to be justified as one — but
+    it is not free either, and three of its costs are mechanical enough to
+    check:
+
+    - **Same day as a quality session.** The evidence-based buffer before the
+      next hard session is >= 12 h, which a same-day pairing cannot satisfy
+      whichever order they run in. The added fluid loss (0.5-1.0 kg) and
+      cardiovascular load land squarely on that session's readiness.
+    - **Inside the pre-race window.** The last 48 h before a race are the one
+      place where the dehydration cost has no upside: the plasma-volume
+      adaptation from a sauna block is retained for weeks, so nothing is won
+      by a late exposure.
+    - **Without an endurance session on the same day.** Then it is the
+      standalone/wellness form, not the post-session adaptation stimulus.
+      That is a legitimate use, but it must not be booked as heat
+      acclimation - so the finding is INFO, and it says which of the two the
+      day actually contains.
+    """
+    findings: list[Finding] = []
+    saunas = [w for w in workouts if _is_sauna(w)]
+    if not saunas:
+        return findings
+
+    quality = [w for w in workouts if _is_quality(w)]
+    endurance = [
+        w for w in workouts
+        if not _is_sauna(w) and str(w.get("type") or "") in {
+            "Run", "VirtualRun", "Ride", "VirtualRide", "Swim", "Rowing"
+        }
+    ]
+
+    for w in saunas:
+        name = _workout_name(w)
+        if quality:
+            findings.append(Finding(
+                rule_id="R025",
+                severity=SEVERITY_WARNING,
+                workout=name,
+                message=(
+                    "Sauna on the same day as a quality session "
+                    f"(«{_workout_name(quality[0])}») — the documented buffer "
+                    "before the next hard session is >= 12 h and cannot be met "
+                    "within one day."
+                ),
+                suggestion=(
+                    "Move the sauna to a day whose following day is easy or "
+                    "off, or drop it for this day. Fluid loss of 0.5-1.0 kg "
+                    "plus cardiovascular load is charged to the quality "
+                    "session's readiness."
+                ),
+            ))
+        if ctx.race_days_ahead is not None and ctx.race_days_ahead <= 2:
+            findings.append(Finding(
+                rule_id="R025",
+                severity=SEVERITY_WARNING,
+                workout=name,
+                message=(
+                    f"Sauna {ctx.race_days_ahead} day(s) before a race — the "
+                    "last 48 h are a hard lockout."
+                ),
+                suggestion=(
+                    "Remove it. Plasma-volume adaptation from a sauna block is "
+                    "retained for at least two weeks, so a late exposure buys "
+                    "nothing and costs hydration and sleep."
+                ),
+            ))
+        if not endurance:
+            findings.append(Finding(
+                rule_id="R025",
+                severity=SEVERITY_INFO,
+                workout=name,
+                message=(
+                    "Sauna without an endurance session on the same day — this "
+                    "is the standalone/recovery form, not the post-session "
+                    "adaptation stimulus."
+                ),
+                suggestion=(
+                    "Legitimate as a sleep/wellbeing measure. Do not book it "
+                    "as heat acclimation, and keep 60-90 min between it and "
+                    "bedtime."
+                ),
+            ))
+    return findings
+
+
 RULES: list[tuple[str, Callable[[list[dict], Context], list[Finding]]]] = [
     ("R001", check_reps_ceiling),
     ("R002", check_injury_locks_shoulder),
@@ -2480,6 +2607,7 @@ RULES: list[tuple[str, Callable[[list[dict], Context], list[Finding]]]] = [
     ("R022", check_impact_day_streak),
     ("R023", check_press_lap_duration_cue),
     ("R024", check_tag_content_adequacy),
+    ("R025", check_sauna_placement),
 ]
 
 
@@ -2603,6 +2731,32 @@ def _load_tag_content_map() -> dict[str, dict]:
     return {str(k).lower(): v for k, v in tags.items() if isinstance(v, dict)}
 
 
+async def _fetch_race_days_ahead(target_date: str, lookahead: int = 14) -> int | None:
+    """Days until the next race on the calendar, or None when none is near.
+
+    Only RACE_A/B/C categories count - a hard session is not a race, and the
+    pre-race lockout in R025 is about the taper, not about intensity.
+    """
+    from app.api.intervals_client import IntervalsClient
+    start = datetime.fromisoformat(target_date).date()
+    end = start + timedelta(days=lookahead)
+    events = await IntervalsClient().get_events(
+        oldest=start.isoformat(), newest=end.isoformat()
+    )
+    ahead: list[int] = []
+    for e in events or []:
+        if (e.get("category") or "") not in {"RACE_A", "RACE_B", "RACE_C"}:
+            continue
+        try:
+            d = date.fromisoformat((e.get("start_date_local") or "")[:10])
+        except (ValueError, TypeError):
+            continue
+        delta = (d - start).days
+        if delta >= 0:
+            ahead.append(delta)
+    return min(ahead) if ahead else None
+
+
 def load_context(target_date: str, fetch_remote: bool = True) -> Context:
     ctx = Context(
         target_date=target_date,
@@ -2653,6 +2807,11 @@ def load_context(target_date: str, fetch_remote: bool = True) -> Context:
         except Exception as exc:  # noqa: BLE001
             ctx.ctl = None
             _degraded("wellness/CTL", "R014 (phase-band easy-run floor)", exc)
+        try:
+            ctx.race_days_ahead = asyncio.run(_fetch_race_days_ahead(target_date))
+        except Exception as exc:  # noqa: BLE001
+            ctx.race_days_ahead = None
+            _degraded("calendar events", "R025 (sauna pre-race lockout)", exc)
         try:
             raw = asyncio.run(_fetch_raw_activities_for_hardreize(target_date))
             from app.graphs.sub_athlete_context.context_builder import _compute_weekly_hard_reize_balance

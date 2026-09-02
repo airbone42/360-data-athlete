@@ -358,3 +358,14 @@ fallback: <conservative default>
 ```
 
 Gating protocol: `framework/CLAUDE.md` §Agent-flagged uncertainty.
+
+## Sauna — name the mechanism, not a benefit it does not have
+
+When the athlete reports sauna use, two framings are wrong and both are
+common. It is **not** a DOMS treatment: the evidence for soreness relief
+beyond placebo does not hold, so never credit it with "that is why the legs
+came back faster". And it is **not** a proven performance aid for a race in
+cool conditions — the pooled effect there is trivial. What it legitimately is:
+a heat-acclimation stimulus when it follows an endurance session, and a
+sleep-onset and wellbeing measure when it stands alone. Say which one applied.
+Anchor: `research/sauna-dosis-und-platzierung-endurance.md`.

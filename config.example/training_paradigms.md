@@ -933,3 +933,49 @@ Always state the target S in the description: `Target: S2–S3 for 30s`.
 - Heiderscheit, B. C. et al. (2011). "Effects of step rate manipulation
   on joint mechanics during running." *Med Sci Sports Exerc*, 43(2),
   296–302.
+
+## Sauna — Post-Session-Adaptation vs. eigenständige Erholung
+
+Belege und Herleitung: [research/sauna-dosis-und-platzierung-endurance.md](../research/sauna-dosis-und-platzierung-endurance.md).
+Mechanisch geprüft durch **R025** in `scripts/validate_plan.py`.
+
+**Zwei Klassen, die nie vermischt werden dürfen:**
+
+| | Post-Session-Sauna | Eigenständige Sauna |
+|---|---|---|
+| Zweck | Adaptations-Reiz (Hitzeakklimation, Plasmavolumen) | Erholung / Schlafeintritt |
+| Bedingung | direkt nach einer Ausdauereinheit (< 15 min) | trainingsfreier oder lockerer Tag |
+| Dosis | ~30 min, 80–100 °C trocken, 3–4×/Woche | frei, kein Adaptations-Anspruch |
+| Form | 2–3-Wochen-Block, nicht dauerhaft | dauerhaft möglich |
+
+Die eigenständige Anwendung ist **kein Ersatz** für die Post-Session-Anwendung —
+ohne den vorangehenden Trainingsreiz fehlt der Adaptations-Pfad.
+
+**Wann ein Sauna-Block indiziert ist:** vor einem Wettkampf **in der Wärme**.
+Der Block endet 5–14 Tage vor dem Rennen; die Plasmavolumen-Adaptation hält
+mindestens zwei Wochen, ein späteres Ende bringt nichts und kostet Hydratation.
+
+**Wann er es NICHT ist:** vor einem Wettkampf bei kühlen Bedingungen. Der
+gepoolte Effekt auf Leistung unter temperierten Bedingungen ist trivial und
+unpräzise. Sauna darf dann als Nice-to-have laufen, aber **kein Trainings-Slot
+wird dafür umgebaut**, und sie wird dem Athleten nicht als belegter
+Leistungsbringer verkauft.
+
+**Sperren (R025 prüft die ersten beiden mechanisch):**
+- **≥ 12 h vor der nächsten Quality-Einheit** — Sauna gehört auf Tage, deren
+  Folgetag locker oder frei ist.
+- **48 h vor dem Wettkampf: hart aus.**
+- **60–90 min vor dem Schlafengehen: aus.** Umgekehrt kann eine Anwendung
+  1–2 h vor dem Schlaf mit Abkühlphase den Einschlafvorgang verkürzen.
+- **Akuter Infekt / Fieber: hart aus.**
+
+**Was Sauna ausdrücklich nicht ist:** eine DOMS-Behandlung. Sie wird nicht als
+solche geplant und nicht als solche kommuniziert.
+
+**Nach Krafteinheiten erlaubt** — kein belegter Nachteil für Hypertrophie.
+Das ist der Gegensatz zur Kaltwasser-Immersion, die nach Krafttraining belegt
+adaptations-mindernd wirkt.
+
+**Frequenz-Falle:** Die Empfehlungen aus der Sauna-*Gesundheits*-Literatur
+(Kohortendaten, 4–7×/Woche) sind keine Trainingsvorgaben und werden nicht auf
+einen Trainingsplan übertragen.
