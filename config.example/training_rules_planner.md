@@ -139,6 +139,33 @@ Grund: Bein-Kraft vor dem Lauf erhöht metabolische Interferenz und CNS-Ermüdun
 - Ninja Upper Body gesperrt (⛔) wenn raceInDays ≤ 2 (CNS + obere Körperspannung)
 - Ninja Grip: raceInDays ≤ 1 gesperrt; raceInDays = 2 ok wenn leicht (Forearm Curl, kein Farmer's Walk)
 
+## Aerobes Cross-Training (impaktfrei) — keine Fälligkeit, aber Entscheidungspflicht
+
+Cross-Training (Rad, Schwimmen, Rudern, Crosstrainer) steht bewusst
+**nicht** in der Fälligkeitstabelle oben: es hat keine verordnete Kadenz,
+die überfallen kann. Es braucht trotzdem eine eigene Regel, weil es sonst
+durch eine Lücke fällt.
+
+- `planningConstraints` führt die Zeile `Aerobic cross-training
+  (impact-free volume)` mit dem Datum der letzten solchen Einheit —
+  unabhängig davon, ob etwas „anliegt".
+- **An jedem Tag ohne geplanten Lauf** muss der Planer ausdrücklich
+  entscheiden, ob ein **lockerer** Cross-Training-Block hineingehört, und
+  die Entscheidung begründen. Beide Antworten sind zulässig, Schweigen
+  nicht.
+- **Der lockere Block ist kein harter Reiz.** Eine Woche mit 0 harten
+  Reizen schließt ihn nicht aus, eine Entlastungswoche ebenfalls nicht —
+  er ist aerobes Volumen ohne Impakt.
+- Ausschlussgründe sind **Last-Gründe** (echter Ruhetag fällig, Beine
+  bleiben für eine benannte Einheit unangetastet, Zeitbudget, Readiness),
+  **nicht** „die harte Variante dieser Sportart steht diese Woche nicht
+  im Plan".
+
+*Hintergrund:* Die Wochen-Hartreiz-Bilanz nennt die Sportart nur in ihrer
+harten Form („Bike VO2max: offen"). Ohne die Regel oben wird die Sportart
+dadurch binär — sobald der harte Reiz falsch wäre, verschwindet sie ganz
+aus der Planung, statt auf die lockere Form zurückzufallen.
+
 ## Ninja-Integration (Planungsfrequenz)
 - 2–3x/Woche, 20–30 min standalone
 - Minimale Interferenz mit Laufen (andere Muskelgruppen/Energiesysteme)

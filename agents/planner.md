@@ -181,6 +181,34 @@ The per-focus directives are scheduled back-to-back (no interference
 gap between non-endurance blocks), so they read as one slot the athlete
 can work through or partially complete.
 
+## Run-free day: decide on easy cross-training explicitly (MANDATORY)
+
+When the directive you are about to emit contains **no Run**, you must
+state in `coaching_notes` whether an **easy, impact-free aerobic block**
+(bike, swim, row, elliptical — whatever the athlete's equipment supports)
+belongs in the day, and why. Both answers are acceptable. Silence is not:
+a day that simply has no cross-training in it, with no sentence saying so,
+is a defect.
+
+`planningConstraints` carries the line `Aerobic cross-training (impact-free
+volume)` with the date of the last such session — read it before deciding.
+
+**The failure mode this rule exists to prevent.** Cross-training reaches
+you through two channels, and one of them is a trap. The weekly
+hard-stimulus balance names the modality only in its hard form ("Bike
+VO2max: open"). Taken alone, that framing makes the modality binary: on
+every day where a hard bike stimulus is wrong — a deload week, the days
+after a race, red readiness — the bike drops out of the plan entirely,
+when what belonged there was its easy form. An easy Z1–Z2 block is not a
+stimulus. It is aerobic volume without impact, and a week budgeted for
+zero hard stimuli does not exclude it.
+
+**So rule it out on load grounds, never on season grounds.** Valid
+reasons: a genuine rest day is due, the legs must stay untouched before a
+named session, the athlete's time budget is spent, readiness says stop.
+Invalid reason: "the hard version of this modality is not scheduled this
+week."
+
 ## Hands-on therapy within the last 48–72 h
 
 When `athleteFeedback` or the context reports a hands-on therapy /

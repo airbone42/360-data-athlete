@@ -1079,6 +1079,26 @@ _COMPLEMENTARY_DUE: list[tuple[list[str], int, int, str, int]] = [
 ]
 
 
+# Activity types that carry aerobic load without running impact. The set is
+# deliberately wider than cycling so an athlete who swims or rows is not
+# invisible to the check below.
+_CROSS_TRAINING_TYPES: set[str] = {
+    "Ride",
+    "VirtualRide",
+    "GravelRide",
+    "MountainBikeRide",
+    "EBikeRide",
+    "Handcycle",
+    "Swim",
+    "OpenWaterSwim",
+    "Rowing",
+    "VirtualRow",
+    "Elliptical",
+    "NordicSki",
+    "BackcountrySki",
+}
+
+
 # Config files already warned about as missing — warn once per process, not
 # on every context build.
 _missing_config_warned: set[str] = set()
@@ -1226,6 +1246,72 @@ def _compute_complementary_due(activities: list[dict], today: date) -> str | Non
     if not lines:
         return None
     return "Complementary due:\n" + "\n".join(lines)
+
+
+def _compute_cross_training_status(activities: list[dict], today: date) -> str:
+    """Report when impact-free aerobic work last happened, and demand a decision.
+
+    Without this line the planner meets cross-training in exactly one place:
+    the weekly hard-stimulus balance, where a bike shows up as an open
+    VO2max slot. That framing makes the modality binary — on every day a
+    hard bike stimulus would be wrong (deload week, post-race, red
+    readiness) it drops out of the plan entirely instead of falling back to
+    its easy form. The easy form is not a stimulus at all; it is aerobic
+    volume without impact, which is exactly what a run-free day can carry.
+
+    So the line is emitted unconditionally, including when the last session
+    is recent: its job is not to warn but to keep the option visible and to
+    force an explicit yes-or-no. The threshold-based due warnings above stay
+    silent when nothing is overdue, which is right for a category that has a
+    prescribed cadence — cross-training has none.
+    """
+    LOOKBACK_DAYS = 60
+    cutoff = today - timedelta(days=LOOKBACK_DAYS)
+    week_cutoff = today - timedelta(days=7)
+
+    last_date: date | None = None
+    last_name = ""
+    in_last_7d = 0
+
+    for a in reversed(activities):
+        try:
+            act_date = date.fromisoformat(activity_date(a))
+        except (ValueError, TypeError):
+            continue
+        if act_date < cutoff:
+            break
+        if (a.get("type") or "") not in _CROSS_TRAINING_TYPES:
+            continue
+        if act_date > week_cutoff:
+            in_last_7d += 1
+        if last_date is None:
+            last_date = act_date
+            last_name = (a.get("name") or "").strip()
+
+    if last_date is None:
+        head = (
+            f"No impact-free aerobic session in the last {LOOKBACK_DAYS} days"
+        )
+    else:
+        days_ago = (today - last_date).days
+        label = f' "{last_name}"' if last_name else ""
+        head = (
+            f"Last session {last_date.isoformat()}{label} ({days_ago}d ago) — "
+            f"{in_last_7d} in the last 7 days"
+        )
+
+    return (
+        "Aerobic cross-training (impact-free volume):\n"
+        f"🚲 {head}\n"
+        "→ On a day whose plan carries NO run, decide explicitly whether an "
+        "easy cross-training block belongs in it, and give the reason either "
+        "way — silence is not a decision. An easy block is not a hard "
+        "stimulus: a week budgeted for zero hard stimuli does not rule it "
+        "out, and neither does a deload. Rule it out on load grounds "
+        "(a genuine rest day is due, the legs must stay untouched for a "
+        "named session), never because the hard version of the modality is "
+        "out of season."
+    )
 
 
 # Re-evaluation cadence — exercise selection is re-challenged at natural
@@ -1910,6 +1996,11 @@ def _compute_planning_constraints(
     due = _compute_complementary_due(activities, today)
     if due:
         constraints.append(due)
+
+    # Aerobic cross-training — always emitted, see the docstring: the point
+    # is to keep the easy form of a non-impact modality visible on run-free
+    # days, not to warn about an overdue cadence.
+    constraints.append(_compute_cross_training_status(activities, today))
 
     # Prescription compliance — the due-warning above works on activity TAGS
     # and therefore cannot see a prescribed exercise that lives inside another
