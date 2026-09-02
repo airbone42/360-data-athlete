@@ -175,21 +175,12 @@ Kraft- / Plyo-Training. Der HM-Leistungs-Effekt kommt aus:
 - **Neuromuskuläre Rekrutierung / Rate of Force Development** —
   schnellere Kraft-Anstiegs-Rate pro Bodenkontakt → weniger
   metabolische Kosten pro Meter (Paavolainen 1999: 5-km-Zeit ↓,
-  Ökonomie ↑, VO2max unverändert; Beattie 2017: 20 W. Kraftblock
+  Ökonomie ↑, VO2max unverändert; Beattie 2017: 40-Wochen-Kraftblock (Messpunkte 20 und 40 W.)
   → signifikanter Ökonomie-Gewinn, VO2max unverändert).
 - **Muskel-Sehnen-Steifigkeit** — Achilles-Wadenmuskel-Sehnen-
   Einheit speichert und gibt elastische Energie zurück. **HSR
   (Heavy Slow Resistance) ist der stärkere Sehnen-Adaptations-
-  Stimulus als Plyometrie** (Bohm & Arampatzis 2014): „high loading
-  rate (one-legged jumps) and high loading duration yielded inferior
-  adaptive results compared to a reference protocol of 4 × 6 second
-  isometric contractions at 90 % of MVC". Plyometrie trainiert die
-  *Nutzung* der Sehnenkapazität als Bein-Feder-Steifigkeit; HSR baut
-  die Kapazität auf. Beide gehören in den Plan des Läufers — sie
-  sind Komplemente, keine Substitute.
-- **Landungs-/Amortisations-Ökonomie** — reaktive Steifigkeit
-  reduziert vertikale Oszillation und Boden-Kontakt-Zeit (Douka /
-  Kellis 2018).
+  Stimulus als Plyometrie** (Bohm et al. 2014, J Exp Biol): Im direkten Vergleich erzeugte das Referenz-Protokoll mit langer Belastungsdauer (3 s Belastung / 3 s Entlastung, 14 Wochen) eine Steifigkeitszunahme von 57 %, während die Variante mit hoher Dehnungsrate (einbeinige Sprünge) bei gleicher Magnitude und gleichem Volumen nur eine Tendenz erreichte (p = 0,08). Sehnenadaptation folgt also der Belastungs**dauer**, nicht der plyometrischen Kürze.
 
 **Endpunkt-Mapping:**
 - **Belegt:** Laufökonomie (Ökonomie-Gewinn 2–8 %, kleine bis moderate
@@ -262,7 +253,7 @@ Bestandteil eines Multi-Übungs-Programms — als wirksam nachweist?
 | **Step-up** | Von Blagrove in Coach-Reviews empfohlen; kein RCT mit trainierten HM-Läufern und Leistungs-Endpunkt, das Step-up *isoliert* testet. Als geladene Multi-Joint-Übung Kategorie-tauglich, aber der Beleg trägt die Kategorie, nicht die Übung. | nur-Mechanismus |
 | **Single-Leg RDL** | Kein RCT mit trainierten Ausdauerläufern und Leistungs-Endpunkt. Legitim in einer Programm-Mischung als Hüft-Extensions-Reiz mit Fascikel-Längen-Adaptation im Hamstring; die Wirkung trägt die Hinge-Kategorie und der slow-eccentric-Charakter, nicht die spezifische Übungswahl. | nur-Mechanismus |
 | **Hip Thrust geladen** | EMG-Belegt für Gluteus-max-Peak-Aktivierung > Back Squat und Split Squat (Williams et al. 2020, PubMed 33332802). **Kein RCT mit HM-Leistungs-Endpunkt**, das Hip Thrust vs. andere High-Load-Übung vergleicht. Legitim als Hüft-Extensions-Kernlift, wenn die Wirbelsäule geschont werden soll — der Ökonomie-Beitrag ist Kategorie-Effekt, nicht Übungs-Effekt. | nur-Mechanismus |
-| **Clamshell / Monster Walk / Lateral Band Walk (Miniband)** | EMG-Aktivierung bei trainierten Läufern liegt unter der 40 %-MVIC-Adaptations-Schwelle (Schwellenwert nach **Andersen & Aagaard 2006**, konservativ für Kraftausdauer-Adaptation; die ≥ 70 %-MVIC-Grenze für Kraft-/Hypertrophie-Adaptation nach Boren 2011. EMG-Rangfolge der Einzelübungen aus Boren 2011 und Bolgla 2005; Details: [glute-hip-abductor-training-endurance-runner.md](glute-hip-abductor-training-endurance-runner.md)). Willy & Davis 2011: 6 W. Hüft-Kraftgewinn ohne Movement-Feedback ändert Lauf-Kinematik nicht („Hip abductor and external rotation strength increased significantly … there were no significant changes in hip or knee mechanics during running"). Legitim als **Warm-up-Priming**, nicht als Adaptations-Reiz. | **widerlegt-für-Leistung** (beim Trainierten); legitim als Warm-up |
+| **Clamshell / Monster Walk / Lateral Band Walk (Miniband)** | EMG-Aktivierung bei trainierten Läufern liegt unter der 40 %-MVIC-Adaptations-Schwelle (Schwellenwert nach **Andersen & Aagaard 2006** — ⚠️ **abstract-seitig nicht belegt:** das Abstract berichtet „low levels of neuromuscular activation … during all conventional exercises" gegenüber schweren Übungen, **nennt aber keine 40-%-Schwelle**; zudem n = 13 **untrainierte** Männer im Knie-Reha-Kontext, also mit Übertragungslücke zum trainierten Läufer. Der Wert ist als Konvention zu lesen, nicht als zitierfähiger Schwellenwert; die ≥ 70 %-MVIC-Grenze für Kraft-/Hypertrophie-Adaptation nach Boren 2011. EMG-Rangfolge der Einzelübungen aus Boren 2011 und Bolgla 2005; Details: [glute-hip-abductor-training-endurance-runner.md](glute-hip-abductor-training-endurance-runner.md)). Willy & Davis 2011: 6 W. Hüft-Kraftgewinn ohne Movement-Feedback ändert Lauf-Kinematik nicht („Hip abductor and external rotation strength increased significantly … there were no significant changes in hip or knee mechanics during running"). Legitim als **Warm-up-Priming**, nicht als Adaptations-Reiz. | **widerlegt-für-Leistung** (beim Trainierten); legitim als Warm-up |
 | **Isoliertes Core-Training** (McGill Big 3, Anti-Rotation, Dead Bug, Pallof Press) | Hung et al. 2019 (PLoS ONE): n = 21 männliche college athletes verschiedener Sportarten (nicht endurance-spezialisiert), 8 W. Core-Training 3 × / W. → Stage-4-VO2 im Lauftest 52,4 → 50,0 ml/kg/min (p = 0,019, ~ 4,6 % Labor-Ökonomie-Gewinn). **Kein Zeitfahren-Endpunkt**, kleines nicht-endurance-spezialisiertes Sample, Autoren räumen die Generalisierbarkeits-Grenze für Elite- und weibliche Athleten selbst ein. Für **LBP-Prophylaxe / -Rehab** ist die McGill-Big-3-Evidenz robust ([lumbar-core-stabilization-mcgill-big3.md](lumbar-core-stabilization-mcgill-big3.md)); für HM-Leistung ist die Evidenz dünn, indirekt und nicht generalisierbar. | **belegt-anderer-Endpunkt** (LBP-Prophylaxe); für Leistung nur-Mechanismus |
 | **Balance- / Propriozeptions-Training** (Wackelbrett, BOSU, Einbeinstand) | Meta-Analyse Schiftan et al. 2015: Propriozeptions-Training reduziert Sprunggelenks-Verstauchungs-Inzidenz RR 0,65 (95 %-CI 0,55–0,77), NNT 17. Rivera et al. 2017 bestätigt. **Kein Leistungs-Endpunkt in dieser Studienbasis.** Wu et al. 2024 (Präventions-Programme bei Ausdauerläufern, Meta): gepoolter Effekt auf Running-Related Injuries log-RR −0,21 (p = 0,110, **nicht signifikant**); nur *supervidierte* Programme signifikant (LRR −0,77, p < 0,001). Die Autoren: „Exercise-based interventions do not appear to reduce the risk and rate of running-related injuries" — Verletzungs-Endpunkt, nicht Leistung. | **belegt-anderer-Endpunkt** (Verstauchungs-Prävention bei prädisponiertem Sprunggelenk); kein Leistungs-Beleg |
 | **Hoch-repetitives Kraftausdauer-Training** (leichte Last, 15 + Reps, „Runner's specific strength") | Llanos-Lagos-Ökonomie 2024: Submaximale Last (40–79 % 1RM) ES −0,365 (p = 0,131, **nicht signifikant**). Unter der Adaptations-Schwelle für Ökonomie-Transfer beim trainierten Athleten. Konvention aus dem Lauf-Coach-Segment ohne belastbaren Meta-Anker. | **widerlegt-für-Leistung** (für den trainierten Ausdauerläufer) |
@@ -328,9 +319,9 @@ und Long Run — alle in
 | Sáez-Sáez de Villarreal E, Kellis E, Kraemer WJ, Izquierdo M — 2009 | Determining Variables of Plyometric Training for Improving Vertical Jump Height Performance: A Meta-Analysis | J Strength Cond Res / [PubMed 19197203](https://pubmed.ncbi.nlm.nih.gov/19197203/) | Meta über 56 Studien, 225 ES; „The combination of different types of plyometrics (squat jump + countermovement jump + drop jump) is recommended rather than using only 1 form"; „Subjects with more experience in sport obtained greater enhancements in VJH performance" |
 | Balsalobre-Fernández C, Santos-Concejero J, Grivas GV — 2016 | Effects of Strength Training on Running Economy in Highly Trained Runners: A Systematic Review with Meta-Analysis of Controlled Trials | J Strength Cond Res / [Academia](https://www.academia.edu/33389784/) | „A strength-training program including low to high intensity resistance exercises and plyometric exercises performed 2–3 times per week for 8–12 weeks is an appropriate strategy to improve running economy" |
 | Blagrove RC, Howatson G, Hayes PR — 2018 | Effects of Strength Training on the Physiological Determinants of Middle- and Long-Distance Running Performance: A Systematic Review | Sports Med / [PMC 5889786](https://pmc.ncbi.nlm.nih.gov/articles/PMC5889786/) | Systematisches Review; berichtet Ökonomie-Verbesserungen im Bereich 2–8 % nach 8–12-Wochen-Programmen kombinierter schwerer Kraft und plyometrischer Elemente bei hoch trainierten Läufern. Volltext-Verifikation aktuell durch PMC-reCAPTCHA-Gate blockiert; die 2–8 %-Range ist über Sekundärquellen mehrfach zitiert (Loughborough-Reporting, Coach-Reviews). Für ein direktes Volltext-Zitat später ergänzen (Open Question 5). |
-| Beattie K, Carson BP, Lyons M, Rossiter A, Kenny IC — 2017 | The Effect of Strength Training on Performance Indicators in Distance Runners | J Strength Cond Res 31(1):9–23 / [PubMed 27135468](https://pubmed.ncbi.nlm.nih.gov/27135468/) | Signifikante Ökonomie-Verbesserung nach 20-Wochen-Maximal-plus-Explosivkraft-Block bei collegiate/national-level distance runners; VO2max unverändert (nur Abstract-Verifikation im aktuellen Durchgang) |
+| Beattie K, Carson BP, Lyons M, Rossiter A, Kenny IC — 2017 | The Effect of Strength Training on Performance Indicators in Distance Runners | J Strength Cond Res 31(1):9–23 / [PubMed 27135468](https://pubmed.ncbi.nlm.nih.gov/27135468/) | „the effect of a **40-week** strength training intervention … The intervention group showed significant improvements in maximal and reactive strength qualities, RE, and VVO2max, at weeks 20 (p ≤ 0.05) and 40 (p ≤ 0.05)". **Präzision, die zählt:** verbessert wurde **vVO2max** (Geschwindigkeit an der VO2max) — nicht VO2max selbst. VO2max wurde miterhoben und taucht **nicht** unter den signifikanten Änderungen auf. Genau diese Kombination (Ökonomie ↑, vVO2max ↑, VO2max unverändert) ist die Signatur eines ökonomie-getriebenen Effekts. *(Korrektur 2026-09-02: zuvor als „20-Wochen-Block" geführt — die Intervention lief 40 Wochen mit Messpunkten bei 20 und 40.)* | Abstract via Europe PMC geprüft |
 | Paavolainen L, Häkkinen K, Hämäläinen I, Nummela A, Rusko H — 1999 | Explosive-strength training improves 5-km running time by improving running economy and muscle power | J Appl Physiol 86(5):1527–1533 / [PubMed 10233114](https://pubmed.ncbi.nlm.nih.gov/10233114/) | „The total training volume was kept the same in both groups, but 32 % of training in E and 3 % in C was replaced by explosive-type strength training. Explosive-strength training sessions … consisted of various sprints (5–10)·(20–100 m) and jumping exercises [alternative jumps, bilateral countermovement, drop and hurdle jumps, and 1-legged, 5-jump (5J) tests] without additional weight or with the barbell on the shoulders and leg-press and knee extensor-flexor exercises with low loads but high or maximal movement velocities. … 5K time, RE, and VMART improved (P < 0,05) in E, but no changes were observed in C. … VO2max increased in C (P < 0,05), but no changes were observed in E." |
-| Bohm S, Mersmann F, Arampatzis A — 2014/2015 | Human tendon adaptation in response to mechanical loading: a systematic review and meta-analysis of exercise intervention studies on healthy adults | Sports Med — Open / [PubMed 25267851](https://pubmed.ncbi.nlm.nih.gov/25267851/) | „high loading rate (one-legged jumps) and high loading duration yielded inferior adaptive results compared to a reference protocol of 4 × 6 second isometric contractions at 90 % of MVC" — Sehnen-Adaptation braucht lange Kontraktionszeit, nicht plyometrische Kürze |
+| Bohm S, Mersmann F, Arampatzis A — 2014 | Human Achilles tendon plasticity in response to cyclic strain: effect of rate and duration | **J Exp Biol 217(Pt 22):4010–4017** / [PubMed 25267851](https://pubmed.ncbi.nlm.nih.gov/25267851/) | Abstract: Referenz-Protokoll 14 Wochen, 4×/Woche, hohe Dehnungs-Magnitude (~6,5 %) bei niedriger Frequenz (0,17 Hz, **3 s Belastung / 3 s Entlastung**) → Sehnensteifigkeit +57 %, Querschnitt +4,2 %, Young-Modul +51 %; die Variante mit **höherer Dehnungsrate (einbeinige Sprünge)** erreichte nur Tendenzen (Steifigkeit p = 0,08). ⚠️ **Zwei Korrekturen 2026-09-02:** Das Journal war fälschlich als „Sports Med — Open" und der Titel als Meta-Analyse geführt — es ist eine Interventionsstudie im Journal of Experimental Biology. Und die zuvor zitierte Formulierung „4 × 6 second isometric contractions at 90 % of MVC" steht **nicht** in dieser Arbeit (deren Referenz-Protokoll ist 3 s/3 s zyklisch); sie stammt vermutlich aus einer anderen Arampatzis-Arbeit und ist hier **nicht belegt** — die Aussage „Sehne braucht Kontraktionsdauer, nicht plyometrische Kürze" trägt die Arbeit trotzdem, über den Sprung-vs.-Referenz-Vergleich. | Abstract via Europe PMC geprüft |
 | Boren K, Conrey C, Le Coguic J, Paprocki L, Voight M, Robinson TK — 2011 | Electromyographic analysis of gluteus medius and gluteus maximus during rehabilitation exercises | Int J Sports Phys Ther 6(3):206–223 / [read.qxmd.com/read/22034614](https://read.qxmd.com/read/22034614/electromyographic-analysis-of-gluteus-medius-and-gluteus-maximus-during-rehabilitation-exercises) | „Exercises producing greater than 70 % MVIC are deemed sufficient to promote strength adaptation" — Miniband- / Clamshell-Übungen unter der Schwelle beim Trainierten |
 | Willy RW, Davis IS — 2011 | The effect of a hip-strengthening program on mechanics during running and during a single-leg squat | J Orthop Sports Phys Ther 41(9):625–632 / [PubMed 21765220](https://pubmed.ncbi.nlm.nih.gov/21765220/) | „Hip abductor and external rotation strength increased significantly … there were no significant changes in hip or knee mechanics during running" — Kraftgewinn ohne Movement-Feedback ändert Lauf-Kinematik nicht |
 | Williams MJ, Gibson NV, Sorbie GG, Ugbolue UC, Brouner J, Easton C — 2020 | Activation of the Gluteus Maximus During Performance of the Back Squat, Split Squat, and Barbell Hip Thrust and the Relationship With Maximal Sprinting | J Strength Cond Res / [PubMed 33332802](https://pubmed.ncbi.nlm.nih.gov/33332802/) | „peak EMG activity in the gluteus maximus was higher in the hip thrust than in the back squat and split squat" — EMG-Beleg für Hip-Thrust-Aktivierung; **kein Läufer-Leistungs-Endpunkt** |
@@ -437,18 +428,34 @@ und Long Run — alle in
    Endpunkt** könnten die Verdikte in Sektion 4 verschieben — die
    aktuellen Verdikte spiegeln den 2026-09-Stand wider.
 
-7. **Prüftiefe dieses Dokuments — ehrlich beziffert.** Die
-   Zitat-Prüfung (frischer Kontext, 2026-09-02) hat **5 der rund 20
-   Quellen** gegen die Primärliteratur geprüft — bewusst die fünf, die
-   die zentrale These und die Verdikt-Tabelle tragen. Diese fünf sind
-   sauber bzw. korrigiert. **15 Quellen sind ungeprüft**, darunter
-   Paavolainen 1999, Sáez de Villarreal 2009, Balsalobre-Fernández 2016,
-   Blagrove 2018 und Bohm 2014. In den geprüften fünf lag die Fundquote
-   bei 3/5 — es ist deshalb wahrscheinlich, nicht bloss möglich, dass in
-   den übrigen fünfzehn weitere Ungenauigkeiten stecken. Wer eine Zahl
-   aus diesem Dokument in eine Trainingsvorgabe übernimmt, die **nicht**
-   aus den vier geprüften Kernquellen (Llanos-Lagos 2024 ×2, Eihara 2022,
-   Eihara 2024, Wu 2024) stammt, prüft sie vorher selbst.
+7. **Prüftiefe dieses Dokuments — zwei Durchgänge, ehrlich beziffert.**
+   Der erste Durchgang (2026-09-02) prüfte die fünf Quellen, die die
+   zentrale These tragen; der zweite auf Athleten-Wunsch die übrigen.
+   **Stand: 16 von rund 20 Quellen geprüft, 5 Funde, alle korrigiert.**
+   Die Funde im Überblick: Interventionsdauer als Schwellenwert
+   missgelesen (Llanos-Lagos); 40-%-MVIC-Schwelle falsch zugeordnet;
+   Beattie 2017 als 20- statt 40-Wochen-Studie geführt; Bohm 2014 mit
+   falschem Journal, falscher Publikationsform und einem Zitat, das
+   nicht in der Arbeit steht; Andersen & Aagaard als Beleg für einen
+   Schwellenwert geführt, den das Abstract nicht nennt.
+
+   **Nicht erreichbar und damit ungeprüft:** Blagrove et al. 2018
+   (PMC-reCAPTCHA), Balsalobre-Fernández et al. 2016 (kein offenes
+   Abstract), Schiftan et al. 2015 (Paywall). Aus diesen drei Quellen
+   stammende Zahlen sind vor einer Übernahme in eine Trainingsvorgabe
+   selbst zu prüfen.
+
+   **Sauber verifiziert:** Llanos-Lagos 2024 (beide), Eihara 2022,
+   Eihara 2024, Wu 2024, Paavolainen 1999, Sáez de Villarreal 2009,
+   Willy & Davis 2011, Boren 2011, Bolgla 2005, Williams 2020,
+   Hung 2019, Wilson 2012, Rivera 2017, Douka 2018.
+
+   *Hinweis zu einem Fehlalarm des zweiten Durchgangs:* Rivera 2017
+   (PMC5737043) und Douka 2018 (PMC5950739) wurden dort als „PMC-Record
+   nicht auffindbar" gemeldet — beide existieren unter genau diesen IDs
+   und mit den angegebenen Titeln. Ebenso wurde für Beattie 2017 eine
+   umgekehrte Aussage zur VO2max gemeldet; tatsächlich verbesserte sich
+   dort **vVO2max**, nicht VO2max. Ein Prüfbericht ist selbst zu prüfen.
 
 8. **Eine Quelle enthält einen Fehler, der nicht unserer ist.**
    Eihara 2022 gibt für das Zeitfahren `g = −0,24 [−1,04; −0,55]` an —
