@@ -653,14 +653,75 @@ def _find_last_intense_session(activities: list[dict]) -> dict | None:
     return None
 
 
+# Types that always carry systemic load, whatever the logged training_load
+# says. A day containing one of these is never "load-less".
+_ENDURANCE_TYPES = {
+    "Run", "VirtualRun", "TrailRun", "Ride", "VirtualRide", "GravelRide",
+    "MountainBikeRide", "Swim", "OpenWaterSwim", "Rowing", "Elliptical",
+    "NordicSki",
+}
+
+# A day of only short accessory work is effective rest for accumulation
+# purposes. The threshold is deliberately generous: the point is to catch
+# mobility/reha/activation blocks, not to relabel a real strength session.
+_LOADLESS_MAX_MINUTES = 45
+
+
+def _day_is_loadless(day_activities: list[dict]) -> bool:
+    """True when a day's activities carry no systemic load worth counting."""
+    if not day_activities:
+        return False
+    total_min = 0.0
+    for a in day_activities:
+        if (a.get("type") or "") in _ENDURANCE_TYPES:
+            return False
+        if (a.get("icu_training_load") or 0) > 0:
+            return False
+        total_min += (a.get("moving_time") or 0) / 60
+    return total_min <= _LOADLESS_MAX_MINUTES
+
+
 def _find_last_rest_day(activities: list[dict], today: date) -> str:
-    activity_dates = {
-        activity_date(a) for a in activities
-    }
+    """Last rest day — and, when there is none, the last load-less day.
+
+    The plain version of this signal counted **any** logged activity as a
+    training day, so a 15-minute mobility or activation block masked a rest
+    day completely. `CLAUDE.md` already carried the rule to discount such
+    days ("Discount load-less days when reading accumulation signals"), but
+    as prose next to a field that flatly says "no rest day in the last 7
+    days" — and prose loses that argument. A recovery day was recommended
+    on that basis against an athlete who had in fact done nothing but a
+    14-minute bodyweight block and a grip block two days earlier.
+
+    So the distinction now lives in the value itself: a day with no
+    activity at all is a full rest day, and a day whose only entries are
+    short accessory work with no endurance session and no training load is
+    reported as load-less. Both are visible, and neither can be silently
+    read as the other.
+    """
+    by_day: dict[str, list[dict]] = {}
+    for a in activities:
+        by_day.setdefault(activity_date(a), []).append(a)
+
+    loadless: tuple[int, str] | None = None
     for i in range(1, 8):
         d = cutoff_iso(today, i)
-        if d not in activity_dates:
+        day = by_day.get(d)
+        if not day:
             return "yesterday" if i == 1 else f"{i} days ago"
+        if loadless is None and _day_is_loadless(day):
+            names = ", ".join((a.get("name") or "?") for a in day)
+            mins = round(sum((a.get("moving_time") or 0) / 60 for a in day))
+            loadless = (i, f"{d} ({names}; {mins} min, no training load)")
+
+    if loadless is not None:
+        i, detail = loadless
+        rel = "yesterday" if i == 1 else f"{i} days ago"
+        return (
+            f"no full rest day in the last 7 days — but {rel} was LOAD-LESS: "
+            f"{detail}. That counts as effective rest for accumulation; do "
+            f"not argue 'rest is overdue' from this field alone."
+        )
     return "no rest day in the last 7 days"
 
 

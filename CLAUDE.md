@@ -352,7 +352,14 @@ below band) defaults to recovery. Do not treat "verdict ≠ clear" as a
 reason to downgrade.
 
 **Discount load-less days when reading accumulation signals.**
-`lastRestDay` ("no rest day in the last 7 days") and `cycleHint`
+**`lastRestDay` now does part of this for you:** when no day in the window
+is empty but one carried only short accessory work (no endurance session,
+no logged training load, ≤ 45 min total), the field reports that day as
+`LOAD-LESS` and names it. Treat such a day as effective rest. The rule
+below stays, because the field still cannot see everything — but the
+common case is now mechanical rather than remembered.
+
+`cycleHint`
 ("N consecutive load weeks") count **any day with ≥1 logged activity**
 as a training day — regardless of `training_load`. A mobility / reha /
 balance-only day (no cardio, no legs, zero/null training_load) is
