@@ -104,6 +104,7 @@ def test_load_context_failed_fetches_surface_as_warnings(monkeypatch):
     monkeypatch.setattr(vp, "_fetch_recent_activities", _boom)
     monkeypatch.setattr(vp, "_fetch_ctl", _boom)
     monkeypatch.setattr(vp, "_fetch_raw_activities_for_hardreize", _boom)
+    monkeypatch.setattr(vp, "_fetch_race_days_ahead", _boom)
 
     ctx = load_context("2025-05-23", fetch_remote=True)
 
@@ -113,10 +114,11 @@ def test_load_context_failed_fetches_surface_as_warnings(monkeypatch):
     assert ctx.recent_activities == []
     assert ctx.weekly_hard_reize_balance == ""
     assert ctx.ctl is None
+    assert ctx.race_days_ahead is None
 
-    assert len(ctx.load_warnings) == 5
+    assert len(ctx.load_warnings) == 6
     messages = [w.message for w in ctx.load_warnings]
-    for impacted in ("R004", "R006", "R014", "R017"):
+    for impacted in ("R004", "R006", "R014", "R017", "R025"):
         assert any(impacted in m for m in messages), f"{impacted} not surfaced: {messages}"
     for w in ctx.load_warnings:
         assert w.rule_id == "VALIDATOR"
@@ -134,15 +136,16 @@ def test_run_validation_emits_load_warnings(monkeypatch):
     monkeypatch.setattr(vp, "_fetch_recent_activities", _boom)
     monkeypatch.setattr(vp, "_fetch_ctl", _boom)
     monkeypatch.setattr(vp, "_fetch_raw_activities_for_hardreize", _boom)
+    monkeypatch.setattr(vp, "_fetch_race_days_ahead", _boom)
 
     ctx = load_context("2025-05-23", fetch_remote=True)
     findings = run_validation([], ctx)
     validator_warnings = [f for f in findings if f.rule_id == "VALIDATOR"]
-    assert len(validator_warnings) == 5
+    assert len(validator_warnings) == 6
 
     # Warnings are not filtered away by --rule selection either.
     findings = run_validation([], ctx, only_rule="R003")
-    assert len([f for f in findings if f.rule_id == "VALIDATOR"]) == 5
+    assert len([f for f in findings if f.rule_id == "VALIDATOR"]) == 6
 
 
 def test_load_context_no_remote_no_warnings(monkeypatch):
@@ -151,3 +154,37 @@ def test_load_context_no_remote_no_warnings(monkeypatch):
     monkeypatch.setattr(vp, "_load_injury_locks", lambda: {})
     ctx = load_context("2025-05-23", fetch_remote=False)
     assert ctx.load_warnings == []
+
+
+def test_every_remote_fetcher_is_covered_by_the_degradation_tests():
+    """Adding a remote fetch without patching it here must fail loudly.
+
+    The two tests above assert an exact warning count while patching a
+    hand-maintained list of fetchers. That list silently drifts: a new
+    fetch in `load_context` is simply not patched, so on a developer
+    machine with credentials it succeeds, adds no warning, and the count
+    still matches — while CI, which has neither credentials nor network,
+    sees the extra failure and the extra warning and goes red. The failure
+    then looks unrelated to the change that caused it.
+
+    This test removes the environment dependency: it reads which
+    `_fetch_*` helpers `load_context` actually calls and compares that to
+    the list the degradation tests patch.
+    """
+    import inspect
+    import re
+
+    called = set(re.findall(r"\b(_fetch_[a-z0-9_]+)\s*\(", inspect.getsource(vp.load_context)))
+    covered = set(
+        re.findall(
+            r'monkeypatch\.setattr\(vp, "(_fetch_[a-z0-9_]+)"',
+            inspect.getsource(test_load_context_failed_fetches_surface_as_warnings),
+        )
+    )
+    assert called == covered, (
+        "load_context fetches these remote sources: "
+        f"{sorted(called)}; the degradation test patches: {sorted(covered)}. "
+        "Patch the new fetcher in BOTH degradation tests and raise their "
+        "expected warning count, otherwise the suite passes locally and "
+        "fails in CI."
+    )
