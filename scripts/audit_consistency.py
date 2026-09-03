@@ -31,6 +31,7 @@ sys.path.insert(0, str(ROOT))
 
 from app.utils.activity_helpers import activity_date  # noqa: E402
 from app.utils.date_parse import parse_config_date  # noqa: E402
+from app.utils.sanitize import escape_for_prompt  # noqa: E402
 from app.utils.paths import (  # noqa: E402
     CONFIG_DIR,
     CONFIG_FALLBACK,
@@ -1863,6 +1864,78 @@ def collect_hr_anchor_ids() -> list[str]:
     return ids
 
 
+def check_slot_authority(today: date | None = None) -> list[dict]:
+    """Flag near-term dated slot commitments filed outside the slot ledger.
+
+    Scheduling decisions belong in ``competition_plan.md``'s slot ledger —
+    that is the file the planning flow consults for dates.  When one is
+    written next to the exercise entry whose placement it justifies instead,
+    nothing looks broken: the decision *was* recorded, and the next planning
+    cycle still contradicts it because it read the ledger and the ledger never
+    learned.
+
+    HIGH when the ledger does not mention the date at all (the planner cannot
+    see the commitment); MEDIUM when it does, because a date in two files is a
+    future contradiction even while the two currently agree.
+    """
+    from app.analytics.dated_commitments import find_dated_commitments
+
+    today = today or date.today()
+    ledger_name = "competition_plan.md"
+    ledger_path = CONFIG_DIR / ledger_name
+    ledger_text = _read(ledger_path)
+
+    sources: dict[str, str] = {}
+    for path in sorted(CONFIG_DIR.glob("*.md")):
+        if path.name == ledger_name:
+            continue
+        sources[path.name] = _read(path)
+
+    findings: list[dict] = []
+    for hit in find_dated_commitments(sources, today, horizon_days=14):
+        # A date the ledger already carries is mirrored, not lost. Match on the
+        # German day-month form the config prose actually uses, not on ISO.
+        mirrored = any(
+            f"{d.day:02d}.{d.month:02d}." in ledger_text
+            or f"{d.day}.{d.month}." in ledger_text
+            for d in hit["dates"]
+        )
+        dates = ", ".join(d.isoformat() for d in hit["dates"])
+        if mirrored:
+            findings.append(_finding(
+                MEDIUM, "slot_duplicated",
+                f"config/{hit['file']}",
+                source_line=hit["line"],
+                evidence=escape_for_prompt(hit["text"], 200),
+                canonical_source=f"config/{ledger_name}",
+                suggested_action="dedupe",
+                fix_hint=(
+                    f"Datum ({dates}) steht in beiden Dateien. Slot in der "
+                    "Slot-Buchfuehrung belassen, hier auf einen Verweis "
+                    "reduzieren — zwei Daten driften frueher oder spaeter auseinander."
+                ),
+                description="Datierte Zusage doppelt gefuehrt",
+            ))
+        else:
+            findings.append(_finding(
+                HIGH, "slot_not_in_ledger",
+                f"config/{hit['file']}",
+                source_line=hit["line"],
+                evidence=escape_for_prompt(hit["text"], 200),
+                canonical_source=f"config/{ledger_name}",
+                suggested_action="fix",
+                fix_hint=(
+                    f"Datum ({dates}) taucht in der Slot-Buchfuehrung nicht auf. "
+                    "Die Tagesplanung liest Termine dort — die Zusage erreicht sie "
+                    "also nicht. Slot nachtragen; ist sie durch eine "
+                    "Athleten-Ansage ueberholt, hier entfernen."
+                ),
+                description="Datierte Zusage ausserhalb der Slot-Buchfuehrung",
+            ))
+
+    return findings
+
+
 def check_percent_anchors(anchor_activities: dict[str, dict] | None = None) -> list[dict]:
     """%LTHR-Anker in den Configs gegen die Quell-Aktivitäten prüfen."""
     findings: list[dict] = []
@@ -2045,6 +2118,7 @@ CHECK_MAP = {
     "POLICY_COVERAGE": ("check_policy_workflow_coverage", False),
     "PERCENT_ANCHORS": ("check_percent_anchors", True),  # online (braucht Quell-Aktivitäten)
     "RPE_HR_DISCREPANCY": ("check_rpe_hr_discrepancy", True),  # online (braucht Streams)
+    "SLOT_AUTHORITY": ("check_slot_authority", False),
 }
 
 
@@ -2093,6 +2167,8 @@ def run_audit(offline: bool, only: str | None) -> dict[str, Any]:
                 results = check_prompt_drift()
             elif name == "POLICY_COVERAGE":
                 results = check_policy_workflow_coverage()
+            elif name == "SLOT_AUTHORITY":
+                results = check_slot_authority()
             elif name == "PERCENT_ANCHORS":
                 results = check_percent_anchors(online_data.get("anchor_activities"))
             elif name == "RPE_HR_DISCREPANCY":

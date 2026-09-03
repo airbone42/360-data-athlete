@@ -1234,6 +1234,34 @@ def _compute_prescription_compliance(today: date) -> str | None:
     return format_findings(findings)
 
 
+def _compute_dated_commitments(today: date) -> str | None:
+    """Surface near-term dated slot commitments filed outside the slot ledger.
+
+    The competition plan is excluded on purpose: the planner already reads it,
+    so echoing it back would bury the misfiled entries this exists to expose.
+    Archived config is excluded too — it is history by definition, and the
+    planner is told not to load it.
+    """
+    from app.analytics.dated_commitments import (
+        find_dated_commitments,
+        format_commitments,
+    )
+    from app.utils.paths import CONFIG_DIR
+
+    ledger = "competition_plan.md"
+    sources: dict[str, str] = {}
+    if CONFIG_DIR.is_dir():
+        for path in sorted(CONFIG_DIR.glob("*.md")):
+            if path.name == ledger:
+                continue
+            try:
+                sources[path.name] = path.read_text(encoding="utf-8")
+            except OSError as exc:
+                logger.warning("Config unreadable for commitment scan: %s", exc)
+
+    return format_commitments(find_dated_commitments(sources, today), ledger)
+
+
 def _compute_complementary_due(activities: list[dict], today: date) -> str | None:
     """Emit 🟡/🔴 due-warnings for complementary training categories.
 
@@ -2075,6 +2103,19 @@ def _compute_planning_constraints(
             constraints.append(prescription)
     except Exception as exc:  # noqa: BLE001
         logger.warning("Prescription-compliance check skipped: %s", exc)
+
+    # Dated commitments filed outside the slot ledger. Scheduling decisions
+    # belong in competition_plan.md, but they get written next to the exercise
+    # whose placement they justify — and the planner does not read that file
+    # for dates. Surfacing them here means a misfiled decision still reaches
+    # the plan instead of being silently contradicted a day later. Fail-soft:
+    # this is a safety net, and a net that blocks the plan is worse than none.
+    try:
+        commitments = _compute_dated_commitments(today)
+        if commitments:
+            constraints.append(commitments)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Dated-commitment scan skipped: %s", exc)
 
     # Impact-load streak — surfaced as a constraint line so the planner reads
     # the pattern before it plans, not after the athlete catches it. Only

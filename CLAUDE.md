@@ -1933,6 +1933,56 @@ exercise weeks later.
 
 ---
 
+### Scheduling decisions have exactly one canonical home (mandatory)
+
+A **scheduling decision** is any statement that fixes *when* something
+happens: a session moved to a named day, a deferred stimulus given a
+replacement slot, a block's first execution date, a week's day order.
+
+**It belongs in `config/competition_plan.md` — in the slot ledger — and
+nowhere else.** Exercise files (`config/exercise_progressions.md`),
+athlete files (`config/athlete_static.md`, `config/athlete_status.md`)
+and workout descriptions carry an exercise's **anchor, vector, dose and
+rationale**. They do not carry dates.
+
+This is not filing tidiness. The `/training` flow derives the day from
+the competition plan and from `planningConstraints`; a date written
+anywhere else is invisible to it. The failure mode is specific and
+silent: the decision *was* recorded, everyone involved believes it is
+live, and the next day's plan contradicts it. Nothing looks wrong —
+there is no missing entry to notice, only an entry in a file the planner
+does not consult for dates.
+
+**Operational rule:**
+
+- Recording a scheduling decision means writing it into the slot ledger
+  **in the same action** that records its rationale elsewhere. A pointer
+  in the other direction (`slot: see competition plan`) is correct and
+  cheap; a date in both places is a future contradiction.
+- When a rationale genuinely belongs with the exercise — why *this*
+  spacing, which floors it satisfies — keep the reasoning there and the
+  **date** in the ledger.
+- **A decision is only reliably recorded once it is in a file the flow
+  reads for that purpose.** Before closing a scheduling change, name
+  which file the next planning cycle will read it from. If the answer is
+  not the slot ledger, the change is not yet recorded.
+- **Some commitments must not get a date at all.** A step gated on an
+  external answer (a practitioner's verdict, an athlete confirmation that
+  has not come) is not a slot; booking it onto a day manufactures a
+  due-date the gate cannot satisfy, and the coach then either breaks the
+  gate or defers again. Park it as an open item with its unlock
+  condition, not as a dated row.
+
+*Enforcement: `audit_consistency.py::check_slot_authority` (audit check
+`SLOT_AUTHORITY`) flags near-term dated slot assertions that live outside
+the slot ledger and are not mirrored in it. Mechanical support on the
+read side: `context_builder` surfaces near-term dated commitments from
+every config file into `planningConstraints`, so a misfiled decision
+still reaches the planner — the check fixes the filing, the context field
+makes the filing matter less.*
+
+---
+
 ## Video form check (strength / core / balance / ninja)
 
 **Chat channels are not a valid transport for form-check video
