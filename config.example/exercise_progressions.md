@@ -68,6 +68,37 @@ python3 scripts/check_prescription_compliance.py [--date YYYY-MM-DD] [--json]
 verfolgt. Das hält die Meldung kurz — sie soll auf die wenigen stehenden
 Verschreibungen zeigen, nicht auf jeden Eintrag der Datei.
 
+## Form-Abbruch-Signatur (Pflichtfeld bei asymmetrisch geladenen Übungen)
+
+Bei den meisten Übungen beendet die RPE-Decke den Satz. Bei **asymmetrisch
+geladenen Übungen** — einarmige Carries/Suitcase Holds, einseitige Träger-
+und Anti-Lateralflexions-Aufgaben — reicht sie nicht: Ermüdung der
+stabilisierenden Kette verschlechtert zuerst die *Bewegungsführung*, und
+zwar genau in Richtung des Lastvektors, gegen den die Übung arbeiten soll.
+Die subjektive Anstrengung bleibt dabei plausibel, weil die Fehlführung die
+Aufgabe leichter macht. Ein RPE-Kriterium allein terminiert den Satz also
+tendenziell zu spät.
+
+Solche Einträge tragen deshalb eine explizite, **beobachtbare** Abbruch-
+Signatur:
+
+```markdown
+- **Form-Abbruch:** <beobachtbare Kriterien, kommagetrennt> → Satz beenden, erreichte Zeit/Wdh melden
+```
+
+Die Kriterien müssen von außen (oder im Spiegel/Video) sichtbar sein — ein
+Gefühl ist kein Abbruchkriterium. Für einen einarmigen Loaded Carry sind das
+typischerweise: sichtbare Rumpfneigung, Beckenabsenkung auf der freien Seite,
+Rotation um die Längsachse, Nachgreifen am Implement.
+
+**Default: leer.** Das Feld wird pro Athlet gesetzt, wenn eine Übung dieser
+Klasse tatsächlich im Programm ist. Es ersetzt die RPE-Erhebung nicht — es
+steht daneben und hat Vorrang, wenn beide gleichzeitig ansprechen.
+
+Warum das Feld überhaupt existiert und wann ein Slot zusätzlich als
+kontaminiert zu führen ist:
+`research/side-plank-prefatigue-vs-loaded-carry-same-day.md`.
+
 ## ROM-Status-Feld (Bewegungsumfang als eigene Progressionsachse)
 
 Optional, standardmäßig leer. Zu setzen nur, wenn eine Übung am

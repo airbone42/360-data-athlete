@@ -113,6 +113,24 @@ For every strength / ninja exercise in the plan:
   stays open (no down-anchor).
 - Shoulder physio + heavy pull block on the same day → INFO if near
   RPE ceiling
+- **Two blocks loading the same stabilising chain in one session** — the
+  canonical case is an anti-lateral-flexion block (side-plank family) and
+  a one-arm loaded carry, but the check is general: whenever one block's
+  demand on a chain is a multiple of the other's, the second block's
+  reading is contaminated. Order decides who pays:
+  - The block that carries the day's **progression step** goes **first**,
+    on the unfatigued chain. The other runs on its documented anchor.
+  - Both progressing in the same session is an ERROR — the resulting
+    signal cannot be attributed to either step.
+  - If the gate-carrying block cannot go first, expect a buffer of at
+    least 10–15 min between them, and require the plan to mark the
+    second slot as contaminated (anchor held, form criterion as the set
+    terminator).
+  - Separate days are not required for this. They are only required when
+    **both** exercises must yield progression data in the same cycle.
+  See `research/side-plank-prefatigue-vs-loaded-carry-same-day.md` for
+  the ordering evidence and `research/pre-fatigued-slots-as-progression-data.md`
+  for how to read the resulting slot.
 
 ### S9 — pillar content adequacy
 - A workout tagged `core` actually contains core stimulus (Hollow,

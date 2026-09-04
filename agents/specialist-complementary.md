@@ -81,6 +81,38 @@ much"):
 **No feedback present**: plan conservatively, slightly under the last
 known level.
 
+### Contaminated slots: RPE is a log field, not the set terminator
+
+The table above assumes the reported RPE describes the exercise. It does
+not when the slot is **contaminated** — when another block in the same
+session has already loaded the same chain, so the number reports the
+accumulated state rather than the exercise's own demand.
+
+In such a slot:
+
+- **Do not read the RPE as a progression trigger** in either direction.
+  A high value does not deload the exercise, and a low one does not
+  progress it. Carry the documented anchor forward unchanged and say so
+  in the description, so the post-session update does not quietly
+  overwrite the anchor with a contaminated value. A *passed* gate still
+  counts — the contamination inflates the number, so passing under it is
+  a conservative lower bound; a *failed* gate does not count.
+- **The set is terminated by a form criterion, not by the RPE ceiling.**
+  This is the safety-relevant half of the rule. Fatigue of a stabilising
+  chain reduces the spatial distribution of muscle activity and the
+  ability to adapt across repetitions, so the movement degrades while the
+  subjective rating stays plausible — and on an asymmetrically loaded
+  exercise the degradation is exactly the loading pattern the exercise is
+  meant to resist. Name the observable failure signature in the
+  description (for a one-arm loaded carry: visible trunk lean, pelvic
+  drop on the free side, rotation about the long axis, re-gripping) and
+  make it the hard end of the set.
+- **RPE stays in the log.** It is still collected — it is just not the
+  variable that moves the plan that day.
+
+Evidence and the ordering rule that avoids the situation in the first
+place: [../research/side-plank-prefatigue-vs-loaded-carry-same-day.md](../research/side-plank-prefatigue-vs-loaded-carry-same-day.md).
+
 ### Balance exercises: stability score S1–S5 (instead of RPE)
 
 For balance and proprioception exercises (balance board, single-leg

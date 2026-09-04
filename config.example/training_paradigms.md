@@ -491,6 +491,38 @@ Across sets:
 Plyo belongs either on an easy run day (gently integrated) or on the
 day BEFORE the next recovery day.
 
+### Same-day ordering when two blocks share a stabilising chain
+
+Not every same-day pairing has to be broken up. When two blocks load the
+same stabilising chain but only one of them is supposed to produce a
+measurement that day, **ordering plus a short buffer does the same job as
+separating the days, and costs nothing**.
+
+The rule:
+
+1. **The block carrying the progression step goes first**, on the
+   unfatigued chain. The other block runs on its documented anchor with
+   no step.
+2. **A block that follows on a pre-loaded chain is a contaminated slot.**
+   Its RPE is logged but is not a progression trigger; a passed gate
+   counts as a conservative lower bound, a failed one does not count at
+   all. The set is ended by an observable form criterion, not by the RPE
+   ceiling.
+3. **If the gate-carrying block cannot go first**, put at least 10–15 min
+   between the two blocks and treat the second as contaminated anyway.
+4. **Separate days are the more expensive tool for the same job.** Use
+   them only when both exercises have to deliver progression data inside
+   the same cycle.
+
+Two things this rule is not. It is not a fatigue-carryover argument — the
+mechanism is priority ordering: whichever stimulus runs first gets the
+capacity. And it is not symmetric: the light-to-heavy direction (the
+block with the *lower* demand on the chain first) is the contaminated
+one; the reverse order is clean and needs none of this.
+
+Evidence, including the honest limits of the numbers behind it:
+`research/side-plank-prefatigue-vs-loaded-carry-same-day.md`.
+
 ### Weekly example (CTL ≥ 20, rebuild, polarisation step)
 | Day | Content |
 |---|---|

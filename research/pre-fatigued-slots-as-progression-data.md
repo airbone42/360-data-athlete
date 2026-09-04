@@ -234,6 +234,13 @@ Vorblocks / Eigenanforderung der Zielübung auf der geteilten Kette.** Liegt
 der Quotient deutlich unter 1, ist der Slot praktisch sauber; liegt er nahe
 oder über 1, ist er kontaminiert. Die umgekehrte Reihenfolge (Seitstütz vor
 Carry) wäre der problematische Fall — nicht die beobachtete.
+**Dieser Fall ist inzwischen eigenständig untersucht:**
+[side-plank-prefatigue-vs-loaded-carry-same-day.md](side-plank-prefatigue-vs-loaded-carry-same-day.md)
+behandelt die umgekehrte Richtung und liefert dafür die Reihenfolge- und
+Puffer-Regel. **Übergabepunkt zwischen den beiden Dokumenten:** hier steht,
+wie ein bereits gelaufener kontaminierter Slot zu *lesen* ist; dort steht,
+wie die Kontamination bei der Planung gar nicht erst entsteht — und dass
+getrennte Tage dafür nicht nötig sind.
 
 Zwei Vorbehalte: die %-MVIC-Zahlen stammen aus **einem** Lastpunkt (~25 kg
 einarmig), eine Dosis-Wirkungs-Kurve Last → laterale Rumpfaktivierung
