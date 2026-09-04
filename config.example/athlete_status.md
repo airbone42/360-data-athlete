@@ -70,9 +70,10 @@ reads them. Add prose freely *after* a field block.
 
 - **rhr_overload_bpm:** 5
 
-The bpm rise above the RHR baseline that, **together with** an HRV value below
-baseline, counts as one overload day in `_compute_combined_overload_signal`.
-Three consecutive such days produce a `deload` verdict.
+The bpm rise above the RHR baseline that counts as one of the three markers
+in `_compute_combined_overload_signal` (HRV below baseline / RHR elevated /
+TSB below its threshold). A day counts when **two of the three** are available
+and firing; three consecutive such days produce a `deload` verdict.
 
 **This default is a convention, not a literature value.** It was documented as
 literature-anchored until a source audit found the attributed sentence absent
@@ -80,7 +81,35 @@ from the cited article. The number was kept because changing a readiness gate is
 a training decision, but it is athlete configuration — like `impact_streak_max`
 — because the right value depends on the athlete's own RHR variability.
 
-What makes the signal specific is the conjunction (HRV low AND RHR elevated)
-plus the consecutive-day requirement, not the size of the bpm step. Lower the
-value for a more sensitive gate, raise it if the verdict fires on days that feel
-unremarkable.
+What makes the signal specific is the convergence requirement (two markers
+agreeing) plus the consecutive-day rule, not the size of the bpm step. Lower
+the value for a more sensitive gate, raise it if the verdict fires on days that
+feel unremarkable.
+
+## Balance cadence (machine-readable)
+
+- **balance_sessions_per_week:** 7
+
+How many balance / proprioception units the auto-push places per rolling
+7-day window. **The default of 7 is the framework's historical behaviour** —
+one unit on every training day — and an athlete who leaves this alone sees no
+change.
+
+Lower it when the balance work is a real prevention block rather than a short
+daily drill. Programmes that measurably reduced lateral ankle sprains ran
+**2–3 sessions per week** of progressive, perturbation-based work; there the
+useful shape is a longer, harder session at a lower frequency, and a daily
+push crowds the week without adding the stimulus that carries the effect.
+
+Two behaviours follow automatically from a value below 7:
+
+- A **minimum gap** of `7 // sessions_per_week` days, so three a week means
+  every other day rather than three in a row.
+- **Rotation stepping.** The pool holds four sessions and the date-based pick
+  (`ordinal % 4`) assumes daily execution — at a two-day gap it keeps drawing
+  the same keys. Below 7 the push steps on from the previous session's key
+  instead, so all four stay in rotation.
+
+Counting uses planned events, not completed ones: the scheduler's job is not
+to double-book the calendar. Execution gaps are a separate question and are
+already covered by the `balance` due-warnings in the planning context.

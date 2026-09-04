@@ -417,6 +417,82 @@ def main() -> None:
         _warn_on_mental_coach_triggers(workouts, args.date)
 
 
+def _read_config(path: str) -> str:
+    """Read a config file through the wrapper→framework fallback, or "" ."""
+    from app.utils.paths import resolve_config
+
+    try:
+        return resolve_config(path).read_text(encoding="utf-8")
+    except (FileNotFoundError, OSError):
+        return ""
+
+
+def _last_rotation_key(balance_events: list[dict]) -> str | None:
+    """Recover the rotation key of the most recent balance event.
+
+    The key is read back from the event name, which carries the pool session
+    title. Falls back to None when nothing matches — `next_rotation` then
+    uses the date-based pick, i.e. the previous behaviour.
+    """
+    import json as _json
+    import re as _re
+
+    try:
+        from get_balance_rotation import ROTATION_KEYS, _pool_path
+
+        with open(_pool_path(), encoding="utf-8") as f:
+            pool = _json.load(f)
+    except Exception:  # noqa: BLE001
+        return None
+
+    dated = [e for e in balance_events if e.get("start_date_local")]
+    if not dated:
+        return None
+    latest = max(dated, key=lambda e: e["start_date_local"])
+    name = (latest.get("name") or "").strip()
+    if not name:
+        return None
+
+    for key in ROTATION_KEYS:
+        session = pool.get("sessions", {}).get(key) or {}
+        pool_name = (session.get("name") or "").strip()
+        if pool_name and pool_name.lower() in name.lower():
+            return key
+    # Explicit marker as a fallback for renamed pool entries.
+    m = _re.search(r"Rotation\s+([ABCD])", name)
+    return m.group(1) if m else None
+
+
+def _shift_before_earliest(events: list[dict], today_events: list[dict]) -> None:
+    """Move the balance event ahead of the day's earliest existing session.
+
+    Both the main push and the balance push start their own numbering at
+    06:00, so without this the two land on the same minute and the ordering
+    that matters — balance on fresh legs, before the endurance session — is
+    left to chance. Mutates `events` in place; a no-op when the day is empty
+    or the computed slot would fall before 05:00.
+    """
+    from datetime import datetime as _dt
+    from datetime import timedelta as _td
+
+    if not events or not today_events:
+        return
+    starts = [e.get("start_date_local") for e in today_events if e.get("start_date_local")]
+    if not starts:
+        return
+    try:
+        earliest = min(_dt.fromisoformat(s) for s in starts)
+    except ValueError:
+        return
+
+    duration = events[0].get("moving_time") or 0
+    duration_min = int(duration / 60) if duration else 12
+    slot = earliest - _td(minutes=duration_min + 15)
+    if slot.hour < 5:
+        return
+    events[0]["start_date_local"] = slot.strftime("%Y-%m-%dT%H:%M:%S")
+
+
 def _auto_push_balance(
     target_date: str,
     current_workouts: list,
@@ -431,12 +507,27 @@ def _auto_push_balance(
     a workflow step in `commands/training.md`. Fail-soft — never blocks the
     main push.
 
-    Skip conditions:
+    Skip conditions, in this order:
     - Current push already contains a workout with the `balance` tag (the
       caller is pushing balance themselves, e.g. via the manual
       `get_balance_rotation.py | push_workouts.py` pipe).
     - An intervals.icu event with the `balance` tag already exists for the
       target date (idempotent — re-pushes don't stack duplicates).
+    - The athlete's configured weekly cadence is already met in the rolling
+      7-day window, or the minimum gap since the last unit has not elapsed
+      (`balance_sessions_per_week` in athlete_status.md; framework default
+      is 7, i.e. daily, so an unconfigured athlete is unaffected).
+
+    The frequency check deliberately comes *after* the idempotency check: a
+    re-push of the same day must fail on "already exists", never on the
+    budget, or a repeat push would be reported as a cadence decision.
+
+    **Start time.** The unit is placed before the day's earliest existing
+    event rather than at the shared 06:00 default. Balance work belongs on
+    fresh legs — the evidence for the perturbation effect comes from
+    unfatigued sessions — and pushing it as a separate call meant both events
+    landed at 06:00 with no ordering between them, so "before the endurance
+    session" was true only by accident.
 
     `travel` is forwarded to `build_rotation_workout` — swaps equipment-
     dependent exercises (balance board / kettlebell / TRX) for bodyweight /
@@ -454,19 +545,52 @@ def _auto_push_balance(
                 logger.debug("Auto-balance: balance already in current push, skipping")
                 return
         from datetime import date as _date
+        from datetime import timedelta as _timedelta
+
+        from app.analytics.balance_schedule import (
+            balance_due,
+            next_rotation,
+            parse_balance_frequency,
+        )
         from get_balance_rotation import build_rotation_workout
 
+        target = _date.fromisoformat(target_date)
         client = CachedIntervalsClient(athlete_id)
-        existing = asyncio.run(client.get_events(target_date, target_date))
-        if any("balance" in (e.get("tags") or []) for e in existing):
+        # One fetch covers both purposes: the same-day idempotency check and
+        # the rolling-window count. Widening the range costs nothing extra.
+        window_start = (target - _timedelta(days=6)).isoformat()
+        window = asyncio.run(client.get_events(window_start, target_date))
+
+        today_events = [e for e in window if (e.get("start_date_local") or "").startswith(target_date)]
+        if any("balance" in (e.get("tags") or []) for e in today_events):
             logger.debug("Auto-balance: balance event already exists for %s, skipping", target_date)
             return
 
+        balance_events = [e for e in window if "balance" in (e.get("tags") or [])]
+        balance_dates: list[_date] = []
+        for e in balance_events:
+            stamp = (e.get("start_date_local") or "")[:10]
+            try:
+                balance_dates.append(_date.fromisoformat(stamp))
+            except ValueError:
+                continue
+
+        sessions_per_week = parse_balance_frequency(_read_config("athlete_status.md"))
+        due, reason = balance_due(target, balance_dates, sessions_per_week)
+        if not due:
+            logger.info("Auto-balance: not due for %s — %s", target_date, reason)
+            return
+
+        previous_key = _last_rotation_key(balance_events)
+        rotation = next_rotation(previous_key, target)
         rotation, workout = build_rotation_workout(
-            _date.fromisoformat(target_date), travel=travel, leg_conflict=leg_conflict
+            target, travel=travel, leg_conflict=leg_conflict, rotation=rotation
         )
-        logger.info("Auto-balance: pushing rotation %s for %s", rotation, target_date)
+        logger.info(
+            "Auto-balance: pushing rotation %s for %s (%s)", rotation, target_date, reason
+        )
         events = prepare_workout_events([workout], target_date)
+        _shift_before_earliest(events, today_events)
         asyncio.run(_push(athlete_id, events, dry_run=False, date_str=target_date))
         logger.info("Auto-balance: rotation %s pushed", rotation)
     except Exception as exc:  # noqa: BLE001

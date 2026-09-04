@@ -1566,12 +1566,28 @@ only for what is still missing. Asking for values the athlete already
 logged in the unit is a context violation — same class as ignoring
 `athleteFeedback` from `fetch_context.py`.
 
-**Daily balance rotation (mandatory after main workout push):**
-On every training day — including rest days — a balance unit runs as a
-third, separate workout. `push_workouts.py` enforces this in code: after
-each successful main push it auto-pushes the daily rotation, unless a
-`balance`-tagged event for the date already exists. This is the single
+**Balance rotation (mandatory after main workout push):**
+A balance unit runs as a third, separate workout. `push_workouts.py`
+enforces this in code: after each successful main push it auto-pushes the
+rotation, unless a `balance`-tagged event for the date already exists or the
+athlete's configured weekly cadence is already met. This is the single
 source of truth — no separate workflow step needed in `/training`.
+
+**Cadence is athlete configuration.** The framework default is 7 per week
+(one per training day, the historical behaviour);
+`balance_sessions_per_week` in `config/athlete_status.md` lowers it. Below 7
+the push also enforces a minimum gap (`7 // n` days) and steps the A/B/C/D
+rotation on from the previous session rather than picking by date — at a
+two-day gap the date arithmetic keeps drawing the same keys. Set a lower
+value when the balance work is a real prevention block: the programmes that
+reduced lateral ankle sprains ran 2–3 progressive, perturbation-based
+sessions per week, not a short daily drill.
+
+**Placement.** The unit is scheduled before the day's earliest existing
+session. Balance work belongs on fresh legs — the perturbation effect comes
+from unfatigued sessions — and because the balance push is a second call
+with its own numbering, both events used to land on 06:00 with no ordering
+between them.
 Manual invocation remains available for ad-hoc / preview purposes:
 
 ```bash
@@ -1580,7 +1596,8 @@ python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/get_balance_rotation.py --date YYYY-M
     | python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/push_workouts.py --date YYYY-MM-DD --no-auto-balance
 ```
 
-- Rotation A/B/C/D is `date.toordinal() % 4` — automatic
+- Rotation A/B/C/D is `date.toordinal() % 4` at the daily default, and
+  steps on from the previous session's key at any lower cadence
 - `--show` previews without pushing
 - Duration: 10–12 min, always as the third unit — existing workouts are
   not shortened

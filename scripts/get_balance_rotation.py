@@ -198,9 +198,17 @@ def _render_description(session: dict, travel: bool, leg_conflict: bool = False)
 
 
 def build_rotation_workout(
-    target_date: date, travel: bool = False, leg_conflict: bool = False
+    target_date: date,
+    travel: bool = False,
+    leg_conflict: bool = False,
+    rotation: str | None = None,
 ) -> tuple[str, dict]:
     """Return (rotation_key, workout_dict) for the given date.
+
+    `rotation` overrides the date-based pick. Callers running a reduced
+    weekly cadence pass the key from `balance_schedule.next_rotation`, which
+    steps on from the previous session instead of hashing the date — at three
+    sessions a week the date arithmetic keeps landing on the same key.
 
     Exposed for in-process callers (e.g. push_workouts.py auto-push) so they
     don't need to subprocess this script.
@@ -218,7 +226,7 @@ def build_rotation_workout(
     flag at push time; nothing infers the conflict automatically (the
     next-day plan is often not an intervals.icu event yet).
     """
-    rotation = get_rotation(target_date)
+    rotation = rotation if rotation in ROTATION_KEYS else get_rotation(target_date)
     with open(_pool_path()) as f:
         pool = json.load(f)
     session = pool["sessions"][rotation]

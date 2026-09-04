@@ -56,7 +56,7 @@ async def _fake_push(athlete_id, events, dry_run, date_str, incremental=False):
 def test_auto_push_balance_forwards_travel_true(monkeypatch):
     captured: dict = {}
 
-    def fake_build_rotation_workout(target_date, travel=False, leg_conflict=False):
+    def fake_build_rotation_workout(target_date, travel=False, leg_conflict=False, rotation=None):
         captured["travel"] = travel
         return "A", {"type": "Workout", "name": "stub", "tags": ["balance"], "description": "x"}
 
@@ -72,7 +72,7 @@ def test_auto_push_balance_forwards_travel_true(monkeypatch):
 def test_auto_push_balance_forwards_travel_false_by_default(monkeypatch):
     captured: dict = {}
 
-    def fake_build_rotation_workout(target_date, travel=False, leg_conflict=False):
+    def fake_build_rotation_workout(target_date, travel=False, leg_conflict=False, rotation=None):
         captured["travel"] = travel
         return "A", {"type": "Workout", "name": "stub", "tags": ["balance"], "description": "x"}
 
