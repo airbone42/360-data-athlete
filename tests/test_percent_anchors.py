@@ -37,7 +37,13 @@ def test_parses_anchor_with_line_number():
     text = "intro\n\n[hr-anchor:i12345678 lthr=154]\n\n| a | b |\n"
     anchors = ac._parse_hr_anchors(text)
     assert anchors == [
-        {"activity_id": "i12345678", "declared_lthr": 154, "line": 3}
+        {
+            "activity_id": "i12345678",
+            "declared_lthr": 154,
+            "stored_lthr": None,
+            "override": None,
+            "line": 3,
+        }
     ]
 
 
@@ -76,13 +82,84 @@ def test_mismatched_lthr_is_high():
     assert "154" in payload["evidence"] and "166" in payload["evidence"]
 
 
-def test_mismatch_names_the_impossible_max_hr():
-    """maxHF below the declared threshold is the cheapest tell of drift."""
+def test_max_hr_tell_holds_for_a_short_all_out_effort():
+    """maxHF below the declared threshold is a real tell — on a short race.
+
+    A 10 km run is well inside the hour a threshold is defined against, so
+    an all-out effort must peak above it. A peak below the declared LTHR
+    therefore means the effort was not run against that threshold.
+    """
     anchor = {"activity_id": "i1", "declared_lthr": 166, "line": 1}
     payload = ac.evaluate_hr_anchor(
-        anchor, {"lthr": 154, "average_heartrate": 155, "max_heartrate": 163}
+        anchor,
+        {"lthr": 154, "average_heartrate": 155, "max_heartrate": 163,
+         "moving_time": 39 * 60},
     )
     assert "UNTER dem deklarierten LTHR" in payload["evidence"]
+    assert "ausgeschlossen" in payload["evidence"]
+
+
+def test_max_hr_tell_is_withdrawn_for_a_long_race():
+    """The same numbers over half-marathon duration prove nothing.
+
+    A threshold is roughly one-hour sustainable, so a well-paced effort
+    *longer* than that sits at the threshold and peaks just under it. Citing
+    "max HR below LTHR" there argues for exactly the wrong correction — it
+    was the reasoning behind a real mis-correction that re-based a race
+    curve on a stale profile value and produced 101 % LTHR over 83 minutes.
+    """
+    anchor = {"activity_id": "i1", "declared_lthr": 166, "line": 1}
+    payload = ac.evaluate_hr_anchor(
+        anchor,
+        {"lthr": 154, "average_heartrate": 155, "max_heartrate": 163,
+         "moving_time": 83 * 60},
+    )
+    assert "ausgeschlossen" not in payload["evidence"]
+    assert "NICHT widerlegt" in payload["evidence"]
+
+
+# ── Deklarierter Override: der hinterlegte Nenner ist selbst falsch ──
+
+
+def test_declared_override_downgrades_to_low():
+    """A profile field is a datum too, and it can be stale.
+
+    When the config deliberately computes against a different denominator
+    and says so, that is auditable rather than wrong — but it has to be
+    declared, which is what `stored=` + `override=` do.
+    """
+    anchor = {
+        "activity_id": "i1", "declared_lthr": 166, "stored_lthr": 154,
+        "override": "stale-profile-value", "line": 1,
+    }
+    payload = ac.evaluate_hr_anchor(anchor, {"lthr": 154, "max_heartrate": 163})
+    assert payload["severity"] == ac.LOW
+    assert payload["category"] == "percent_anchor_override"
+    assert "stale-profile-value" in payload["evidence"]
+
+
+def test_override_whose_stored_value_moved_on_is_flagged():
+    """An override pins the value it was written against.
+
+    If the activity later carries a different threshold, the override
+    describes a state that no longer exists and must be re-examined.
+    """
+    anchor = {
+        "activity_id": "i1", "declared_lthr": 166, "stored_lthr": 154,
+        "override": "stale-profile-value", "line": 1,
+    }
+    payload = ac.evaluate_hr_anchor(anchor, {"lthr": 160})
+    assert payload["severity"] == ac.MEDIUM
+    assert payload["category"] == "percent_anchor_override_stale"
+
+
+def test_override_marker_is_parsed():
+    text = "[hr-anchor:i1 lthr=166 stored=154 override=stale-profile-value]\n"
+    anchors = ac._parse_hr_anchors(text)
+    assert anchors[0]["activity_id"] == "i1"
+    assert anchors[0]["declared_lthr"] == 166
+    assert anchors[0]["stored_lthr"] == 154
+    assert anchors[0]["override"] == "stale-profile-value"
 
 
 def test_mismatch_without_max_hr_still_reports():

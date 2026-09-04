@@ -239,3 +239,64 @@ def test_strength_to_run_keeps_interference_gap() -> None:
     starts = sorted(e["start_date_local"] for e in events)
     # 06:00 strength → +20m +180m gap → 09:20 run
     assert starts == ["2026-01-01T06:00:00", "2026-01-01T09:20:00"]
+
+
+# ---------------------------------------------------------------------------
+# Ordering: the session that carries the adaptation goes first
+# ---------------------------------------------------------------------------
+
+
+def test_quality_run_goes_before_strength() -> None:
+    """A quality endurance session takes the first slot, strength follows 6h later.
+
+    Running economy is degraded after leg strength, and the effect bites
+    hardest above ~85 % VO2max — exactly where an INTERVALS session lives.
+    The paradigms file used to demand strength-first unconditionally, which
+    contradicted the framework's own research.
+    """
+    events = prepare_workout_events(
+        [
+            {"type": "WeightTraining", "name": "Bein-Kraft", "duration_min": 45,
+             "workout_type": "STRENGTH", "tags": ["legs"]},
+            {"type": "Run", "name": "HM-Pace", "duration_min": 70,
+             "workout_type": "INTERVALS", "tags": ["run", "intervals"]},
+        ],
+        date="2026-01-01",
+    )
+    by_name = {e["name"]: e["start_date_local"] for e in events}
+    assert by_name["HM-Pace"] == "2026-01-01T06:00:00"
+    # 06:00 + 70min run + 360min gap = 13:10
+    assert by_name["Bein-Kraft"] == "2026-01-01T13:10:00"
+
+
+def test_intervals_tag_alone_marks_a_quality_run() -> None:
+    """The `intervals` tag qualifies even without workout_type INTERVALS —
+    a race-pace block inside a long run carries the tag, not the type."""
+    events = prepare_workout_events(
+        [
+            {"type": "WeightTraining", "name": "Kraft", "duration_min": 30,
+             "workout_type": "STRENGTH", "tags": ["legs"]},
+            {"type": "Run", "name": "Long mit HM-Pace", "duration_min": 100,
+             "workout_type": "LONG", "tags": ["run", "intervals"]},
+        ],
+        date="2026-01-01",
+    )
+    assert events[0]["name"] == "Long mit HM-Pace"
+
+
+def test_easy_run_keeps_strength_first() -> None:
+    """Below the economy-sensitive intensity the old order stands: strength
+    first, run after the leg-spacing gap. A Z2 run on pre-loaded legs is a
+    deliberate stimulus, not an accident."""
+    events = prepare_workout_events(
+        [
+            {"type": "Run", "name": "Easy Z2", "duration_min": 60,
+             "workout_type": "EASY", "tags": ["run"]},
+            {"type": "WeightTraining", "name": "Bein-Kraft", "duration_min": 45,
+             "workout_type": "STRENGTH", "tags": ["legs"]},
+        ],
+        date="2026-01-01",
+    )
+    by_name = {e["name"]: e["start_date_local"] for e in events}
+    assert by_name["Bein-Kraft"] == "2026-01-01T06:00:00"
+    assert by_name["Easy Z2"] == "2026-01-01T12:45:00"

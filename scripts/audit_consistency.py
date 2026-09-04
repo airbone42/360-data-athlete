@@ -1736,8 +1736,17 @@ def check_policy_workflow_coverage() -> list[dict]:
 #     verified anchor in the same section.
 
 _HR_ANCHOR_RE = re.compile(
-    r"\[hr-anchor:(?P<activity>i\d+)\s+lthr=(?P<lthr>\d{2,3})\]"
+    r"\[hr-anchor:(?P<activity>i\d+)\s+lthr=(?P<lthr>\d{2,3})"
+    r"(?:\s+stored=(?P<stored>\d{2,3}))?"
+    r"(?:\s+override=(?P<override>[a-z0-9-]+))?\]"
 )
+# Duration above which a race cannot have been run *over* threshold, so a
+# max HR below the declared LTHR proves nothing about the denominator.
+# A threshold is by definition roughly one-hour sustainable; a well-paced
+# effort longer than that sits at or just under it and peaks in the high
+# 90s of %LTHR. The "max HR below threshold rules out a full-effort
+# session" inference is only sound for genuinely short all-out racing.
+_ALL_OUT_MAX_SECONDS = 45 * 60
 # "% LTHR (166)" / "%LTHR (154, korrekt)" — a stated denominator in a header.
 #
 # The parenthetical after "% LTHR" is used for two different things in
@@ -1760,6 +1769,8 @@ def _parse_hr_anchors(text: str) -> list[dict[str, Any]]:
             anchors.append({
                 "activity_id": m.group("activity"),
                 "declared_lthr": int(m.group("lthr")),
+                "stored_lthr": int(m.group("stored")) if m.group("stored") else None,
+                "override": m.group("override"),
                 "line": lineno,
             })
     return anchors
@@ -1812,6 +1823,39 @@ def evaluate_hr_anchor(anchor: dict[str, Any], activity: dict | None) -> dict | 
     if int(stored) != int(anchor["declared_lthr"]):
         avg_hr = activity.get("average_heartrate")
         max_hr = activity.get("max_heartrate")
+        moving = activity.get("moving_time") or activity.get("elapsed_time")
+
+        # A declared override says: the value stored on the activity is
+        # itself wrong (a stale profile field, a lab value that was never
+        # race-validated), and the config deliberately computes against a
+        # different denominator. That is a legitimate case — a profile
+        # field is a datum like any other and can be out of date — but it
+        # must be declared, not performed silently. Downgraded to LOW and
+        # kept visible so the claim stays auditable.
+        if anchor.get("override") and anchor.get("stored_lthr") == int(stored):
+            return {
+                "severity": LOW,
+                "category": "percent_anchor_override",
+                "evidence": (
+                    f"{anchor['activity_id']}: Config rechnet bewusst mit lthr="
+                    f"{anchor['declared_lthr']} statt mit den hinterlegten "
+                    f"{int(stored)} (override={anchor['override']}). Der "
+                    f"hinterlegte Wert gilt als nicht tragfähig — Begründung "
+                    f"gehört neben den Anker."
+                ),
+            }
+        if anchor.get("override"):
+            return {
+                "severity": MEDIUM,
+                "category": "percent_anchor_override_stale",
+                "evidence": (
+                    f"{anchor['activity_id']}: Anker deklariert override="
+                    f"{anchor['override']} mit stored={anchor.get('stored_lthr')}, "
+                    f"die Aktivität trägt aber {int(stored)}. Der Override "
+                    f"beschreibt einen Stand, den es so nicht mehr gibt."
+                ),
+            }
+
         detail = ""
         if avg_hr:
             detail = (
@@ -1819,12 +1863,29 @@ def evaluate_hr_anchor(anchor: dict[str, Any], activity: dict | None) -> dict | 
                 f"des hinterlegten LTHR, aber "
                 f"{avg_hr / int(anchor['declared_lthr']) * 100:.0f} % des deklarierten."
             )
+        # The max-HR tell is only sound for a genuinely short all-out effort.
+        # Over longer distances a well-paced race sits *at* threshold and
+        # peaks just under it, so "max HR below the declared LTHR" is the
+        # expected shape rather than evidence against the denominator —
+        # citing it there would argue for exactly the wrong correction.
+        short_enough = moving is not None and moving <= _ALL_OUT_MAX_SECONDS
         if max_hr and int(max_hr) < int(anchor["declared_lthr"]):
-            detail += (
-                f" maxHF {max_hr} liegt UNTER dem deklarierten LTHR "
-                f"{anchor['declared_lthr']} — eine Volllast-Einheit gegen diese "
-                f"Schwelle ist damit ausgeschlossen."
-            )
+            if short_enough:
+                detail += (
+                    f" maxHF {max_hr} liegt UNTER dem deklarierten LTHR "
+                    f"{anchor['declared_lthr']} — bei einer Einheit dieser "
+                    f"Dauer ({int(moving) // 60} min) ist Volllast gegen diese "
+                    f"Schwelle damit ausgeschlossen."
+                )
+            elif moving is not None:
+                detail += (
+                    f" maxHF {max_hr} liegt unter dem deklarierten LTHR "
+                    f"{anchor['declared_lthr']}, was bei "
+                    f"{int(moving) // 60} min Dauer allerdings normal ist und "
+                    f"den Nenner NICHT widerlegt — ein gut gepacter Effort "
+                    f"über der Schwellendauer liegt an der Schwelle, nicht "
+                    f"darüber."
+                )
         return {
             "severity": HIGH,
             "category": "percent_anchor_drift",

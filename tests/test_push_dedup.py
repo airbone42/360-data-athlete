@@ -143,10 +143,18 @@ async def test_default_sweep_warns_on_collateral_names(monkeypatch, caplog):
     stub = _events([_CORE, _BALANCE], monkeypatch)
     import logging
 
+    # `app.utils.logging.configure` sets propagate=False so script output
+    # does not double up through the root logger. caplog attaches to the
+    # root handler, so it never sees these records — attach its handler to
+    # the module logger directly instead of relying on propagation.
     with caplog.at_level(logging.WARNING, logger=pw.logger.name):
-        await pw._dedup_existing_events(
-            "i1", "2026-07-15",
-            [{"type": "Workout", "tags": ["mobility"], "name": "Mobility-Block"}],
-        )
+        pw.logger.addHandler(caplog.handler)
+        try:
+            await pw._dedup_existing_events(
+                "i1", "2026-07-15",
+                [{"type": "Workout", "tags": ["mobility"], "name": "Mobility-Block"}],
+            )
+        finally:
+            pw.logger.removeHandler(caplog.handler)
     assert stub.deleted == [11]  # default semantics unchanged
     assert any("--incremental" in r.message for r in caplog.records)

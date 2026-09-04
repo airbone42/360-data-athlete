@@ -157,17 +157,53 @@ def _lint_intervals_icu(w: dict, index: int) -> None:
         logger.warning("Workout %d '%s': intervals_icu — %s", index, w.get("name"), v)
 
 
-def _sort_key(w: dict) -> int:
-    """Kraft/Plyo vor Lauf/Ride."""
-    if w.get("type") in ("WeightTraining", "Workout"):
-        return 0
-    return 1
-
-
 _STRENGTH_TYPES = {"WeightTraining", "Workout"}
 _ENDURANCE_TYPES = sports.ENDURANCE_TYPES
 # Bilingual leg-tag synonyms ("beine" = legacy German, "legs" = new canonical).
 _LEG_TAGS = {"beine", "legs", "plyo"}
+_QUALITY_WORKOUT_TYPES = {"INTERVALS", "RACE"}
+_QUALITY_TAGS = {"intervals"}
+
+
+def _is_quality_endurance(w: dict) -> bool:
+    """True for an endurance session whose adaptation must be protected.
+
+    Quality means the session lives at or above threshold: an ``INTERVALS``
+    or ``RACE`` workout_type, or an ``intervals`` tag. Race-pace blocks
+    inside a long run count as well — they carry the same tag.
+    """
+    if w.get("type") not in _ENDURANCE_TYPES:
+        return False
+    if (w.get("workout_type") or "").upper() in _QUALITY_WORKOUT_TYPES:
+        return True
+    tags = {str(t).lower() for t in (w.get("tags") or [])}
+    return bool(tags & _QUALITY_TAGS)
+
+
+def _sort_key(w: dict) -> int:
+    """Order within a day: the session that carries the adaptation goes first.
+
+    Default is strength/plyo before run/ride — on an easy day the residual
+    fatigue costs little, and a Z2 run on pre-loaded legs is a deliberate
+    stimulus.
+
+    A **quality** endurance session inverts that. Running economy is
+    measurably degraded after leg strength, and the effect bites hardest
+    above ~85 % VO2max — precisely where a threshold or VO2max session
+    lives. Putting the strength block first there spends the session's
+    quality to save scheduling convenience. The framework's own research
+    (``research/concurrent-training-interference.md``) has recommended this
+    inversion for a while; the paradigms file used to demand the opposite
+    unconditionally.
+
+    The spacing itself is unaffected — ``_interference_gap_min`` applies in
+    both directions.
+    """
+    if _is_quality_endurance(w):
+        return 0
+    if w.get("type") in _STRENGTH_TYPES:
+        return 1
+    return 2
 
 
 def _interference_gap_min(prev: dict, curr: dict) -> int:
@@ -176,6 +212,11 @@ def _interference_gap_min(prev: dict, curr: dict) -> int:
     WeightTraining/Workout → Run/Ride:
       - leg-focused (legs/beine/plyo tags): 360 min (6h)
       - other: 180 min (3h)
+    Quality Run/Ride → WeightTraining/Workout: 360 min (6h).
+      The mirror case of the leg-focused rule. When a quality endurance
+      session takes the first slot (see ``_sort_key``), the strength block
+      follows at the same distance the research prescribes — otherwise
+      inverting the order would silently shrink the gap to the 2h default.
     WeightTraining/Workout → WeightTraining/Workout: 0 min (adjacent).
       Complementary sub-blocks (e.g. a per-focus split into shoulder /
       core / grip) carry no metabolic or neuromuscular interference that
@@ -184,6 +225,8 @@ def _interference_gap_min(prev: dict, curr: dict) -> int:
       not for stacking complementary blocks across the day.
     All other transitions: 120 min (2h default).
     """
+    if _is_quality_endurance(prev) and curr.get("type") in _STRENGTH_TYPES:
+        return 360
     if prev.get("type") in _STRENGTH_TYPES and curr.get("type") in _ENDURANCE_TYPES:
         prev_tags = set(str(t).lower() for t in (prev.get("tags") or []))
         if prev_tags & _LEG_TAGS:

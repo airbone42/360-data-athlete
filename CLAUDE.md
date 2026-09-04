@@ -461,10 +461,37 @@ perverse — each threshold increase makes the derived prescription *more*
 conservative, in the opposite direction to the athlete's development, and
 nothing in the table looks wrong while it happens. Before reusing a
 historical %-anchor, read the threshold stored on the source activity
-itself and recompute. The cheapest tell that a denominator has drifted is a
-max HR in the source race that is implausible against the current threshold
-— an all-out effort whose peak sits below today's threshold was not run
-against today's threshold.
+itself and recompute.
+
+**But the stored threshold is a datum too, and it can be the wrong one.**
+A profile field carries whatever was configured at the time — often a lab
+step-test value that was never race-validated, and step tests
+systematically read below field threshold. Recomputing against it is not
+automatically the correction; it can be the error. Two guards before
+adopting a stored denominator:
+
+1. **Plausibility beats provenance.** A percentage is only admissible if
+   the resulting claim is physiologically possible. Threshold is by
+   definition roughly one-hour sustainable, so an effort materially longer
+   than an hour **cannot** average above it. When recomputing against the
+   stored value produces an event average over 100 % LTHR for a
+   90-minute race, the stored value is refuted — not the athlete's
+   physiology. Sanity-check the output before trusting the input.
+2. **"All-out" means short.** The cheapest tell of a drifted denominator
+   is a max HR in the source race that is implausible against the
+   threshold — *but only for a genuinely short all-out effort*, inside
+   the hour the threshold is defined against. Over half-marathon distance
+   and beyond, a well-paced race sits **at** threshold and peaks just
+   under it; a max HR below LTHR is the expected shape there, not
+   evidence. Applying the short-race tell to a long race argues for
+   precisely the wrong correction.
+
+**When the stored value is the wrong one, say so in the anchor rather than
+quietly computing around it:** `[hr-anchor:<id> lthr=<used> stored=<field>
+override=<reason>]`. The audit check then reports a declared override
+(LOW) instead of drift, and the claim stays auditable — including the case
+where the activity's stored value later changes, which invalidates the
+override and is flagged separately.
 
 *Enforcement: `audit_consistency.py::check_percent_anchors` (audit check
 `PERCENT_ANCHORS`, online). Bind a stored %-anchor to its source activity
@@ -473,7 +500,14 @@ and the check recomputes the claim against the `lthr` the activity itself
 carries: a mismatch is HIGH (`percent_anchor_drift`), a `% LTHR (nnn)`
 header with no anchor nearby is MEDIUM (`percent_anchor_missing`), and an
 activity that cannot be fetched or carries no threshold is LOW rather than
-silently passing. Tests: `tests/test_percent_anchors.py`.*
+silently passing. A deliberate departure from the stored value is declared
+in the marker (`stored=` + `override=`) and reported as LOW
+(`percent_anchor_override`); if the activity's own value later moves away
+from the one the override was written against, that becomes MEDIUM
+(`percent_anchor_override_stale`). The max-HR tell is only cited for
+efforts inside `_ALL_OUT_MAX_SECONDS`; on longer races the check says
+explicitly that the peak does **not** refute the denominator. Tests:
+`tests/test_percent_anchors.py`.*
 
 **A rehearsal that comes back far easier than the band predicts is evidence
 against the band.** When an exposure run at the prescribed race band returns

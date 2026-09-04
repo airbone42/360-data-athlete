@@ -16,12 +16,18 @@ available as `{hr_zones}` in prompts.
 **Research anchor:** [HRV & RHR baseline — methodology, LTHR derivation](../research/hrv-rhr-baseline-methodology.md)
 
 ## Polarized training (build phase)
-- 80 % of sessions in Z1–Z2 (easy)
+- 80 % of **training time** in Z1–Z2 (easy) — Seiler's ratio is a
+  time/volume share, not a session count. The system computes it that way
+  too (`zones.py` sums seconds per zone); "2 of 7 sessions are hard" is a
+  different number and not the criterion.
 - 20 % in Z4–Z5 (hard)
-- Z3 is actively avoided
-- After 2–3 consecutive easy sessions a hard session can follow,
-  provided HRV ≥ baseline and TSB > −5
-- HRV ≥ baseline and TSB > 0 = green light for intensity
+- **Z3 is not the primary stimulus zone, but not forbidden either.**
+  Targeted threshold work is legitimate — as a deliberate session, not as
+  drift. Where a race pace sits in Z3/Z4 (half marathon and shorter for
+  most trained runners), race-specific work necessarily lives there.
+- After 2–3 consecutive easy sessions a hard session can follow, provided
+  the readiness signals are clear (see §Intensity control — the gate is
+  relative to CTL, not an absolute TSB value)
 
 **Sources:** Seiler 2010 (*Int J Sports Physiol Perform*) — observational
 analysis of elite endurance athletes converging on a ~80/20 distribution;
@@ -38,9 +44,8 @@ high-volume/HIT in trained endurance athletes; Stöggl & Sperlich 2015
 - Z3 and Z4 are trained deliberately (not avoided), often as tempo runs
   or threshold intervals
 - After 2–3 easy sessions a threshold or high-intensity session can
-  follow, provided HRV ≥ baseline and TSB > −5
-- HRV ≥ baseline and TSB > 0 = green light for race-specific intensity
-  (e.g. 10K, half marathon)
+  follow, provided the readiness signals are clear (see §Intensity
+  control — the gate is relative to CTL, not an absolute TSB value)
 
 **Sources:** Treff et al. 2019 (*Eur J Sport Sci*) — pyramidal vs polarized
 in rowing; Casado et al. 2022 (*J Strength Cond Res*) — pyramidal effective
@@ -77,14 +82,49 @@ tired legs moving after a hard day.
 
 **Research anchor:** [Recovery-run intensity](../research/recovery-run-intensity.md)
 
-## Intensity control
-- TSB < −20: immediate reduction to Z1 or rest day (mandatory, even if
-  the plan says otherwise)
-- TSB > 0 + HRV ≥ baseline: green light for intensity
+## Intensity control — TSB thresholds in one place
+
+**Read this table before quoting a TSB number anywhere else.** The
+thresholds below serve different decisions and are not interchangeable;
+they were previously scattered across five files, and the same figure
+meant different things in different places.
+
+| Decision | Threshold | Where it lives |
+|---|---|---|
+| Green light for a hard session | see the **relative rule** below, not an absolute TSB | this file |
+| Red flag in `intensityReadiness` | TSB < −10 | `context_builder._compute_intensity_readiness` |
+| Convergence signal, one of three markers | TSB < −15 sustained | `recovery_protocol.md` |
+| Immediate reduction to Z1 or rest | TSB < −20 | this file, `training_rules_endurance.md`, `training_rules_strength.md` |
+| Deload override, rolling 7-day mean | TSB < −25 | `recovery_protocol.md`, `load_cycles.py` |
+| Deload override, 3+ consecutive days | TSB < −30 | `recovery_protocol.md`, `load_cycles.py` |
+| Taper target on race day | TSB +5 … +15 (event-dependent) | `competition_plan.md` |
+
+**The green-light rule is relative, not absolute (corrected).** An earlier
+version demanded "TSB > 0" for intensity and "TSB > −5" for a hard session
+after 2–3 easy ones. Those are **taper criteria used as build-phase
+gates**: in a build block TSB sits negative by design, so the rule forbade
+quality exactly when it does its work. Two override layers grew on top of
+it instead of the rule being fixed.
+
+TSB is `CTL − ATL`, and a single session's ATL contribution does **not**
+scale with CTL. At CTL 26 one key session can push TSB to −20; the same
+session at CTL 100 is unremarkable. An absolute gate therefore fires
+spuriously at exactly the CTL where an athlete is rebuilding.
+
+- **Read TSB relative to CTL.** A useful working form is `TSB / CTL`:
+  around −0.2 is normal build-phase fatigue, and the hard floor (−20
+  absolute) still applies as a safety net regardless.
+- **The stop signals stay absolute** — TSB < −20 for the day, the deload
+  overrides at −25 / −30. They mark genuine accumulation, not the normal
+  cost of a stimulus.
+- Athlete-specific escape hatches (e.g. "ignore CTL below X") belong in
+  `config/athlete_status.md`, not here.
 
 **Sources:** Bourdon et al. 2017 (*Int J Sports Physiol Perform*) —
 fatigue / freshness monitoring with TSB; Bellenger et al. 2016 (*Sports
-Med*) — HRV as a recovery proxy in endurance athletes.
+Med*) — HRV as a recovery proxy in endurance athletes. Note that neither
+source prescribes a numeric TSB gate; the values above are operating
+conventions, not literature thresholds.
 
 ## HM-pace / race-pace HR — pace leads, HR is a duration-band cap
 
@@ -632,14 +672,31 @@ long-run simulation (Z2 run after moderate leg strength as an
 intentional stimulus) — does not apply to quality stimuli
 (threshold / VO2max).
 
-**Order:** WeightTraining ALWAYS before the run (same day). Never the
-other way round.
+**Order: the priority session goes first — there is no universal
+sequence.** An earlier version of this file demanded "WeightTraining
+ALWAYS before the run, never the other way round". That contradicted the
+framework's own research
+([concurrent-training-interference.md](../research/concurrent-training-interference.md)
+§"What should be changed"), which recommends endurance first on the same
+day and, for a quality run, strength no earlier than 6 h afterwards. The
+absolutism was the error, not the direction — both orders are right in
+their own case:
+
+| Same-day pairing | Order | Why |
+|---|---|---|
+| **Quality / race-pace run** + strength | **Run first**, strength ≥ 6 h later | Running economy is measurably degraded after leg strength, and the effect bites hardest above ~85 % VO2max — exactly where a quality session lives. Protect the session that carries the adaptation. |
+| **Easy / Z2 run** + strength | Strength first is fine | Below the economy-sensitive intensity the residual fatigue costs little, and a Z2 run on pre-loaded legs is a legitimate stimulus in its own right (see the pre-fatigue exception above). |
+| Two easy sessions | Either | Spacing governs, not order. |
+
+The minimum spacings above apply in **both** directions.
 
 **Start times** (`workout_parser.py` applies these automatically):
 - Standard double-day: strength 06:00 → run 09:30 (06:00 + strength
   duration + 3h)
 - Leg-intensive / plyo + run: strength 06:00 → run 12:30+ (06:00 +
   strength duration + 6h)
+- Quality run in the day's plan: the run takes the 06:00 slot and the
+  strength block follows it at the leg-spacing distance.
 
 **Research anchor:** [Concurrent training interference — strength–run spacing 3h/6h](../research/concurrent-training-interference.md)
 
@@ -673,6 +730,10 @@ with heavy eccentric tendon loading. Concretely:
 
 **Permitted before Z4/Z5 sessions** (PAP-positive, may raise pace):
 - Pogo Hops 2–3×10–12 RPE 5–6 (light, dynamic, short ground contacts)
+  — **but not under an active achilles / calf restriction.** Pogo is
+  fast-SSC and loads exactly that tissue; the tissue-sparing rule in
+  `agents/specialist-complementary.md` contraindicates it under a tendon
+  freeze. Use Lateral Bound or strides instead.
 - Lateral Bound 2×6–8/side RPE ≤6
 - Low Box Jump 2–3×5 RPE 6
 - Strides 3–4× 20s
