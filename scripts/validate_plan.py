@@ -263,7 +263,15 @@ def _description(w: dict) -> str:
 # ─────────────────────────── Rules ───────────────────────────
 
 def check_reps_ceiling(workouts: list[dict], ctx: Context) -> list[Finding]:
-    """R001 — Reps ceiling 15: hypertrophy/strength exercises should have max 15 reps.
+    """R001 — Reps ceiling 15 on strength exercises.
+
+    **What the cap is and is not.** It is a proxy for the *character* of the
+    set: past ~15 reps a strength exercise shifts toward strength endurance,
+    the per-set connective-tissue and forearm volume rises, and the session
+    stops being the stimulus it was prescribed as. It is **not** a
+    hypertrophy boundary — hypertrophy is largely rep-range independent as
+    long as sets are taken close to failure, so "leaves the hypertrophy zone"
+    was the wrong justification for a cap that is otherwise sensible.
 
     Exception: whitelist (iso-holds, mobility, plyo-hops). Override: HYPERTROPHY_REPS_CAP_OVERRIDES
     lists explicit hypertrophy exercises that are checked for >15 reps DESPITE whitelist match
@@ -287,7 +295,7 @@ def check_reps_ceiling(workouts: list[dict], ctx: Context) -> list[Finding]:
                     rule_id="R001",
                     severity=SEVERITY_WARNING,
                     workout=name,
-                    message=f"Reps {reps} > 15 — leaves hypertrophy zone. Line: «{line[:80]}»",
+                    message=f"Reps {reps} > 15 — shifts the set toward strength endurance and raises tendon volume. Line: «{line[:80]}»",
                     suggestion="Reduce reps to 12-15 and increase load (heavier band/weight) or add tempo stimulus (3-4s eccentric + hold).",
                 ))
     return findings
@@ -666,12 +674,21 @@ def check_run_hr_zone_target(workouts: list[dict], ctx: Context) -> list[Finding
 
 
 def check_easy_hr_ceiling(workouts: list[dict], ctx: Context) -> list[Finding]:
-    """R010 — Easy/Recovery run must not let HR ceiling creep into Z3.
+    """R010 — Easy/Recovery run must not let the HR ceiling creep upward.
 
-    For workout_type EASY or RECOVERY, this rule checks whether the HR ceiling
-    set in intervals_icu code or description exceeds the Z2 upper bound from
-    athlete_status.md. Z3 territory = tempo/threshold, does not belong in
-    recovery workouts.
+    **Two ceilings, because they are two intensity classes.** An EASY run is
+    capped at the Z2 upper bound; a RECOVERY run is capped at the Z1 upper
+    bound. Recovery is not a slow easy run — the framework defines it as its
+    own class whose target is upper Z1, *below* the Z2 floor, and the
+    coach-analyst treats "HR drifted into Z2/Z3 on a recovery run" as the
+    cardinal finding. Validating both classes against the same Z2 ceiling
+    made that exact error invisible to the mechanical check: a recovery run
+    prescribed at the full Z2 bound passed without a word.
+
+    Both bounds are read from the zone table in athlete_status.md. Where the
+    table yields no Z1 bound the recovery ceiling falls back to the Z2 one —
+    the previous behaviour, so an athlete without a parseable zone line is
+    not suddenly flagged.
 
     Detected ceiling notations:
     - explicit BPM ranges: `120-145 bpm` and `HR 120-145` (no `bpm` literal)
@@ -696,6 +713,7 @@ def check_easy_hr_ceiling(workouts: list[dict], ctx: Context) -> list[Finding]:
     )
     if not m:
         return findings
+    z1_upper = int(m.group(1))
     z2_upper = int(m.group(2))
     lthr_match = re.search(
         r"LTHR\s*(?:aktuell|current)[:\*\s]*?(\d{2,3})\s*bpm", ctx.athlete_status
@@ -721,6 +739,9 @@ def check_easy_hr_ceiling(workouts: list[dict], ctx: Context) -> list[Finding]:
         wt = (w.get("workout_type") or "").upper()
         if wt not in ("EASY", "RECOVERY"):
             continue
+        # Recovery has its own, lower ceiling (upper Z1). See docstring.
+        ceiling = z1_upper if wt == "RECOVERY" else z2_upper
+        ceiling_label = "Z1 upper bound" if wt == "RECOVERY" else "Z2 upper bound"
         # Search both intervals_icu code and description; at most one
         # finding per source (first violating notation wins). Use the raw
         # description field here — _description() falls back to
@@ -735,19 +756,19 @@ def check_easy_hr_ceiling(workouts: list[dict], ctx: Context) -> list[Finding]:
             # (a) explicit BPM ceilings — `120-145 bpm` or `HR 120-145`
             for match in bpm_range_pattern.finditer(text):
                 hi = int(match.group(2) or match.group(4))
-                if hi > z2_upper:
+                if hi > ceiling:
                     finding = Finding(
                         rule_id="R010",
                         severity=SEVERITY_ERROR,
                         workout=_workout_name(w),
                         message=(
                             f"{wt} run has HR ceiling {hi} bpm in {source_name} — "
-                            f"exceeds Z2 upper bound ({z2_upper} bpm) "
+                            f"exceeds {ceiling_label} ({ceiling} bpm) "
                             f"and creeps into Z3 (tempo). Easy/recovery workouts must "
                             f"never push into Z3+."
                         ),
                         suggestion=(
-                            f"Set HR ceiling to max {z2_upper} bpm — "
+                            f"Set HR ceiling to max {ceiling} bpm — "
                             f"for recovery character prefer 5-10 bpm buffer below."
                         ),
                     )
@@ -765,8 +786,8 @@ def check_easy_hr_ceiling(workouts: list[dict], ctx: Context) -> list[Finding]:
                                 f"{wt} run uses %LTHR/%HR range "
                                 f"'{match.group(0)}' in {source_name}, but no "
                                 f"LTHR was found in athlete_status.md — cannot "
-                                f"verify the ceiling against the Z2 upper bound "
-                                f"({z2_upper} bpm)."
+                                f"verify the ceiling against the {ceiling_label} "
+                                f"({ceiling} bpm)."
                             ),
                             suggestion=(
                                 "Add 'LTHR current: NNN bpm' to athlete_status.md "
@@ -775,7 +796,7 @@ def check_easy_hr_ceiling(workouts: list[dict], ctx: Context) -> list[Finding]:
                         )
                         break
                     hi_bpm = lthr * hi_pct / 100
-                    if hi_bpm > z2_upper:
+                    if hi_bpm > ceiling:
                         finding = Finding(
                             rule_id="R010",
                             severity=SEVERITY_ERROR,
@@ -783,13 +804,13 @@ def check_easy_hr_ceiling(workouts: list[dict], ctx: Context) -> list[Finding]:
                             message=(
                                 f"{wt} run has HR ceiling {hi_pct}% LTHR "
                                 f"≈ {hi_bpm:.0f} bpm in {source_name} — "
-                                f"exceeds Z2 upper bound ({z2_upper} bpm) "
+                                f"exceeds {ceiling_label} ({ceiling} bpm) "
                                 f"and creeps into Z3 (tempo). Easy/recovery "
                                 f"workouts must never push into Z3+."
                             ),
                             suggestion=(
-                                f"Cap the range at {z2_upper / lthr * 100:.0f}% LTHR "
-                                f"(= Z2 upper bound {z2_upper} bpm) — for recovery "
+                                f"Cap the range at {ceiling / lthr * 100:.0f}% LTHR "
+                                f"(= {ceiling_label} {ceiling} bpm) — for recovery "
                                 f"character prefer a buffer below."
                             ),
                         )
@@ -798,23 +819,29 @@ def check_easy_hr_ceiling(workouts: list[dict], ctx: Context) -> list[Finding]:
             # (intervals_icu only — description prose may legitimately say
             # "stay below Z3 HR")
             if finding is None and source_name == "intervals_icu":
+                # A `Z2 HR` step is correct on an easy run and wrong on a
+                # recovery one, where the target is upper Z1 — so the zone
+                # a step may reach follows the class, like the bpm ceiling.
+                max_allowed_zone = 1 if wt == "RECOVERY" else 2
                 for match in zone_hr_pattern.finditer(text):
                     zmax = max(int(g) for g in match.groups() if g)
-                    if zmax >= 3:
+                    if zmax > max_allowed_zone:
                         finding = Finding(
                             rule_id="R010",
                             severity=SEVERITY_ERROR,
                             workout=_workout_name(w),
                             message=(
                                 f"{wt} run step targets '{match.group(0)}' in "
-                                f"intervals_icu — Z3+ is tempo/threshold "
-                                f"territory. Easy/recovery workouts must never "
-                                f"push into Z3+."
+                                f"intervals_icu — above Z{max_allowed_zone}, "
+                                f"which is the ceiling for this class "
+                                f"(recovery targets upper Z1, easy Z2). "
+                                f"Neither may push into tempo/threshold."
                             ),
                             suggestion=(
-                                f"Use 'Z1 HR'/'Z2 HR' (or a %LTHR range whose "
-                                f"ceiling stays at or below the Z2 upper bound, "
-                                f"{z2_upper} bpm) on easy/recovery steps."
+                                f"Use a zone target of at most "
+                                f"Z{max_allowed_zone} HR (or a %LTHR range whose "
+                                f"ceiling stays at or below the {ceiling_label}, "
+                                f"{ceiling} bpm) on {wt.lower()} steps."
                             ),
                         )
                         break

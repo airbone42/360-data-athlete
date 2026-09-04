@@ -29,6 +29,35 @@ recommendations for the practice setting.
 5. Return-to-sport criteria — when can intervals / competition resume?
 6. Long-term prognosis with correct treatment
 
+## Red flags — check these before any load recommendation (MANDATORY)
+
+This list is checked **first**, on every consultation, before diagnosis
+ranking or load advice. A hit means: stop the training discussion, name the
+finding plainly, and route the athlete to acute medical care — not to a
+modified session. The list is deliberately short and covers the categories
+that are time-critical rather than merely serious.
+
+| Region / system | Red flag | Why it cannot wait |
+|---|---|---|
+| **Lumbar spine / cauda equina** | Saddle anaesthesia, new bladder or bowel dysfunction, bilateral leg weakness or numbness, progressive neurological deficit | Cauda equina syndrome — surgical emergency, outcome depends on hours |
+| **Spine, systemic** | Fever with back pain, night pain unrelieved by position change, unexplained weight loss, history of cancer, IV drug use, recent spinal procedure | Infection (discitis, abscess) or malignancy |
+| **Cardiac** | Chest pain / pressure / jaw or arm radiation on exertion, syncope or near-syncope during effort, unexplained exertional dyspnoea, new palpitations with light-headedness | Exercise-induced cardiac events present as effort symptoms first; a syncope during exertion is never a training question |
+| **Vascular** | Unilateral calf swelling with warmth and tenderness, especially after immobilisation, long travel or surgery; sudden cold, pale, pulseless limb | Deep vein thrombosis / arterial occlusion |
+| **Bone** | Focal bony tenderness that worsens through a run and persists at rest, night pain over bone, inability to bear weight, a "pop" with immediate loss of function | Stress fracture or complete rupture — continued loading changes the prognosis |
+| **Neurological** | Rapidly progressive weakness, foot drop, saddle or perineal sensory change, loss of coordination | Nerve root or central involvement |
+| **Systemic / infectious** | Joint that is hot, red, swollen and exquisitely painful; fever with a single acutely inflamed joint | Septic arthritis — hours matter |
+| **Head** | Any concussion suspicion after a fall — confusion, amnesia, vomiting, worsening headache | Second-impact risk; no return-to-run decision belongs here |
+
+**How to report a hit.** State the finding, state that it is outside the
+scope of this consultation, and name the appropriate care level (emergency
+department vs. same-day physician vs. next available appointment). Do not
+soften it into a training modification, and do not pair it with a rehab
+suggestion — the two do not belong in the same message.
+
+**What this list is not.** It does not replace examination, and a clean
+sweep through it is not a clearance. Everything below assumes no red flag
+was found.
+
 **Research anchor (Achilles-Reha):** For Achilles tendinopathy rehabilitation phases (Silbernagel protocol — isometric → isotonic → energy-storage), see [achilles-rehab-phases.md](../research/achilles-rehab-phases.md).
 
 **Research anchor (re-load after hands-on treatment):** For grading a post-treatment reaction by tissue irritability and deriving the re-load dose (hold anchor / one step below / no loading) plus red flags and re-progression timing, see [post-treatment-reaction-reload-dosing.md](../research/post-treatment-reaction-reload-dosing.md).
@@ -55,7 +84,9 @@ decision before endorsing:
 
 Answer in the athlete's preferred language (see
 `config/athlete_preferences.md`). Be precise and clinically concrete. No
-downplaying, no panic-mongering. Maximum 300 words.
+downplaying, no panic-mongering. Maximum 300 words — **a red-flag hit is exempt**:
+it is reported in full and replaces the consultation rather than competing
+with it for space.
 
 ## Research-uncertainty flag (mandatory)
 

@@ -16,10 +16,10 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from scripts.validate_plan import (  # type: ignore  # noqa: E402
+    SEVERITY_ERROR,
     Context,
     check_easy_hr_ceiling,
 )
-
 
 # Synthetic zone model: LTHR 170, Z2 upper bound 142.
 STATUS_WITH_LTHR = (
@@ -135,5 +135,58 @@ def test_r010_silent_without_zone_model():
     """No Z2 upper bound in athlete_status → rule cannot anchor, stays silent."""
     findings = check_easy_hr_ceiling(
         [_easy_run("- 40m 84-90% LTHR")], _ctx(athlete_status="")
+    )
+    assert findings == []
+
+
+# ─── Recovery has its own, lower ceiling (upper Z1) ──────────────────────
+
+def test_r010_recovery_ceiling_is_z1_not_z2():
+    """A recovery run at the full Z2 bound is the cardinal error, and it used
+    to pass: both classes were validated against the same Z2 ceiling."""
+    findings = check_easy_hr_ceiling(
+        [_easy_run(intervals_icu="Recovery 30m 130-140 bpm",
+                   workout_type="RECOVERY")],
+        _ctx(),
+    )
+    assert len(findings) == 1
+    assert findings[0].severity == SEVERITY_ERROR
+    assert "Z1 upper bound" in findings[0].message
+    assert "115" in findings[0].message
+
+
+def test_r010_easy_at_the_same_ceiling_stays_clean():
+    """The same prescription on an EASY run is correct — 140 is inside Z2."""
+    findings = check_easy_hr_ceiling(
+        [_easy_run(intervals_icu="Easy 45m 130-140 bpm", workout_type="EASY")],
+        _ctx(),
+    )
+    assert findings == []
+
+
+def test_r010_recovery_within_z1_stays_clean():
+    findings = check_easy_hr_ceiling(
+        [_easy_run(intervals_icu="Recovery 25m 100-112 bpm",
+                   workout_type="RECOVERY")],
+        _ctx(),
+    )
+    assert findings == []
+
+
+def test_r010_z2_zone_target_is_wrong_on_a_recovery_run():
+    """`Z2 HR` is right on an easy run and wrong on a recovery one."""
+    findings = check_easy_hr_ceiling(
+        [_easy_run(intervals_icu="Recovery 30m Z2 HR", workout_type="RECOVERY")],
+        _ctx(),
+    )
+    assert len(findings) == 1
+    assert findings[0].severity == SEVERITY_ERROR
+    assert "Z1 HR" in findings[0].suggestion
+
+
+def test_r010_z2_zone_target_stays_clean_on_an_easy_run():
+    findings = check_easy_hr_ceiling(
+        [_easy_run(intervals_icu="Easy 50m Z2 HR", workout_type="EASY")],
+        _ctx(),
     )
     assert findings == []

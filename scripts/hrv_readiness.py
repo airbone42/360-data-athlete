@@ -68,8 +68,28 @@ def main() -> int:
     wellness = asyncio.run(_gather(target))
 
     if not any(w.get("hrv") for w in wellness):
-        sys.stderr.write("No HRV history available.\n")
-        return 1
+        # Not an error: an athlete whose device dropped the value, or who has
+        # no HRV source at all, is a supported state. Exiting 1 made a normal
+        # gap look like a broken script and turned the wellness flow red for
+        # a reason the athlete could do nothing about. Report the state in
+        # the same JSON shape the caller already parses.
+        json.dump(
+            {
+                "target_date": target.isoformat(),
+                "method": "7d-rolling ln-rMSSD vs 60d mean±0.5·SD band",
+                "verdict": "insufficient_data",
+                "days_below": 0,
+                "n_ref": 0,
+                "message": (
+                    "No HRV history in the reference window — readiness falls "
+                    "back to RHR, sleep, TSB and athlete feedback."
+                ),
+            },
+            sys.stdout,
+            indent=2,
+        )
+        sys.stdout.write("\n")
+        return 0
 
     readiness = _compute_hrv_readiness_band(wellness, target)
     out = {

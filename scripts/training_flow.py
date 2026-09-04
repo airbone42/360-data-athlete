@@ -55,10 +55,21 @@ def run_health_check(context: dict) -> list[str]:
     warnings.extend(context.get("dataWarnings") or [])
     readiness = context.get("intensityReadiness", "")
     if "🔴" in str(readiness):
-        hrv = context.get("hrv", "?")
-        baseline = context.get("hrvBaseline", "?")
-        dev = context.get("hrvDeviation", "?")
-        warnings.append(f"HRV supprimiert: {hrv} (Baseline {baseline}, {dev}%) — Rückfrage Athlet empfohlen")
+        # The red flag has several possible causes — a suppressed HRV is only
+        # one of them, TSB and the combined overload signal are others. Naming
+        # HRV unconditionally told the athlete something false whenever the
+        # flag came from somewhere else. Report the readiness verdict itself
+        # and add the HRV numbers only when they are actually the reason.
+        hrv = context.get("hrv", "-")
+        baseline = context.get("hrvBaseline", "-")
+        dev = context.get("hrvDeviation")
+        detail = ""
+        if hrv not in ("-", "?", None) and baseline not in ("-", "?", None):
+            detail = f" (HRV {hrv}, Baseline {baseline}"
+            detail += f", {dev}%)" if dev is not None else ")"
+        warnings.append(
+            f"Intensitäts-Ampel rot: {readiness}{detail} — Rückfrage Athlet empfohlen"
+        )
     return warnings
 
 
@@ -125,13 +136,28 @@ def run_shoe_recommend(workouts: list[dict], weather: str, date_str: str) -> dic
 def run_hrv_reminder(context: dict) -> str | None:
     """Return HRV review question if pending, else None."""
     pending = context.get("hrvReviewPending")
-    if pending:
+    if not pending:
+        return None
+    # The template used to read `pct` / `expected_pct`, which the forecast
+    # model supplied. That model was retired in favour of the rolling-band
+    # classifier, and the fields went with it — the question then rendered
+    # "actual: ?%, erwartet: ?%". Ask against the band the classifier
+    # actually reports.
+    days = pending.get("days_below")
+    rolling = pending.get("rolling_mean_ms")
+    low = pending.get("band_low_ms")
+    high = pending.get("band_high_ms")
+    if rolling is not None and low is not None and high is not None:
+        span = f"{days} Tag(e)" if days else "mehrere Tage"
         return (
-            f"Dein HRV war am {pending.get('date', '?')} deutlich niedriger als erwartet "
-            f"(actual: {pending.get('pct', '?')}%, erwartet: {pending.get('expected_pct', '?')}%). "
-            "Gab es externe Faktoren — schlechter Schlaf, Stress, Alkohol, Erkältung?"
+            f"Dein 7-Tage-HRV liegt seit {span} unter deinem 60-Tage-Normalband "
+            f"({rolling} vs. Band {low}–{high}). Gab es externe Faktoren — "
+            "schlechter Schlaf, Stress, Alkohol, Erkältung, Reise?"
         )
-    return None
+    return (
+        "Dein 7-Tage-HRV liegt unter deinem 60-Tage-Normalband. Gab es externe "
+        "Faktoren — schlechter Schlaf, Stress, Alkohol, Erkältung, Reise?"
+    )
 
 
 # ─── CLI ─────────────────────────────────────────────────────────────────────
