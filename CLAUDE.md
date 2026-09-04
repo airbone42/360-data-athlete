@@ -49,7 +49,7 @@ pure symptom/feeling messages:
 |-------|-----|
 | `todayWorkouts` | What is already scheduled today? Every recommendation must reference this concrete list. |
 | `hrv`, `hrvBaseline`, `hrvDeviation`, `intensityReadiness` | Current tolerance (Methodik: framework/research/hrv-rhr-baseline-methodology.md) |
-| `rhr`, `rhrBaseline`, `rhrDeviation`, `rhrContext`, `combinedOverloadSignal` | Long-window RHR drift + combined HRV+RHR overload trigger. `combinedOverloadSignal.verdict` ∈ {`clear`, `watch`, `deload`}. `deload` at 3+ consecutive days both signals fire → `intensityReadiness` flips red automatically (Methodik: framework/research/hrv-rhr-baseline-methodology.md) |
+| `rhr`, `rhrBaseline`, `rhrDeviation`, `rhrContext`, `combinedOverloadSignal` | Long-window RHR drift + the convergence overload trigger. `combinedOverloadSignal.verdict` ∈ {`clear`, `watch`, `deload`, `insufficient_data`}, with `markers` naming which of HRV / RHR / TSB fired. A day counts when **two of the three** are available and firing; `deload` at 3+ consecutive such days → `intensityReadiness` flips red automatically. `insufficient_data` means fewer than two markers were readable — that is a data gap, not an all-clear (Methodik: framework/research/hrv-rhr-baseline-methodology.md) |
 | `runDayStreak` | Impact-load pattern: consecutive running days, run days per trailing 5d/7d, and whether a long run or quality session sits inside. Running is the only impact modality — `lastRestDay` and `daysSinceIntense` cannot see this (see rule below) |
 | `planningConstraints` | Active blocks (legs, plyo, recovery week, pause) |
 | `athleteFeedback`, `eventList` | Latest athlete notes — context violation if ignored |

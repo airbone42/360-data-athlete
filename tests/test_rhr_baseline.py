@@ -14,11 +14,20 @@ from app.graphs.sub_athlete_context.context_builder import (
 )
 
 
-def _wellness(today: date, days: int, hrv: float | None, rhr: float | None) -> dict:
+def _wellness(
+    today: date,
+    days: int,
+    hrv: float | None,
+    rhr: float | None,
+    ctl: float | None = None,
+    atl: float | None = None,
+) -> dict:
     return {
         "id": (today - timedelta(days=days)).isoformat(),
         "hrv": hrv,
         "restingHR": rhr,
+        "ctl": ctl,
+        "atl": atl,
     }
 
 
@@ -74,11 +83,53 @@ def test_rhr_baseline_ignores_entries_older_than_90_days() -> None:
 # ── Combined HRV/RHR overload signal ─────────────────────────────────
 
 
-def test_combined_signal_returns_none_without_baselines() -> None:
+def test_combined_signal_needs_two_derivable_markers() -> None:
+    """One baseline missing is fine — TSB is the third marker and needs none.
+
+    The signal used to require both HRV and RHR baselines, which gave HRV a
+    veto over an overload trigger that RHR and TSB can carry on their own.
+    """
     today = date(2025, 5, 28)
-    history = [_wellness(today, 0, hrv=60.0, rhr=44.0)]
-    assert _compute_combined_overload_signal(history, None, 40.0, today) is None
-    assert _compute_combined_overload_signal(history, 65.0, None, today) is None
+    history = [_wellness(today, 0, hrv=60.0, rhr=44.0, ctl=40.0, atl=42.0)]
+    assert _compute_combined_overload_signal(history, None, 40.0, today) is not None
+    assert _compute_combined_overload_signal(history, 65.0, None, today) is not None
+
+
+def test_combined_signal_reports_insufficient_data_not_clear() -> None:
+    """A day with fewer than two readable markers is unjudgeable.
+
+    Reporting "clear" there would present missing data as an all-clear.
+    """
+    today = date(2025, 5, 28)
+    history = [_wellness(today, 0, hrv=None, rhr=44.0)]  # no HRV, no CTL/ATL
+    sig = _compute_combined_overload_signal(history, 65.0, 40.0, today)
+    assert sig is not None
+    assert sig["verdict"] == "insufficient_data"
+
+
+def test_combined_signal_fires_on_rhr_plus_tsb_without_hrv() -> None:
+    """The case the old conjunction could not see: an HRV non-responder, or a
+    wearable that dropped the value, with RHR and TSB both pointing down."""
+    today = date(2025, 5, 28)
+    history = [
+        _wellness(today, d, hrv=None, rhr=46.0, ctl=40.0, atl=58.0)
+        for d in range(3)
+    ]
+    sig = _compute_combined_overload_signal(history, 65.0, 40.0, today)
+    assert sig is not None
+    assert sig["verdict"] == "deload"
+    assert sig["markers"] == ["RHR", "TSB"]
+
+
+def test_combined_signal_still_fires_on_the_classic_hrv_plus_rhr_pair() -> None:
+    today = date(2025, 5, 28)
+    history = [
+        _wellness(today, d, hrv=55.0, rhr=46.0) for d in range(3)
+    ]
+    sig = _compute_combined_overload_signal(history, 65.0, 40.0, today)
+    assert sig is not None
+    assert sig["verdict"] == "deload"
+    assert sig["markers"] == ["HRV", "RHR"]
 
 
 def test_combined_signal_clear_when_only_one_marker_fires() -> None:

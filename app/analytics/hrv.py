@@ -118,19 +118,41 @@ def _compute_rhr_baseline(
     return baseline_str, deviation, rhr_context
 
 
+# TSB below which the third marker of the convergence signal fires. The
+# value mirrors `config.example/recovery_protocol.md`; like the bpm step it
+# is an operating convention, not a literature threshold.
+TSB_OVERLOAD_THRESHOLD = -15.0
+
+
 def _compute_combined_overload_signal(
     wellness_history: list[dict],
     hrv_baseline_float: float | None,
     rhr_baseline_float: float | None,
     today: date,
     rhr_overload_bpm: float = 5.0,
+    tsb_threshold: float = TSB_OVERLOAD_THRESHOLD,
 ) -> dict | None:
-    """Combined HRV+RHR overload trigger.
+    """Convergence overload trigger — two of three markers, per Meeusen.
 
-    For each of the last N days, check whether **both** signals fired:
+    For each of the last N days, check how many of **three** markers fired:
       - HRV below 90d-median (any negative deviation counts; SWC-based
         filtering happens elsewhere)
       - RHR ≥ baseline + ``rhr_overload_bpm``
+      - TSB ≤ ``tsb_threshold`` (computed per day from that day's CTL/ATL)
+
+    **Why three and not two.** The documented rule has always been the
+    Meeusen convergence idea — no single marker diagnoses overreaching, so
+    look for agreement between several. The implementation checked HRV
+    **and** RHR only, which is stricter than documented in one specific and
+    unhelpful way: it cannot fire at all without HRV. An athlete who is an
+    HRV non-responder, or whose wearable simply dropped the value, had no
+    overload signal available even when RHR and TSB both pointed the same
+    way. Requiring two of three keeps the conjunction that makes the signal
+    specific while removing HRV's veto over it.
+
+    A day counts as a hit when at least two markers are **available and
+    firing**; a day with fewer than two available markers cannot be judged
+    and ends the streak rather than silently counting as clean.
 
     **The bpm threshold is a convention, not a literature value.** It was
     previously documented as "literature-anchored" on the strength of a single
@@ -156,45 +178,94 @@ def _compute_combined_overload_signal(
     section "RHR and HRV — together or separately?" (Buchheit 2014). The
     RunnersConnect reference formerly cited here was retracted on 2026-09-01.
     """
-    if hrv_baseline_float is None or rhr_baseline_float is None:
+    # At least two markers must be derivable at all, otherwise there is no
+    # convergence to detect. TSB needs no baseline — it is self-contained.
+    available_markers = sum(
+        x is not None for x in (hrv_baseline_float, rhr_baseline_float)
+    ) + 1
+    if available_markers < 2:
         return None
 
-    # Walk backward from today; count consecutive days both signals fire.
+    # Walk backward from today; count consecutive days where at least two of
+    # the three markers fire.
     streak = 0
+    judged_any = False
+    fired_names: set[str] = set()
     for offset in range(0, 7):  # check today + last 6 days
         d_str = cutoff_iso(today, offset)
         entry = next((x for x in wellness_history if x.get("id") == d_str), None)
         if entry is None:
             # No data for this day → stop streak (do not count gaps as hits)
             break
+
+        day_fired: list[str] = []
+        day_available = 0
+
         hrv_val = entry.get("hrv")
+        if hrv_baseline_float is not None and hrv_val is not None:
+            day_available += 1
+            if hrv_val < hrv_baseline_float:
+                day_fired.append("HRV")
+
         rhr_val = entry.get("restingHR")
-        if hrv_val is None or rhr_val is None:
+        if rhr_baseline_float is not None and rhr_val is not None:
+            day_available += 1
+            if rhr_val >= rhr_baseline_float + rhr_overload_bpm:
+                day_fired.append("RHR")
+
+        ctl_val, atl_val = entry.get("ctl"), entry.get("atl")
+        if ctl_val is not None and atl_val is not None:
+            day_available += 1
+            if (ctl_val - atl_val) <= tsb_threshold:
+                day_fired.append("TSB")
+
+        # Fewer than two readable markers is an unjudgeable day, not a clean
+        # one — treat it like a data gap.
+        if day_available < 2:
             break
-        hrv_below = hrv_val < hrv_baseline_float
-        rhr_elevated = rhr_val >= rhr_baseline_float + rhr_overload_bpm
-        if hrv_below and rhr_elevated:
-            streak += 1
-        else:
+        judged_any = True
+        if len(day_fired) < 2:
             break
+        streak += 1
+        fired_names.update(day_fired)
 
     if streak == 0:
-        return {"verdict": "clear", "days": 0, "message": "No combined HRV/RHR overload signal."}
+        if not judged_any:
+            # No day carried two readable markers — silence here means missing
+            # data, not an all-clear, and saying "clear" would misreport it.
+            return {
+                "verdict": "insufficient_data",
+                "days": 0,
+                "markers": [],
+                "message": (
+                    "Convergence signal not computable — fewer than two of "
+                    "HRV / RHR / TSB readable in the window."
+                ),
+            }
+        return {
+            "verdict": "clear",
+            "days": 0,
+            "markers": [],
+            "message": "No convergence overload signal (needs 2 of HRV / RHR / TSB).",
+        }
+    marker_list = ", ".join(sorted(fired_names))
     if streak >= 3:
         return {
             "verdict": "deload",
             "days": streak,
+            "markers": sorted(fired_names),
             "message": (
-                f"⛔ Combined overload: HRV below baseline AND RHR ≥ +{rhr_overload_bpm:g} bpm "
-                f"for {streak} consecutive days — deload trigger active."
+                f"⛔ Convergence overload: {marker_list} for {streak} consecutive "
+                f"days (2-of-3 rule) — deload trigger active."
             ),
         }
     return {
         "verdict": "watch",
         "days": streak,
+        "markers": sorted(fired_names),
         "message": (
-            f"⚠️ Combined drift watch: HRV below baseline AND RHR ≥ +{rhr_overload_bpm:g} bpm "
-            f"for {streak} day(s) — monitor for deload at 3d."
+            f"⚠️ Convergence drift watch: {marker_list} for {streak} day(s) "
+            f"(2-of-3 rule) — monitor for deload at 3d."
         ),
     }
 
