@@ -42,6 +42,13 @@ IMPACT_TYPES: frozenset[str] = frozenset({"Run", "VirtualRun", "TrailRun"})
 # annotation. Deliberately generic: the point is "a session that carries
 # unusual structural load sits inside the streak", not a phase-specific
 # long-run definition (that lives in competition_plan.md).
+#
+# **This is the framework's single long-run duration constant.** Anything
+# else that needs the notion imports it rather than restating a number —
+# there used to be three (90 here, 75 in R014's baseline filter, 60 in the
+# plyo follow-day rules), and the same run was a long run to one rule and
+# not to another. An athlete-specific floor belongs in the config, not in
+# a second constant.
 LONG_RUN_MIN_MINUTES = 90
 
 # training_load at or above this marks a quality/hard session when no

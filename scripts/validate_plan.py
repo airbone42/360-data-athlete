@@ -32,7 +32,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app.api.intervals_client import IntervalsClient
 from app.config import settings
 from app.utils.activity_helpers import activity_date
-from app.utils.impact_load import compute_run_day_streak
+from app.utils.impact_load import LONG_RUN_MIN_MINUTES, compute_run_day_streak
 
 
 SEVERITY_ERROR = "ERROR"
@@ -1859,8 +1859,11 @@ def check_easy_run_conservatism(workouts: list[dict], ctx: Context) -> list[Find
         dur = a.get("duration_min") or 0
         if dur < 20:
             continue  # too short for easy baseline
-        # Exclude long runs (>=75 min) and quality runs (training_load >70)
-        if dur >= 75:
+        # Exclude long runs and quality runs (training_load >70) from the
+        # easy baseline. The long-run cut is the framework's shared constant,
+        # not a second local number — a 80-minute run used to be a long run
+        # here and an ordinary one to the impact-streak rule.
+        if dur >= LONG_RUN_MIN_MINUTES:
             continue
         if (a.get("training_load") or 0) > 70:
             continue

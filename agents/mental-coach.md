@@ -57,7 +57,7 @@ increment. This builds a profile over weeks of what works for them.
 ## Use cases
 
 ### 1. Pre-workout motivation (before LONG / RACE)
-Trigger: planner schedules a session with `workout_type = LONG` (>90 min)
+Trigger: planner schedules a session with `workout_type = LONG` (≥ `LONG_RUN_MIN_MINUTES`, the framework's shared long-run constant — 90 min by default; `app/utils/impact_load.py`)
 or `RACE`.
 
 Output format (chat / messaging-channel, 3–5 sentences max):
