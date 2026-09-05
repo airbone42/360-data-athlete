@@ -392,6 +392,17 @@ has leaked in — move it to `focus`. Full rule and rationale: `CLAUDE.md`
 
 **Inline format in `description`:** `Farmer's Hold KB: 3x35s/side @ 32.5kg | RPE 6-7 | last 13.05. 30kg @ 35s @ RPE 6-7 — Vektor 'load primary' triggered`. RPE token belongs **between** the volume spec and the progression rationale, separated by `|`.
 
+**The RPE alone is not enough on a weighted exercise — ask for the executed
+load too.** The plan names a target load, the description is also what gets
+parsed back after the session, and a bare RPE answer never contradicts it. So
+the target gets booked as the result and the anchor advances on a number
+nobody measured; the entry is indistinguishable from a real data point. It
+happened to this very block class: an auto-sync filed 38 kg for a carry that
+had run at ~33 kg, and the athlete caught it, not the system. Any session
+carrying a kg figure ends with one line — `FEEDBACK: RPE je Übung und die
+gefahrene Last.` — not one ask per exercise. *Enforcement:
+`validate_plan.py::check_load_report_requested` (R026), WARNING.*
+
 **The `@` before the load is MANDATORY, not decorative.** `3x12 16kg` is ambiguous — `2x12 12kg` reads as "two 12 kg bells" to a human, not "2 sets of 12 reps at 12 kg". Always write ` @ ` between volume and load; where the exercise could use one or two implements, state the count explicitly ("one kettlebell, both hands on the same handle").
 
 ## MANDATORY: two legitimate justification sources — planner estimate is NOT one

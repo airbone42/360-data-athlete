@@ -1464,7 +1464,8 @@ Name: sets×reps/duration @ load | RPE or target | ≤1 cue, or the one thing th
 - The single form cue that matters most for *this* exercise.
 - Stop criteria — as a short list, not a paragraph.
 - What feedback is wanted back, stated as a question the athlete can
-  answer in a few words.
+  answer in a few words. **When the session carries a load, the executed
+  load is part of that question** — see below.
 
 **Does NOT belong in `description`** — every item below is a real pattern
 that has bloated real plans:
@@ -1495,6 +1496,22 @@ description runs past roughly 1200 characters, or any single exercise past
 roughly two lines, the rationale has leaked in — move it to `focus`.
 Endurance `intervals_icu` steps carry their cue inline after the `—` and
 follow the same rule: the cue is an instruction, not an explanation.
+
+**A load in a description is a target until the athlete says otherwise
+(mandatory).** The description states the planned load, the same description
+is what gets parsed back after the session, and the athlete typically answers
+with a bare RPE. Nothing in that loop establishes what was actually lifted, so
+the planned figure is booked as the executed one and the progression anchor
+moves on a number nobody measured — while looking exactly like a real data
+point in the record. Any session whose description carries a kg figure
+therefore asks for the load in the same breath as the RPE (`FEEDBACK: RPE je
+Übung und die gefahrene Last.`), once per session rather than per exercise.
+The exception is a load fixed by equipment rather than chosen — say so on the
+line and the ask can be dropped.
+
+*Enforcement: `validate_plan.py::check_load_report_requested` (R026) —
+WARNING, never blocking; the agent-side contract lives in
+`agents/specialist-complementary.md` and `agents/specialist-ninja.md`.*
 
 **Corollary — do not compensate by moving prose into the workout *name*.**
 Names stay short; see the naming guidance in the specialist agent

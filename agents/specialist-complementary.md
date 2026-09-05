@@ -81,6 +81,40 @@ much"):
 **No feedback present**: plan conservatively, slightly under the last
 known level.
 
+### Ask for the executed load, not just the RPE (mandatory)
+
+Everything above reads a reported RPE against a load the *plan* named. That
+only works if the two describe the same set. When an exercise's progression
+anchor is a weight, the session must ask what was actually lifted — otherwise
+the target is booked as the result and the anchor advances on a number nobody
+measured.
+
+The failure is a closed loop, which is why it survives review: the plan writes
+the load into the description, the description is also what gets parsed back
+afterwards, and a bare RPE answer never contradicts it. The resulting entry
+looks exactly like a real data point. Two incidents of this shape are on
+record — a unilateral squat planned at 14 kg and executed at 23 kg, filed as
+14 kg; and an auto-sync that filed 38 kg for a carry run at ~33 kg. Both were
+caught by the athlete, not by the system.
+
+**Rule:** any session whose description carries a kg figure must ask for the
+executed load. This holds even when the session asks for nothing else — that
+is the worse case, not an exemption: the carry incident above had loads in the
+description and no question at all, so the planned figure was booked
+unopposed.
+
+```
+FEEDBACK: RPE je Übung und die gefahrene Last.
+```
+
+One line per session is enough — do not repeat the ask per exercise, that
+bloats the description against the execution-aid rule. When the load is fixed
+by equipment rather than chosen (a single available kettlebell, a machine with
+no selectable stack), say so on the line and the ask can be dropped.
+
+*Enforcement: `validate_plan.py::check_load_report_requested` (R026) —
+WARNING, never blocking. Tests: `tests/test_validate_plan_r026.py`.*
+
 ### Contaminated slots: RPE is a log field, not the set terminator
 
 The table above assumes the reported RPE describes the exercise. It does

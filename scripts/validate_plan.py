@@ -2522,6 +2522,115 @@ def _is_quality(w: dict) -> bool:
     return _matches_any(haystack, QUALITY_PATTERNS)
 
 
+# A load figure written into a plan is a TARGET. It becomes a MEASUREMENT only
+# when the athlete says what was actually on the bar. These patterns are how a
+# description asks for that.
+_LOAD_REPORT_REQUEST = [
+    r"gefahrene[nsr]?\s+(?:last|gewicht)",
+    r"tats(?:ä|ae)chliche[nsr]?\s+(?:last|gewicht)",
+    r"aufgelegte[nsr]?\s+(?:last|gewicht)",
+    r"welche[smn]?\s+(?:last|gewicht)",
+    r"wie\s+viel\s+(?:kg|gewicht)",
+    r"(?:last|gewicht|kg)\s+melden",
+    r"melde[nt]?\s+(?:bitte\s+)?(?:die\s+|das\s+)?(?:last|gewicht|kg)",
+    r"mit\s+welchem\s+gewicht",
+    r"actual\s+(?:load|weight)",
+    r"(?:load|weight)\s+used",
+    r"report\s+(?:the\s+)?(?:load|weight)",
+    r"which\s+(?:load|weight)",
+]
+
+def check_load_report_requested(workouts: list[dict], ctx: Context) -> list[Finding]:
+    """R026 — a loaded exercise must have its executed load asked for.
+
+    **The failure this catches is a closed loop, not a typo.** The plan writes
+    the target load into the description; the description is also what gets
+    parsed back after the session; and the athlete answers with a bare RPE.
+    Nothing in that loop ever establishes what was actually lifted, so the
+    planned figure is booked as the result and the anchor moves on a number
+    nobody measured. It looks identical to a real data point in the record —
+    which is why it survives until the athlete happens to trip over it.
+
+    Two documented incidents of exactly this shape:
+
+    - A unilateral squat was planned at 14 kg and executed at 23 kg. The
+      feedback was "RPE 8 at rep 6", so the anchor was written as 14 kg @ RPE
+      8 — a load 64 % below reality, and a plausible-looking one. The
+      correction only came days later, from the athlete.
+    - An auto-sync wrote 38 kg for a carry that had actually run at ~33 kg;
+      again corrected by the athlete, not by the system.
+
+    Trigger: a strength-type workout whose description carries at least one
+    exercise line with a kg figure and never asks what load was used.
+
+    A session that requests **no** feedback at all is deliberately included
+    rather than treated as a separate problem: it is the worse half of the
+    pair. The carry incident above is exactly that shape — loads in the
+    description, nothing asked back, and the planned figure booked
+    unopposed. Scoping the rule to sessions that already ask for an RPE would
+    have let it through.
+
+    Out of scope: endurance sessions (the anchor is pace/power), sauna, and
+    balance work (the anchor is the S-rating; see the guard below).
+
+    WARNING rather than ERROR: a missing question is worth surfacing before
+    the push, but it is not a reason to block a training day.
+    """
+    findings: list[Finding] = []
+
+    for w in workouts:
+        if (w.get("type") or "") in ("Run", "Ride", "VirtualRun", "VirtualRide"):
+            continue
+        if _is_sauna(w):
+            continue
+        # Balance work is out of scope even when it carries a load. The
+        # perturbation weight there is a tool, not the progression anchor —
+        # the S-rating is, and the pool's own rule reads the other way round
+        # ("at S4+ go back to 8 kg"). A load the athlete picked differently
+        # shows up in the S-value he reports, so the loop is self-correcting
+        # and the ask would be noise on every balance push.
+        if "balance" in {str(t).lower() for t in (w.get("tags") or [])}:
+            continue
+        desc = _description(w)
+        if not desc:
+            continue
+        if _matches_any(desc, _LOAD_REPORT_REQUEST):
+            continue
+
+        loaded: list[str] = []
+        for line in desc.splitlines():
+            stripped = line.strip()
+            if not stripped or not re.search(r"\d+(?:[.,]\d+)?\s*kg\b", stripped, re.I):
+                continue
+            # Name is whatever precedes the first colon; good enough to point
+            # the coach at the line without re-implementing the parser.
+            head = stripped.split(":", 1)[0].strip().lstrip("-*+•‣▪ ")
+            if head and len(head) <= 70:
+                loaded.append(head)
+
+        if not loaded:
+            continue
+
+        findings.append(Finding(
+            rule_id="R026",
+            severity="WARNING",
+            workout=_workout_name(w),
+            message=(
+                "Loaded exercise(s) without a load-report request: "
+                + ", ".join(dict.fromkeys(loaded))
+                + " — the description states the target load and asks only for RPE, "
+                "so the planned figure will be booked as the executed one."
+            ),
+            suggestion=(
+                "Add the executed load to what the session asks back, e.g. "
+                "\"FEEDBACK: RPE je Satz und die gefahrene Last\". The load belongs "
+                "in the answer for any exercise whose progression anchor is a weight."
+            ),
+        ))
+
+    return findings
+
+
 def check_sauna_placement(workouts: list[dict], ctx: Context) -> list[Finding]:
     """R025 — sauna slots must respect their three documented buffers.
 
@@ -2638,6 +2747,7 @@ RULES: list[tuple[str, Callable[[list[dict], Context], list[Finding]]]] = [
     ("R023", check_press_lap_duration_cue),
     ("R024", check_tag_content_adequacy),
     ("R025", check_sauna_placement),
+    ("R026", check_load_report_requested),
 ]
 
 
