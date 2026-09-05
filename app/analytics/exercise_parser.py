@@ -34,11 +34,22 @@ class ParsedExercise:
 
 # ── Alias normalisation ─────────────────────────────────────────────────────
 
+# Every rule here must be IDEMPOTENT: applying it to its own replacement must
+# be a no-op. The list is applied in order and each pattern sees the output of
+# the ones before it, so a rule that expands a substring into a superstring
+# containing that substring fires again on its own result — "Bulgarian Split
+# Squat" became "bulgarian split squat squat", and worse, `\bl-sit\b` rewrote
+# the already-normalised "l-sit tuck hold" into "l-sit parallettes tuck hold",
+# splicing a different exercise's name into it. Guard expanding rules with a
+# lookahead/lookbehind. Enforced by
+# `tests/test_exercise_parser_bullets.py::test_alias_table_is_idempotent`.
 _ALIAS_NORMALISE: list[tuple[re.Pattern, str]] = [
     (re.compile(r"\bfarmer'?s?\s*hold\b", re.I), "farmer hold"),
     (re.compile(r"\bl-sit\s*tuck\s*hold\b", re.I), "l-sit tuck hold"),
     (re.compile(r"\bl-sit\s*parallettes?\b", re.I), "l-sit parallettes"),
-    (re.compile(r"\bl-sit\b", re.I), "l-sit parallettes"),
+    # Lookahead: darf nicht auf dem eigenen Ergebnis ("l-sit parallettes") und
+    # nicht auf dem Ergebnis der Tuck-Hold-Regel darueber feuern.
+    (re.compile(r"\bl-sit\b(?!\s*(?:parallettes?|tuck))", re.I), "l-sit parallettes"),
     (re.compile(r"\bhollow\s*rock\b", re.I), "hollow rock"),
     (re.compile(r"\bhollow\s*hold\b", re.I), "hollow hold"),
     (re.compile(r"\bdead\s*bug\b", re.I), "dead bug"),
@@ -54,7 +65,7 @@ _ALIAS_NORMALISE: list[tuple[re.Pattern, str]] = [
     (re.compile(r"\breverse\s*curl\b", re.I), "reverse curl"),
     (re.compile(r"\bkurzhantel.curl\b", re.I), "kurzhantel curl"),
     (re.compile(r"\bbizeps.curl\b", re.I), "kurzhantel curl"),
-    (re.compile(r"\bbulgarian\s*split\b", re.I), "bulgarian split squat"),
+    (re.compile(r"\bbulgarian\s*split\b(?!\s*squat)", re.I), "bulgarian split squat"),
     (re.compile(r"\bsingle.leg\s*rdl\b", re.I), "single leg rdl"),
     (re.compile(r"\bsl-rdl\b", re.I), "single leg rdl"),
     (re.compile(r"\bhip\s*thrust\b", re.I), "hip thrust"),
@@ -65,7 +76,7 @@ _ALIAS_NORMALISE: list[tuple[re.Pattern, str]] = [
     (re.compile(r"\bkurzhantel.row\b", re.I), "kurzhantel row"),
     (re.compile(r"\blat.zug\b", re.I), "lat zug"),
     (re.compile(r"\bkb\s*overhead\s*press\b", re.I), "kb overhead press"),
-    (re.compile(r"\boverhead\s*press\b", re.I), "kb overhead press"),
+    (re.compile(r"(?<!kb )\boverhead\s*press\b", re.I), "kb overhead press"),
     (re.compile(r"\bdiagonal.?zug\b|\bdiagonal.pull\b", re.I), "diagonal pull"),
     (re.compile(r"\bpush.ups?\b|\bliegestütz\b", re.I), "push up"),
     (re.compile(r"\bplanche\s*lean\b", re.I), "planche lean"),
@@ -116,7 +127,7 @@ _LINE_RE = re.compile(
     (?:\s*,\s*|\s+@?\s*)?
     (?:(?P<weight>\d+(?:[.,]\d+)?)\s*kg)?  # optional weight (dot OR German comma decimal)
     (?:[^/\n]{0,80}?                       # anything in between
-     RPE\s*(?P<rpe>\d+(?:[,.\-–]\d+)?))?  # optional RPE or range
+     RPE\s*(?:~|≈|bis|ca\.?|max\.?)?\s*(?P<rpe>\d+(?:[,.\-–]\d+)?))?  # "RPE 7", "RPE~7", "RPE bis 6"
     """,
     re.VERBOSE | re.IGNORECASE,
 )
@@ -131,7 +142,51 @@ _NAME_COLON_RE = re.compile(
     re.IGNORECASE,
 )
 
-_RPE_ONLY_RE = re.compile(r"RPE\s*(\d+(?:[,.\-–]\d+)?)", re.IGNORECASE)
+# Leading list marker on a description line — "- Name: 3x8", "* Name: 3x8",
+# "1. Name: 3x8". Workout descriptions are written as bullet lists, so almost
+# every real exercise line carries one. It must come off before the name is
+# read: `_NAME_COLON_RE` is anchored at `^` and expects a letter, so a bullet
+# silently disables the hyphen-tolerant name path and pushes every line onto
+# the `name_pre` fallback — which excludes "-" and therefore truncates any
+# hyphenated name to the fragment after its last hyphen.
+# Requires whitespace after the marker, so the "->" feedback prefix is not
+# mistaken for a bullet.
+_LIST_BULLET_RE = re.compile(r"^(?:[-*+•‣▪◦–—]|\d+[.)])\s+")
+
+# Asymmetric per-side set counts: "3 Sätze rechts / 2 links x 8 Wdh", "3r/2l x 8".
+# Rehab work is routinely biased to the affected side, so the two sides carry a
+# different number of sets. Neither branch of `_LINE_RE` can read that — and
+# because `parse_description` also requires an N×M counter before queueing a
+# line as unmapped, such a line was dropped **silently**: no exercise, no
+# unmapped entry, nothing to notice. A prescription executed that way then
+# reads as never executed. Normalised to the equivalent total ("5x8") before
+# the main regex runs; per-side doubling must NOT be applied on top, because
+# the sum already covers both sides.
+_SIDE_TOKEN = r"(?:rechts|links|right|left|[rl])(?![a-zäöüß])"
+_ASYM_SETS_RE = re.compile(
+    r"\b(?P<a>\d+)\s*(?:sätze|satz|sets|set)?\s*" + _SIDE_TOKEN +
+    r"\s*/\s*(?P<b>\d+)\s*(?:sätze|satz|sets|set)?\s*" + _SIDE_TOKEN +
+    r"\s*[x×*]\s*(?P<reps>\d+(?:\.\d+)?)",
+    re.IGNORECASE,
+)
+
+
+def _normalise_asymmetric_sets(line: str) -> tuple[str, bool]:
+    """Rewrite an asymmetric side-split set count into its total ("5x8").
+
+    Returns the rewritten line and whether a rewrite happened — the caller
+    needs the flag to suppress per-side doubling.
+    """
+    m = _ASYM_SETS_RE.search(line)
+    if not m:
+        return line, False
+    total = int(m.group("a")) + int(m.group("b"))
+    return line[: m.start()] + f"{total}x{m.group('reps')}" + line[m.end():], True
+
+# "RPE~7" / "RPE ≈ 7" are the forms the specialist agents actually emit; without
+# the approximation marker the value is silently dropped and the session lands
+# in the muscle log with no RPE at all.
+_RPE_ONLY_RE = re.compile(r"RPE\s*(?:~|≈|bis|ca\.?|max\.?)?\s*(\d+(?:[,.\-–]\d+)?)", re.IGNORECASE)
 _WEIGHT_ONLY_RE = re.compile(r"(\d+(?:[.,]\d+)?)\s*kg", re.IGNORECASE)
 _PER_SIDE_RE = re.compile(r"je\s*seite|per\s*side|/\s*seite|beidseitig", re.IGNORECASE)
 # Isometric hold-time within a rep — e.g. "3s Hold at the contact point", "7s Hold",
@@ -340,13 +395,21 @@ def parse_line(line: str) -> ParsedExercise | None:
     # Skip section headers like "## Warm-up" or plain "WARM-UP (5 min)"
     if stripped.startswith("##") or stripped.startswith("**"):
         return None
+
+    # Strip the list marker before anything reads a name off the line. The
+    # original line is kept as `raw_line` so unmapped output and the drift
+    # sync still quote the source verbatim.
+    raw_line = stripped
+    stripped = _LIST_BULLET_RE.sub("", stripped, count=1)
+    stripped, asymmetric_sets = _normalise_asymmetric_sets(stripped)
+
     if _SECTION_HEADER_RE.match(stripped):
         return None
 
     m = _LINE_RE.search(stripped)
     if not m:
         return ParsedExercise(
-            raw_line=stripped, name=None, sets=None, reps=None,
+            raw_line=raw_line, name=None, sets=None, reps=None,
             duration_s=None, weight_kg=None, rpe=None,
             per_side=False, load_mode_hint="unknown", parse_ok=False,
         )
@@ -399,8 +462,8 @@ def parse_line(line: str) -> ParsedExercise | None:
         if rm:
             rpe = _parse_rpe(rm.group(1))
 
-    # Per side
-    per_side = bool(_PER_SIDE_RE.search(stripped))
+    # Per side — never on top of an asymmetric total, that would double-count.
+    per_side = (not asymmetric_sets) and bool(_PER_SIDE_RE.search(stripped))
 
     # Isometric Hold-time within a rep (separate from duration_s, which is the full-rep duration)
     hold_s: float | None = None
@@ -434,7 +497,7 @@ def parse_line(line: str) -> ParsedExercise | None:
         load_mode_hint = "bodyweight"
 
     return ParsedExercise(
-        raw_line=stripped,
+        raw_line=raw_line,
         name=name_normalised,
         sets=sets_int,
         reps=reps_out,

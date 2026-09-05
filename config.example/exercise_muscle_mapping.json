@@ -798,6 +798,55 @@
     "load_mode": "band",
     "eccentric_dominant": false
   },
+  "pallof_hold": {
+    "aliases": [
+      "pallof hold",
+      "pallof-hold",
+      "pallof hold isometrisch",
+      "anti-rotation hold",
+      "pallof hold band"
+    ],
+    "primary": [
+      {
+        "muscle": "obliquus_externus",
+        "intensity": 1.0
+      },
+      {
+        "muscle": "obliquus_internus",
+        "intensity": 1.0
+      },
+      {
+        "muscle": "transversus_abdominis",
+        "intensity": 0.9
+      }
+    ],
+    "secondary": [
+      {
+        "muscle": "rectus_abdominis",
+        "intensity": 0.4
+      },
+      {
+        "muscle": "gluteus_medius",
+        "intensity": 0.4
+      }
+    ],
+    "stabilizer": [
+      {
+        "muscle": "erector_spinae",
+        "intensity": 0.2
+      },
+      {
+        "muscle": "quadratus_lumborum",
+        "intensity": 0.2
+      },
+      {
+        "muscle": "multifidus",
+        "intensity": 0.2
+      }
+    ],
+    "load_mode": "band",
+    "eccentric_dominant": false
+  },
   "stir_the_pot": {
     "aliases": [
       "stir the pot",
