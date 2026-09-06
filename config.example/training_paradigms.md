@@ -926,6 +926,26 @@ the stability rating S1–S5:**
 external load (KB) → combined.
 Always state the target S in the description: `Target: S2–S3 for 30s`.
 
+**Landing tasks read the same scale on a different observable.** For a hop,
+jump-landing or edge-hop the exercise has no hold phase, so "wobble while
+standing" does not apply — the observable is what happens in the first two
+seconds **after touchdown**, rated per set and per side, on the pattern that
+**recurs** rather than on the single worst repetition:
+
+| Rating | Landing |
+|--------|---------|
+| S1 | Silent and instantly still; free leg stays up, no arm work |
+| S2 | Slight give or one small sway, no compensating step, free leg stays up |
+| S3 | Clear sway, arms/trunk visibly working, free foot occasionally touches down — still no compensating step |
+| S4 | Repeated near-limit landings, a compensating step is needed, or the landing turns loud/hard |
+| S5 | Loss of balance, ankle rolls, or the set is aborted |
+
+The step from S3 to S4 is the meaningful line: a **compensating step** means
+the task exceeded control, not that the athlete concentrated poorly. Target
+band stays S2–S3. Progression from S1 on a landing task follows the same
+ladder as elsewhere — surface, then height, then unpredictability — one
+variable per session.
+
 ### Run-ABC in balance sessions (explicit block):
 - A-skips + leg swings as a 5–8 min block of their own in every balance
   session (not only as a run warm-up)
