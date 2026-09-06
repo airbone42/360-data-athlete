@@ -4574,5 +4574,86 @@
     "eccentric_dominant": false,
     "base_exercise": "trx_row",
     "variant_factor": 0.7
+  },
+  "bouldering": {
+    "aliases": [
+      "bouldern",
+      "bouldering",
+      "klettern",
+      "climbing",
+      "boulder",
+      "toprope",
+      "sportklettern"
+    ],
+    "primary": [
+      {
+        "muscle": "flexor_digitorum_superficialis",
+        "intensity": 1.0
+      },
+      {
+        "muscle": "flexor_digitorum_profundus",
+        "intensity": 1.0
+      },
+      {
+        "muscle": "latissimus_dorsi",
+        "intensity": 0.8
+      },
+      {
+        "muscle": "brachialis",
+        "intensity": 0.7
+      }
+    ],
+    "secondary": [
+      {
+        "muscle": "biceps_brachii",
+        "intensity": 0.6
+      },
+      {
+        "muscle": "brachioradialis",
+        "intensity": 0.5
+      },
+      {
+        "muscle": "deltoideus_posterior",
+        "intensity": 0.5
+      },
+      {
+        "muscle": "trapezius_mid",
+        "intensity": 0.5
+      },
+      {
+        "muscle": "rhomboideus_major",
+        "intensity": 0.4
+      },
+      {
+        "muscle": "obliquus_externus",
+        "intensity": 0.4
+      },
+      {
+        "muscle": "rectus_abdominis",
+        "intensity": 0.4
+      }
+    ],
+    "stabilizer": [
+      {
+        "muscle": "infraspinatus",
+        "intensity": 0.2
+      },
+      {
+        "muscle": "serratus_anterior",
+        "intensity": 0.15
+      },
+      {
+        "muscle": "gluteus_maximus",
+        "intensity": 0.15
+      },
+      {
+        "muscle": "gastrocnemius",
+        "intensity": 0.15
+      }
+    ],
+    "load_mode": "bodyweight",
+    "eccentric_dominant": false,
+    "tendon_dominant": true,
+    "lever_factor": 1.0
   }
 }
