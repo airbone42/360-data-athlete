@@ -356,6 +356,22 @@ VIDEO_UPLOAD_TARGET_MB = 15.0
 # instead of analysing it.
 VALID_ROTATIONS = (0, 90, 180, 270)
 
+# Input options for every ffmpeg call that rotates the picture itself.
+#
+# `-noautorotate` alone is not enough, and the gap is invisible until a
+# downstream decoder disagrees: it stops ffmpeg from applying the display
+# matrix, but the matrix is still *copied into the output container*. A clip
+# rotated by our own transpose filter therefore reaches the model with the
+# correction baked in **and** an instruction to apply it again — the athlete
+# ends up 90° from where the pipeline believes he is. Extracted stills escape
+# this only because JPEG carries no such field.
+#
+# `-display_rotation` (ffmpeg ≥ 6) overrides the input's rotation to zero, so
+# nothing is applied on read and nothing is written on output. The binary is the
+# pinned `imageio-ffmpeg` build, not the host's, so the version is ours to rely
+# on.
+ROTATION_NEUTRAL_INPUT = ["-display_rotation:v:0", "0"]
+
 # Re-encode ladder, tried in order until the output fits the target. Each step
 # is (long-edge pixels, CRF). Resolution is reduced before quality because form
 # checks depend on joint-position clarity more than on pixel count.
@@ -1366,7 +1382,7 @@ def extract_structure_frames(
         # The timestamp is part of the filename because a verdict has to cite its
         # evidence: "refuted at frame_03_t00m11s.jpg" is checkable weeks later.
         out_path = out_dir / f"frame_{i + 1:02d}_t{int(ts) // 60:02d}m{int(ts) % 60:02d}s.jpg"
-        cmd = [ffmpeg, "-y", "-noautorotate", "-ss", f"{ts:.3f}", "-i", video_path]
+        cmd = [ffmpeg, "-y", *ROTATION_NEUTRAL_INPUT, "-ss", f"{ts:.3f}", "-i", video_path]
         if filters:
             cmd += ["-vf", ",".join(filters)]
         cmd += ["-frames:v", "1", "-q:v", "2", str(out_path)]
@@ -1555,7 +1571,7 @@ def _prepare_for_upload(
             )
             try:
                 result = subprocess.run(
-                    [ffmpeg, "-y", "-noautorotate", "-i", video_path,
+                    [ffmpeg, "-y", *ROTATION_NEUTRAL_INPUT, "-i", video_path,
                      "-vf", ",".join(filters),
                      "-c:v", "libx264", "-preset", "veryfast", "-crf", str(crf),
                      "-pix_fmt", "yuv420p", "-an", "-movflags", "+faststart",

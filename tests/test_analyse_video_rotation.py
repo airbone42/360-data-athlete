@@ -1,4 +1,4 @@
-"""Tests for orientation detection — the step ahead of every structural claim.
+"""Tests for orientation handling — the step ahead of every structural claim.
 
 Motivating case: a phone clip carried ``displaymatrix: rotation of 90.00
 degrees``; the detector read it through PyAV, whose ``stream.side_data`` is
@@ -7,14 +7,19 @@ silent, so the stills reached the structure pass lying on their side — and a
 sideways frame is precisely the input that produces confident wrong contact
 points and swapped anatomical sides, the failure class the structure pass
 exists to prevent. The detector must therefore read the value from ffmpeg, a
-hard dependency of the module, and it must read it with the right sign: the
-printed angle is already the counter-clockwise correction.
+hard dependency of the module, and read it with the right sign: the printed
+angle is already the counter-clockwise correction.
 
-A truncated model answer is the other silent failure guarded here. The models
-are thinking models and ``max_tokens`` caps reasoning plus answer, so a budget
-that looks generous against the JSON alone truncates mid-object — which used to
-surface as a JSON parse error whose handler advised shrinking the video, the one
-remedy that cannot help.
+The second orientation bug sits one step further on. ``-noautorotate`` stops
+ffmpeg applying the display matrix but still copies it into the output
+container, so a clip we rotated ourselves arrived at the model with the
+correction baked in *and* an instruction to apply it again.
+
+A truncated model answer is the third silent failure guarded here. These are
+thinking models and ``max_tokens`` caps reasoning plus answer, so a budget that
+looks generous against the JSON alone truncates mid-object — which surfaced as a
+JSON parse error whose handler advised shrinking the video, the one remedy that
+cannot help.
 """
 from __future__ import annotations
 
@@ -31,6 +36,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from scripts.analyse_video import (  # type: ignore  # noqa: E402
     MAX_TOKENS,
     MODELS,
+    ROTATION_NEUTRAL_INPUT,
     _detect_metadata_rotation,
     _first_choice_content,
 )
@@ -79,11 +85,20 @@ def test_no_display_matrix_reports_zero(_ffmpeg, monkeypatch):
     assert _detect_metadata_rotation("clip.mp4") == 0
 
 
-def test_unparseable_angle_does_not_crash(_ffmpeg, monkeypatch):
+def test_unparseable_angle_does_not_guess(_ffmpeg, monkeypatch):
     line = "        displaymatrix: rotation of 42.50 degrees\n"
     monkeypatch.setattr(subprocess, "run", lambda *a, **k: _Completed(_dump(line)))
-    # 42.5° is not a valid transpose chain — fall through rather than guess.
     assert _detect_metadata_rotation("clip.mp4") == 0
+
+
+def test_rotating_calls_neutralise_the_container_flag():
+    """Baking a rotation in and leaving the matrix behind rotates it twice."""
+    assert ROTATION_NEUTRAL_INPUT[0].startswith("-display_rotation")
+    assert ROTATION_NEUTRAL_INPUT[1] == "0"
+    source = (ROOT / "scripts" / "analyse_video.py").read_text()
+    # Both picture-producing calls go through the constant; only the probes,
+    # which need the matrix to still be readable, may omit it.
+    assert '"-noautorotate"' not in source
 
 
 def test_budget_covers_reasoning_tokens():
