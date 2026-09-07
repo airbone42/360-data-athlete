@@ -32,6 +32,7 @@ class ContextDict(BaseModel):
     zone_distribution: Any = Field(None, alias="zoneDistribution")
     weekly_zone_balance: Any = Field(None, alias="weeklyZoneBalance")
     weekly_hard_reize_balance: Any = Field(None, alias="weeklyHardReizeBalance")
+    consistency_streak: Any = Field(None, alias="consistencyStreak")
     meso_load_trend: Any = Field(None, alias="mesoLoadTrend")
     weather_info: Any = Field(None, alias="weatherInfo")
     intensity_readiness: Any = Field(None, alias="intensityReadiness")

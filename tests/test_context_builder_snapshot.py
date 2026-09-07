@@ -33,6 +33,7 @@ REQUIRED_CONTEXT_KEYS = {
     "cycleHint",
     "zoneDistribution",
     "weeklyZoneBalance",
+    "consistencyStreak",
     "mesoLoadTrend",
     "weatherInfo",
     "intensityReadiness",

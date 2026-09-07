@@ -29,6 +29,10 @@ from app.utils.alerts import notify_error
 from app.utils.date_windows import cutoff_iso
 from app.utils.hr_zones import extract_run_hr_bounds, format_hr_zones
 from app.utils.impact_load import compute_run_day_streak
+from app.analytics.consistency import (
+    compute_consistency_streak,
+    parse_consistency_thresholds,
+)
 from app.analytics.zones import (  # noqa: F401 — re-exported for callers/tests
     CARDIO_TYPES,
     HARD_STIMULUS_MIN_Z4_Z5_SECS,
@@ -274,6 +278,19 @@ def build_context(state: AthleteContextState) -> dict:
     )
     weekly_hard_reize_balance = _compute_weekly_hard_reize_balance(activities, today)
 
+    # Consistency needs a longer look-back than the 4-week activity window the
+    # rest of this builder runs on. The 90-day list fetched for the shoe
+    # advisor already covers it, so this costs no extra API call; the `or`
+    # fallback keeps the field working for callers that only pass the short
+    # window (it then simply reports fewer weeks).
+    long_window_activities: list[dict] = state.get("shoe_activities") or activities
+    _c_days, _c_km, _c_neutral = parse_consistency_thresholds(
+        _read_optional_config("athlete_status.md")
+    )
+    consistency_streak = compute_consistency_streak(
+        long_window_activities, today, _c_days, _c_km, _c_neutral
+    )
+
     last_intense = _find_last_intense_session(activities)
     last_rest_day = _find_last_rest_day(activities, today)
 
@@ -461,6 +478,7 @@ def build_context(state: AthleteContextState) -> dict:
         "zoneDistribution": zone_distribution,
         "weeklyZoneBalance": weekly_zone_balance,
         "weeklyHardReizeBalance": weekly_hard_reize_balance,
+        "consistencyStreak": consistency_streak,
         "mesoLoadTrend": meso_load_trend,
         "weatherInfo": weather_info,
         "intensityReadiness": intensity_readiness,
