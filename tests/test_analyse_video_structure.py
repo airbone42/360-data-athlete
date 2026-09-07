@@ -322,3 +322,67 @@ def test_frames_fall_back_outside_the_repo_when_no_inbox(monkeypatch) -> None:
 
 def test_explicit_frames_dir_wins() -> None:
     assert structure_frames_dir("/clips/VID_123.mp4", "/tmp/custom") == Path("/tmp/custom")
+
+
+# ── "sicher" about not being able to tell is still not a confirmation ────────
+#
+# Observed on a real clip: the stills went into the pass rotated 90°, and the
+# model answered `grundposition: "nicht_erkennbar"` with `sicherheit: "sicher"`
+# — an honest abstention, correctly labelled. The gate read only `sicherheit`
+# for these three records and let it through, so the run went on to produce an
+# assessment on a body position nobody could name. The abstention lives in the
+# value field; `sicherheit` describes confidence in the answer, including
+# confidence that there is none.
+
+def test_unreadable_body_position_blocks_even_when_certain() -> None:
+    rec = _record(koerperposition={
+        "grundposition": "nicht_erkennbar",
+        "belegframe": FRAMES[0],
+        "sicherheit": "sicher",
+    })
+    passed, reasons = structure_gate(rec, FRAMES)
+    assert not passed
+    assert any("koerperposition.grundposition" in r for r in reasons)
+
+
+def test_unreadable_camera_angle_blocks_even_when_certain() -> None:
+    rec = _record(aufnahme={
+        "kamera_winkel": "nicht_erkennbar",
+        "bildausschnitt": "ganzer_koerper",
+        "belegframe": FRAMES[0],
+        "sicherheit": "sicher",
+    })
+    passed, reasons = structure_gate(rec, FRAMES)
+    assert not passed
+    assert any("aufnahme.kamera_winkel" in r for r in reasons)
+
+
+def test_unreadable_implement_presence_blocks() -> None:
+    rec = _record(geraet={
+        "vorhanden": "nicht_erkennbar",
+        "belegframe": FRAMES[0],
+        "sicherheit": "sicher",
+    })
+    passed, reasons = structure_gate(rec, FRAMES)
+    assert not passed
+    assert any("geraet.vorhanden" in r for r in reasons)
+
+
+def test_implement_present_but_hand_unreadable_blocks() -> None:
+    """Which hand carries the load is the laterality question that fails most."""
+    rec = _record(geraet={
+        "vorhanden": "ja",
+        "was": "Kurzhantel",
+        "anatomische_hand": "nicht_erkennbar",
+        "belegframe": FRAMES[0],
+        "sicherheit": "sicher",
+    })
+    passed, reasons = structure_gate(rec, FRAMES)
+    assert not passed
+    assert any("geraet.anatomische_hand" in r for r in reasons)
+
+
+def test_no_implement_needs_no_hand() -> None:
+    """`vorhanden: nein` carries no hand to name — that must not block."""
+    passed, _ = structure_gate(_record(), FRAMES)
+    assert passed

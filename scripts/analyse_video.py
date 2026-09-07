@@ -539,6 +539,7 @@ STRUCTURE_UNVERIFIED_MARKER = "⚠️ STRUKTUR UNVERIFIZIERT"
 LOAD_BEARING_FIELDS = ("aufnahme", "koerperposition", "bodenkontakte", "geraet")
 
 _CERTAIN = "sicher"
+_UNREADABLE = "nicht_erkennbar"
 
 CONTACT_SEGMENTS_STRENGTH = (
     "Hand_gestreckter_Arm", "Hand_gebeugter_Arm", "Unterarm_Ellbogen",
@@ -656,10 +657,42 @@ def structure_gate(claims: dict, frame_names: tuple[str, ...] = ()) -> tuple[boo
         if field not in claims:
             reasons.append(f"{field}: fehlt in der Struktur-Antwort")
 
+    def check_readable(label: str, entry: dict, *keys: str) -> None:
+        """`nicht_erkennbar` in a value field is an abstention, whatever `sicherheit` says.
+
+        The two are independent: a model can be entirely certain that it cannot
+        tell, and it says so — `grundposition: nicht_erkennbar` alongside
+        `sicherheit: sicher` is not a contradiction, it is an honest one. The
+        gate used to read only `sicherheit` here and waved such a record
+        through, which is the same "silence is not a confirmation" hole it
+        already closes for the contact points.
+        """
+        for key in keys:
+            if entry.get(key) == _UNREADABLE:
+                reasons.append(f"{label}.{key}: nicht erkennbar")
+
     for field in ("aufnahme", "koerperposition", "geraet"):
         value = claims.get(field)
         if isinstance(value, dict):
             check_evidence(field, value)
+
+    aufnahme = claims.get("aufnahme")
+    if isinstance(aufnahme, dict):
+        # Camera geometry decides what the footage can answer at all, and it has
+        # been misread before.
+        check_readable("aufnahme", aufnahme, "kamera_winkel")
+
+    position = claims.get("koerperposition")
+    if isinstance(position, dict):
+        check_readable("koerperposition", position, "grundposition")
+
+    geraet = claims.get("geraet")
+    if isinstance(geraet, dict):
+        check_readable("geraet", geraet, "vorhanden")
+        if geraet.get("vorhanden") == "ja":
+            # Which hand carries the load is the same laterality question that
+            # has gone wrong most often; unanswered, it is not a detail.
+            check_readable("geraet", geraet, "anatomische_hand")
 
     contacts = claims.get("bodenkontakte")
     if isinstance(contacts, list):
@@ -671,9 +704,9 @@ def structure_gate(claims: dict, frame_names: tuple[str, ...] = ()) -> tuple[boo
                 continue
             label = f"bodenkontakte[{contact.get('koerperteil', idx)}]"
             check_evidence(label, contact)
-            if contact.get("kontakt") == "nicht_erkennbar":
+            if contact.get("kontakt") == _UNREADABLE:
                 reasons.append(f"{label}: Auflagepunkt nicht erkennbar")
-            if contact.get("anatomische_seite") == "nicht_erkennbar":
+            if contact.get("anatomische_seite") == _UNREADABLE:
                 reasons.append(f"{label}: anatomische Seite nicht erkennbar")
     elif "bodenkontakte" in claims:
         reasons.append("bodenkontakte: keine Liste")
