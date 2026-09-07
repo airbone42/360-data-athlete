@@ -82,6 +82,14 @@ MODELS = {
 }
 DEFAULT_MODEL = "pro"
 
+# `max_tokens` is a cap on reasoning + answer, not on the answer alone, and the
+# models above are thinking models: a structure questionnaire that emits ~900
+# tokens of JSON burned 3839 reasoning tokens before writing a character. At a
+# 4000 cap that truncates mid-object, and the caller sees a JSON parse error
+# rather than a budget problem. The cap is only charged when it is used, so it
+# is set well above the observed need rather than tuned to it.
+MAX_TOKENS = {"flash": 8000, "pro": 16000}
+
 # Known limitation — read before trusting a fine spatial detail:
 # on a chat-compressed clip at default sampling (~1 fps), a binary stance
 # question ("stacked vs. staggered feet") was answered inconsistently across
@@ -708,12 +716,7 @@ def analyse_structure_frames(
         ],
         extra_headers={"X-Title": settings.openrouter_x_title},
     )
-    if not response.choices:
-        raise RuntimeError(f"Leere Antwort von {model} — kein choices-Array zurückgegeben")
-    raw = response.choices[0].message.content
-    if not raw:
-        raise RuntimeError(f"Leere Antwort-Content von {model} — choices vorhanden aber leer")
-    return _parse_structure_json(raw)
+    return _parse_structure_json(_first_choice_content(response, model, "Stage A"))
 
 
 def _build_evaluation_prompt(
@@ -749,6 +752,31 @@ HARTE REGELN:
 {body}"""
 
 
+def _first_choice_content(response: object, model: str, stage: str) -> str:
+    """The one message content, or a RuntimeError that names what went wrong.
+
+    A truncated answer is called by its name here. It used to surface as a JSON
+    parse error two frames up, where the handler advised shrinking the video —
+    the one remedy that cannot help, because the budget was spent on reasoning
+    tokens before the answer began.
+    """
+    choices = getattr(response, "choices", None)
+    if not choices:
+        raise RuntimeError(f"Leere Antwort von {model} ({stage}) — kein choices-Array zurückgegeben")
+    choice = choices[0]
+    out = choice.message.content
+    if getattr(choice, "finish_reason", None) == "length":
+        used = getattr(getattr(response, "usage", None), "completion_tokens", "?")
+        raise RuntimeError(
+            f"Antwort von {model} ({stage}) bei max_tokens abgeschnitten ({used} Tokens verbraucht) — "
+            f"Denk-Tokens haben das Budget aufgebraucht. MAX_TOKENS im Script erhöhen; "
+            f"das Video zu kürzen hilft hier nicht."
+        )
+    if not out:
+        raise RuntimeError(f"Leere Antwort-Content von {model} ({stage}) — choices vorhanden aber leer")
+    return out
+
+
 def _call_openrouter_text(client: object, model: str, system: str, user: str, max_tok: int) -> str:
     """Plain text completion — used for the evaluation pass (no video payload)."""
     response = client.chat.completions.create(  # type: ignore[attr-defined]
@@ -759,12 +787,7 @@ def _call_openrouter_text(client: object, model: str, system: str, user: str, ma
             {"role": "user", "content": user},
         ],
     )
-    if not response.choices:
-        raise RuntimeError(f"Leere Antwort von {model} — kein choices-Array zurückgegeben")
-    out = response.choices[0].message.content
-    if not out:
-        raise RuntimeError(f"Leere Antwort-Content von {model} — choices vorhanden aber leer")
-    return out
+    return _first_choice_content(response, model, "Stage C")
 
 
 def analyse_with_gemini_video(
@@ -813,7 +836,9 @@ def analyse_with_gemini_video(
             source_path, out_dir, count=structure_frames, rotate_ccw=rotate_ccw
         )
         print("  Stage A — Struktur an Standbildern...", file=sys.stderr)
-        structure = analyse_structure_frames(client, model, frames, run_mode, 4000)
+        structure = analyse_structure_frames(
+            client, model, frames, run_mode, MAX_TOKENS.get(model_key, MAX_TOKENS[DEFAULT_MODEL])
+        )
         passed, reasons = structure_gate(structure, tuple(f.name for f in frames))
         if not passed:
             if skip_structure_gate:
@@ -858,7 +883,7 @@ def analyse_with_gemini_video(
     ]
 
     # Pro/thinking models need more tokens for reasoning + output
-    max_tok = 4000 if model_key == "pro" else 1200
+    max_tok = MAX_TOKENS.get(model_key, MAX_TOKENS[DEFAULT_MODEL])
 
     mode_tag = "running" if run_mode else "strength"
     span_name = f"Video analysis — {exercise} ({mode_tag})"
@@ -896,11 +921,7 @@ def analyse_with_gemini_video(
             ],
             extra_headers={"X-Title": settings.openrouter_x_title},
         )
-        if not response.choices:
-            raise RuntimeError(f"Leere Antwort von {model} — kein choices-Array zurückgegeben")
-        perception = response.choices[0].message.content
-        if not perception:
-            raise RuntimeError(f"Leere Antwort-Content von {model} — choices vorhanden aber leer")
+        perception = _first_choice_content(response, model, "Stage B")
 
         # An unusable recording is reported by pass 1 and must not be talked
         # into a finding by pass 2 — return it verbatim.
@@ -1440,7 +1461,38 @@ def _detect_metadata_rotation(video_path: str) -> int:
     Only covers failure mode 1 (see VALID_ROTATIONS). A clip whose *content* is
     sideways without a flag reports 0 here — that case needs an explicit
     ``--rotate``.
+
+    Read from ffmpeg rather than from PyAV. ffmpeg is a hard dependency of this
+    module already (the structure pass cannot run without it), while PyAV is
+    optional and its side-data API is not stable across versions: on PyAV 17
+    ``stream.side_data`` is ``None`` even for a clip whose display matrix
+    ffmpeg prints, so the old lookup returned 0 for every file. That failure is
+    silent and it is the expensive kind — the frames then reach the structure
+    pass lying on their side, and a sideways frame produces exactly the
+    confident wrong contact-point / laterality claims this stage exists to
+    prevent. PyAV stays as a fallback for deployments that ship it without
+    ffmpeg.
+
+    Sign convention: ``av_display_rotation_get`` (what the ``-i`` dump prints)
+    is already the counter-clockwise correction to apply — a clip printing
+    ``rotation of 90.00 degrees`` needs one ``transpose=2``, which is what
+    ffmpeg's own autorotate inserts for it.
     """
+    ffmpeg = _ffmpeg_exe()
+    if ffmpeg:
+        try:
+            result = subprocess.run(
+                [ffmpeg, "-i", video_path], capture_output=True, timeout=30
+            )
+            text = result.stderr.decode("utf-8", errors="replace")
+            marker = "displaymatrix: rotation of"
+            if marker in text:
+                raw = text.split(marker, 1)[1].split("degrees", 1)[0].strip()
+                deg = int(round(float(raw))) % 360
+                if deg in VALID_ROTATIONS:
+                    return deg
+        except Exception:
+            pass
     try:
         import av
         with av.open(video_path) as container:
@@ -1455,9 +1507,7 @@ def _detect_metadata_rotation(video_path: str) -> int:
                     continue
                 if value is None:
                     continue
-                # ffmpeg reports the clockwise rotation to undo; we work in CCW.
-                deg = int(round(float(getattr(value, "rotation", value)))) % 360
-                return (-deg) % 360
+                return int(round(float(getattr(value, "rotation", value)))) % 360
     except Exception:
         pass
     return 0
