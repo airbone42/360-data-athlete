@@ -2122,6 +2122,23 @@ Once the original is in the inbox:
    athlete's view of their own video outranks a single automated read;
    correct any already-persisted finding before it drives a (wrong)
    progression change.
+
+   **The verifier is not exempt from this.** Where a coach adjudication of
+   the frames contradicts the athlete's account of his own execution, the
+   coach is the likelier error for as long as the camera does not answer the
+   question unambiguously — the athlete was in the movement, the camera saw
+   one projection of it. Say what the frames appear to show, ask, and let the
+   answer stand; do not escalate a second dispute into a third reading.
+
+   **A length measured off a still is an argument only when its ruler is
+   proven, not assumed.** Segment proportions look decisive and are the
+   easiest thing to get wrong: a limb whose proximal end is occluded by the
+   torso reads as a whole limb, and a reference frame chosen for convenience
+   ("here the arms are straight") is worthless if that posture is itself an
+   assumption. Calibrate against a segment whose position is *visible* in the
+   same clip — a full-body frame before or after the set — or drop the
+   argument. Getting this backwards costs more than a missing finding: it
+   spends the athlete's trust to overturn a reading that was correct.
 4. Send feedback via Telegram.
 5. Persist the analysis in `config/exercise_log.md` — specialists read this
    file and feed findings into future coaching notes. **An unverified
