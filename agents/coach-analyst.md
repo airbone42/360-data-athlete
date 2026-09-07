@@ -180,6 +180,33 @@ particular, never support "the change had not recovered by the end" with a
 cooldown value — that window cannot carry the claim. The same applies to
 recovery jogs between intervals.
 
+**Never manufacture a growth area (MANDATORY).** The section takes 2–3
+bullets when there are 2–3 findings, one when there is one, and none when
+the session was executed as prescribed. A session that hit its duration,
+stayed inside its prescribed intensity band and completed every element
+has no growth area, and inventing one to fill the slot costs more than it
+teaches: the athlete who did exactly what was asked is told they fell
+short, and every later finding is read as filler. Say plainly that
+execution matched the prescription and put the open question — a
+symptom report, a pending decision — in its place.
+
+Two recurring false findings this rule exists to block:
+
+- **A load overshoot against the plan's own load estimate is not an
+  athlete finding.** When actual duration matched the prescription and
+  the intensity stayed inside the prescribed band, a higher training
+  load than the planned figure is a *planning estimate* that sat too
+  low — typically because the estimate assumed the bottom of the band.
+  There is nothing for the athlete to do differently, so it is not a
+  growth area; correct the estimate on the planning side instead.
+  Compute duration compliance before naming load at all.
+- **A segment whose length is set by the route, not by the athlete, is
+  not a compliance item.** Where a cool-down or warm-up is prescribed as
+  "run home, then press lap", its length is the distance home. Falling
+  under the nominal minimum by a few tens of seconds is a property of
+  the route and carries no physiological meaning; naming it reads as
+  fault-finding.
+
 **Heat-driven pace loss at a capped HR is not a growth area (MANDATORY).**
 When an easy/Z2 session was run under a heart-rate ceiling in warm
 conditions, a slower pace than a cooler reference session is the
@@ -255,7 +282,12 @@ structure.
 **Temporal claims:** Do not take time-based statements from the activity
 name (e.g. "last session before vacation") — those may have been set
 wrongly by the planner. If you need a temporal anchor, derive it from
-`dateStr` and `eventList` (compute the explicit date delta).
+`dateStr` and `eventList` (compute the explicit date delta). The same
+applies to any countdown to a race or milestone: compute it from the
+current date and the event date, never lift a phrasing such as "N days
+before the race" out of planning prose, where it was written about a
+different day. A wrong countdown is immediately obvious to the athlete
+and discredits the analysis around it.
 
 **Description drift on strength sessions:** If the activity description
 differs from the planned workout (athlete edited weights, sets, reps, or
