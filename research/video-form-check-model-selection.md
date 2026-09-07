@@ -4,7 +4,14 @@
 
 ## TL;DR
 
-1. **Die Modellwahl ist nicht der wichtigste Hebel — die Abtastung ist es.**
+0. **Die Fehlerklasse ist statisch-strukturell, nicht zeitlich — und daraus
+   folgt der Zuschnitt der Pipeline.** Sämtliche real aufgetretenen
+   Fehlbefunde betrafen Auflagepunkte, Seitigkeit, mitgeführtes Gerät oder die
+   Kamerageometrie; kein einziger betraf Tempo oder Verlauf. Alle waren als
+   `sicher` ausgewiesen, mehrere entstanden *nach* Einführung der
+   Zwei-Call-Trennung. Konsequenz: Perzeption wird nach Aussagetyp getrennt.
+   Struktur-Fragen gehen an **Standbilder**, Bewegungs-Fragen ans Video —
+   siehe „Transport-Grenze" unten, dort steht die Zahl, die das erzwingt.
    Bei Default-Sampling (~1 fps) auf einem chat-komprimierten Clip beantwortete
    *dasselbe* Modell eine binäre Wahrnehmungsfrage („Füsse gestapelt oder
    gestaffelt?") über wiederholte identische Läufe **inkonsistent** — in einem
@@ -63,6 +70,39 @@ unzuverlässig, weil die Frage an der Abtastung scheitert, nicht am Urteil. Die
 Trendfrage bleibt ebenfalls unzuverlässig: Modelle zitieren die geforderten
 Zeitstempel und behaupten den Trend trotzdem.
 
+## Transport-Grenze (Korrektur, 2026-09-07)
+
+Die ursprüngliche Kernempfehlung dieses Dokuments — Framerate explizit setzen
+und die höchste Medienauflösungs-Stufe wählen — ist über den eingesetzten
+Transportweg **nicht umsetzbar**. Sie stand hier als „noch nicht umgesetzt";
+richtig ist „so nicht erreichbar".
+
+- **OpenRouter exponiert weder `media_resolution` noch `video_metadata.fps`.**
+  Der einzige Gemini-spezifische Passthrough ist `processing: agentic|static`.
+- **Für Video sind `unspecified`, `low` und `medium` identisch 70 Tokens pro
+  Frame**, nur `high` gibt 280. Der Default ist also bereits die gröbste Stufe
+  — es gab nie eine billigere, die man versehentlich gewählt hätte.
+- **Ein Standbild bekommt im selben Default 1120 Tokens** (`high` ebenfalls
+  1120, `ultra_high` 2240).
+
+Der Faktor 16 zwischen Video-Frame und Standbild ist grösser als der Faktor 4,
+den `high` auf dem Videopfad gebracht hätte — und er ist über den bestehenden
+Transportweg erreichbar. Das ist der Grund, warum die Struktur-Fragen an
+Standbilder gehen und nicht der Anbieter gewechselt wurde.
+
+**Was der Split nicht behebt:** Der Bewegungs-Pass läuft weiterhin bei 70
+Tokens/Frame. Zeitliche Aussagen bleiben schwach — sie sind durch die
+Zeitstempel-Pflicht und „kein Trend belegbar" abgesichert, nicht durch
+Auflösung. Das ist vertretbar, solange die Fehlerklasse statisch bleibt.
+
+**Aufgeschobene Option mit benanntem Auslöser:** Träte eine *zeitliche*
+Fehlerklasse auf — eine Aussage über Tempo, Wiederholungsunterschied oder
+Bodenkontaktzeit, die eine Frame-Prüfung widerlegt —, dann ist der richtige
+Schritt der Wechsel auf die direkte Gemini-API mit `video_metadata.fps`. Keine
+Zahl an Standbildern ersetzt Framerate. Der Preis wäre eine zusätzliche
+Abhängigkeit, ein zusätzliches Credential und der Verlust der gepinnten
+Slug-Auflösung (Rollback-Sicherheit) — deshalb erst bei diesem Auslöser.
+
 ## Konsequenzen für die Praxis
 
 ### Abtastung und Aufnahme (der grösste Hebel)
@@ -71,12 +111,15 @@ Zeitstempel und behaupten den Trend trotzdem.
   47-s-Clip ~4–6 Frames pro Wiederholung; eine Top-Position ist dann oft von
   einem einzigen Frame repräsentiert, und ein Früh-Spät-Vergleich ist
   strukturell unmöglich.
-- **Framerate explizit setzen:** 4–6 fps für Kraft-/Core-/Reha-Wiederholungen;
-  **8–10 fps für Laufstil** (bei ~170 spm dauert ein Gangzyklus ~0.7 s).
-- **Höchste verfügbare Medienauflösungs-Stufe wählen.** Bei Gemini gilt für
-  Video ein Deckel von 70 Tokens/Frame bei `low` *und* `medium` — identisch —
-  gegenüber 280 bei `high`. Erst mit `high` lohnt überhaupt eine höhere
-  Quellauflösung.
+- **Struktur-Fragen an Standbilder stellen, nicht ans Video.** Auflagepunkte,
+  Seitigkeit, Gerät und Kamerageometrie werden an wenigen Frames in
+  Originalauflösung erhoben (1120 Tokens/Bild statt 70/Video-Frame). Eine
+  höhere Quellauflösung lohnt sich erst auf diesem Pfad — auf dem Videopfad
+  wird sie wegtokenisiert, unabhängig davon, wie scharf die Datei ist.
+- **Framerate und Medienauflösung sind über OpenRouter nicht steuerbar**
+  (siehe „Transport-Grenze"). Für Bewegungs-Fragen bleibt es daher bei der
+  Default-Abtastung; die Absicherung dort ist die Zeitstempel-Pflicht, nicht
+  die Auflösung.
 - **Quellauflösung mindestens 720p**, Kamera fix (Stativ), ganzer Körper im
   Bild, senkrecht zur Beobachtungsebene, kein Zoom, kein Schwenk —
   Kamerabewegung ist eine eigene Fehlerquelle der Bewegungsinterpretation.
@@ -123,13 +166,16 @@ Zeitstempel und behaupten den Trend trotzdem.
 
 ## Offene Punkte
 
-- Ob eine höhere Framerate plus `high`-Medienauflösung die Fussstellungs-Frage
-  tatsächlich stabilisiert, ist **nicht verifiziert** — der Test lief auf dem
-  vorhandenen chat-komprimierten Material. Mit dem ersten
-  Originalauflösungs-Upload gegenprüfen.
-- Der Zwei-Call-Aufbau ist als Empfehlung belegt, im Code aber noch nicht
-  umgesetzt (Stand dieses Dokuments: Modell-Slugs und Transport-Guard sind
-  umgesetzt).
+- Ob der Standbild-Pfad die Fussstellungs-Frage tatsächlich stabilisiert, ist
+  **nicht verifiziert**. Der ursprüngliche Test lief auf chat-komprimiertem
+  Material; die Zahlenlage (Faktor 16 im Token-Budget) begründet die Erwartung,
+  belegt sie aber nicht. Erster Gegentest: ein Clip mit bekannter Ground Truth
+  zur Auflagepunkt-Frage. Erfolgskriterium ist **entweder** die korrekte
+  Antwort **oder** eine ehrliche Enthaltung — eine falsche Antwort mit
+  `sicher` ist der Fehlschlag.
+- Ob die erzwungene Enumeration (feste Auswahlliste statt Fliesstext) über die
+  erzwungene Nichtwissen-Option hinaus etwas beiträgt, ist nicht isoliert
+  gemessen. Beide wurden zusammen eingeführt.
 
 ## Quellen
 

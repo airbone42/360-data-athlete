@@ -1,12 +1,22 @@
 #!/usr/bin/env python3
 """Video-Formcheck via Gemini (OpenRouter) — Kraft/Core/Balance/Ninja/Laufen.
 
-Flow:
-1. Video laden, Motion-Trimming (Intro/Outro abschneiden) — bei Kraft
-   Für Laufen: feste Fenster (erste 15% + letzte 10% überspringen)
-2. N gleichmäßige Frames extrahieren
-3. Frames als sequentielle Bilder an Gemini via OpenRouter
-4. Strukturiertes Feedback: Ausführung / Drill / Challenge
+Drei Stufen, getrennt nach Art der Aussage:
+
+A. **Struktur** — Auflagepunkte, Seitigkeit, Gerät, Kamerawinkel, erhoben an
+   wenigen Standbildern in Originalauflösung. Geschlossener Fragebogen mit
+   erzwungener `nicht_erkennbar`-Option, ohne Übungsname. Ein nicht sicher
+   erhobener Struktur-Claim blockt den Befund (Exit 4).
+B. **Bewegung** — Wiederholungen, Tempo, früh-vs-spät, am nativen Video.
+   Ebenfalls ohne Übungsname und ohne Athleten-Kontext.
+C. **Bewertung** — nur Text aus A und B, nie Video, nie Frames; hier kommt der
+   Athleten-Kontext dazu.
+
+Warum der Split: Für Video deckelt Gemini einen Frame auf 70 Tokens (nur
+`media_resolution=high` gäbe 280, und OpenRouter kann das nicht anfordern) —
+ein Standbild bekommt 1120. Sämtliche real aufgetretenen Fehlbefunde waren
+statisch-strukturell, keiner temporal. Details und Quellen:
+framework/research/video-form-check-model-selection.md
 
 Usage:
     python3 scripts/analyse_video.py --video /tmp/video.mp4 --exercise "Goblet Squat"
@@ -76,9 +86,16 @@ DEFAULT_MODEL = "pro"
 # on a chat-compressed clip at default sampling (~1 fps), a binary stance
 # question ("stacked vs. staggered feet") was answered inconsistently across
 # repeated identical runs of the SAME model. The information is not reliably
-# present in the sampled frames, so no model choice fixes it. The remedies are
-# upstream: full-resolution upload (see the chat-transport guard above) and a
-# clip short enough that each repetition gets several frames.
+# present in the sampled frames, so no model choice fixes it.
+#
+# The remedy originally recorded here — "full-resolution upload" — turned out to
+# be insufficient, and it is worth being precise about why: the 70-token cap is
+# applied per *frame* regardless of what the source file contains, so uploading
+# a sharper video buys nothing on a question like this. What actually raises the
+# budget is asking the question of a still image instead (1120 tokens), which is
+# what the structure pass does. Uploading the original is still right — chat
+# re-encoding destroys detail before Gemini ever sees it — it is just not
+# sufficient on its own.
 
 # --- Chat-transport guard -------------------------------------------------
 #
@@ -92,6 +109,11 @@ DEFAULT_MODEL = "pro"
 # Videos arriving through a chat attachment are therefore refused by default.
 # The athlete uploads the original file to COACH_VIDEO_INBOX instead.
 _CHAT_INBOX_MARKERS = (("channels", "inbox"),)
+
+# Exit codes the caller distinguishes. 3 = chat transport refused (above);
+# 4 = the structural claims did not hold up, so no finding was produced. A 4 is
+# a correct outcome, not a crash: it means the pipeline declined to guess.
+EXIT_STRUCTURE_GATE = 4
 
 
 def is_chat_transport_path(path: str) -> bool:
@@ -123,6 +145,7 @@ ANGLE_GUIDE: dict[str, str] = {
     "kb horn pinch": "von vorne — Daumen-Finger-Spannung, Unterarm",
     "single leg rdl": "seitlich — Hüftachse, Knie-Softness, Rücken",
     "bulgarian split squat": "seitlich — Knie-Tracking, Oberkörperlage",
+    "side plank": "seitlich (90°) — Hüfthöhe, Körperlinie, Auflagepunkt des Stützarms",
     "planche lean": "seitlich — Körperlinie, Schulterposition über Handgelenk",
     "push-up": "seitlich — Körperlinie, Ellbogen-Winkel",
     # Laufen
@@ -137,12 +160,34 @@ ANGLE_GUIDE: dict[str, str] = {
 
 def get_angle_tip(exercise: str) -> str:
     key = exercise.lower().strip()
-    for pattern, tip in ANGLE_GUIDE.items():
-        if pattern in key or key in pattern:
-            return tip
+    # Longest match wins. The previous two-way substring test let a short
+    # exercise name borrow a longer entry's guidance ("Plank" matching
+    # "side plank"), which silently hands the wrong checkpoints to the
+    # evaluation. Only the pattern-in-name direction is meaningful.
+    matches = [(pat, tip) for pat, tip in ANGLE_GUIDE.items() if pat in key]
+    if matches:
+        return max(matches, key=lambda pair: len(pair[0]))[1]
     if any(kw in key for kw in RUN_KEYWORDS):
         return "seitlich (90°, 8–12m Distanz) — Fußaufsatz, Hüftextension, Oberkörperhaltung"
     return "seitlich oder schräg vorne (45°) — Gesamtbewegung beurteilen"
+
+
+# An ANGLE_GUIDE entry carries two different things separated by an em dash:
+# the camera *geometry* ("seitlich (90°)") and the evaluation *focus*
+# ("Hüfthöhe, Körperlinie, Auflagepunkt des Stützarms"). Only the geometry may
+# reach the structure pass — the focus names the finding the observer is meant
+# to look for, which is exactly the prior that pass exists to avoid. The focus
+# belongs in the evaluation, where a hypothesis is legitimate.
+
+def get_angle_geometry(exercise: str) -> str:
+    """Camera geometry only — safe for the structure pass."""
+    return get_angle_tip(exercise).split("—", 1)[0].strip()
+
+
+def get_angle_focus(exercise: str) -> str:
+    """Evaluation focus only (empty when the entry names no checkpoints)."""
+    parts = get_angle_tip(exercise).split("—", 1)
+    return parts[1].strip() if len(parts) > 1 else ""
 
 
 def is_run_exercise(exercise: str) -> bool:
@@ -158,6 +203,12 @@ _SEEDING_PATTERNS = (
     "frontal", "goblet", "vor der brust", "gehalten", "hält die", "haelt die",
     "kontralateral", "ipsilateral", "über kopf", "ueber kopf",
     "bein vorne", "vorderes bein", "tempo 3", "tempo 2",
+    # Contact-point and laterality vocabulary. These are the terms a correction
+    # after a wrong structural finding is phrased in, and handing the model the
+    # right answer produces a confirmation, not an observation.
+    "unterarm", "ellbogen", "gestreckter arm", "gestreckten arm",
+    "gestapelt", "gestaffelt", "stützarm", "stuetzarm", "stützhand", "stuetzhand",
+    "linke seite", "rechte seite", "auf dem arm", "aufgestützt", "aufgestuetzt",
 )
 
 
@@ -395,25 +446,32 @@ Regeln:
 
 
 def _build_perception_prompt(exercise: str, angle: str, run_mode: bool) -> str:
-    """Pass-1 prompt. Deliberately carries no athlete context and no checklist."""
-    subject = "Laufbewegung" if run_mode else "Übung"
+    """Movement pass. No athlete context, no checklist — and no exercise name.
+
+    ``exercise`` and ``angle`` are accepted for call-site compatibility and
+    deliberately unused: naming the exercise hands the model a textbook picture,
+    and the sharpest confabulation on record was precisely the standard coaching
+    cue of the named movement, reported for a clip that never showed it. The
+    structural questions this pass used to ask now belong to the structure pass,
+    which asks them of stills; what is left here is what only video can answer.
+    """
+    del exercise, angle  # see docstring — priors, not inputs
+    subject = "eine laufende Person" if run_mode else "eine trainierende Person"
     extra = (
         "- Fussaufsatz relativ zum Körperschwerpunkt, Kniewinkel bei Bodenkontakt, Rumpfneigung, Armführung\n"
         if run_mode else
-        "- Falls ein Gerät/Gewicht sichtbar ist: welches, in welcher Hand, wo gehalten\n"
+        "- Bewegungstempo: zügig oder langsam, mit oder ohne Pause in den Endpositionen\n"
     )
-    return f"""Video: {subject} — „{exercise}".
-Aufnahmewinkel laut Aufnahme-Vorgabe: {angle or get_angle_tip(exercise)}
-(Diese Angabe ist eine Vorgabe, keine Tatsache — prüfe am Bild, aus welchem Winkel tatsächlich gefilmt wurde.)
+    return f"""Das Video zeigt {subject}. Der Name der Übung wird dir bewusst nicht genannt — beschreibe, was zu sehen ist, nicht was zu einer Übung gehören würde.
 
 Beschreibe ausschliesslich Sichtbares, in dieser Reihenfolge:
 
 **1. Aufnahme**
 Tatsächlicher Kamerawinkel und -höhe. Welcher Bildausschnitt ist zu sehen (ganzer Körper / Teilkörper)? Welche Körperteile sind zu KEINEM Zeitpunkt im Bild? Bildqualität/Unschärfe.
 
-**2. Ausgangsposition** [mm:ss]
-Körperposition, Auflagepunkte, Seitigkeit — **anatomisch** (aus Sicht des Athleten): welcher Arm/welches Bein trägt, welcher führt. Gib je Seitenangabe die Bildseite und die Begründung der anatomischen Zuordnung mit an, oder melde `nicht erkennbar`.
-{extra}
+**2. Wiederholungen**
+Wie viele voneinander abgegrenzte Wiederholungen sind zu sehen? Zeitstempel je Endposition. Ist es ein Halt ohne Wiederholungen, sage das.
+
 **3. Erste Wiederholung** [mm:ss]
 Beschreibe die Endposition der ersten Wiederholung isoliert.
 
@@ -422,26 +480,261 @@ Beschreibe die Endposition der letzten Wiederholung isoliert.
 
 **5. Differenz**
 Erst jetzt: Unterscheiden sich 3 und 4? Trendwörter nur mit zwei Zeitstempeln und konkreter Differenz, sonst „kein Trend belegbar".
-
+{extra}
 **6. Nicht beurteilbar**
 Liste explizit auf, welche anatomischen Strukturen aus diesem Winkel NICHT beurteilbar sind und warum.
 
-Halte dich knapp. Keine Bewertung, keine Empfehlung, keine Ursachen."""
+Auflagepunkte, Seitigkeit und Gerät beschreibst du hier NICHT — die werden getrennt an Standbildern erhoben. Halte dich knapp. Keine Bewertung, keine Empfehlung, keine Ursachen."""
+
+
+# ─── Stage A: structure, asked of stills ────────────────────────────
+#
+# Every wrong finding this pipeline has produced was a *static structural* claim:
+# which limb carries the load, on which surface (forearm vs. extended arm), which
+# anatomical side, which implement, from which angle it was filmed. None was
+# temporal. Two properties of the video path explain that.
+#
+# First, budget. A video frame is billed at 70 tokens on every media-resolution
+# setting except `high` (280), and the OpenRouter transport exposes no way to ask
+# for `high` — so the default is also the coarsest tier available. A still image
+# gets 1120 tokens at the same default. The distinction between a forearm lying
+# on the floor and an extended arm with the hand on the floor is a small region
+# of a full-body frame; at 70 tokens it is simply not represented.
+#
+# Second, priors. Free prose under a known exercise name reproduces the textbook
+# picture of that exercise. So this pass gets no exercise name, and it answers a
+# closed-form questionnaire instead of writing a description — a forced choice
+# between named options, with abstention as one of the options rather than as a
+# discipline the model has to remember.
+
+STRUCTURE_UNVERIFIED_MARKER = "⚠️ STRUKTUR UNVERIFIZIERT"
+
+# Fields whose being wrong invalidates everything downstream. A swapped support
+# side or a misread contact point does not degrade an assessment gracefully — it
+# produces a confident finding about a movement that did not happen.
+LOAD_BEARING_FIELDS = ("aufnahme", "koerperposition", "bodenkontakte", "geraet")
+
+_CERTAIN = "sicher"
+
+CONTACT_SEGMENTS_STRENGTH = (
+    "Hand_gestreckter_Arm", "Hand_gebeugter_Arm", "Unterarm_Ellbogen",
+    "Knie", "Schienbein", "Fuss", "Gesaess", "Huefte_Becken",
+    "Ruecken_Schulterguertel", "kein_Kontakt", "nicht_erkennbar",
+)
+CONTACT_SEGMENTS_RUN = ("Ferse", "Mittelfuss", "Vorfuss", "kein_Kontakt", "nicht_erkennbar")
+
+STRUCTURE_SYSTEM_PROMPT = """Du bist ein präziser Beobachter. Du beantwortest Fragen zu Standbildern ausschliesslich aus dem, was darin sichtbar ist.
+
+Du bewertest NICHT. Keine Wertungen, keine Ursachenzuschreibungen, keine Empfehlungen. Verbotene Wörter: gut, schlecht, sauber, instabil, kompensiert, zu tief, zu hoch, korrekt, falsch, ermüdungsbedingt, Schwäche, Defizit.
+
+`nicht_erkennbar` ist eine vollwertige und ausdrücklich erwünschte Antwort. Eine ehrliche Enthaltung ist wertvoller als eine geratene Beobachtung — geratene Details führen stromabwärts zu falschen Trainingsentscheidungen.
+
+Du bekommst KEINEN Übungsnamen. Das ist Absicht: Ein Übungsname ruft ein Lehrbuchbild ab, und dieses Bild würde deine Beschreibung färben. Beschreibe, was auf den Bildern liegt — nicht, was zu einer Übung gehören würde. Nenne die Übung auch dann nicht, wenn du sie zu erkennen glaubst.
+
+Regeln:
+- **Seitigkeit ist IMMER anatomisch anzugeben — aus Sicht der Person, nicht aus Sicht der Kamera.** Eine der Kamera zugewandte Körperseite kann im Bild links erscheinen und anatomisch rechts sein. Gib zu jeder Seitenangabe an, auf welcher Bildseite sie erscheint und woran du die anatomische Zuordnung festmachst (Blickrichtung des Gesichts, Bauch-/Rückenseite, Daumenstellung, Fussstellung). Ist die Zuordnung nicht sicher ableitbar: `nicht_erkennbar` — rate NIEMALS. Eine vertauschte Seitigkeit macht die gesamte Bewertung stromabwärts falsch.
+- Auflagepunkte zerlegst du. Für jedes Körperteil mit Bodenkontakt nennst du das konkrete Segment, das aufliegt. Ein Arm kann über die flache Hand bei gestrecktem Ellbogen aufliegen oder über den Unterarm mit dem Ellbogen am Boden — das sind verschiedene Antworten. Wähle die zutreffende aus der vorgegebenen Liste oder `nicht_erkennbar`.
+- Jede Angabe bekommt einen `belegframe`: den Dateinamen des Bildes, auf dem du sie ablesen kannst. Nenne das Bild, das die Angabe am deutlichsten zeigt.
+- Was ausserhalb des Bildausschnitts liegt oder durch Kleidung, Winkel oder Unschärfe verdeckt ist, meldest du als `nicht_erkennbar` — mit Angabe des Grundes.
+
+Du antwortest AUSSCHLIESSLICH mit einem JSON-Objekt nach dem vorgegebenen Schema. Kein Fliesstext davor oder danach."""
+
+
+def _build_structure_prompt(frame_names: list[str], run_mode: bool) -> str:
+    """Stage-A prompt: no exercise name, no checklist, no athlete context.
+
+    No expected camera angle either. By analysis time the shot already exists,
+    so telling the model what angle was *intended* supplies nothing but a prior
+    to confirm — and the camera geometry has itself been misread before, which
+    makes it a question to ask rather than a fact to hand over.
+    """
+    segments = CONTACT_SEGMENTS_RUN if run_mode else CONTACT_SEGMENTS_STRENGTH
+    enum = " | ".join(segments)
+    listing = "\n".join(f"  {n}" for n in frame_names)
+    subject = "einer laufenden Person" if run_mode else "einer trainierenden Person"
+    return f"""Die folgenden {len(frame_names)} Standbilder stammen chronologisch aus einer Aufnahme {subject}:
+{listing}
+
+Antworte mit genau diesem JSON-Objekt:
+
+{{
+  "aufnahme": {{
+    "kamera_winkel": "<frontal | schraeg_vorne | seitlich | schraeg_hinten | dorsal | von_oben | nicht_erkennbar>",
+    "kamera_hoehe": "<bodennah | huefthoch | brusthoch | kopfhoch | nicht_erkennbar>",
+    "bildausschnitt": "<ganzer_koerper | teilkoerper>",
+    "nie_im_bild": ["<Körperteile, die zu keinem Zeitpunkt sichtbar sind>"],
+    "belegframe": "<Dateiname>",
+    "sicherheit": "sicher | unsicher | nicht_erkennbar"
+  }},
+  "koerperposition": {{
+    "grundposition": "<liegend_seitlich | liegend_rueck | liegend_bauch | sitzend | stehend | vierfuessler | haengend | nicht_erkennbar>",
+    "koerperlaengsachse": "<horizontal | vertikal | schraeg | nicht_erkennbar>",
+    "belegframe": "<Dateiname>",
+    "sicherheit": "sicher | unsicher | nicht_erkennbar"
+  }},
+  "bodenkontakte": [
+    {{
+      "koerperteil": "<Arm | Bein | Rumpf | Kopf>",
+      "kontakt": "<{enum}>",
+      "anatomische_seite": "<links | rechts | beidseitig | nicht_erkennbar>",
+      "bildseite": "<links | rechts | nicht_erkennbar>",
+      "seite_begruendung": "<woran du die anatomische Zuordnung festmachst>",
+      "belegframe": "<Dateiname>",
+      "sicherheit": "sicher | unsicher | nicht_erkennbar"
+    }}
+  ],
+  "geraet": {{
+    "vorhanden": "<ja | nein | nicht_erkennbar>",
+    "was": "<Gerät/Gewicht, oder leer>",
+    "anatomische_hand": "<links | rechts | beide | keine | nicht_erkennbar>",
+    "position": "<vor_der_brust | seitlich | ueber_kopf | am_boden | keine | nicht_erkennbar>",
+    "belegframe": "<Dateiname>",
+    "sicherheit": "sicher | unsicher | nicht_erkennbar"
+  }},
+  "nicht_beurteilbar": ["<Struktur> — <Grund>"]
+}}
+
+Liste unter "bodenkontakte" JEDES Körperteil auf, das den Boden oder eine Unterlage berührt. Erfinde keine Einträge für Körperteile ohne Kontakt."""
+
+
+def _parse_structure_json(raw: str) -> dict:
+    """Tolerant parse — models fence JSON even when told not to."""
+    text = raw.strip()
+    if text.startswith("```"):
+        text = text.split("\n", 1)[-1].rsplit("```", 1)[0]
+    start, end = text.find("{"), text.rfind("}")
+    if start == -1 or end == -1:
+        raise ValueError("Struktur-Pass lieferte kein JSON-Objekt")
+    return json.loads(text[start:end + 1])
+
+
+def structure_gate(claims: dict, frame_names: tuple[str, ...] = ()) -> tuple[bool, list[str]]:
+    """Are the load-bearing structural claims safe to build an assessment on?
+
+    Returns ``(passed, reasons)``. A blocked check is not a pipeline failure — it
+    is the pipeline declining to guess, which is the outcome this stage exists to
+    produce. Anything not explicitly ``sicher`` blocks, a missing field included:
+    silence is not a confirmation. A ``sicher`` claim that cites no extracted
+    frame is downgraded too, because a claim whose evidence cannot be opened
+    cannot be verified.
+    """
+    reasons: list[str] = []
+
+    def check_evidence(label: str, entry: dict) -> None:
+        if entry.get("sicherheit") != _CERTAIN:
+            reasons.append(f"{label}: Sicherheit „{entry.get('sicherheit', '—')}“")
+            return
+        beleg = str(entry.get("belegframe") or "")
+        if frame_names and beleg not in frame_names:
+            reasons.append(f"{label}: Belegframe „{beleg or '—'}“ ist kein extrahiertes Bild")
+
+    for field in LOAD_BEARING_FIELDS:
+        if field not in claims:
+            reasons.append(f"{field}: fehlt in der Struktur-Antwort")
+
+    for field in ("aufnahme", "koerperposition", "geraet"):
+        value = claims.get(field)
+        if isinstance(value, dict):
+            check_evidence(field, value)
+
+    contacts = claims.get("bodenkontakte")
+    if isinstance(contacts, list):
+        if not contacts:
+            reasons.append("bodenkontakte: kein einziger Auflagepunkt erhoben")
+        for idx, contact in enumerate(contacts, start=1):
+            if not isinstance(contact, dict):
+                reasons.append(f"bodenkontakte[{idx}]: unlesbarer Eintrag")
+                continue
+            label = f"bodenkontakte[{contact.get('koerperteil', idx)}]"
+            check_evidence(label, contact)
+            if contact.get("kontakt") == "nicht_erkennbar":
+                reasons.append(f"{label}: Auflagepunkt nicht erkennbar")
+            if contact.get("anatomische_seite") == "nicht_erkennbar":
+                reasons.append(f"{label}: anatomische Seite nicht erkennbar")
+    elif "bodenkontakte" in claims:
+        reasons.append("bodenkontakte: keine Liste")
+
+    return (not reasons), reasons
+
+
+def format_structure_block(claims: dict, frames: list) -> str:
+    """The auditable evidence trail appended to every analysis."""
+    frame_list = "\n".join(f"- {f}" for f in frames)
+    return (
+        "=== STRUKTUR (Stage A, an Standbildern erhoben, ohne Übungsname) ===\n"
+        f"{json.dumps(claims, ensure_ascii=False, indent=2)}\n"
+        f"\nFrames (Belege für die Verifikation):\n{frame_list}"
+    )
+
+
+def blocked_by_structure_gate(reasons: list[str], frames: list, angle_focus: str) -> str:
+    """Output for a blocked check: the open question, never a hedged finding."""
+    lines = ["❌ Formcheck blockiert: Struktur nicht belastbar erhoben.", "", "Offen geblieben ist:"]
+    lines += [f"- {r}" for r in reasons]
+    lines += [
+        "",
+        "📹 Nächstes Mal: senkrecht zur Beobachtungsebene filmen, ganzer Körper im Bild, "
+        "Kamera fix (Stativ), 20–40 s / 3–6 Wiederholungen.",
+    ]
+    if angle_focus:
+        lines.append(f"   Zu beurteilen wäre: {angle_focus}")
+    if frames:
+        lines += ["", "Frames zum Selbst-Nachsehen:"] + [f"- {f}" for f in frames]
+    return "\n".join(lines)
+
+
+def analyse_structure_frames(
+    client: object,
+    model: str,
+    frames: list,
+    run_mode: bool,
+    max_tok: int,
+) -> dict:
+    """Stage A — closed-form structural questionnaire on full-resolution stills."""
+    content: list = [
+        {"type": "text",
+         "text": _build_structure_prompt([f.name for f in frames], run_mode)}
+    ]
+    for frame in frames:
+        b64 = base64.b64encode(frame.read_bytes()).decode()
+        content.append({"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64}"}})
+
+    response = client.chat.completions.create(  # type: ignore[attr-defined]
+        model=model,
+        max_tokens=max_tok,
+        messages=[
+            {"role": "system", "content": STRUCTURE_SYSTEM_PROMPT},
+            {"role": "user", "content": content},
+        ],
+        extra_headers={"X-Title": settings.openrouter_x_title},
+    )
+    if not response.choices:
+        raise RuntimeError(f"Leere Antwort von {model} — kein choices-Array zurückgegeben")
+    raw = response.choices[0].message.content
+    if not raw:
+        raise RuntimeError(f"Leere Antwort-Content von {model} — choices vorhanden aber leer")
+    return _parse_structure_json(raw)
 
 
 def _build_evaluation_prompt(
-    exercise: str, checklist: str, context: str, angle: str, run_mode: bool, perception: str
+    exercise: str, checklist: str, context: str, angle: str, run_mode: bool, perception: str,
+    structure: dict | None = None,
 ) -> str:
-    """Pass-2 prompt. Sees only the pass-1 text, never the video."""
+    """Evaluation prompt. Sees only text — never the video, never the frames."""
     checklist_block = f"\nÜbungs-Checkliste:\n{checklist}" if checklist else ""
     context_block = f"\nAthlet-Kontext: {context}" if context else ""
     body = _build_user_prompt(exercise, checklist, context, angle, run_mode)
+    structure_block = (
+        "\n\n=== STRUKTUR (an Standbildern erhoben, ohne Übungsname) ===\n"
+        + json.dumps(structure, ensure_ascii=False, indent=2)
+        + "\n=== ENDE STRUKTUR ==="
+    ) if structure else ""
     # Reuse the established output format, but bind it to the observation text.
     return f"""Ein unabhängiger Beobachter hat das Video beschrieben, OHNE den Athleten-Kontext zu kennen. Du siehst das Video selbst nicht — nur diese Beschreibung.
 
 === BEOBACHTUNG (Videobeschreibung) ===
 {perception}
-=== ENDE BEOBACHTUNG ==={checklist_block}{context_block}
+=== ENDE BEOBACHTUNG ==={structure_block}{checklist_block}{context_block}
 
 Bewerte auf dieser Grundlage.
 
@@ -451,6 +744,7 @@ HARTE REGELN:
 - Was der Beobachter mit `unsicher` markiert hat, kennzeichnest du in deiner Bewertung ebenfalls als unsicher.
 - **Seitenangaben des Beobachters sind anatomisch zu lesen** (aus Sicht des Athleten). Hat der Beobachter die anatomische Zuordnung als `nicht erkennbar` gemeldet, darfst du KEINE seitenabhängige Aussage treffen — insbesondere keine Aussage darüber, ob eine Reha-Seite belastet wird oder nicht.
 - Der Athleten-Kontext dient der Einordnung und der Dosierungs-Frage. Er ist KEIN Beleg dafür, dass ein bekanntes Muster im Video vorliegt — wenn die Beobachtung es nicht hergibt, liegt es nicht vor.
+- **Der STRUKTUR-Block hat Vorrang.** Auflagepunkte, Seitigkeit, Gerät und Kamerawinkel wurden an Standbildern mit deutlich höherer Auflösung erhoben als der Videopfad sie hat. Widerspricht die Videobeschreibung dem Struktur-Block in einem dieser Punkte, gilt der Struktur-Block — und du benennst den Widerspruch ausdrücklich, statt ihn zu glätten.
 
 {body}"""
 
@@ -483,8 +777,11 @@ def analyse_with_gemini_video(
     run_mode: bool = False,
     section_label: str = "",
     rotate: int | None = None,
+    structure_frames: int = 0,
+    frames_dir: str = "",
+    skip_structure_gate: bool = False,
 ) -> str:
-    """Direkte Video-Analyse via OpenRouter video_url (Gemini sieht das komplette Video).
+    """Formcheck in drei Stufen: Struktur (Standbilder) → Bewegung (Video) → Bewertung.
 
     ``rotate`` is degrees counter-clockwise to apply before upload; ``None``
     means read the container's display matrix (see VALID_ROTATIONS).
@@ -493,13 +790,46 @@ def analyse_with_gemini_video(
     if size_mb > VIDEO_SIZE_LIMIT_MB:
         raise ValueError(f"Video zu groß für direkte Analyse ({size_mb:.1f}MB > {VIDEO_SIZE_LIMIT_MB}MB) — nutze Frames")
 
+    source_path = video_path  # keep the untouched original for the still frames
+    rotate_ccw = rotate if rotate is not None else _detect_metadata_rotation(video_path)
+    if rotate_ccw:
+        print(f"  Orientierung: drehe {rotate_ccw}° gegen den Uhrzeigersinn", file=sys.stderr)
+
+    client = _openrouter_client()
+    model = MODELS.get(model_key, MODELS[DEFAULT_MODEL])
+    print(f"  Modell: {model}", file=sys.stderr)
+
+    # ── Stage A ──────────────────────────────────────────────────────────────
+    # Runs first, and on stills cut from the ORIGINAL file. Two reasons for the
+    # ordering: the frames must not inherit the upload copy's downscaling (the
+    # resolution is the entire point), and a blocked gate should cost nothing —
+    # re-encoding a large clip can take minutes, and there is no sense paying
+    # that for a check that is about to decline to produce a finding.
+    structure: dict | None = None
+    frames: list[Path] = []
+    if structure_frames > 0:
+        out_dir = structure_frames_dir(source_path, frames_dir)
+        frames = extract_structure_frames(
+            source_path, out_dir, count=structure_frames, rotate_ccw=rotate_ccw
+        )
+        print("  Stage A — Struktur an Standbildern...", file=sys.stderr)
+        structure = analyse_structure_frames(client, model, frames, run_mode, 4000)
+        passed, reasons = structure_gate(structure, tuple(f.name for f in frames))
+        if not passed:
+            if skip_structure_gate:
+                print(f"  ⚠️  Struktur-Gate übersprungen ({len(reasons)} offene Punkte).",
+                      file=sys.stderr)
+                structure["_gate_uebersprungen"] = reasons
+            else:
+                return blocked_by_structure_gate(
+                    reasons, frames, get_angle_focus(exercise)
+                ) + "\n\n" + format_structure_block(structure, frames)
+
+    # ── Stage B ──────────────────────────────────────────────────────────────
     # Rotate upright and/or shrink before uploading. Above the practical payload
     # target the provider tends to answer with an empty body after a long upload
     # rather than with an error, so size is handled here rather than discovered
     # ten minutes later.
-    rotate_ccw = rotate if rotate is not None else _detect_metadata_rotation(video_path)
-    if rotate_ccw:
-        print(f"  Orientierung: drehe {rotate_ccw}° gegen den Uhrzeigersinn", file=sys.stderr)
     if size_mb > VIDEO_UPLOAD_TARGET_MB:
         print(f"  {size_mb:.1f}MB über dem Upload-Ziel ({VIDEO_UPLOAD_TARGET_MB:.0f}MB) — bereite auf…",
               file=sys.stderr)
@@ -512,18 +842,13 @@ def analyse_with_gemini_video(
               "Bei leerer Antwort das Video kürzen oder vorab verkleinern.",
               file=sys.stderr)
 
-    print(f"  Direkte Video-Analyse ({size_mb:.1f}MB)...", file=sys.stderr)
+    print(f"  Stage B — Bewegung am Video ({size_mb:.1f}MB)...", file=sys.stderr)
     with open(video_path, "rb") as f:
         b64 = base64.b64encode(f.read()).decode()
 
-    client = _openrouter_client()
-    model = MODELS.get(model_key, MODELS[DEFAULT_MODEL])
-    print(f"  Modell: {model}", file=sys.stderr)
-
-    # Pass 1 carries no athlete context and no checklist — see the two-pass
-    # rationale above. The checklist is withheld too: it names the exact
-    # patterns the evaluation is looking for and would prime the description
-    # just as the athlete context would.
+    # No athlete context, no checklist, no exercise name: the checklist names the
+    # exact patterns the evaluation is looking for and would prime the
+    # description just as the athlete context would.
     system_prompt = PERCEPTION_SYSTEM_PROMPT
     user_text = _build_perception_prompt(exercise, angle, run_mode)
 
@@ -583,10 +908,10 @@ def analyse_with_gemini_video(
             set_span_io(output=perception)
             return perception
 
-        print("  Pass 2 — Bewertung (nur Text, ohne Video)...", file=sys.stderr)
+        print("  Stage C — Bewertung (nur Text, ohne Video, ohne Frames)...", file=sys.stderr)
         eval_system = SYSTEM_PROMPT_RUN if run_mode else SYSTEM_PROMPT
         eval_user = _build_evaluation_prompt(
-            exercise, checklist, context, angle, run_mode, perception
+            exercise, checklist, context, angle, run_mode, perception, structure
         )
         content_out = _call_openrouter_text(client, model, eval_system, eval_user, max_tok)
 
@@ -594,7 +919,17 @@ def analyse_with_gemini_video(
 
     # The observation stays attached: it is the evidence the assessment rests
     # on, and it is what makes a wrong finding auditable after the fact.
-    return f"{content_out}\n\n---\n**Beobachtung (Pass 1, ohne Athleten-Kontext erhoben)**\n\n{perception}"
+    out = f"{content_out}\n\n---\n**Bewegung (Stage B, ohne Athleten-Kontext erhoben)**\n\n{perception}"
+    if structure is not None:
+        # The banner is load-bearing, not decoration: _update_exercise_log refuses
+        # to persist while it is present, so an unattended run cannot put an
+        # unverified structural claim in front of the specialists.
+        out = (
+            f"{STRUCTURE_UNVERIFIED_MARKER} — Strukturaussagen sind noch nicht gegen "
+            f"die Frames geprüft.\n\n{out}\n\n---\n"
+            f"{format_structure_block(structure, frames)}"
+        )
+    return out
 
 
 
@@ -610,9 +945,24 @@ _EXERCISE_LOG = _CONFIG_DIR / "exercise_log.md"
 
 
 def _update_exercise_log(exercise: str, video_filename: str, summary: str, date_str: str) -> None:
-    """Update or append entry in config/exercise_log.md."""
+    """Update or append entry in config/exercise_log.md.
+
+    Refuses to write while the finding still carries the unverified-structure
+    banner. This is the point where a wrong structural claim used to become a
+    training decision: specialists read this file, so a finding that has not been
+    checked against the frames must not reach it. The verifying agent removes the
+    banner once it has adjudicated, and only then does the entry get written.
+    """
     import logging
     _log = logging.getLogger(__name__)
+    if STRUCTURE_UNVERIFIED_MARKER in summary or summary.lstrip().startswith("❌"):
+        _log.warning(
+            "exercise_log.md nicht geschrieben: Struktur unverifiziert bzw. Formcheck blockiert. "
+            "Erst nach Frame-Verifikation persistieren."
+        )
+        print("  ℹ️  exercise_log.md NICHT geschrieben — Struktur erst verifizieren.",
+              file=sys.stderr)
+        return
     log_path = _EXERCISE_LOG
     if not log_path.exists():
         # Vorher: silent return. Bei frischem Wrapper-Setup (nur config.example
@@ -640,7 +990,7 @@ def _update_exercise_log(exercise: str, video_filename: str, summary: str, date_
     section_header = f"## {exercise}"
     # Gemini-Response wird hier persistiert und später von Spezialisten als
     # Prompt-Input gelesen → schützen vor Format-/Markdown-Injection.
-    short_summary = escape_for_prompt(summary.strip().replace("\n", " "), max_len=200)
+    short_summary = escape_for_prompt(summary.strip().replace("\n", " "), max_len=1200)
 
     new_block = (
         f"\n## {exercise}\n"
@@ -691,7 +1041,13 @@ def main() -> None:
     parser.add_argument("--context", default="", help="Optionaler Kontext (RPE-Feedback etc.)")
     parser.add_argument("--angle", default="", help="Kamerawinkel (z.B. 'seitlich', 'posterior')")
     parser.add_argument("--model", default=DEFAULT_MODEL, choices=list(MODELS.keys()),
-                        help=f"Modell: flash (default, günstig) oder pro (tiefere Analyse)")
+                        help="Modell: pro (default, tiefere Analyse) oder flash (günstiger)")
+    parser.add_argument("--structure-frames", type=int, default=6,
+                        help="Standbilder für den Struktur-Pass (Stage A); 0 schaltet ihn ab")
+    parser.add_argument("--frames-dir", default="",
+                        help="Ablage der Standbilder (Default: <COACH_VIDEO_INBOX>/frames/<clip>)")
+    parser.add_argument("--skip-structure-gate", action="store_true",
+                        help="Notfall: Befund trotz unsicherer Struktur ausgeben (bleibt unsicher)")
     parser.add_argument("--angle-only", action="store_true", help="Nur Kamera-Empfehlung ausgeben")
     # Lauf-spezifische Parameter
     parser.add_argument("--multi-section", action="store_true",
@@ -774,13 +1130,28 @@ def _resolve_rotate_arg(raw: str) -> int | None:
     return deg
 
 
+def _finish(args: argparse.Namespace, feedback: str) -> None:
+    """Persist the finding — or decline to, and say so with an exit code.
+
+    A blocked structure gate exits 4 rather than 0 so that a wrapper script or a
+    cron-driven call cannot mistake "no finding was produced" for "the form was
+    fine". The log write is guarded a second time inside _update_exercise_log;
+    the duplication is deliberate, because that file is what the specialists read.
+    """
+    if not args.no_log and args.video:
+        _update_exercise_log(
+            args.exercise, Path(args.video).name, feedback, date.today().isoformat()
+        )
+    if feedback.lstrip().startswith("❌ Formcheck blockiert"):
+        sys.exit(EXIT_STRUCTURE_GATE)
+
+
 def _run_analysis(args: argparse.Namespace) -> None:
 
     # Trim video if requested
     if args.video and (args.trim_start > 0 or args.trim_end > 0):
-        import av as _av, tempfile as _tmp
-        with _av.open(args.video) as _c:
-            _dur = float(_c.duration) / 1e6
+        import tempfile as _tmp
+        _dur = _probe_duration_sec(args.video)
         _start = args.trim_start
         _end = _dur - args.trim_end
         _trimmed = _tmp.NamedTemporaryFile(suffix=".mp4", delete=False).name
@@ -808,35 +1179,49 @@ def _run_analysis(args: argparse.Namespace) -> None:
         if args.multi_section:
             _run_multi_section(args, checklist)
             return
-        print("\nAnalysiere mit Gemini (Video)...", file=sys.stderr)
+        print("\nAnalysiere mit Gemini...", file=sys.stderr)
         try:
             feedback = analyse_with_gemini_video(
                 args.video, args.exercise, checklist, args.context, args.angle,
                 args.model, run_mode=True, rotate=_resolve_rotate_arg(args.rotate),
+                structure_frames=args.structure_frames, frames_dir=args.frames_dir,
+                skip_structure_gate=args.skip_structure_gate,
             )
+        except FrameExtractionError as e:
+            print(f"⚠️ Technischer Fehler: Standbilder nicht extrahierbar — {e}", file=sys.stderr)
+            print("   Ohne Standbilder ist der Formcheck nicht belastbar. "
+                  "ffmpeg prüfen oder --structure-frames 0 (Befund bleibt unsicher).",
+                  file=sys.stderr)
+            sys.exit(1)
         except ValueError as e:
             print(f"Fehler: {e}", file=sys.stderr)
             print("Video komprimieren oder in kürzere Clips aufteilen.", file=sys.stderr)
             sys.exit(1)
         print(feedback)
-        if not args.no_log and args.video:
-            _update_exercise_log(args.exercise, Path(args.video).name, feedback, date.today().isoformat())
+        _finish(args, feedback)
         return
 
     # Kraft/Core/Ninja: Direkte Video-Analyse (kein lokales Frame-Decoding)
-    print("\nAnalysiere mit Gemini (Video)...", file=sys.stderr)
+    print("\nAnalysiere mit Gemini...", file=sys.stderr)
     try:
         feedback = analyse_with_gemini_video(
             args.video, args.exercise, checklist, args.context, args.angle,
             args.model, run_mode=False, rotate=_resolve_rotate_arg(args.rotate),
+            structure_frames=args.structure_frames, frames_dir=args.frames_dir,
+            skip_structure_gate=args.skip_structure_gate,
         )
+    except FrameExtractionError as e:
+        print(f"⚠️ Technischer Fehler: Standbilder nicht extrahierbar — {e}", file=sys.stderr)
+        print("   Ohne Standbilder ist der Formcheck nicht belastbar. "
+              "ffmpeg prüfen oder --structure-frames 0 (Befund bleibt unsicher).",
+              file=sys.stderr)
+        sys.exit(1)
     except ValueError as e:
         print(f"Fehler: {e}", file=sys.stderr)
         print("Video komprimieren oder in kürzere Clips aufteilen.", file=sys.stderr)
         sys.exit(1)
     print(feedback)
-    if not args.no_log and args.video:
-        _update_exercise_log(args.exercise, Path(args.video).name, feedback, date.today().isoformat())
+    _finish(args, feedback)
 
 
 def _trim_video_clip(video_path: str, start_sec: float, end_sec: float, out_path: str) -> bool:
@@ -856,8 +1241,136 @@ def _trim_video_clip(video_path: str, start_sec: float, end_sec: float, out_path
         return False
 
 
+class FrameExtractionError(RuntimeError):
+    """Stage A could not obtain frames — never degrade silently to the video path."""
+
+
+def _ffmpeg_exe() -> str | None:
+    """Single resolution point for the bundled ffmpeg binary."""
+    try:
+        import imageio_ffmpeg
+        return imageio_ffmpeg.get_ffmpeg_exe()
+    except Exception:
+        return None
+
+
+def _probe_duration_sec(video_path: str) -> float:
+    """Clip length in seconds, read from ffmpeg itself.
+
+    Preferred over :func:`_get_video_duration_sec`, whose last resort is to
+    return a hard-coded 60 s. A wrong duration is worse than no duration here:
+    frame timestamps are derived from it, so a silent fallback would sample
+    past the end of a short clip and quietly hand the structure pass fewer
+    frames than it asked for — or, on a long clip, only its opening seconds.
+    """
+    ffmpeg = _ffmpeg_exe()
+    if ffmpeg:
+        try:
+            # ffmpeg exits non-zero without an output file but still prints the
+            # container metadata, which is all we need.
+            result = subprocess.run(
+                [ffmpeg, "-i", video_path], capture_output=True, timeout=30
+            )
+            text = result.stderr.decode("utf-8", errors="replace")
+            marker = "Duration:"
+            if marker in text:
+                stamp = text.split(marker, 1)[1].split(",", 1)[0].strip()
+                hours, minutes, seconds = stamp.split(":")
+                total = int(hours) * 3600 + int(minutes) * 60 + float(seconds)
+                if total > 0:
+                    return total
+        except Exception:
+            pass
+    return _get_video_duration_sec(video_path)
+
+
+def structure_frames_dir(video_path: str, explicit: str = "") -> Path:
+    """Where the extracted stills are written.
+
+    Deliberately a persistent location, not a temp dir: the verification step
+    reads these exact files as its evidence, and a claim whose evidence has
+    already been deleted cannot be adjudicated afterwards.
+    """
+    if explicit:
+        return Path(explicit).expanduser()
+    inbox = video_inbox()
+    if inbox:
+        return inbox / "frames" / Path(video_path).stem
+    import tempfile as _tmp
+    return Path(_tmp.gettempdir()) / "coach_video_frames" / Path(video_path).stem
+
+
+def extract_structure_frames(
+    video_path: str,
+    out_dir: Path,
+    count: int = 6,
+    rotate_ccw: int = 0,
+) -> list[Path]:
+    """Evenly spaced stills at source resolution — the input for the structure pass.
+
+    Why stills at all, when the video is uploaded anyway: for *video* Gemini
+    caps a frame at 70 tokens on every media-resolution setting except `high`
+    (280), and the OpenRouter transport exposes no way to request `high`. Still
+    images are not subject to that cap. Every wrong finding this pipeline has
+    produced was a static structural claim — a contact point, a side, a piece of
+    equipment, a camera angle — so those questions are asked of stills and the
+    video is left to carry what it is actually good at, the movement over time.
+
+    No downscale happens here on purpose; `_COMPRESSION_LADDER` exists for the
+    video upload, and shrinking a frame would give back the detail this pass is
+    for. JPEG at the top quality step keeps the request small enough to survive
+    the upload (a large payload is a documented silent-failure mode here) while
+    staying far above what the video path ever resolved.
+    """
+    ffmpeg = _ffmpeg_exe()
+    if not ffmpeg:
+        raise FrameExtractionError(
+            "ffmpeg nicht verfügbar (Paket `imageio-ffmpeg`) — ohne Standbilder liefe "
+            "der Formcheck wieder über den Video-Pfad, also genau in die Fehlerklasse "
+            "zurück, die diese Stufe verhindert."
+        )
+
+    duration = _probe_duration_sec(video_path)
+    if duration <= 0:
+        raise FrameExtractionError("Video-Dauer nicht lesbar — keine Frames extrahierbar.")
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    filters = ["transpose=2"] * ((rotate_ccw % 360) // 90)
+    frames: list[Path] = []
+
+    for i in range(count):
+        # Sample at interval midpoints so neither the first nor the last frame
+        # lands on a cut, where a half-finished rep is common.
+        ts = duration * (i + 0.5) / count
+        # The timestamp is part of the filename because a verdict has to cite its
+        # evidence: "refuted at frame_03_t00m11s.jpg" is checkable weeks later.
+        out_path = out_dir / f"frame_{i + 1:02d}_t{int(ts) // 60:02d}m{int(ts) % 60:02d}s.jpg"
+        cmd = [ffmpeg, "-y", "-noautorotate", "-ss", f"{ts:.3f}", "-i", video_path]
+        if filters:
+            cmd += ["-vf", ",".join(filters)]
+        cmd += ["-frames:v", "1", "-q:v", "2", str(out_path)]
+        try:
+            result = subprocess.run(cmd, capture_output=True, timeout=60)
+        except Exception as e:
+            print(f"  Frame {i + 1} fehlgeschlagen: {e}", file=sys.stderr)
+            continue
+        if result.returncode == 0 and out_path.exists():
+            frames.append(out_path)
+
+    if not frames:
+        raise FrameExtractionError(f"ffmpeg lieferte kein einziges Standbild aus {video_path}")
+    total_mb = sum(f.stat().st_size for f in frames) / (1024 * 1024)
+    print(f"  {len(frames)} Struktur-Frames → {out_dir} ({total_mb:.1f}MB)", file=sys.stderr)
+    return frames
+
+
 def _run_garmin_sections(args: argparse.Namespace, checklist: str) -> None:
-    """Analysiert Garmin-definierte Sections als direkte Video-Clips."""
+    """Analysiert Garmin-definierte Sections als direkte Video-Clips.
+
+    Ohne Struktur-Pass: Auflagepunkte und Seitigkeit ändern sich zwischen einer
+    frischen und einer müden Section desselben Clips nicht, die Sections sind per
+    Konstruktion eine zeitliche Frage.
+    """
     import subprocess as sp
     import tempfile
 

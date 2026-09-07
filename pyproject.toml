@@ -26,6 +26,9 @@ dependencies = [
     "langsmith>=0.7,<1",
     "openai>=1.50,<3",
     "garminconnect>=0.2,<1",
+    # Bundled ffmpeg binary. Hard requirement since the form check extracts
+    # still frames: without it the structure pass cannot run at all.
+    "imageio-ffmpeg>=0.4,<1",
 ]
 
 [project.optional-dependencies]

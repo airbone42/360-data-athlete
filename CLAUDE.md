@@ -2092,18 +2092,50 @@ Once the original is in the inbox:
    contradicts it (confirmation bias). Frame the focus neutrally —
    "assess pelvis / lumbar-spine position through the forward circle" —
    and reconcile against any prior finding *after* the model has
-   reported, not before. When the athlete **disputes** a finding, do
-   not defend the model: extract the cited frames yourself
-   (`ffmpeg`/`imageio-ffmpeg` at the named timestamps, fine-sample the
-   critical window) and adjudicate from the footage. The athlete's view
-   of their own video outranks a single automated read; correct any
-   already-persisted finding before it drives a (wrong) progression
-   change.
+   reported, not before.
+3b. **Verify the structure against the frames — always, before the athlete
+   sees anything (mandatory).** The script extracts stills, asks the
+   structural questions of them (contact points, anatomical side,
+   implement, camera geometry), and returns them under a
+   `⚠️ STRUKTUR UNVERIFIZIERT` banner with the frame file backing each
+   claim. Launch `video-analyst`, which reads those frames itself and
+   returns one typed verdict per claim (`CONFIRMED` / `REFUTED` /
+   `NOT_DETERMINABLE`).
+
+   This is the reactive frame-adjudication rule made standing. Frame
+   adjudication has repeatedly been the thing that produced the *correct*
+   reading — but it only ever ran after the athlete caught an error, which
+   made the athlete the error-detection mechanism. Every wrong finding on
+   record was a static structural claim rated `sicher`, and several
+   survived the two-pass context isolation built to prevent them. A
+   confident wrong reading is caught by a second reader opening the image,
+   or not at all.
+
+   Exit code 4 means the gate already blocked the check: no finding was
+   produced, and that is a correct outcome, not a failure. Relay the open
+   question and the recording hint. `--skip-structure-gate` exists for
+   emergencies only, and its result is explicitly uncertain.
+
+   When the athlete **disputes** a verified finding, the same rule still
+   applies and the model is never defended: re-open the frames, fine-sample
+   the critical window if needed, and adjudicate from the footage. The
+   athlete's view of their own video outranks a single automated read;
+   correct any already-persisted finding before it drives a (wrong)
+   progression change.
 4. Send feedback via Telegram.
 5. Persist the analysis in `config/exercise_log.md` — specialists read this
-   file and feed findings into future coaching notes.
+   file and feed findings into future coaching notes. **An unverified
+   structural claim never becomes a `Befund:`**; `_update_exercise_log`
+   refuses to write while the banner stands. That link — wrong claim →
+   `exercise_log.md` → specialists → wrong progression — is the damage
+   path this gate exists to break.
 6. If follow-up needed: add `⚠️ video follow-up` to the next workout
    description.
+
+**Recording spec** (the largest single lever after the gate): clip 20–40 s
+covering 3–6 repetitions, camera fixed on a tripod, perpendicular to the
+plane being assessed, whole body in frame, no zoom or pan, ≥ 720p. Camera
+movement is its own source of movement-interpretation error.
 
 DJI / drone videos (filename contains `dji_fly_`): always analyse with
 `--trim-start 5 --trim-end 5`.

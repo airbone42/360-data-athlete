@@ -54,62 +54,32 @@ your answers explicitly:
 
 ---
 
-## Analysis prompts (Gemini via OpenRouter)
+## How the script produces its input
 
-### System prompt (passed as the first text element)
-```
-You are an experienced movement analyst and sports physiologist. You
-analyse training videos for execution quality and sports-physiological
-soundness.
+`scripts/analyse_video.py` runs three stages, split by the **kind of claim**
+rather than by convenience:
 
-The following images are chronologically ordered frames from a training
-video showing a single training exercise. Athlete restrictions are
-loaded from `config/athlete_static.md` — respect them as hard constraints,
-not recommendations.
+| Stage | Input | Answers | Sees athlete context |
+|-------|-------|---------|----------------------|
+| **A — structure** | a few stills at source resolution | contact points, anatomical side, implement, actual camera angle | no |
+| **B — movement** | the native video | repetitions, tempo, first-vs-last rep | no |
+| **C — evaluation** | only the text from A and B | execution quality, drill, challenge | yes |
 
-Analyse the sequence in two layers:
-1. Execution quality: what do you see concretely in the frames?
-2. Challenge: is this exercise and dosing optimal for this athlete right
-   now?
+Neither A nor B is told the exercise name: a name summons the textbook
+picture of that movement, and the sharpest confabulation on record was
+exactly the standard coaching cue of the named exercise, reported for a clip
+that never showed it. The name enters at stage C, where a hypothesis is
+legitimate.
 
-If the frames are not interpretable (blurry, wrong angle, athlete out of
-frame): write ONLY
-"❌ Video not analysable: [reason]\n📹 Next time: [what to change]".
-```
+**Why structure is asked of stills.** For video, Gemini bills a frame at 70
+tokens on every media-resolution tier the OpenRouter transport can request; a
+still image gets 1120. A contact point is a small region of a full-body
+frame, so at 70 tokens it is not meaningfully represented. Derivation and
+sources: [`research/video-form-check-model-selection.md`](../research/video-form-check-model-selection.md).
 
-### User-prompt template (filled with exercise name and context)
-```
-Exercise: {exercise}
-Camera angle: {angle}
-{checklist_block}
-{context_block}
-
-Reply in this format (maximum 8–10 sentences):
-
-**{exercise} — form check**
-
-**Execution**
-[2–3 concrete observations — only what's visible in the frames, no
-speculation]
-
-**Drill for next session**
-[1 concrete correction point — precise and actionable]
-
-**Challenge**
-[Is this exercise + approach optimal right now? If yes: "fits". If no:
-what specifically would be better and why?]
-```
-
-### Model choice
-- **Default (`flash`):** fast tier — good for standard form checks
-- **`--model pro`:** deeper analysis, better on complex movement patterns
-
-The concrete OpenRouter model ids live in `scripts/analyse_video.py`
-(`_MODELS` map — pinned there with the selection rationale); this file
-never restates them, so they cannot drift apart.
-
-Frames are passed as **sequential single images** (not as a grid) —
-Gemini sees the temporal progression of the movement.
+Prompts, enumerations and the model ids all live in the script — this file
+never restates them, so they cannot drift apart. Model tiers: `--model pro`
+is the default (deeper analysis); `--model flash` is the cheaper tier.
 
 ---
 
@@ -146,6 +116,54 @@ more than an honest refusal.
 
 ---
 
+## Structure verification (mandatory — before anything reaches the athlete)
+
+The script's output carries a `⚠️ STRUKTUR UNVERIFIZIERT` banner and a
+`=== STRUKTUR ===` block listing every structural claim with the frame file it
+was read from. **You verify those claims against the frames yourself before
+you report anything.** This is not a formality and it is not reserved for
+disputes.
+
+Why a second reader rather than a better prompt: the errors this catches were
+all rated `sicher` by the model that made them, and several survived the
+context isolation built specifically to prevent them. A confident wrong
+reading does not announce itself — it is caught by someone opening the image,
+or not at all. The recurring classes are contact-point misidentification, image
+versus anatomical laterality, a detail present in no frame, and a misread
+camera geometry.
+
+**Method.** For each claim in the structure block, `Read` the file named in its
+`belegframe` — that one first, other frames only if it is inconclusive. Judge
+from the image alone: do not read the movement text first, and do not let the
+athlete context tell you what to expect.
+
+**One typed verdict per claim**, one line each:
+
+```
+<field> · CONFIRMED | REFUTED | NOT_DETERMINABLE · claimed: <what the script says> · seen: <what the frame shows> · <frame file>
+```
+
+Close with `geprüft N / offen M` — state what you did not check rather than
+letting partial coverage read as full coverage.
+
+**Release verdict:**
+
+- **All load-bearing claims CONFIRMED** → remove the banner, report normally,
+  and persist to `config/exercise_log.md` including the verdict lines.
+- **Any REFUTED or NOT_DETERMINABLE** → **no finding goes to the athlete.**
+  Report the open question and the camera angle that would answer it. A
+  refuted claim may be named as "the automatic read claimed X, refuted at the
+  frames" — never as a finding. The persistence path is closed anyway:
+  `_update_exercise_log` refuses to write while the banner stands.
+
+**Guards on yourself:**
+
+- Never guess. A false accusation against a correct reading costs as much as a
+  missed error.
+- A run with no objections is a legitimate outcome. Do not manufacture one to
+  look useful.
+- Do not edit the structure block. Report.
+
 ## Context handoff (from the head coach)
 
 ```
@@ -153,11 +171,13 @@ Exercise: {name}
 RPE feedback: {if present}
 Last sessions of this exercise: {from type history}
 Current training phase: {from planner context}
+Frames directory: {from the script's output}
 ```
 
 The head coach invokes this agent with the script output of
-`scripts/analyse_video.py`. The analysis runs through Gemini directly —
-no grid image is returned.
+`scripts/analyse_video.py`. Exit code 4 means the structure gate already
+blocked the check — then there is nothing to verify: relay the open question
+and the recording hint.
 
 ## Research-uncertainty flag (mandatory)
 
