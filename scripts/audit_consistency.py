@@ -571,6 +571,98 @@ def check_stale_cancellation_markers() -> list[dict]:
     return findings
 
 
+# ── Check 6b: chronicle cells without a planning-time head ────────────
+
+# A single table cell longer than this no longer reads as a rule. The number is
+# deliberately generous — it is not a style budget, it is roughly the point past
+# which a reader extracts an impression instead of a constraint.
+CHRONICLE_CELL_MAX_CHARS = 1200
+
+# Machine-readable declaration that a row has a planning-time head somewhere in
+# the same file. Schema and worked example: ``config.example/athlete_static.md``.
+LEVER_HEAD_RE = re.compile(r"<!--\s*lever-head:\s*(.+?)\s*-->", re.IGNORECASE | re.DOTALL)
+
+
+def _normalise_row_key(text: str) -> str:
+    """Canonical comparison form for a table row key / lever-head key."""
+    cleaned = re.sub(r"[*_`]", "", text)
+    cleaned = re.sub(r"\s+", " ", cleaned)
+    return cleaned.strip().lower()
+
+
+def _is_separator_row(cells: list[str]) -> bool:
+    return all(c and set(c) <= set("-: ") for c in cells)
+
+
+def check_chronicle_cell_bloat() -> list[dict]:
+    """Flags config table rows that grew into a chronicle with no planning head.
+
+    Status and history tables accumulate one episode after another inside a
+    single cell. Past a certain length nobody reads such a cell as a rule any
+    more — they read it as narrative and leave with an impression. The failure
+    mode is specific and quiet: a hypothesis the chronicle itself already
+    refuted gets reached for again, because the refutation was written as a
+    correction in prose and never as the operative sentence that follows from
+    it. Nothing looks wrong while it happens; the entry is present, current and
+    even correct.
+
+    The remedy is a short head in front of the chronicle — which levers apply,
+    which are refuted and on what evidence, where an escalation routes — marked
+    with ``<!-- lever-head: <row key> -->`` so this check can see it. A row that
+    declares such a head is never flagged, however long its chronicle grows.
+    MEDIUM: it degrades the context every planning cycle reads, but nothing is
+    factually wrong in the file.
+    """
+    findings: list[dict] = []
+    for path in sorted(CONFIG_DIR.glob("*.md")):
+        rel = f"config/{path.name}"
+        text = _read(path)
+        declared = {
+            _normalise_row_key(m.group(1)) for m in LEVER_HEAD_RE.finditer(text)
+        }
+        for i, line_text in enumerate(text.splitlines(), start=1):
+            stripped = line_text.strip()
+            # Leading pipe only: a cell that has grown past the threshold is
+            # also the cell most likely to have swallowed the row's closing
+            # pipe, and those degenerate rows are exactly the ones worth
+            # catching. Requiring a well-formed row would skip the worst cases.
+            if not stripped.startswith("|"):
+                continue
+            cells = [c.strip() for c in stripped.strip("|").split("|")]
+            if len(cells) < 2 or _is_separator_row(cells):
+                continue
+            longest = max(len(c) for c in cells)
+            if longest <= CHRONICLE_CELL_MAX_CHARS:
+                continue
+            key = _normalise_row_key(cells[0])
+            if not key or key in declared:
+                continue
+            findings.append(_finding(
+                MEDIUM,
+                "chronicle_cell_without_head",
+                rel,
+                source_line=i,
+                evidence=f"row '{cells[0].strip()[:80]}' — longest cell {longest} chars",
+                suggested_action="add_planning_head",
+                fix_hint=(
+                    "Put a short head in front of the chronicle: the levers that "
+                    "apply, the ones that are refuted (as an explicit negative "
+                    "claim, with the evidence that refuted them), and where red "
+                    "flags route. Declare it with "
+                    "`<!-- lever-head: <row key> -->` so this check can see it. "
+                    "Keep the chronicle below the head — it is not the problem, "
+                    "its position is."
+                ),
+                description=(
+                    f"{rel}:{i} — table row '{cells[0].strip()[:60]}' carries a "
+                    f"{longest}-character cell and declares no planning-time "
+                    "head. A cell this long is read as narrative, so a refuted "
+                    "hypothesis inside it can be reached for again."
+                ),
+            ))
+    return findings
+
+
 # ── Check 7: Erholungswoche-Konsistenz ────────────────────────────────
 
 
@@ -2170,6 +2262,7 @@ CHECK_MAP = {
     "SHOES": ("check_shoes", True),
     "HARDCODED": ("check_hardcoded_restrictions", False),
     "STALE_MARKERS": ("check_stale_cancellation_markers", False),
+    "CHRONICLE_HEAD": ("check_chronicle_cell_bloat", False),
     "DELOAD": ("check_deload_consistency", False),
     "CONFIG_DRIFT": ("check_config_drift", False),
     "LOG_VS_HISTORY": ("check_log_vs_history", True),  # online (braucht activities)
@@ -2214,6 +2307,8 @@ def run_audit(offline: bool, only: str | None) -> dict[str, Any]:
                 results = check_hardcoded_restrictions()
             elif name == "STALE_MARKERS":
                 results = check_stale_cancellation_markers()
+            elif name == "CHRONICLE_HEAD":
+                results = check_chronicle_cell_bloat()
             elif name == "DELOAD":
                 results = check_deload_consistency()
             elif name == "CONFIG_DRIFT":
