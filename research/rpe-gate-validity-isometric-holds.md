@@ -431,3 +431,8 @@ Einschränkung dieses Dokuments betrifft ausschließlich Isometrie).
    Last-Schritt ist — die Kletter-Daten legen das nahe, kollidieren
    aber mit dem bestehenden ≥ 48-h-Grip-Spacing-Cap. Diese Kollision
    ist bislang **nicht** aufgelöst.
+
+
+---
+
+**Siehe auch:** [adductor-isometric-loading-dose-and-copenhagen-progression](adductor-isometric-loading-dose-and-copenhagen-progression.md) — dieselbe RPE-Kritik in der Adduktoren-Anwendung; dort ist die Steuergrösse % MVIC per Squeeze-Test, weil die RPE über einen isometrischen Halt die Versagensnähe nicht trägt.

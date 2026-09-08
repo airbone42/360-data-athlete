@@ -476,3 +476,8 @@ Head-Coach-Freigabe:**
    nicht unter „acceptable pain" laufen — ist harte
    Ausschluss-Bedingung und Trigger für einen
    Neuro-/Ortho-Handover.
+
+
+---
+
+**Siehe auch:** [adductor-isometric-loading-dose-and-copenhagen-progression](adductor-isometric-loading-dose-and-copenhagen-progression.md) — die Squeeze-Position 45° ist das Adduktoren-Analog zur Long-MTC-Position: reliabelste Testposition und zugleich die mit der höchsten Aktivierung, also derselbe Zusammenhang von Länge und Reiz wie hier beschrieben.

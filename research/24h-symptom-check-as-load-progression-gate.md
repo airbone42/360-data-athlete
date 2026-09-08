@@ -554,3 +554,8 @@ Athleten-Freigabe.
   langen) beim Menschen tatsächlich das günstigere Verhältnis aus
   Adaptationssignal und Mikroschaden liefert. Die Stützung dafür ist
   tierexperimentell (Robling 2001) plus theoretisch (Turner 1998).
+
+
+---
+
+**Siehe auch:** [adductor-isometric-loading-dose-and-copenhagen-progression](adductor-isometric-loading-dose-and-copenhagen-progression.md) — konkretes Anwendungsbeispiel für den Vorbehalt „stark als Stopp-, schwach als Freigabe-Regel": den Format-Sprung von isometrisch zu dynamisch gibt das 24-h-Gate dort ausdrücklich **nicht allein** frei, es braucht zusätzlich ein Kraft-Symmetrie-Kriterium.
