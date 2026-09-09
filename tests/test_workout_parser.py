@@ -300,3 +300,46 @@ def test_easy_run_keeps_strength_first() -> None:
     by_name = {e["name"]: e["start_date_local"] for e in events}
     assert by_name["Bein-Kraft"] == "2026-01-01T06:00:00"
     assert by_name["Easy Z2"] == "2026-01-01T12:45:00"
+
+
+def test_core_block_keeps_its_slot_before_a_quality_run() -> None:
+    """The quality-first inversion is a *leg* interference rule.
+
+    A core / anti-rotation block does not load the running muscles, so it
+    does not degrade running economy and must not be pushed behind the
+    quality session. The post-quality slot is the one athletes reliably
+    skip, and a core block is exactly where progression steps live — so
+    inverting the day for it costs a real stimulus and buys the run nothing.
+    """
+    events = prepare_workout_events(
+        [
+            {"type": "Run", "name": "Threshold", "duration_min": 70,
+             "workout_type": "INTERVALS", "tags": ["run", "intervals"]},
+            {"type": "Workout", "name": "Rumpf-Schicht D", "duration_min": 37,
+             "workout_type": "STRENGTH", "tags": ["core"]},
+        ],
+        date="2026-01-01",
+    )
+    by_name = {e["name"]: e["start_date_local"] for e in events}
+    assert by_name["Rumpf-Schicht D"] == "2026-01-01T06:00:00"
+    # 06:00 + 37min core + 180min non-leg strength→endurance gap = 09:37
+    assert by_name["Threshold"] == "2026-01-01T09:37:00"
+
+
+def test_leg_block_on_the_same_day_restores_the_inversion() -> None:
+    """One leg block on the day is enough: the economy rationale applies
+    again, so the quality run reclaims the first slot and every strength
+    block — core included — follows it."""
+    events = prepare_workout_events(
+        [
+            {"type": "Workout", "name": "Rumpf-Schicht D", "duration_min": 37,
+             "workout_type": "STRENGTH", "tags": ["core"]},
+            {"type": "WeightTraining", "name": "Bein-Kraft", "duration_min": 45,
+             "workout_type": "STRENGTH", "tags": ["legs"]},
+            {"type": "Run", "name": "Threshold", "duration_min": 70,
+             "workout_type": "INTERVALS", "tags": ["run", "intervals"]},
+        ],
+        date="2026-01-01",
+    )
+    assert events[0]["name"] == "Threshold"
+    assert events[0]["start_date_local"] == "2026-01-01T06:00:00"

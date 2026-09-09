@@ -180,26 +180,43 @@ def _is_quality_endurance(w: dict) -> bool:
     return bool(tags & _QUALITY_TAGS)
 
 
-def _sort_key(w: dict) -> int:
+def _loads_legs(w: dict) -> bool:
+    """True for a strength block that actually loads the legs.
+
+    Same tag set ``_interference_gap_min`` uses for the 6h spacing — the two
+    rules share one rationale and must not disagree about which blocks are
+    leg work.
+    """
+    if w.get("type") not in _STRENGTH_TYPES:
+        return False
+    tags = {str(t).lower() for t in (w.get("tags") or [])}
+    return bool(tags & _LEG_TAGS)
+
+
+def _sort_key(w: dict, *, invert_quality: bool = True) -> int:
     """Order within a day: the session that carries the adaptation goes first.
 
     Default is strength/plyo before run/ride — on an easy day the residual
     fatigue costs little, and a Z2 run on pre-loaded legs is a deliberate
     stimulus.
 
-    A **quality** endurance session inverts that. Running economy is
-    measurably degraded after leg strength, and the effect bites hardest
-    above ~85 % VO2max — precisely where a threshold or VO2max session
-    lives. Putting the strength block first there spends the session's
-    quality to save scheduling convenience. The framework's own research
-    (``research/concurrent-training-interference.md``) has recommended this
-    inversion for a while; the paradigms file used to demand the opposite
-    unconditionally.
+    A **quality** endurance session inverts that — but only when the day's
+    strength work is **leg** work (``invert_quality``, decided per day in
+    ``prepare_workout_events``). The rationale is specific: running economy
+    is measurably degraded after leg strength, and the effect bites hardest
+    above ~85 % VO2max, precisely where a threshold or VO2max session lives
+    (``research/concurrent-training-interference.md``). A core / anti-rotation
+    / upper-body block does not load the running muscles and so does not
+    trigger that rationale; inverting the day for it buys the run nothing and
+    costs the strength block real quality, because what lands after a
+    threshold session is an athlete with nothing left for a progression step.
 
-    The spacing itself is unaffected — ``_interference_gap_min`` applies in
-    both directions.
+    Applying the inversion to every strength type was over-broad in exactly
+    that way: it silently moved core blocks into the post-quality slot, which
+    is the slot athletes reliably skip. The spacing itself is unaffected —
+    ``_interference_gap_min`` applies in both directions.
     """
-    if _is_quality_endurance(w):
+    if invert_quality and _is_quality_endurance(w):
         return 0
     if w.get("type") in _STRENGTH_TYPES:
         return 1
@@ -246,7 +263,12 @@ def prepare_workout_events(workouts: list[dict], date: str) -> list[dict]:
     getrennt — push_workouts.py ruft nur letztere, also musste der Linter hier
     rein, sonst rottet er als toter Code.
     """
-    sorted_workouts = sorted(workouts, key=_sort_key)
+    # The quality-first inversion is a leg-interference rule, so it only
+    # fires when the day actually carries leg strength work.
+    invert_quality = any(_loads_legs(w) for w in workouts)
+    sorted_workouts = sorted(
+        workouts, key=lambda w: _sort_key(w, invert_quality=invert_quality)
+    )
     for i, w in enumerate(sorted_workouts):
         _lint_intervals_icu(w, i + 1)
     events = []
