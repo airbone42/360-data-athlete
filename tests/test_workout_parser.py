@@ -343,3 +343,58 @@ def test_leg_block_on_the_same_day_restores_the_inversion() -> None:
     )
     assert events[0]["name"] == "Threshold"
     assert events[0]["start_date_local"] == "2026-01-01T06:00:00"
+
+
+def test_stretch_cap_blocks_a_long_static_hold() -> None:
+    """The >30s cap still fires when the step actually names a stretch."""
+    with pytest.raises(ValueError, match="stretch hold time"):
+        prepare_workout_events(
+            [
+                {"type": "Workout", "name": "Cool-down", "duration_min": 10,
+                 "workout_type": "STRENGTH", "tags": ["mobility"],
+                 "structure": [{"step": "Cool-down", "duration_min": 10,
+                                "description": "Figure-4 Glute-Dehnung 60 s je Seite"}]},
+            ],
+            date="2026-01-01",
+        )
+
+
+def test_stretch_cap_lets_a_hip_flexor_reset_keep_its_prescribed_dose() -> None:
+    """A body region is not a modality.
+
+    The coupled hip-flexor reset holds a posterior pelvic tilt with the glute
+    switched on — it is explicitly *not* a stretch, and its dose is prescribed.
+    Triggering the static-stretch cap on the region name made the only way past
+    the block a shortened prescription.
+    """
+    events = prepare_workout_events(
+        [
+            {"type": "Run", "name": "Quality", "duration_min": 70,
+             "workout_type": "INTERVALS", "tags": ["run", "intervals"],
+             "structure": [{"step": "Drills", "duration_min": 5,
+                            "description": "Gekoppelter Hüftbeuger-Reset RECHTS 60 s, links 30 s — "
+                                           "Becken posterior kippen, Po anspannen, nicht in die Dehnung ziehen"}]},
+        ],
+        date="2026-01-01",
+    )
+    assert len(events) == 1
+
+
+def test_a_negated_stretch_note_does_not_block_the_push() -> None:
+    """"heute kein Child's Pose" is the opposite of a stretch prescription.
+
+    Cool-down notes routinely say what is *not* done, in the same step that
+    carries a legitimate long hold. Matching the bare keyword made that note
+    a hard block.
+    """
+    events = prepare_workout_events(
+        [
+            {"type": "Workout", "name": "Rumpf", "duration_min": 30,
+             "workout_type": "STRENGTH", "tags": ["core"],
+             "structure": [{"step": "Cool-down", "duration_min": 2,
+                            "description": "Bauchatmung 90 s — heute kein Child's Pose, "
+                                           "vor der Quality kein statisches Dehnen"}]},
+        ],
+        date="2026-01-01",
+    )
+    assert len(events) == 1

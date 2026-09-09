@@ -27,12 +27,42 @@ _RUNDEN_RE = re.compile(r"\b\d+\s*(?:[Rr]unden|[Rr]ounds?)\b")
 _SETS_RE = re.compile(r"\b\d+\s*[x×]\s*\d+")
 # Detects static stretch durations > 30s, e.g. "45s/side", "60s", "2x45s".
 # Keywords are bilingual to detect stretches written in German or English.
+#
+# Only a **modality** word establishes a static stretch. A body region or a
+# tool does not: a hip-flexor entry can just as well be an activation or a
+# coupled reset (posterior pelvic tilt, glute-driven — explicitly *out* of the
+# stretch), and rolling or mobility work is not a static hold either. Matching
+# on the region turned those into false blocks, and the only way past a false
+# block is to shorten a dose the physio prescribed. The region list below is
+# kept for documentation, deliberately not as a trigger.
 _STRETCH_KEYWORDS_RE = re.compile(
-    r"\b(?:stretch|stretching|dehnen|dehnung|hip stretch|piriformis|figure.4|taubenpose|kindhaltung"
-    r"|hüftbeuger|hip flexor|foamroller|foam roller|mobilisation|mobility|child[\s-]?pose|pigeon)\b",
+    r"\b(?:stretch|stretching|dehnen|dehnung|hip stretch|piriformis|figure.4|taubenpose"
+    r"|kindhaltung|child[\s-]?pose|pigeon)\b",
     re.IGNORECASE,
 )
+# Regions and tools that frequently *carry* a stretch but do not imply one.
+# Present for readers of this rule; intentionally not part of the trigger.
+_STRETCH_REGION_HINTS = ("hüftbeuger", "hip flexor", "foamroller", "foam roller", "mobilisation", "mobility")
 _STRETCH_DURATION_RE = re.compile(r"\b([4-9]\d|[1-9]\d{2,})\s*s\b")  # ≥40s
+# A stretch word inside a negation is the opposite of a stretch prescription.
+# Plans routinely write "kein statisches Dehnen" or "heute kein Child's Pose"
+# in the very step that also carries a legitimate ≥40 s hold, and matching the
+# bare keyword turned those notes into a hard block.
+_NEGATION_RE = re.compile(r"\b(?:kein|keine|keinen|nicht|ohne|statt|no|not|never)\b", re.IGNORECASE)
+_NEGATION_WINDOW = 40
+
+
+def _prescribes_static_stretch(desc: str) -> bool:
+    """True when the step actually prescribes a static stretch.
+
+    A keyword hit counts only if it is not preceded by a negation inside a
+    short window — see ``_NEGATION_RE``.
+    """
+    for match in _STRETCH_KEYWORDS_RE.finditer(desc):
+        window = desc[max(0, match.start() - _NEGATION_WINDOW):match.start()]
+        if not _NEGATION_RE.search(window):
+            return True
+    return False
 
 VALID_TYPES = sports.VALID_TYPES
 REQUIRED_FIELDS = ["type", "name", "duration_min", "workout_type"]
@@ -136,7 +166,7 @@ def _validate_structure(w: dict, index: int) -> None:
                 f"Correct the structure before pushing."
             )
         # Static stretch duration > 30s violates the athlete-preference cap
-        if _STRETCH_KEYWORDS_RE.search(desc):
+        if _prescribes_static_stretch(desc):
             bad = _STRETCH_DURATION_RE.search(desc)
             if bad:
                 raise ValueError(
