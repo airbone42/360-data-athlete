@@ -2721,6 +2721,84 @@ def check_sauna_placement(workouts: list[dict], ctx: Context) -> list[Finding]:
     return findings
 
 
+# ── R027 — the HR band must match the intensity the pace prescribes ──
+# A threshold rep and a race-pace block are different intensities and take
+# different HR ceilings. The HM-pace duration-band table is built *downward*
+# from race HR, so reusing it on a faster (threshold) block puts the guardrail
+# below the intensity the pace corridor actually prescribes.
+_R027_THRESHOLD_LABEL_RE = re.compile(r"^\s*-\s*(?:t-?pace|threshold|schwelle|lt2)\b", re.IGNORECASE)
+_R027_RACEPACE_LABEL_RE = re.compile(
+    r"^\s*-\s*(?:hm-?pace|race-?pace|renntempo|marathon-?pace)\b", re.IGNORECASE
+)
+_R027_PCT_LTHR_RE = re.compile(r"(\d{2,3})\s*-\s*(\d{2,3})\s*%\s*lthr", re.IGNORECASE)
+# LT2 == LTHR == 100 %. A threshold rep has to reach it; a race-pace block
+# stays under it. 98 % leaves one bpm of slack at a typical LTHR either way.
+_R027_THRESHOLD_CEILING_MIN = 98
+_R027_RACEPACE_CEILING_MAX = 98
+
+
+def check_hr_band_matches_intensity(workouts: list[dict], ctx: Context) -> list[Finding]:
+    """R027 — a step's %LTHR ceiling must match the intensity its label names.
+
+    Threshold / T-pace work is prescribed *at* LT2, so its HR ceiling is the
+    LTHR itself (~95-100 %). HM- / race-pace work is prescribed *below* LT2,
+    with a duration-dependent ceiling derived downward from race HR
+    (``framework/research/hm-race-hr-and-training-hr.md``).
+
+    Mixing the two is silent and expensive in both directions:
+
+    * a threshold rep carrying a race-pace ceiling puts the guardrail *below*
+      the intensity the pace corridor prescribes — running the correct pace
+      then reads as exceeding the plan, and an athlete who obeys the HR band
+      instead runs a sub-threshold session that was booked as threshold;
+    * a race-pace block carrying a threshold ceiling invites the
+      "chase race HR" anti-pattern — the athlete runs *above* race pace to
+      reach a HR that needs drift and pre-start arousal to appear.
+
+    Drift incident: 6-minute reps at T-pace were emitted with the 4-8 km
+    HM-pace band (92-97 % LTHR ≈ 153-161 bpm at LTHR 166). The athlete caught
+    it and asked why the threshold session was capped below his threshold.
+    """
+    findings: list[Finding] = []
+    for w in workouts:
+        for line in (w.get("intervals_icu") or "").splitlines():
+            band = _R027_PCT_LTHR_RE.search(line)
+            if not band:
+                continue
+            hi_pct = int(band.group(2))
+            if _R027_THRESHOLD_LABEL_RE.match(line) and hi_pct < _R027_THRESHOLD_CEILING_MIN:
+                findings.append(Finding(
+                    rule_id="R027",
+                    severity=SEVERITY_WARNING,
+                    workout=_workout_name(w),
+                    message=(
+                        f"Threshold step capped at {hi_pct}% LTHR — a threshold rep is "
+                        f"prescribed AT LT2, so the ceiling is the LTHR itself. The guardrail "
+                        f"sits below the intensity the pace corridor prescribes."
+                    ),
+                    suggestion=(
+                        "Raise the ceiling to ~95-100% LTHR. The HM-/race-pace duration bands "
+                        "are built downward from race HR and do not apply to a faster block."
+                    ),
+                ))
+            elif _R027_RACEPACE_LABEL_RE.match(line) and hi_pct > _R027_RACEPACE_CEILING_MAX:
+                findings.append(Finding(
+                    rule_id="R027",
+                    severity=SEVERITY_WARNING,
+                    workout=_workout_name(w),
+                    message=(
+                        f"Race-pace step capped at {hi_pct}% LTHR — at or above LT2. On a "
+                        f"training rep that HR needs cardiac drift and pre-start arousal to "
+                        f"appear, so chasing it forces pace above race pace."
+                    ),
+                    suggestion=(
+                        "Use the duration band for the block length (2-4 km ~88-93%, "
+                        "4-8 km ~92-96%, 8-12 km ~94-98% LTHR)."
+                    ),
+                ))
+    return findings
+
+
 RULES: list[tuple[str, Callable[[list[dict], Context], list[Finding]]]] = [
     ("R001", check_reps_ceiling),
     ("R002", check_injury_locks_shoulder),
@@ -2748,6 +2826,7 @@ RULES: list[tuple[str, Callable[[list[dict], Context], list[Finding]]]] = [
     ("R024", check_tag_content_adequacy),
     ("R025", check_sauna_placement),
     ("R026", check_load_report_requested),
+    ("R027", check_hr_band_matches_intensity),
 ]
 
 
