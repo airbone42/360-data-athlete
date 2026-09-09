@@ -295,6 +295,29 @@ to chase the HR band; pace + RPE lead, HR is the decoupling/drift signal.
 Athlete-specific bpm bands + current LTHR live in `config/athlete_status.md`.
 Evidence + within-race HR pattern: `framework/research/hm-race-hr-and-training-hr.md`.
 
+**⛔ Scope — this table is for HM-pace / race-pace blocks ONLY. Never apply
+it to a faster prescription (mandatory).** The bands are constructed
+*downward* from race HR: they say how far below race HR a training rep
+legitimately sits because drift and pre-start arousal are missing. That
+construction only holds for a block run **at** race pace. A threshold /
+T-pace rep is **faster** than HM pace, so its HR ceiling must sit
+**above** the HM-pace ceiling, not equal to it.
+
+For a threshold / T-pace block the ceiling is the athlete's **LT2 —
+i.e. the LTHR itself (~95–100 % LTHR)**, and HR in the range just under
+LTHR on the later reps is the *target region*, not an overshoot. Pace
+still leads; the corridor is opened only when the athlete must go
+**above** LTHR to hold the prescribed pace, which is the genuine signal
+that the stored pace anchor is too fast for today. Above LTHR is Z5 / VO2max
+work and belongs to a different prescription entirely.
+
+*Failure mode this prevents:* the 4–8 km HM-pace row (~92–96 % LTHR) was
+applied to 6-minute reps at T-pace. The athlete caught it — the guardrail
+sat below the intensity actually prescribed, so hitting the correct pace
+would have read as exceeding the plan. Check what the block's **pace**
+is before picking an HR band; the block's *length* alone does not
+identify which table applies.
+
 ## Long-run × quality — embed or separate is phase-gated (mandatory)
 
 A race-pace / threshold block **embedded in the long run** (Canova "Specific

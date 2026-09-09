@@ -18,6 +18,17 @@ fatigue) HR converges toward race HR and the guardrail moves up
 accordingly. Encode the HR ceiling as a **duration-dependent band**,
 not a single value.
 
+**Scope limit (added 2026-09-09, after a misapplication in practice):**
+everything in this document is derived *downward from race HR* and
+therefore applies to blocks run **at HM / race pace**. It does not
+transfer to a faster prescription. A threshold / T-pace rep sits above
+HM pace, so its HR ceiling sits above these bands — at LT2, i.e. the
+LTHR itself (~95–100 %LTHR) — and HR just under LTHR on the later reps
+is the target region rather than an overshoot. Applying the 4–8 km row
+(~92–96 %LTHR) to a T-pace rep puts the guardrail *below* the intensity
+being prescribed, so running the correct pace reads as exceeding the
+plan. Identify the block by its **pace**, not by its length.
+
 ## Question / Trigger
 
 Auslöser: ein dokumentierter Vorfall aus realer Anwendung — der Coach
