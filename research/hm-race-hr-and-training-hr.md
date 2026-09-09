@@ -24,10 +24,21 @@ therefore applies to blocks run **at HM / race pace**. It does not
 transfer to a faster prescription. A threshold / T-pace rep sits above
 HM pace, so its HR ceiling sits above these bands — at LT2, i.e. the
 LTHR itself (~95–100 %LTHR) — and HR just under LTHR on the later reps
-is the target region rather than an overshoot. Applying the 4–8 km row
+is expected rather than an overshoot — but see the correction below before calling any of it a *target*. Applying the 4–8 km row
 (~92–96 %LTHR) to a T-pace rep puts the guardrail *below* the intensity
 being prescribed, so running the correct pace reads as exceeding the
 plan. Identify the block by its **pace**, not by its length.
+
+**Correction (2026-09-09, same day): ceiling ≠ target, and the ceiling is
+a property of the series, not of each rep.** The first version of the
+scope note above let a threshold ceiling be read as a target region for
+the later reps. At a correctly held LT2 pace HR drifts up ~4–6 bpm across
+a series, so the number the last rep reaches is unreachable on rep 1
+without running above LT2 — and the interval HR plateau is largely blind
+to the actual velocity, so nothing tells the athlete it happened. Pace
+leads on reps; HR is read afterwards.
+[threshold-interval-rest-duration-and-control-variable.md](threshold-interval-rest-duration-and-control-variable.md)
+carries the derivation, the work:rest corridors, and the sources.
 
 ## Question / Trigger
 

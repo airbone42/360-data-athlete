@@ -304,12 +304,50 @@ T-pace rep is **faster** than HM pace, so its HR ceiling must sit
 **above** the HM-pace ceiling, not equal to it.
 
 For a threshold / T-pace block the ceiling is the athlete's **LT2 —
-i.e. the LTHR itself (~95–100 % LTHR)**, and HR in the range just under
-LTHR on the later reps is the *target region*, not an overshoot. Pace
-still leads; the corridor is opened only when the athlete must go
-**above** LTHR to hold the prescribed pace, which is the genuine signal
-that the stored pace anchor is too fast for today. Above LTHR is Z5 / VO2max
-work and belongs to a different prescription entirely.
+i.e. the LTHR itself (~95–100 % LTHR)** — but write it as a **ceiling on
+the series**, never as a per-rep target. At a correctly held LT2 pace the
+HR **drifts up across the series by roughly 4–6 bpm** (Talsnes 2024), so
+the number the last rep reaches is not the number rep 1 can reach. Naming
+the series ceiling as rep 1's target is only achievable by running
+**above** LT2 — and because the HR plateau in interval work is largely
+blind to the actual velocity (Schoenmakers & Reed 2019: the plateau sits
+at ~95 % HRmax regardless of the recovery duration, so HR "cannot inform
+coaches and athletes on … the intensity of physical work performed"), the
+athlete gets no feedback that it happened. Pace leads; HR is read
+afterwards. Expect rep 1 about 4–6 bpm under the ceiling and the last rep
+at it. The pace corridor is opened only when the athlete must go **above**
+LTHR to hold the prescribed pace, which is the genuine signal that the
+stored pace anchor is too fast for today. Above LTHR is Z5 / VO2max work
+and belongs to a different prescription entirely.
+
+**Anti-pattern, both directions:** a ceiling too low reads a correct pace
+as exceeding the plan; a ceiling handed over as a *target* makes the pace
+the free variable and the athlete overshoots LT2 with no signal that it
+happened. Both are the same category error — taking an HR number without
+the state it belongs to. Derivation, work:rest corridors and sources:
+[threshold-interval-rest-duration-and-control-variable.md](../research/threshold-interval-rest-duration-and-control-variable.md).
+
+## Threshold-rep series — rest duration and encoding (mandatory)
+
+Rest between threshold reps is a **weak lever, and it points upward**.
+For distance running the documented corridors are 1–2 min for Z3 reps of
+3–12 min (work:rest 5–3:1) and 0:30–3 min for Z4 reps of 1–6 min
+(2–1,5:1), with an explicit trend toward a *longer* relative rest as
+intensity rises (Tønnessen 2024). A 6-minute rep at LT2 sits on the Z3/Z4
+boundary, so both 2:00 and 2:30 are inside the corridor.
+
+Consequences for the specialist:
+
+- **A rest change inside the corridor is not a re-prescription.** When the
+  athlete asks for 30 s more jog on a threshold series, grant it and keep
+  the rest of the format; it does not dilute the stimulus and, at
+  iso-effort, longer rest produced a *higher* mean running velocity for
+  the same time ≥ 90/95 % VO2max (Schoenmakers & Reed 2019).
+- **The target quantity is cumulative time at LT2**, not the rest pressure.
+  Say so in the notes, so an athlete who needs a longer jog does not read
+  it as failing the session.
+- Leaving the corridor — a rest so long the series becomes repetitions with
+  full recovery — *is* a different session and needs saying.
 
 *Failure mode this prevents:* the 4–8 km HM-pace row (~92–96 % LTHR) was
 applied to 6-minute reps at T-pace. The athlete caught it — the guardrail

@@ -401,3 +401,27 @@ cool conditions — the pooled effect there is trivial. What it legitimately is:
 a heat-acclimation stimulus when it follows an endurance session, and a
 sleep-onset and wellbeing measure when it stands alone. Say which one applied.
 Anchor: `research/sauna-dosis-und-platzierung-endurance.md`.
+
+
+## Threshold-rep series — the expected shape, and what breaks it (mandatory)
+
+On a correctly executed threshold series the numbers **rise across the
+series**: HR by roughly 4–6 bpm from the first rep to the last, RPE with
+it, at an unchanged pace. That shape is the session working, not the
+athlete fading — do not report it as fatigue.
+
+Two departures from it are **over-pacing findings, not fatigue findings**:
+
+- HR at or near the LTHR already on rep 1 or 2. The series ceiling is
+  reachable on the first rep only by running above LT2.
+- The RPE maximum sitting on rep 1 or 2 rather than at the end, especially
+  when the athlete then slows and reports the later reps as easier.
+
+In both cases the finding belongs to the **prescription**, not to the
+athlete's execution — and when the prescription named an HR target rather
+than an HR ceiling, say so plainly in the overview and keep it out of the
+growth areas. The interval HR plateau is largely blind to actual velocity,
+so an athlete steering by HR gets no signal that the overshoot happened.
+
+Derivation and sources:
+`framework/research/threshold-interval-rest-duration-and-control-variable.md`.

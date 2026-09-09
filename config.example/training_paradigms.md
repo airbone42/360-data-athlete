@@ -569,10 +569,22 @@ Evidence, including the honest limits of the numbers behind it:
 | Mon | Mobility / rehab (when routines from `athlete_static.md` risk-zone listings apply) + Pull/Core, plyo if fresh |
 | Tue | Easy run Z2 + complementary |
 | Wed | Recovery or mobility |
-| Thu | **Threshold run** (Z4 5×4 or 5×5) + light complementary activation |
+| Thu | **Threshold run** (Z4 5×4 or 5×5, jog recovery 1–3 min — see the rest corridor below) + light complementary activation |
 | Fri | Easy run Z1/Z2 + Core/Grip — NO plyo (leg recovery) |
 | Sat | **Bike VO2max** (Rønnestad 2–3×13×30/15 or Billat 30/30 by CTL) + 40–60 min brick run Z2 (long-sim) or 20–30 min Z1 (recovery brick) + mobility / rehab |
 | Sun | Long Z2 OR recovery bike Z1 (passive recovery, high Z1 volume for polarisation) |
+
+**Threshold-rep rest is a corridor, and the target quantity is cumulative
+time at LT2 — not the rest pressure.** Documented for distance running:
+1–2 min for Z3 reps of 3–12 min (work:rest 5–3:1), 0:30–3 min for Z4 reps
+of 1–6 min (2–1,5:1), with a trend toward *longer* relative rest as
+intensity rises. A rest change inside that corridor is not a
+re-prescription and does not dilute the session; at iso-effort, longer
+rest produced a higher mean running velocity for the same time at
+≥ 90/95 % VO2max. Leaving the corridor — rest long enough that the series
+becomes repetitions with full recovery — is a different session and must
+be named as one. Derivation and sources:
+`framework/research/threshold-interval-rest-duration-and-control-variable.md`.
 
 ## Trail-specific training
 
