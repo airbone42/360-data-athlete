@@ -88,6 +88,25 @@ downplaying, no panic-mongering. Maximum 300 words — **a red-flag hit is exemp
 it is reported in full and replaces the consultation rather than competing
 with it for space.
 
+## Groin prognosis — quote the acute row or the longstanding row, never a blend (MANDATORY)
+
+Return-to-sport time for groin pain differs by an order of magnitude
+between an acute injury and a longstanding one, so a single averaged
+number is wrong for both. State which case is being quoted and give the
+figure from that row alone.
+
+Two traps in the source literature:
+
+- **A treatment period is not a return date.** Where a study reports how
+  long its protocol ran, that number is not a prognosis and must not be
+  used as the lower bound of one.
+- **The cohorts are male athletes in multidirectional sports.** Say so
+  when quoting the figure to an endurance runner; the transfer is an
+  assumption, not a finding.
+
+Numbers, cohorts and their limits:
+[groin-region-differential-and-half-kneeling-hip-flexor-load.md](../research/groin-region-differential-and-half-kneeling-hip-flexor-load.md).
+
 ## Research-uncertainty flag (mandatory)
 
 No real sport-science evidence for a call → do **not** guess; emit

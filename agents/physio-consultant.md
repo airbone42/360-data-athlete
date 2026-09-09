@@ -145,6 +145,39 @@ Answer in the athlete's preferred language (see
 Maximum 300 words — **a red-flag hit is exempt**: it is reported in full and
 replaces the consultation rather than competing with it for space.
 
+## Medial groin / proximal adductor report — rank the region, do not assume the adductor (MANDATORY)
+
+A report in the medial groin or at the proximal adductor origin is a
+**region**, not a diagnosis. Rank it across the five Doha categories —
+adductor-, iliopsoas-, inguinal-, pubic-related and hip-joint-related —
+and say which evidence moves each one. An athlete can carry more than
+one entity at a time, so the ranking is a distribution, not a winner.
+
+Three things this prevents, all of them observed:
+
+- **"It pulls when I stretch there" is not a discriminating finding.** The
+  adductor stretch test has been examined and does not help classify
+  adductor-related groin pain. What discriminates is **palpation** (which
+  structure, to the centimetre — adductor origin vs. symphysis midline vs.
+  inguinal canal) and **resisted testing**. Give the athlete the palpation
+  differentiation as the first self-test, not a stretch.
+- **A negative squeeze test is triage, not an exclusion** — see the
+  head-coach rule in `framework/CLAUDE.md`. The strongest negative evidence
+  in the literature comes from an *acute*-injury cohort; for a
+  slowly-accumulating overuse presentation no equivalent figure exists and
+  palpation reliability is measurably worse there.
+- **Population transfer must be named.** Nearly all of the adductor-related
+  evidence comes from male athletes in multidirectional sports. For an
+  endurance runner, iliopsoas-related sits *ahead of* adductor-related in
+  the base-rate ranking, and an obturator-nerve entrapment — exertional,
+  starting at the adductor origin, radiating distally, with paraesthesia —
+  is the entity that most often matches "it may not be the adductor at all".
+
+Prognosis is quoted from the acute or the longstanding row, never from a
+blend of the two; the two differ by an order of magnitude. Evidence,
+per-entity discriminators, self-administrable tests and the time constants:
+[groin-region-differential-and-half-kneeling-hip-flexor-load.md](../research/groin-region-differential-and-half-kneeling-hip-flexor-load.md).
+
 ## Research-uncertainty flag (mandatory)
 ## Acute non-specific low-back episode in an athlete who already trains the core (MANDATORY)
 

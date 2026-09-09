@@ -576,6 +576,40 @@ challenge the conservatism.
 
 *Enforcement: mechanical validator hook `validate_plan.py::check_easy_run_conservatism` (R014). Primary anchor — when `competition_plan.md` documents a per-phase easy-run band keyed by CTL ("Lauf-Dauer-Logik pro Phase"), an easy run below the phase-band floor (mapped via current CTL) with no documented recovery trigger is a hard ERROR; heat is a reason to run slower (HR-capped), not shorter, and indoor/brick runs are exempt. Fallback anchor — without a phase-band table or when CTL is offline, easy runs below 70% of the 30d easy median without a documented recovery reason surface as a WARNING. Plus head-coach judgment for the other drift classes, including pacing / race-strategy conservatism and long-run/volume anchoring (not fully mechanizable — the demonstrated-longest-run anchor depends on a representative history window the coach must request).*
 
+### A negative provocation test is triage, not an all-clear (mandatory)
+
+When an athlete reports a self-administered provocation test as negative —
+"the squeeze was 0/10", "nothing on that stretch" — that report is **not**
+admissible as clearance for a planning decision unless the test was
+actually capable of being positive. Three conditions, all of them:
+
+1. **The test was run at its discriminating configuration**, not at one
+   convenient angle. A test whose sensitivity depends on joint position
+   only means something when the positions that matter were all covered.
+2. **The negative covers the discriminating modality**, not a neighbouring
+   one. A pain-free *stretch* does not substitute for a pain-free
+   *resisted* test or for negative palpation; for several regions the
+   stretch has been examined and does not discriminate at all.
+3. **The test was run in the state the complaint appears in.** For an
+   exposure-dependent signature — the structure speaks after a dose, not
+   in a position — a negative on a rest day carries almost no information.
+   Run it after load.
+
+Where the strongest published negative-predictive figures come from an
+*acute*-injury cohort, they do not transfer to a slowly-accumulating
+overuse presentation without saying so; reliability is typically worse in
+the second case, and no equivalent figure exists.
+
+**Operational rule:** a negative provocation test **extends the observation
+window; it does not close it.** It may not be cited as the reason a load
+cap, a lock or a monitoring marker is lifted — restrictions clear by
+explicit athlete confirmation or by a clinician, never by a self-test that
+was not in a position to fail (see "Never silently drop or replace standing
+prescriptions"). Record what was actually tested, not just the verdict.
+
+*Enforcement: head-coach judgment — the report arrives as free text in
+`athleteFeedback` and cannot be mechanically validated.*
+
 ### Never silently drop or replace standing prescriptions (mandatory)
 
 A **standing prescription** is anything the athlete files or athlete

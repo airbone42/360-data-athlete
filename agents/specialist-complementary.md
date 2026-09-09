@@ -824,3 +824,28 @@ fallback: <conservative default>
 ```
 
 Gating protocol: `framework/CLAUDE.md` §Agent-flagged uncertainty.
+
+
+## Half-kneeling hip-flexor work — the rear leg is a prescribed variable (mandatory)
+
+In a half-kneeling hip-flexor position (stretch, reset or activation) the
+**rear leg's frontal-plane position decides which structure is loaded**,
+and leaving it unspecified leaves the dose undecided:
+
+- **Rear leg in the sagittal plane** (knee under the hip, no abduction, no
+  internal rotation): little stretch load reaches the proximal adductor
+  group. Elastographically the difference between hip extension and hip
+  flexion is not significant at 0 degrees of abduction.
+- **Rear leg abducted or internally rotated:** the same position becomes a
+  genuine adductor stretch load — the shear modulus rises severalfold at
+  40 degrees of abduction.
+
+So write the rear-leg position into the exercise line whenever the athlete
+has any groin, adductor or pubic-region history, and default to the
+sagittal plane there. A glute squeeze added to the position recruits the
+**adductor magnus** as an extension synergist — that is a different origin
+(ramus ischiopubicus) from the adductor longus enthesis, and the evidence
+is a ranking between the two muscles rather than an absence in either.
+
+Evidence and limits (measured on muscle tissue, not on the enthesis):
+[groin-region-differential-and-half-kneeling-hip-flexor-load.md](../research/groin-region-differential-and-half-kneeling-hip-flexor-load.md).
