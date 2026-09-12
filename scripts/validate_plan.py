@@ -2799,6 +2799,95 @@ def check_hr_band_matches_intensity(workouts: list[dict], ctx: Context) -> list[
     return findings
 
 
+_CATCHUP_TYPES = {"WeightTraining", "Workout"}
+
+
+def check_repeat_session_within_cadence(workouts: list[dict], ctx: Context) -> list[Finding]:
+    """R028 - a catch-up block must not re-run what already ran yesterday.
+
+    When a single exercise is dropped from a session, the replacement slot
+    tends to get written as a **session** ("the missing item runs in the
+    <session name> on <date>"), because a session name is the only thing the
+    slot notation can express. The next planning cycle reads that as "a
+    <session> runs on <date>" and rebuilds the whole roster - so a block whose
+    cadence is every second day runs on consecutive days, at full volume,
+    without anybody deciding to. The owed unit was an exercise; the booked unit
+    was a session. Nothing in the tag-level due-warnings can see this: they
+    answer "did a <tag> session happen", not "which roster items are still
+    owed".
+
+    The rule therefore ignores tags and durations and looks at the only thing
+    that separates a legitimate catch-up from an accidental repeat: **content
+    overlap**. A catch-up carries exactly the items that did *not* run; any
+    roster exercise that ran yesterday and is planned again today is the
+    signal.
+
+    Deliberately **no keyword exemption.** The failure mode this rule exists
+    to catch is a coach writing prose that explains the repeat away
+    ("catch-up booking", "cadence is deliberate") - a keyword escape hatch
+    would reproduce it exactly. To clear the finding, remove the overlap.
+
+    WARNING, never blocking: an athlete may have a documented reason to train
+    a pillar on consecutive days, and the finding names the overlapping
+    exercises so that reason can be checked against them.
+    """
+    if not ctx.recent_activities:
+        return []
+    try:
+        today = datetime.fromisoformat(ctx.target_date).date()
+    except ValueError:
+        return []
+    yesterday = (today - timedelta(days=1)).isoformat()
+
+    # Same helper the specialist history uses, on purpose: two implementations
+    # of "which exercises does this description contain" would eventually
+    # disagree, and a disagreement about whether a rule fired is worse than no
+    # rule. It reads the HAUPTTEIL only, so a warm-up drill that legitimately
+    # repeats daily does not count as overlap.
+    try:
+        from app.graphs.sub_workout_specialist.history_fetcher import (
+            _extract_exercises_seen,
+        )
+    except ImportError:
+        return []
+
+    executed: set[str] = set()
+    for a in ctx.recent_activities:
+        if a.get("date") != yesterday or a.get("type") not in _CATCHUP_TYPES:
+            continue
+        executed.update(_extract_exercises_seen(a.get("description")))
+    if not executed:
+        return []
+
+    findings: list[Finding] = []
+    for w in workouts:
+        if w.get("type") not in _CATCHUP_TYPES:
+            continue
+        planned = set(_extract_exercises_seen(_description(w)))
+        overlap = sorted(planned & executed)
+        if not overlap:
+            continue
+        findings.append(
+            Finding(
+                rule_id="R028",
+                severity=SEVERITY_WARNING,
+                workout=_workout_name(w),
+                message=(
+                    f"repeats {len(overlap)} exercise(s) that already ran on {yesterday}: "
+                    + ", ".join(overlap)
+                ),
+                suggestion=(
+                    "If this block is a catch-up for items that did not run, keep only "
+                    "those items and drop the overlap - the rest of the roster is not due "
+                    "again yet. If the whole session is genuinely due, verify the cadence "
+                    "against the last executed date instead of inheriting the slot note, "
+                    "and drop the pillar tag when the block no longer covers the pillar."
+                ),
+            )
+        )
+    return findings
+
+
 RULES: list[tuple[str, Callable[[list[dict], Context], list[Finding]]]] = [
     ("R001", check_reps_ceiling),
     ("R002", check_injury_locks_shoulder),
@@ -2827,6 +2916,7 @@ RULES: list[tuple[str, Callable[[list[dict], Context], list[Finding]]]] = [
     ("R025", check_sauna_placement),
     ("R026", check_load_report_requested),
     ("R027", check_hr_band_matches_intensity),
+    ("R028", check_repeat_session_within_cadence),
 ]
 
 
@@ -2874,6 +2964,11 @@ async def _fetch_recent_activities(target_date: str, days_back: int = 30) -> lis
             "name": a.get("name"),
             "duration_min": int((a.get("moving_time") or 0) / 60),
             "training_load": a.get("icu_training_load"),
+            # R028 reads the executed exercise list out of this. Capped at the
+            # same 5000 chars the specialist history fetcher uses — a strength
+            # description regularly runs 2-4 KB and a shorter cap would silently
+            # drop the trailing block, which is exactly where a catch-up item sits.
+            "description": (a.get("description") or "")[:5000],
         }
         for a in activities
     ]

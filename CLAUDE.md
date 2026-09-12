@@ -654,6 +654,25 @@ exists to prevent, reached by a route it did not cover.
   restriction's criteria — a supine single-leg lift has no balance demand
   and is not what an ankle lock blocks. A wrong omission reads exactly like
   a right one in the record.
+- **Re-slot the element, not its container.** An exercise that drops out is
+  owed as an *exercise*. Writing the replacement slot as a session ("the
+  missing item runs in the <session> on <date>") satisfies the named-slot
+  requirement on paper and then inflates the dose, because a session name is
+  the only unit the slot notation can express: the next planning cycle reads
+  "a <session> runs on <date>" and rebuilds the whole roster. A block whose
+  cadence is every second day then runs on consecutive days at full volume
+  and no single decision caused it. Name the exercise and its carrier
+  separately, and let the **carrier's own cadence** decide whether the
+  session runs at all — the last executed date, recomputed, not the slot
+  note (see "Due / overdue claims are computed, not inherited").
+- **And ask whether partial catch-up is a stimulus or a checklist.** Before
+  booking owed items into a short add-on, state what the recovering unit is.
+  A session is a list of positions; the tissue is not. Where the owed items
+  are low-load motor-control work the add-on is usually harmless, and where
+  they carry load or a progression step the honest question is whether the
+  *stimulus* is due — not which rows are unticked. Integrating the item into
+  the next regularly-due session is the default answer; a same-day-plus-one
+  add-on needs a reason beyond completeness.
 
 **Mechanical support:** `_compute_prescription_compliance` surfaces this in
 `planningConstraints` at exercise granularity, driven by a
@@ -2229,6 +2248,32 @@ Two-layer architecture:
    Runs in step 3.5b after specialists. Checks pillar rotation, stimulus
    adequacy vs. wellness, weekly volume jump, progression consistency,
    form findings from `exercise_log.md`.
+
+### A validator finding's own severity is an input, not a verdict (mandatory)
+
+The semantic `plan-validator` writes both the finding **and** its severity,
+and it will sometimes attach its own exoneration in the same breath — "formally
+an S1 trigger, but no must-fix, the rotation is deliberately justified". That
+sentence is the agent's hypothesis about the coach's intent, produced from the
+briefing the coach wrote. Accepting it closes the loop: the coach's own framing
+comes back labelled as an independent verdict.
+
+**Rule:** a finding is cleared by the underlying arithmetic, never by the
+label the agent put on it. When a rule fires on a cadence, a due-date, a
+streak or a count, recompute it from the verified last occurrence and the
+documented interval (see "Due / overdue claims are computed, not inherited")
+before deciding it does not apply. State the recomputed numbers where the
+decision is recorded — if they cannot be stated, the finding stands.
+
+This is the mirror image of the already-documented failure where a block the
+validator called dispensable got pushed anyway. Both come from treating the
+report as a verdict rather than as evidence: once in the direction of ignoring
+a warning, once in the direction of accepting an exemption. The report is
+input in both directions.
+
+*Enforcement: head-coach judgment. The drift it guards against is invisible
+afterwards — a dismissed finding and a correctly-cleared one look identical in
+the record unless the arithmetic is written down.*
 
 New rules: add `check_<name>(workouts, ctx)` in `validate_plan.py`,
 register in `RULES`. Auditable via `audit_consistency.py`.
