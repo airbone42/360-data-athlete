@@ -18,6 +18,24 @@ Routing rule (important — silent-drift case 2026-05-19):
   one NOTE event per day (`app.utils.note_upsert`). An existing day NOTE
   is updated (section replace-or-append), never stacked.
 - Anything else → error.
+
+Section semantics (`--section`, default `Athleten-Feedback`) — read this
+before writing a day NOTE twice:
+  `note_upsert` merges per `## <Section>` block: a section that already
+  exists is **replaced**, a new one is appended. The section name is
+  therefore the identity of the block. Writing two different day notes
+  under the **same** section silently destroys the first one — there is no
+  append-within-a-section mode, by design, because a topic should carry one
+  current statement rather than a growing log.
+  So: one topic per section. A second write about the same topic on the
+  same day must contain the **complete, merged** text, and a write about a
+  different topic must pass its own `--section` (e.g. `Tagesabschluss`,
+  `HRV-Review`, `Mental-Coach`).
+  The failure mode this parameter exists for: with a fixed section name,
+  a later write about a different topic lands in the same block and replaces
+  it. The loss is invisible at the call site, because the upsert reports a
+  successful update either way — nothing distinguishes "merged alongside"
+  from "overwrote".
 """
 
 from __future__ import annotations
@@ -58,7 +76,7 @@ async def _run(args: argparse.Namespace) -> None:
 
     elif args.date and args.note:
         result = await upsert_day_note(
-            client, args.date, section="Athleten-Feedback", text=args.note
+            client, args.date, section=args.section, text=args.note
         )
         print(json.dumps(result, ensure_ascii=False, indent=2))
 
@@ -80,6 +98,16 @@ def main() -> None:
     parser.add_argument("--message", help="Message text for activity (accepted alongside --note when --activity-id is set)")
     parser.add_argument("--date", default=date.today().isoformat())
     parser.add_argument("--note", help="Text for NOTE event (or — when --activity-id is set — activity-bound feedback)")
+    parser.add_argument(
+        "--section",
+        default="Athleten-Feedback",
+        help=(
+            "Day-NOTE section heading (default: Athleten-Feedback). The section name is "
+            "the block's identity: writing an existing section REPLACES it, a new one is "
+            "appended. Two different notes for the same day need different sections, "
+            "otherwise the first is silently lost."
+        ),
+    )
     args = parser.parse_args()
     asyncio.run(_run(args))
 
