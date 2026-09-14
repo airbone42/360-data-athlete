@@ -1084,18 +1084,47 @@ technique clip today?
 - Athlete mentioned "technique feels wrong", "something is pulling"
 - Tempo or threshold run: running form degrades under load
 
-**When a trigger is active:** mention explicitly in `focus`:
+**When a trigger is active:** the instruction goes into `intervals_icu`, as
+a trailing block after the cool-down:
 ```
-📹 Film tip: [Running sagittal / Running posterior] — follow-me capable
-drone, 6–10 m distance.
-Record a longer clip (2–3 min after 10+ min warm-up, natural running
-style).
-Sections: [fresh,uphill,fatigued | fresh,fatigued | uphill,downhill |
-fresh,stable,fatigued]
-Focus: [what specifically to watch — e.g. "foot strike uphill due to
-achilles irritation"]
-Upload here after the session.
+📹 FILM CLIP [SAGITTAL / POSTERIOR] — [when: e.g. "between minute 20 and
+40"], 2–3 min in one take
+- [camera position: follow-me drone behind / beside, N m distance, height]
+- [resolution / frame rate]
+- [terrain requirement that would otherwise invalidate the read — e.g.
+  straight and flat, no camber, no bend]
+- [whether to apply the session's technique cue during the clip — see the
+  measurement note below]
+- [where to put the file afterwards]
 ```
+
+**Why `intervals_icu` and not `focus` (mandatory).** For Run/Ride the
+athlete-facing description **is** the `intervals_icu` text —
+`prepare_workout_events` writes it verbatim so intervals.icu can parse it
+for device sync. `focus` never reaches the athlete's watch or phone. A film
+tip that lives only in `focus` is therefore invisible at exactly the moment
+it has to be executed, and the athlete finds a session that says "clip from
+the quiet middle" with no camera position, no segment, and no settings. Put
+the instruction where it is read, and keep `focus` for the rationale (what
+the clip is meant to answer, which baseline it is compared against).
+
+**Two content rules that decide whether the clip is readable at all:**
+
+1. **Name the terrain condition that would invalidate the read.** A gait
+   variable measured on a bend, a cambered road, or a gradient is measuring
+   the surface, not the runner — foot placement relative to the midline is
+   the obvious case, but stance-phase pelvic drop and foot strike shift the
+   same way. A clip shot on the wrong 200 m is not a weak data point, it is
+   a misleading one.
+2. **Say whether the technique cue runs during the clip — and default to
+   no.** When the session carries a cue aimed at the same variable the clip
+   measures, a cue-on clip answers "can the athlete do it on command",
+   which is almost never the open question. The open question is whether the
+   habit has moved since the baseline, and that needs an uncued clip. Film
+   first, then pick the cue back up for the rest of the session.
+
+A one-line summary of the film tip may additionally appear in `focus`; the
+executable version belongs in `intervals_icu`.
 
 **Running-posture cue library (pelvis / hip extension — evidence-based).**
 When the form focus touches posture, pelvis, lower back, or hip drive, cue
