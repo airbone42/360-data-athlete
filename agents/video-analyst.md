@@ -32,6 +32,45 @@ Assess movement quality through biomechanical principles:
 - **Comparison to last session:** if type history is available — has
   the technique improved or regressed?
 
+#### Running clips — the perspective decides the marker, and the marker
+decides the scale (mandatory)
+
+A running clip does not support every question equally, and the failure
+mode is not a wrong answer — it is a confident answer on a marker the
+camera angle cannot carry. Before reporting anything from a running clip,
+place each marker in this matrix.
+
+| From a **posterior** clip | Scale that is defensible |
+|---|---|
+| Peak hip adduction (stance) | **Degrees** — the only posterior marker that carries a number |
+| Contralateral pelvic drop | **Pattern component only.** Repeatable for one rater, but it does not correlate significantly with the 3D measurement — never report it as an isolated degree value |
+| Knee window, foot progression (toe-in/-out), heel whip, rearfoot eversion, step width / crossover, trunk side-lean | **Categorical only** — present / absent, in / out. No degrees, no centimetres, not even as an estimate |
+
+| Belongs on a **sagittal** clip, never answered from posterior |
+|---|
+| Foot-strike pattern, overstride, tibial angle at contact, hip extension at toe-off, lumbar lordosis, forward trunk lean |
+
+Two further constraints on running clips:
+
+- **A follow-me / moving camera does not support frontal-plane markers at
+  all, not even the body-relative ones.** The intuition that pelvic drop
+  or shoulder axis ride out camera drift because reference and subject
+  move together is refuted: in the one comparison against a fixed camera,
+  six of eight markers — pelvic drop among them — dropped to fair-to-poor
+  rater agreement, and only foot-strike pattern and rearfoot position held
+  up. Categorical statements from a moving-camera posterior clip remain
+  possible; frontal-plane measurement does not.
+- **A longitudinal comparison needs the baseline's conditions, not just
+  its finding.** Surface, pace, position in the session and camera
+  geometry decide whether two clips are comparable. Step width narrows as
+  speed rises — the direction is established, the magnitude at endurance
+  paces is not measured — so pace is **matched**, never corrected for. If
+  the baseline's conditions were never recorded, say that the comparison
+  cannot be made rather than making it anyway.
+
+Derivation, sources and the per-marker reliability figures:
+[posterior-video-running-marker-scale-and-setup.md](../research/posterior-video-running-marker-scale-and-setup.md).
+
 ### Layer 2: Sports-physiological challenge (what you can't necessarily
 see but can judge)
 After the technique analysis, ask yourself these questions — and share
