@@ -1252,6 +1252,25 @@ def _compute_prescription_compliance(today: date) -> str | None:
     return format_findings(findings)
 
 
+def _compute_progression_queue() -> str | None:
+    """Surface declared pending progression steps, ordered, grouped by chain.
+
+    Sits next to `_compute_prescription_compliance` and closes the mirror gap.
+    That check answers "was a prescribed element executed"; this one answers
+    "which steps are waiting, in which order, and do any of them collide".
+    Both failures it addresses come from the same filing habit: a pending step
+    and its agreed order are written next to the exercise, and the planning
+    flow does not read exercise entries looking for either.
+
+    Opt-in per exercise via `**Schritt-offen:**`; a file without the field
+    produces nothing.
+    """
+    from app.analytics.progression_queue import format_queue, parse_open_steps
+    from app.utils.config_loader import load_config
+
+    return format_queue(parse_open_steps(load_config("exercise_progressions")))
+
+
 def _compute_dated_commitments(today: date) -> str | None:
     """Surface near-term dated slot commitments filed outside the slot ledger.
 
@@ -2121,6 +2140,17 @@ def _compute_planning_constraints(
             constraints.append(prescription)
     except Exception as exc:  # noqa: BLE001
         logger.warning("Prescription-compliance check skipped: %s", exc)
+
+    # Open progression steps, ordered and grouped by chain. The prescription
+    # check above sees a missing element; this sees a waiting one — and, more
+    # importantly, sees two of them landing on the same tissue, which no
+    # single exercise entry can. Fail-soft for the same reason as above.
+    try:
+        queue = _compute_progression_queue()
+        if queue:
+            constraints.append(queue)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Progression-queue scan skipped: %s", exc)
 
     # Dated commitments filed outside the slot ledger. Scheduling decisions
     # belong in competition_plan.md, but they get written next to the exercise

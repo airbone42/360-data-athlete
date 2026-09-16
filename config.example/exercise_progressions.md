@@ -135,6 +135,59 @@ motion on an irritable tendon" und
 
 ---
 
+## Schritt-Felder (offene Progressionsschritte, Reihenfolge und Kollision)
+
+Optional, standardmäßig leer. Zu setzen, sobald für eine Übung ein
+Progressionsschritt **fällig, aber noch nicht gelaufen** ist.
+
+```
+- **Schritt-offen:** <der eine Schritt, kurz — z.B. 11,5 → 12,5 kg>
+- **Schritt-Kette:** <welches Gewebe der Schritt belastet>
+- **Schritt-Rang:** <Position in der Warteschlange dieser Kette>
+```
+
+Der Zweck ist nicht Buchhaltung, sondern die Behebung zweier Fehler, die
+dieselbe Ursache haben — ein fälliger Schritt steht neben seiner Übung und
+nirgends sonst:
+
+- **Niemand zählt die Schritte zusammen.** Werden mehrere Übungen im selben
+  Fenster fällig, sagt das jeder Eintrag für sich. Belasten zwei davon
+  dasselbe Gewebe und laufen in einer Session, ist die Ablesung am Folgetag
+  keiner Quelle zuordenbar: sie ist verbraucht, und **kein** Schritt ist
+  bestätigt. In einer gemeinsamen Liste ist die Kollision offensichtlich; in
+  drei Einträgen ist sie unsichtbar.
+- **Eine entschiedene Reihenfolge wird neu hergeleitet.** Sie steht in dem
+  Eintrag, in dem die Diskussion stattgefunden hat. Der nächste
+  Planungszyklus liest Plan und Constraints, nicht drei Übungseinträge — und
+  leitet die Reihenfolge dann aus der nächstliegenden Heuristik ab. Das ist
+  nicht neutral: „ältester Warteschlangen-Eintrag zuerst" und „größter
+  Abstand zum Zielband zuerst" liefern verschiedene Ergebnisse, und die
+  Entscheidung muss ein zweites Mal von dem begründet werden, der sie schon
+  gewonnen hatte.
+
+Konventionen:
+
+- **`Schritt-offen` nennt EINEN Schritt**, nicht die Roadmap der Übung. Ist
+  der Schritt gelaufen, wird das Feld **entfernt** (nicht auf „erledigt"
+  gesetzt — siehe `framework/CLAUDE.md` → Config-Hygiene).
+- **`Schritt-Kette` gruppiert nach Gewebe, nicht nach Session.** Die
+  Kollisionswarnung feuert pro Kette; ohne Angabe steht der Schritt allein.
+- **`Schritt-Rang` trägt eine entschiedene Reihenfolge, kein Alter.** Fehlt
+  er, gibt es keine Entscheidung — der Schritt sortiert dann hinter die
+  gerankten, statt stillschweigend auf Rang 0 zu rutschen.
+- **Kein Datum in diesen Feldern.** Wann ein Schritt läuft, gehört in die
+  Slot-Buchführung in `competition_plan.md` (`framework/CLAUDE.md` →
+  „Scheduling decisions have exactly one canonical home"). Der Rang sagt
+  *in welcher Reihenfolge*, nicht *an welchem Tag*.
+
+**Opt-in pro Übung:** Ohne `Schritt-offen`-Zeile erscheint die Übung nicht in
+der Warteschlange. Eine Datei ohne diese Felder erzeugt keine Ausgabe.
+
+Mechanik: `app/analytics/progression_queue.py`, eingeblendet in
+`planningConstraints` durch `context_builder._compute_progression_queue`.
+
+---
+
 ## Re-Eval-Feld (WHY-Persistenz für die Re-Evaluations-Kadenz)
 
 Damit die Übungsauswahl nicht „blind" Session für Session übernommen,

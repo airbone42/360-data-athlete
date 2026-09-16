@@ -2631,6 +2631,142 @@ def check_load_report_requested(workouts: list[dict], ctx: Context) -> list[Find
     return findings
 
 
+# A description asks its questions in a trailing block. These start it.
+_FEEDBACK_BLOCK_START = re.compile(
+    r"^\W*(?:FEEDBACK|FEEDBACK-FRAGE|R(?:Ü|UE)CKMELDUNG|ZUR(?:Ü|UE)CKMELDEN)\b",
+    re.IGNORECASE,
+)
+
+_KG_FIGURE = re.compile(r"(\d+(?:[.,]\d+)?)\s*kg\b", re.IGNORECASE)
+
+
+def _kg_figures(text: str) -> set[str]:
+    """Normalised kg figures in a chunk of description text.
+
+    `33kg`, `33 kg` and `33,0 kg` are the same load written three ways, and a
+    plan mixes all three. Comparing the raw strings would report a mismatch
+    that does not exist, so the decimal comma is folded to a point and a
+    trailing zero is dropped.
+    """
+    out: set[str] = set()
+    for raw in _KG_FIGURE.findall(text):
+        value = raw.replace(",", ".")
+        try:
+            out.add(f"{float(value):g}")
+        except ValueError:  # pragma: no cover - regex guarantees a number
+            continue
+    return out
+
+
+def check_feedback_load_matches_prescription(
+    workouts: list[dict], ctx: Context
+) -> list[Finding]:
+    """R029 — a load named in the feedback question must be one the plan prescribes.
+
+    This is the sibling of R026 and catches the other half of the same loop.
+    R026 checks that the session asks what was lifted at all. This one checks
+    that the question asks about the **right** load.
+
+    The failure mode is an edit that only lands in half the description. A
+    load gets revised — a step deferred, a cap applied, an anchor held — the
+    exercise line is corrected, and the trailing feedback question keeps
+    naming the figure that was there before. Both numbers are then in front of
+    the athlete, and the one in the question is the one phrased as a
+    statement: "and did the 35 kg feel different left to right" reads as
+    settled fact, not as a stale draft.
+
+    What makes it expensive is how the answer comes back. The athlete replies
+    with a bare RPE, because that is what the question leads with. Nothing in
+    the reply names a load, so the planned figure is booked as the executed
+    one — and which planned figure gets booked depends on which line the
+    reader trusts. A step that never happened can be recorded as taken, on an
+    anchor nobody held, and it looks exactly like a real data point
+    afterwards.
+
+    Documented incident: a carry was reset from 35 kg to 33 kg before the
+    push (the load step was deferred over a hands-on therapy day), but the
+    feedback line of the same description still asked about "die 35 kg". The
+    athlete reported "rpe 6" with no load. Only an explicit follow-up
+    question established that 33 kg had actually been held; without it, RPE 6
+    would have been filed as the reading of the deferred step.
+
+    Trigger: a strength-type workout whose feedback block names a kg figure
+    that appears on none of its exercise lines.
+
+    WARNING rather than ERROR, and deliberately so: a feedback question may
+    legitimately look forward to a load that is not prescribed today ("melde,
+    ob 12,5 kg realistisch wären"). That phrasing is not reliably separable
+    from a stale one by pattern, so the rule names the figure and lets the
+    coach decide instead of guessing which kind it is.
+    """
+    findings: list[Finding] = []
+
+    for w in workouts:
+        if (w.get("type") or "") in ("Run", "Ride", "VirtualRun", "VirtualRide"):
+            continue
+        if _is_sauna(w):
+            continue
+        desc = _description(w)
+        if not desc:
+            continue
+
+        feedback_lines: list[str] = []
+        exercise_lines: list[str] = []
+        in_feedback = False
+        for line in desc.splitlines():
+            stripped = line.strip()
+            if _FEEDBACK_BLOCK_START.match(stripped):
+                in_feedback = True
+                feedback_lines.append(stripped)
+                continue
+            if in_feedback:
+                # A blank line closes the block; anything else continues it,
+                # because a multi-line question is written as a list.
+                if not stripped:
+                    in_feedback = False
+                    continue
+                feedback_lines.append(stripped)
+                continue
+            exercise_lines.append(stripped)
+
+        if not feedback_lines:
+            continue  # nothing asked back — that is R026's finding, not this one
+
+        asked = _kg_figures("\n".join(feedback_lines))
+        if not asked:
+            continue
+        prescribed = _kg_figures("\n".join(exercise_lines))
+        orphans = sorted(asked - prescribed, key=float)
+        if not orphans:
+            continue
+
+        findings.append(Finding(
+            rule_id="R029",
+            severity="WARNING",
+            workout=_workout_name(w),
+            message=(
+                "Feedback question names load(s) "
+                + ", ".join(f"{v} kg" for v in orphans)
+                + " that no exercise line prescribes"
+                + (
+                    " (prescribed: " + ", ".join(f"{v} kg" for v in sorted(prescribed, key=float)) + ")"
+                    if prescribed else " (no load on any exercise line)"
+                )
+                + " — typically an edit that changed the exercise line and left the "
+                "question behind. The athlete answers with a bare RPE, so the wrong "
+                "planned figure gets booked as the executed one."
+            ),
+            suggestion=(
+                "Re-read the feedback line against the exercise lines: a load change "
+                "is one edit, not two. If the figure is deliberately forward-looking "
+                "(asking whether a future load seems realistic), phrase it so it "
+                "cannot be read as today's prescription."
+            ),
+        ))
+
+    return findings
+
+
 def check_sauna_placement(workouts: list[dict], ctx: Context) -> list[Finding]:
     """R025 — sauna slots must respect their three documented buffers.
 
@@ -2917,6 +3053,7 @@ RULES: list[tuple[str, Callable[[list[dict], Context], list[Finding]]]] = [
     ("R026", check_load_report_requested),
     ("R027", check_hr_band_matches_intensity),
     ("R028", check_repeat_session_within_cadence),
+    ("R029", check_feedback_load_matches_prescription),
 ]
 
 

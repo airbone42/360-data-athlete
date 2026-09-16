@@ -682,6 +682,31 @@ they resolve to "did a `core` session happen?", so a prescription living
 *inside* such a session is invisible to them. Declare the cadence for any
 prescription whose omission would otherwise be silent.
 
+**The mirror gap, and it needs its own field: a step that is waiting.** The
+check above sees a prescribed element that was *missed*. Nothing sees one
+that is *pending* — and, more importantly, nothing sees **two pending steps
+landing on the same tissue**. Each exercise entry declares its own step and
+no single entry can count the others, so two steps run in one session, the
+next morning's reading is unattributable, and neither step is confirmed. The
+same filing habit loses the **order** as well: once an order has been argued
+and agreed, it is written into whichever entry the argument happened in, and
+the next planning cycle re-derives it from the nearest heuristic instead.
+That is not a neutral substitution — "oldest queue entry first" and "largest
+distance to target band first" give different answers, and the athlete then
+has to win a settled decision twice.
+
+Declare `**Schritt-offen:**` (plus optional `**Schritt-Kette:**` and
+`**Schritt-Rang:**`) on any entry whose step is due and not yet run. Schema
+and conventions: `config.example/exercise_progressions.md` → Schritt-Felder.
+**No date in those fields** — when a step runs belongs in the slot ledger
+(see "Scheduling decisions have exactly one canonical home"); the rank says
+in which order, not on which day.
+
+*Enforcement: `app/analytics/progression_queue.py`, surfaced in
+`planningConstraints` by `context_builder._compute_progression_queue`
+(fail-soft, opt-in per exercise, no output without the field). Tests:
+`tests/test_progression_queue.py`.*
+
 Three concrete triggers — pause and ask the athlete before acting:
 
 1. **Atomic block would lose members.** Today's plan is shaping up to
@@ -1565,6 +1590,28 @@ line and the ask can be dropped.
 *Enforcement: `validate_plan.py::check_load_report_requested` (R026) —
 WARNING, never blocking; the agent-side contract lives in
 `agents/specialist-complementary.md` and `agents/specialist-ninja.md`.*
+
+**And when a load changes, the question that asks about it changes too
+(mandatory).** The rule above establishes that the description must ask what
+was lifted. The other half is that it must ask about the **right** load. A
+load gets revised late — a step deferred, a cap applied, an anchor held — the
+exercise line is corrected, and the trailing feedback question keeps naming
+the figure that was there before. Both numbers are then in front of the
+athlete, and the one in the question reads as settled fact rather than as a
+stale draft. The reply comes back as a bare RPE, because that is what the
+question leads with, so the planned figure is booked as the executed one —
+and which planned figure gets booked depends on which line the reader
+trusts. A step that never happened is then recorded as taken, on an anchor
+nobody held, and it is indistinguishable from a real data point afterwards.
+**A load change is one edit, not two.**
+
+*Enforcement: `validate_plan.py::check_feedback_load_matches_prescription`
+(R029) — WARNING, never blocking. It flags a kg figure in the feedback block
+that no exercise line prescribes. WARNING rather than ERROR because a
+question may legitimately look forward to a load that is not prescribed today
+("report whether 12.5 kg seems realistic"), and that phrasing is not reliably
+separable from a stale one by pattern — so the rule names the figure and
+leaves the reading to the coach. Tests: `tests/test_validate_plan_r029.py`.*
 
 **Corollary — do not compensate by moving prose into the workout *name*.**
 Names stay short; see the naming guidance in the specialist agent
