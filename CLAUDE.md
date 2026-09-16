@@ -1367,6 +1367,14 @@ is documented in `config/athlete_status.md` (athlete-specific incident log).
   current-LTHR slot in `athlete_status.md`, never heuristic
 - Easy/recovery runs: HR ceiling must stay below Z3 — validator rule R010
   blocks violations as a hard ERROR before the push
+- **Indoor / treadmill sessions: raise the HR ceiling by ~5–8 bpm** for the
+  same target pace — there is no cooling airflow, and RPE sits roughly one
+  CR10 point higher too. Both are the indoor signature, not a drift finding.
+  The figure is practitioner consensus rather than a measured point estimate,
+  so label it as such where it is applied. A belt session is also **not** a
+  pace anchor: calibration error, the thermal premium and treadmill-specific
+  energy cost all arrive inside the same displayed pace. Anchor:
+  [treadmill-vs-outdoor-pace-hr-and-1-percent-grade.md](research/treadmill-vs-outdoor-pace-hr-and-1-percent-grade.md)
 
 ### Sport-specific HR-zone application (MANDATORY)
 

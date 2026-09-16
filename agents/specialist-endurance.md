@@ -816,6 +816,35 @@ Allowed values:
 routes, pick the dominant surface (>60 %); if truly 50/50, mention in
 `focus` and pick trail if trail share ≥ 40 % (safety bias).
 
+**`treadmill` (or `indoor: true`) changes three things in the prescription,
+and getting them wrong is the common failure:**
+
+1. **Grade — one correction axis, never two.** Default 0 % up to ~13 km/h,
+   1 % above ~16 km/h, and in between pick **one** axis. Raising the belt
+   speed above the outdoor target *and* adding grade corrects the same
+   missing air resistance twice and puts the session above its intended
+   intensity. When the target pace has already been set faster than the
+   outdoor equivalent, the grade stays at 0 % — and say in `focus` that this
+   is the chosen axis, otherwise it reads as an oversight. The threshold
+   figure rests on a secondary transcription of the only per-speed study;
+   keep that caveat attached when you cite it.
+2. **HR ceiling: ~5–8 bpm higher** for the same pace, because there is no
+   cooling airflow, and RPE roughly one CR10 point higher. Write the guard
+   so it cannot bind spuriously: the belt sets the pace, so the binding
+   in-session criterion is **breathing**, not the HR number. Flag the
+   +5–8 bpm as practitioner consensus rather than a measured value.
+3. **Not a pace anchor.** Belt calibration error, the thermal HR premium and
+   treadmill-specific energy cost all land in the same displayed pace. Do not
+   let a belt session be the reading point for a pace anchor — state in
+   `focus` that the anchor gets re-checked outdoors. It *can* serve as an RPE
+   reading at a controlled speed, compared against a treadmill baseline.
+
+Plus the practical two: a fan from minute zero (the cheapest lever against
+both the HR premium and the RPE shift), and running drills belong beside the
+**stopped** belt, not on it.
+
+Derivation: `framework/research/treadmill-vs-outdoor-pace-hr-and-1-percent-grade.md`.
+
 **The field is also a training variable, not only advisor input.** Surface
 decides the loading pattern the athlete's foot, tendon and ankle actually
 get, so it is part of race specificity — and terrain tolerance is built by
