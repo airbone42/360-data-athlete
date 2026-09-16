@@ -576,6 +576,62 @@ challenge the conservatism.
 
 *Enforcement: mechanical validator hook `validate_plan.py::check_easy_run_conservatism` (R014). Primary anchor — when `competition_plan.md` documents a per-phase easy-run band keyed by CTL ("Lauf-Dauer-Logik pro Phase"), an easy run below the phase-band floor (mapped via current CTL) with no documented recovery trigger is a hard ERROR; heat is a reason to run slower (HR-capped), not shorter, and indoor/brick runs are exempt. Fallback anchor — without a phase-band table or when CTL is offline, easy runs below 70% of the 30d easy median without a documented recovery reason surface as a WARNING. Plus head-coach judgment for the other drift classes, including pacing / race-strategy conservatism and long-run/volume anchoring (not fully mechanizable — the demonstrated-longest-run anchor depends on a representative history window the coach must request).*
 
+### Correlated signals are one signal, however many of them there are (mandatory)
+
+Converging evidence is the strongest thing a coach can have and the easiest
+thing to fake accidentally. Several derived metrics agreeing feels like
+independent confirmation; when they are computed from the same underlying
+observation, it is one observation counted several times, and the
+"convergence" is arithmetic rather than evidence.
+
+The trap is specific to derived data, which is most of what an activity file
+contains. Running dynamics are the clearest case: at a fixed speed, **step
+length = speed ÷ cadence**, so cadence and step length carry exactly one
+degree of freedom between them — quoting both as agreeing is quoting one
+number twice. Ground-contact time is a property of the same stride and moves
+with them. A watch's treadmill pace is estimated from that same stride by an
+accelerometer, so it is not an outside check either. Four figures, one
+observation.
+
+**Before calling evidence convergent, name the mechanism each signal comes
+through, and drop the ones that share a mechanism.** What survives is the
+real count. If that count is one, say so — a single signal can still be
+right, but it does not carry the weight of four and it must not be presented
+as though it did.
+
+Two consequences that keep recurring:
+
+- **An unmodelled signal outranks several modelled ones.** A direct
+  measurement of the thing in question — a stopwatch, a tape measure, a
+  scale, a device-level calibration check — is worth more than any number of
+  quantities derived from the athlete's own movement, because it fails
+  differently. Where such a check is cheap, run it *before* building a case,
+  not afterwards as confirmation.
+- **The athlete's perception is an independent instrument, and usually the
+  only one at hand.** An athlete who trains at a given intensity for months
+  has a calibrated sense of it. It arrives as prose and therefore looks softer
+  than a number — but on the question "was this really that pace / that
+  effort", it is sensor-independent, which none of the file's metrics are.
+  Discounting it as intuition while treating four correlated metrics as
+  corroboration inverts the actual evidence ranking.
+
+**Drift incident pattern** (canonical case to learn from): an athlete reported
+that his legs felt far fresher than the session's effort implied. The coach
+built a quantitative case from ground-contact time, cadence and the watch's
+recorded pace, found all three consistent with a substantially slower speed,
+and concluded the treadmill belt was running about 12 % slow. The athlete
+doubted it on two grounds — that the slip figure was implausibly large, and
+that his own sense of the pace would have had to be badly wrong. A five-minute
+belt-revolution count under load then showed the belt accurate to under 1 %
+at three speeds. The three "independent" signals were three views of one
+stride, which on a treadmill simply differed from the athlete's outdoor
+stride; the one genuinely independent signal available beforehand had been the
+athlete's perception, and it had been set aside as intuition.
+
+*Enforcement: head-coach judgment. The failure is invisible in the record
+afterwards — a correct convergence and a tautological one look identical
+unless the mechanism behind each signal was written down.*
+
 ### A negative provocation test is triage, not an all-clear (mandatory)
 
 When an athlete reports a self-administered provocation test as negative —
