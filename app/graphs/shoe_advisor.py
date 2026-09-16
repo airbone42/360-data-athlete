@@ -264,6 +264,26 @@ def _compute_last_used(activities: list[dict]) -> dict[str, str]:
     return last
 
 
+def _is_treadmill(workout: dict) -> bool:
+    """True when the session runs on a belt rather than on ground.
+
+    `_detect_terrain_from_context` deliberately collapses `treadmill` into the
+    asphalt bucket, because for tread compound and grip a belt behaves like a
+    firm even surface. That is the right call for terrain and the wrong one for
+    the race-prep window, which is not about tread at all: it habituates the
+    athlete to the race **surface** and to the race shoe **at race pace**, and
+    a belt supplies neither. So the two questions need separate answers, and
+    this is the second one.
+
+    Checked in both places a belt can be declared, because the two arrive from
+    different writers: `surface` from the endurance specialist, `indoor` from
+    the planner.
+    """
+    if normalize_surface((workout.get("surface") or "").lower().strip()) == "treadmill":
+        return True
+    return workout.get("indoor") in (True, "true")
+
+
 # ── Terrain detection ─────────────────────────────────────────────────────────
 
 def _detect_terrain_from_context(workout: dict, weather_info: str) -> str:
@@ -357,6 +377,7 @@ def _score_shoe(
     last_used: dict[str, str],
     workout_type: str = "",
     workout_keys: list[str] | None = None,
+    indoor: bool = False,
 ) -> float | None:
     """Return a score ≥ 0 or None if the shoe is disqualified.
 
@@ -377,7 +398,13 @@ def _score_shoe(
     if role == "race":
         race_prep_days = int(profile.get("race_prep_days", 7))
         is_race_workout = workout_type.upper() == "RACE"
-        in_prep_window = race_in_days is not None and race_in_days <= race_prep_days
+        # A belt session does not open the prep window: the window exists to
+        # habituate the athlete to the race surface and to the shoe at race
+        # pace, and a treadmill delivers neither. Letting it through spends a
+        # race shoe's short life on the one session that cannot use it.
+        in_prep_window = (
+            not indoor and race_in_days is not None and race_in_days <= race_prep_days
+        )
         if not (is_race_workout or in_prep_window):
             return None
 
@@ -445,7 +472,7 @@ def _score_shoe(
     ):
         prep_days = int(profile.get("race_prep_days", 7))
         if workout_type.upper() == "RACE" or (
-            race_in_days is not None and race_in_days <= prep_days
+            not indoor and race_in_days is not None and race_in_days <= prep_days
         ):
             score += 50.0
 
@@ -585,6 +612,7 @@ def build_shoe_context(
                 race_in_days, today_str, last_used,
                 workout_type=run_workout.get("workout_type") or "",
                 workout_keys=_workout_keys(run_workout),
+                indoor=_is_treadmill(run_workout),
             )
             if sc is not None:
                 scored.append((sc, s))

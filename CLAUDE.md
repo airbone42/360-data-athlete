@@ -1629,6 +1629,21 @@ shoe advisor gets gear, mileage, and active/retired status:
   `icu_gear_id`.
 - **`off`** — advisor disabled.
 
+**A belt session does not open the race-prep window.** Terrain detection
+collapses `treadmill` into the asphalt bucket, which is right for tread
+compound and grip — for those a belt behaves like a firm even surface. It is
+wrong for the race-prep window, because that window is not about tread: it
+habituates the athlete to the race **surface** and to the race shoe **at race
+pace**, and a belt supplies neither. So the advisor answers the two questions
+separately — terrain stays asphalt-equivalent, the prep window closes
+(`_is_treadmill`, checked on both `surface` and the planner's `indoor` flag).
+Without the split, a race-pace session moved indoors for weather still drew
+the designated race shoe: its short life spent on the one session that cannot
+use it, and a `[coach-gear]` marker nobody would have chosen. A carbon plate
+wants ground reaction; a belt does not give it one.
+
+*Tests: `tests/test_shoe_treadmill_race_prep.py`.*
+
 `SHOE_IGNORE_DEVICE_GEAR` (default `false`) decides who owns the gear field
 on a finished activity. By default a shoe already attached by the recording
 device counts as a real assignment and `set_activity_gear.py` leaves it
