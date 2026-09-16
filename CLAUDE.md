@@ -2249,6 +2249,49 @@ Once the original is in the inbox:
 6. If follow-up needed: add `⚠️ video follow-up` to the next workout
    description.
 
+**Setup and scale are derived from the marker, before anything is filmed
+(mandatory).** The structure gate catches a wrong claim after the clip
+exists. This rule sits *before* the clip and catches the clip that could
+never have answered the question — which is the more common and the more
+expensive failure, because it costs the athlete a session and comes back
+looking like a data gap rather than a planning error.
+
+The order is: name the claim, check it carries a scale, then derive the
+setup. Never the reverse. A setup assembled first and a scale chosen after
+looking at the footage turns a post-hoc scale into an unsupported claim.
+
+Four claim classes, and the only question that matters is which one the
+marker is in:
+
+| Claim class | What it can carry | Setup that follows |
+|---|---|---|
+| **Absolute position** of a structure, as an isolated value | often **nothing from video** — check the marker's own evidence before assuming otherwise | palpation + instrument, or change the marker |
+| **Pattern** present / absent under movement | categorical, sometimes ordinal | dynamic, enough repetitions to see a pattern, camera fixed and perpendicular, region unobstructed |
+| **Within-recording comparison** (condition A vs. B in one take) | categorical — a clearly visible change | both conditions in the same clip, **camera untouched between them**, identical framing and lighting |
+| **Symptom modifier** under a manoeuvre | binary | a clinician applies it; video documents, it is not the method |
+
+Then, before the athlete is asked into position, a **landmark check**: are
+the decision-relevant landmarks visible under the planned clothing, and do
+they read as *edges* under the planned light? Backlight flattens relief and
+erases exactly the bone edges a position claim depends on. If either answer
+is no, change the condition or shrink the claim — do not film and hope. This
+part is setup discipline, not a study finding, and should be stated as such.
+
+**When the question fits no class that carries a scale, the answer is to
+change the marker or the method — not to film anyway.** A clip produced
+against a question it cannot answer does not return "no finding"; it returns
+a confident wrong one, or it burns the slot. Anchor:
+[scapula-video-assessment-reliability-and-marker-scale.md](research/scapula-video-assessment-reliability-and-marker-scale.md),
+which generalises the per-marker scale table already established for
+posterior running markers in
+[posterior-video-running-marker-scale-and-setup.md](research/posterior-video-running-marker-scale-and-setup.md).
+
+*Enforcement: head-coach and specialist judgment at prescription time — the
+film tip is written before the clip exists, so no code path can check it.
+The agent-side contracts live in `agents/video-analyst.md` (per-marker
+scales) and in the film-tip sections of `agents/specialist-complementary.md`
+and `agents/specialist-ninja.md`.*
+
 **Recording spec** (the largest single lever after the gate): clip 20–40 s
 covering 3–6 repetitions, camera fixed on a tripod, perpendicular to the
 plane being assessed, whole body in frame, no zoom or pan, ≥ 720p. Camera

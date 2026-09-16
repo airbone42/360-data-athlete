@@ -197,3 +197,14 @@ Konkrete Edits macht der Head-Coach nach Athleten-Freigabe — siehe `Proposed d
 - **RTP-Kriterien:** die ≥ 90 %-Kraft-Schwelle und die Skapula-Kinematik-Symmetrie sind aus generischer Schulter-Reha übernommen; klavikula-spezifische prospektive Validierung fehlt.
 - **Refraktur-Zeitfenster:** Die 18-Monats-Empfehlung („longer than 18 months" Intervall Fixation → Entfernung) ist Umfrage-Praxis, nicht evidenzbasiert (Tsai 2019 explizit). Für unsere Frage (Post-Entfernung 12+ Monate) ist das Risiko-Fenster ohnehin geschlossen.
 - **Nächster sinnvoller Recherche-Ausbau:** wenn die Evidenz zur „late rescue" nach Materialentfernung eine harte Zahl bräuchte — gezielt suchen nach prospektiven Kohorten „post-implant-removal shoulder rehabilitation > 12 months" (aktuell in unserer Suche leer).
+
+## Related: how reliable is the observation that would trigger the exercise choice?
+
+This document covers the *exercise* axis. The **diagnostic** axis — what a
+scapular observation can actually establish, at which scale, and from which
+recording — is in
+[scapula-video-assessment-reliability-and-marker-scale.md](scapula-video-assessment-reliability-and-marker-scale.md).
+Read it before letting a scapular finding drive a progression decision: a
+dyskinesis pattern has not been shown to track shoulder symptoms in overhead
+athletes, and no scapular examination test differentially diagnoses shoulder
+pathology — so the pattern is a pattern, not a cause.

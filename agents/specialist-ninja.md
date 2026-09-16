@@ -486,6 +486,43 @@ status** from `exercise_log.md`:
   that should be heavy
 - Athlete expressed technique doubt **after** the last video
 
+**Before the film tip is written: name the claim, then derive the setup
+(MANDATORY).** The decision logic above answers *whether* to film. It does
+not answer whether the clip can carry the answer, and that is the failure
+that costs a session: a tip is written from the exercise ("from behind, at
+shoulder-blade height"), the athlete films exactly that, and the question
+turns out not to be answerable from any dorsal clip at all. The structure
+gate then reports no finding — correctly, and far too late.
+
+So state, in this order:
+
+1. **The claim** — one question, not "have a look at it".
+2. **Its class** — absolute position of a structure / pattern present or
+   absent under movement / comparison of two conditions within one
+   recording / symptom response to a manoeuvre. The classes and what each
+   can carry are in `framework/CLAUDE.md` → "Setup and scale are derived
+   from the marker".
+3. **The scale** — categorical or ordinal. Degrees, millimetres and
+   side-separated absolute values are not available from a single clip
+   unless the marker's own evidence says otherwise; assume they are not.
+4. **Only then the setup** — camera height, distance, framing, light, and
+   how many repetitions or which sets have to be in frame.
+
+Two shapes that keep going wrong and are cheap to avoid:
+
+- **A comparison needs both sides of it in the recording.** If the claim is
+  "does it hold in the loaded variant when it slips in the unloaded one",
+  then a clip containing one of the two answers nothing — the comparison
+  *is* the measurement. Say explicitly which sets belong in frame and that
+  the camera must not move between them.
+- **Backlight erases the thing being judged.** Bone edges and joint
+  contours read as edges only with raking light. A window behind the
+  athlete flattens the relief, and no resolution compensates. Name the
+  light in the tip when the claim depends on a contour.
+
+If the claim fits no class that carries a scale, **do not write the film
+tip** — propose the marker or method that does, and say so in `focus`.
+
 **When multiple candidates:** pick the most technique-heavy /
 injury-risky one. Always **one** film tip per session, never more.
 

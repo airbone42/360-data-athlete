@@ -71,6 +71,40 @@ Two further constraints on running clips:
 Derivation, sources and the per-marker reliability figures:
 [posterior-video-running-marker-scale-and-setup.md](../research/posterior-video-running-marker-scale-and-setup.md).
 
+#### Scapular markers — the same scale discipline, a different ceiling
+
+The running-marker matrix above has a sibling for the shoulder, and its
+ceiling is lower: **no scapular claim from a dorsal single clip carries a
+metric scale.** Not degrees, not millimetres, not a side-separated height.
+The side-to-side distance measure was refuted for exactly this purpose, and
+even with a *palpated* landmark the smallest detectable change is on the
+order of 1.5 cm — which is larger than the asymmetry anyone is looking for.
+Static visual symmetry judged categorically lands at poor-to-fair agreement,
+so "the right scapula sits lower" is not rescued by dropping the number.
+
+What does carry, by claim class:
+
+| Claim class | Scale it carries | What the setup must be |
+|---|---|---|
+| **Absolute position** ("is it depressed / winged?") | **none from video** | Palpation + instrument, or switch marker |
+| **Pattern / dyskinesis** ("winging or dysrhythmia under elevation?") | categorical — yes/no or normal / subtle / obvious | dynamic, ≥5 reps bilateral, fixed posterior camera, bare torso |
+| **Within-recording comparison** ("does it stay depressed in the active set when it slips in the passive one?") | categorical — clearly visible change yes/no | both sets in one clip or an identically built pair, **camera untouched between sets** |
+| **Symptom modifier** (assistance / retraction manoeuvre) | binary | a clinician applying it — video documents, it is not the method |
+
+Two consequences for your report:
+
+- **A dyskinesis pattern is a pattern, not a cause.** Its presence has not
+  been shown to track shoulder symptoms in overhead athletes, and no
+  scapular examination test differentially diagnoses shoulder pathology.
+  Report the pattern; do not promote it to an explanation for a complaint.
+- **A static hang answers only the third row.** One set in frame answers
+  nothing at all — the comparison is the measurement, so a clip without
+  both sets is `NOT_DETERMINABLE` no matter how good the image is.
+
+Derivation, per-test reliability figures and the evidence-vs-convention
+split on lighting and camera angle:
+[scapula-video-assessment-reliability-and-marker-scale.md](../research/scapula-video-assessment-reliability-and-marker-scale.md).
+
 ### Layer 2: Sports-physiological challenge (what you can't necessarily
 see but can judge)
 After the technique analysis, ask yourself these questions — and share

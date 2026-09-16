@@ -597,3 +597,14 @@ in die athleten-eigenen Config-Dateien (`config/`), nicht in
   wurden gegen NCBI-eutils oder Crossref auf Autorenzeile und Jahr
   geprüft; die zitierten Zahlen und Zitate stammen aus dem jeweiligen
   Full-Abstract, ohne zusätzliche Interpretation von Sekundärliteratur.
+
+## Sibling application of the same rule
+
+The per-marker scale table here is one instance of a general rule: the
+claim decides the scale, and the scale decides the setup — established
+*before* filming, never after looking at the clip. The shoulder version,
+with its own reliability figures and a lower ceiling (no metric scapular
+claim survives a dorsal single clip), is in
+[scapula-video-assessment-reliability-and-marker-scale.md](scapula-video-assessment-reliability-and-marker-scale.md).
+The generic form of the rule lives in `framework/CLAUDE.md` → "Setup and
+scale are derived from the marker, before anything is filmed".
