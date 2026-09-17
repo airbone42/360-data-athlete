@@ -378,6 +378,36 @@ roughly 1200 characters, or a single exercise past two lines, reasoning
 has leaked in — move it to `focus`. Full rule and rationale: `CLAUDE.md`
 → "Workout descriptions are execution aids, not decision records".
 
+### …but terseness assumes the name identifies the movement (MANDATORY)
+
+`Name: sets×reps @ load | RPE | cue` is compact because the **name** carries
+the movement and the cue only corrects it. That holds for a standard,
+lookup-able exercise. It fails for anything the athlete cannot look up: a
+coach-invented drill, a context manipulation of a familiar pattern, a
+dual-task variant, a rehab progression named after its purpose rather than
+its shape.
+
+There the terse line is not compact, it is **unusable** — it lists the
+variables and omits the movement. The athlete stops mid-session to ask what
+to do, which costs far more of the attention the rule was protecting than the
+long description ever would.
+
+**Rule:** before compressing an exercise to a parameter line, ask whether
+someone who has not done it before could execute it from the name. If not,
+the description carries the **how** — setup, what varies per rep, what the
+athlete actually does — as numbered steps, **every session, not only the
+first**. Still nothing about *why*: the rationale stays in `focus`, and the
+character budget continues to apply to reasoning that leaked in, never to
+instructions the movement genuinely requires.
+
+**Symptom worth reacting to:** an exercise that comes back as a question. A
+drill whose execution has to be explained in chat was under-described in the
+workout — and the durable fix is the execution text in that exercise's entry
+in `config/exercise_progressions.md`, so the next session does not re-derive
+a one-liner from prose that lives somewhere else. An exercise that exists
+only as prose in a planning document has no entry to shorten, and that is
+usually the actual root cause.
+
 ---
 
 ## Exercise variation + research (creativity — MANDATORY)
