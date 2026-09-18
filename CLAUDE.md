@@ -82,6 +82,38 @@ The mesocycle table tells you the **content** of each Hard-Reiz; the
 weekly strategy tells you **which Hard-Reiz comes next**. Both are
 required.
 
+**The two weekly stimuli go on separate days, decided at planning time
+(mandatory).** Two hard sessions on one calendar day is not a schedule,
+it is a collision waiting for someone to resolve it — and the person who
+resolves it is the athlete, on the day, by declining one. That decision
+is correct: two interval sessions in a day rarely makes sense. But the
+week then loses a stimulus, and the record shows the loss as an athlete
+decision rather than as the planning error it is.
+
+The failure is self-sustaining, which is why it needs a rule rather than
+attention. Every time the two stimuli are stacked, a sensible athlete
+declines one, the bookkeeping writes "dropped at athlete's request", and
+the next planning cycle reads a week that carried one stimulus and an
+athlete who refuses the second. Repeat and the programme never reaches
+its own prescription while every individual entry looks defensible.
+
+- Place both stimuli on distinct days **before** the week starts. If the
+  available days do not allow it, that is the finding — say the week
+  carries one stimulus and why, rather than booking two on one day and
+  discovering it later.
+- When an athlete declines a stimulus, record **what** they declined.
+  "Not two interval sessions in one day" is a scheduling objection and
+  leaves the stimulus itself untouched; "that intensity is too much this
+  week" is a dose objection and does. Filing the first as the second
+  silently deletes a stimulus nobody rejected.
+- A stimulus lost to a collision is **deferred with a named slot**, like
+  any other deferral — and the slot is on a day the other stimulus does
+  not already own.
+
+*Enforcement: head-coach judgment at plan time. No mechanical check sees
+this, because each day in isolation is legal and the athlete's refusal
+looks like consent to the outcome.*
+
 ---
 
 ## Athlete knowledge
