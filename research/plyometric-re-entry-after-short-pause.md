@@ -266,13 +266,26 @@ Intensitäts-Achse als mit der Anzahl der Kontakte. Die
 dokumentiert die Achsen (SSC-Kopplungszeit, Amplitude/Fallhöhe, uni/
 bilateral, Gewebe-Ziel); die Load-Relation zusätzlich aus Buckthorpe 2021:
 
-> „Bilateral landing, treadmill based running and single limb plyometric
-> tasks typically involve ground reaction forces of 1–1.5, 2–3 and 2–6
-> times body mass, respectively."
+> „Plyometric tasks vary in their intensity and specificity, with typical
+> peak ground reaction forces (GRF) ranging from 1.5-7 times body mass."
 
-Das ist ein **Faktor 4–5×** von einem sanften bilateralen Landen zu einem
-harten unilateralen Kontakt. Zum Vergleich: eine 25 %-Reduktion in der
-Kontakt-Zahl bei gleicher Intensität senkt die kumulative Sehnen-Last um
+**⚠️ KORREKTUR 18.09.2026 — hier stand ein Zitat, das es in der Quelle nicht
+gibt.** Die frühere Fassung zitierte Buckthorpe & Della Villa mit
+„Bilateral landing, treadmill based running and single limb plyometric tasks
+typically involve ground reaction forces of 1–1.5, 2–3 and 2–6 times body
+mass, respectively" und leitete daraus einen **Faktor 4–5×** zwischen sanfter
+bilateraler und harter unilateraler Landung ab. Der Satz steht **nicht** in der
+Arbeit; geprüft gegen Volltext (EuropePMC-XML und Verlags-PDF), das Wort
+„respectively" kommt dort überhaupt nicht vor. Die Quelle gibt **eine einzige,
+undifferenzierte Spanne** über plyometrische Aufgaben hinweg an — oben zitiert.
+
+Was davon trägt und was nicht: Die Spanne 1,5–7× Körpergewicht belegt, dass
+**Intensität stark variiert** — das ist die Aussage, die dieser Abschnitt
+braucht, und sie steht. **Nicht** belegt ist die Aufschlüsselung nach
+bilateral / Laufen / einbeinig und damit jede Zahl, die einbeinige Landungen
+gegen bilaterale quantifiziert. Wer eine solche Relation braucht, muss sie neu
+belegen; sie ist hier nicht mehr verfügbar. Zum Vergleich: eine 25 %-Reduktion
+in der Kontakt-Zahl bei gleicher Intensität senkt die kumulative Sehnen-Last um
 ~25 %. Eine Intensitäts-Rückstufung (z.B. Fast-SSC → Slow-SSC bilateral)
 kann die Peak-Last pro Kontakt um 30–50 % senken — bei gleicher
 Kontaktzahl.
@@ -426,7 +439,7 @@ Aus der 5–10 %/Woche-Progressions-Rate + der 48–72 h-Recovery-Kadenz:
 | Silbernagel KG, Hanlon S, Sprague A — 2020 | Current Clinical Concepts: Conservative Management of Achilles Tendinopathy | JOSPT/JAT / [PMC 7249277](https://pmc.ncbi.nlm.nih.gov/articles/PMC7249277/) | Rebuilding-Phase: „Plyometric training starts with bilateral jumps and progresses to unilateral jumps." Activities reclassified every 3–4 weeks. | Clinical Practice Guideline |
 | Cook JL, Purdam CR — 2009 | Is tendon pathology a continuum? A pathology model to explain the clinical presentation of load-induced tendinopathy | Br J Sports Med / [Oliver Finlay PDF](http://www.oliverfinlay.com/assets/pdf/cook%20&%20purdam%20(2009)%20is%20tendon%20pathology%20a%20continuum.%20%20a%20pathology%20model%20to%20explain%20the%20clinical%20presentation%20of%20load-induced%20tendinopathy.pdf) | Reactive tendinopathy: „non-inflammatory proliferative response in the cell matrix, as a result of compressive or tensile overload. […] Heavy load eccentric exercises […] may be highly provocative and deleterious within this reactive stage." | Konsens-Modell / seminales Framework |
 | Mascaró A, Cos MA, Morral A, Roig A, Purdam C, Cook J — 2018 | Load management in tendinopathy: Clinical progression for Achilles and patellar tendinopathy | Apunts Sports Medicine / [ScienceDirect](https://www.apunts.org/en-load-management-in-tendinopathy-clinical-articulo-S1886658117300580) | „Pain behavior the day after loading is the critical load response test. […] If NPS increases keep 72h rest between workouts, if NPS does not increase, keep 48h rest between workouts. […] add fast dynamic exercises every three days. 3 sets of fast concentric-eccentric contraction (explosive), 6–8 repetitions." | Clinical Review (mit Cook + Purdam als Autoren) |
-| Buckthorpe M, Della Villa F — 2021 | Recommendations for Plyometric Training after ACL Reconstruction — A Clinical Commentary | Int J Sports Phys Ther / [ijspt Scholastic](https://ijspt.scholasticahq.com/article/23549-recommendations-for-plyometric-training-after-acl-reconstruction-a-clinical-commentary) · [PDF](https://ijspt.org/wp-content/uploads/2021/05/30-Buckthorpe.pdf) | Stage 1–4 = 50 → 100 → 150 → 200 Bodenkontakte; „Bilateral landing, treadmill running and single-limb plyometric tasks typically involve ground reaction forces of 1–1.5, 2–3 and 2–6 times body mass, respectively"; Progression kriterienbasiert, nicht kalenderbasiert. | Clinical Commentary |
+| Buckthorpe M, Della Villa F — 2021 | Recommendations for Plyometric Training after ACL Reconstruction — A Clinical Commentary | Int J Sports Phys Ther / [ijspt Scholastic](https://ijspt.scholasticahq.com/article/23549-recommendations-for-plyometric-training-after-acl-reconstruction-a-clinical-commentary) · [PDF](https://ijspt.org/wp-content/uploads/2021/05/30-Buckthorpe.pdf) | Stage 1–4 = 50 → 100 → 150 → 200 Bodenkontakte; „Plyometric tasks vary in their intensity and specificity, with typical peak ground reaction forces (GRF) ranging from 1.5-7 times body mass" (**das früher hier geführte Zitat mit der Aufschlüsselung 1–1,5 / 2–3 / 2–6 × Körpergewicht existiert in der Arbeit nicht — Korrektur 18.09.2026, Volltext geprüft**); Progression kriterienbasiert, nicht kalenderbasiert. | Clinical Commentary |
 | Bohm S, Mersmann F, Arampatzis A — 2015 | Human tendon adaptation in response to mechanical loading: a systematic review and meta-analysis of exercise intervention studies on healthy adults | Sports Medicine — Open / [PMC 4532714](https://pmc.ncbi.nlm.nih.gov/articles/PMC4532714/) | Sehnen-Adaption reagiert auf lang gehaltene Strain (~3 s bei 4,5–6,5 %); plyometrische Kurzkontakte trainieren nicht optimal die Sehnen-Steifigkeits-Adaption selbst | Systematic Review + Meta-Analyse |
 | Kubo K, Kanehisa H, Fukunaga T — 2001/2004 | Effects of resistance and stretching training programmes on tendon properties; Elasticity of tendon structures … effects of immobilization and disuse | J Appl Physiol; via Frontiers-2024-Review-Referenzen | Sehnen-Steifigkeit fällt bei echter Entlastung: −10 % nach 14 d Unilateral Suspension, −30 % nach 20 d Bettruhe | Primär-Interventions-Studien |
 | Physiopedia | Plyometric Progression for Rehabilitation | [physio-pedia.com](https://www.physio-pedia.com/Plyometric_Progression_for_Rehabilitation) | „Volume should progress first, while ensuring proper technique, then increasing the intensity and frequency should follow. A patient should tolerate 2–3 sessions at a particular intensity without symptoms before the intensity is progressed." | Praxis-Konsens-Ressource |
