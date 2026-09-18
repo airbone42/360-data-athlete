@@ -187,6 +187,27 @@ class IntervalsClient:
         )
         return data
 
+    @traced("intervals.icu · fetch activity intervals", kind="tool")
+    async def get_activity_intervals(self, activity_id: str) -> list[dict]:
+        """Laps / intervals of one activity.
+
+        Deliberately a separate call: `GET /activity/{id}` does **not** carry
+        `icu_intervals`, it only looks as though it might. Without this
+        endpoint every per-block comparison silently degrades to the session
+        average, which is the failure this exists to prevent.
+        """
+        async with httpx.AsyncClient(auth=self._auth) as c:
+            r = await c.get(f"{BASE_URL}/activity/{activity_id}/intervals")
+            r.raise_for_status()
+            data = r.json()
+        intervals = data.get("icu_intervals") if isinstance(data, dict) else data
+        intervals = intervals if isinstance(intervals, list) else []
+        set_span_io(
+            input={"activity_id": activity_id},
+            output=f"{len(intervals)} lap(s)",
+        )
+        return intervals
+
     @traced("intervals.icu · update activity name", kind="tool")
     async def update_activity_name(self, activity_id: str, name: str) -> dict:
         """Rename an existing activity. Used e.g. when an Indoor-Activity

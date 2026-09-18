@@ -348,11 +348,11 @@ async def fetch_type_history(
             messages = []
         intervals = activity.get("icu_intervals")
         if intervals is None:
-            # The activity list endpoint carries no laps; without them every
-            # pace/HR comparison silently falls back to the session average.
+            # Neither the activity list nor GET /activity/{id} carries laps —
+            # they come from a dedicated endpoint. Without them every pace/HR
+            # comparison silently falls back to the session average.
             try:
-                detail = await client.get_activity(act_id)
-                intervals = detail.get("icu_intervals")
+                intervals = await client.get_activity_intervals(act_id)
             except Exception:
                 logger.warning(
                     "fetch_type_history: could not fetch laps for activity %s — "

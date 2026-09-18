@@ -752,6 +752,10 @@ class CachedIntervalsClient:
                 return cached  # type: ignore[return-value]
             raise
 
+    async def get_activity_intervals(self, activity_id: str) -> list[dict]:
+        """Pass-through; laps are small and only fetched for history windows."""
+        return await self._client.get_activity_intervals(activity_id)
+
     # --- Activity messages --------------------------------------------------
 
     async def get_activity_messages(self, activity_id: str) -> list[dict]:
