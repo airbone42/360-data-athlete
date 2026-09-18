@@ -152,6 +152,65 @@ def _extract_exercises_seen(description: str | None) -> list[str]:
     return sorted(seen)
 
 
+# A session average mixes warm-up, cool-down, strides and jog recoveries into one
+# number, and the mixture differs from session to session. Comparing two such
+# averages therefore compares the *structure* of the sessions, not the athlete's
+# performance — a shorter warm-up alone moves the figure. The blocks below give
+# the specialists and the coach a like-for-like unit: the main continuous effort,
+# and the work intervals of a structured session.
+#
+# Drift incident (the reason this exists): an easy run was called "no faster than
+# two weeks ago" from session averages that happened to match. On the main block
+# the same two runs were 14 s/km apart. The athlete caught it.
+_MAIN_BLOCK_MIN_S = 300  # below this a lap is a warm-up, a drill or a stride
+_WORK_BLOCK_MIN_S = 180  # an interval worth comparing on its own
+
+
+def _block_stats(lap: dict) -> dict | None:
+    """Duration / distance / pace / HR of one lap, or None when unusable."""
+    duration = lap.get("moving_time") or lap.get("elapsed_time")
+    distance = lap.get("distance")
+    if not duration or not distance:
+        return None
+    return {
+        "duration_min": round(duration / 60, 1),
+        "distance_km": round(distance / 1000, 2),
+        "avg_pace_min_km": _pace_min_km(distance / duration),
+        "average_heartrate": lap.get("average_heartrate"),
+    }
+
+
+def _extract_blocks(intervals: list[dict] | None) -> tuple[dict | None, list[dict]]:
+    """Split an activity's laps into (main block, work blocks).
+
+    `main_block` is the longest work lap and is the right comparison unit for a
+    continuous session. `work_blocks` carries every work lap long enough to mean
+    something on its own, so a structured session can be compared interval by
+    interval instead of through an average that includes its recoveries.
+
+    Returns (None, []) when the activity carries no lap data — the caller then
+    falls back to the session average and must say so.
+    """
+    if not intervals:
+        return None, []
+    work = [
+        lap
+        for lap in intervals
+        if (lap.get("type") or "WORK").upper() == "WORK"
+        and (lap.get("moving_time") or lap.get("elapsed_time") or 0) >= _WORK_BLOCK_MIN_S
+    ]
+    if not work:
+        return None, []
+    blocks = [b for b in (_block_stats(lap) for lap in work) if b]
+    longest = max(
+        work, key=lambda lap: lap.get("moving_time") or lap.get("elapsed_time") or 0
+    )
+    main = _block_stats(longest)
+    if main and (longest.get("moving_time") or longest.get("elapsed_time") or 0) < _MAIN_BLOCK_MIN_S:
+        main = None
+    return main, blocks
+
+
 def _slim_activity(activity: dict, *, is_endurance: bool = False) -> dict:
     """Reduce a full activity to the fields specialists actually need.
 
@@ -192,6 +251,15 @@ def _slim_activity(activity: dict, *, is_endurance: bool = False) -> dict:
         slim["average_heartrate"] = activity.get("average_heartrate")
         slim["decoupling"] = activity.get("decoupling")
         slim["avg_pace_min_km"] = _pace_min_km(activity.get("pace"))
+        # Session averages stay in the payload because volume and drift are
+        # session-level properties — but they are NOT the comparison unit for
+        # pace or HR. See _extract_blocks.
+        main_block, work_blocks = _extract_blocks(activity.get("icu_intervals"))
+        slim["main_block"] = main_block
+        slim["work_blocks"] = work_blocks or None
+        slim["comparison_unit"] = (
+            "main_block" if main_block else "session_average (no lap data — say so when comparing)"
+        )
     if "messages" in activity:
         # Activity-Messages (coach-feedback) — gleicher Sanitization-Pfad.
         slim["messages"] = [
@@ -278,7 +346,21 @@ async def fetch_type_history(
         except Exception:
             logger.warning("fetch_type_history: could not fetch messages for activity %s", act_id)
             messages = []
-        return {**activity, "messages": messages}
+        intervals = activity.get("icu_intervals")
+        if intervals is None:
+            # The activity list endpoint carries no laps; without them every
+            # pace/HR comparison silently falls back to the session average.
+            try:
+                detail = await client.get_activity(act_id)
+                intervals = detail.get("icu_intervals")
+            except Exception:
+                logger.warning(
+                    "fetch_type_history: could not fetch laps for activity %s — "
+                    "comparison falls back to session average",
+                    act_id,
+                )
+                intervals = None
+        return {**activity, "messages": messages, "icu_intervals": intervals}
 
     enriched = await asyncio.gather(*[_enrich(s) for s in sessions])
     return [_slim_activity(a, is_endurance=True) for a in enriched]

@@ -32,6 +32,16 @@ Required: intervals.icu activity ID, e.g. `i12345678`
   for a structured session and state the assumption. Prescribed watt
   anchors remain valid as *dose* — only the inference from held watts
   back to athlete state is invalid.
+- **Never compare two session averages (MANDATORY).** A session average
+  spans warm-up, cool-down, drills, strides and recoveries, and that
+  mixture differs per session — so the comparison measures how the
+  sessions were built, not the athlete. Compare the main block against
+  the reference session's main block, or interval against interval. The
+  type history carries `main_block` / `work_blocks` per session for
+  exactly this; `comparison_unit` says which basis exists. Where a
+  session has no lap data, state that the figure is a session average
+  instead of comparing it. Volume, total load, zone distribution and
+  decoupling remain session-level and are read there.
 - **GCT on recovery runs:** High GCT during slow jogging is biomechanics,
   not error. Only evaluate GCT as a fatigue indicator when the GCT rise
   disproportionately exceeds the pace slowdown (pace-normalized). Do not

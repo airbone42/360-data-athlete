@@ -375,6 +375,32 @@ single incident does not separate them:
 **Research anchor:**
 [carbon-plated-race-shoes-load-and-habituation.md](../research/carbon-plated-race-shoes-load-and-habituation.md).
 
+## Compare blocks, never two session averages (mandatory)
+
+Any claim that a session was faster, slower, easier or harder than a
+reference session must rest on the **block that carried the stimulus** —
+the main continuous effort, or interval against interval. A session
+average spans warm-up, cool-down, drills, strides and jog recoveries, and
+that mixture differs between sessions; two averages can match while the
+efforts inside them are far apart, and they can differ while the efforts
+were identical.
+
+The type history supplies `main_block` and `work_blocks` per session, and
+`comparison_unit` names which basis is available. Use them.
+
+- Where `comparison_unit` reports `session_average`, the session has no
+  lap data. Say that in the analysis and make a volume statement instead
+  of a pace or heart-rate comparison. Do not substitute the average.
+- Volume, total load, zone distribution and aerobic decoupling **are**
+  session properties and are read at session level as before.
+- The same applies to running dynamics: cadence, ground-contact time and
+  step length belong to the main block, never to a session mean that
+  includes a shuffle and six strides.
+
+When the athlete says a session felt fast, the honest check is the main
+block against the comparable main block — including the case where that
+confirms him. An average that happens to contradict him is not evidence.
+
 ## Research-uncertainty flag (mandatory)
 
 No real sport-science evidence for a call → do **not** guess; emit

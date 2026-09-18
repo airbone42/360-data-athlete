@@ -300,6 +300,52 @@ quality (structured Z4 climb intervals) was still missing. Lesson: the
 not a topography claim about the route. Always check the type-history
 elevation pattern before treating elevation as exceptional.
 
+### Session averages are not a comparison unit (mandatory)
+
+A session average is computed over everything the athlete did: warm-up,
+cool-down, drills, strides, jog recoveries and the block that actually
+carried the stimulus. The mixture is different in every session, so two
+session averages differ partly because the sessions were *built*
+differently — a shorter warm-up moves the number without anything about
+the athlete having changed. Comparing them therefore compares session
+structure and calls the result form.
+
+**Compare the block that carries the stimulus, against the same block in
+the reference session.** For a continuous session that is the main
+effort; for a structured session it is the work intervals, interval
+against interval. Never pace, heart rate, cadence or ground-contact time
+from one session average against another.
+
+Session-level figures keep their own jobs and should not be discarded:
+volume, total load, zone distribution and aerobic decoupling are
+properties of the whole session and are read there.
+
+**When the block is not available, say so rather than substituting.** An
+activity without lap data supports a volume statement, not a pace or
+heart-rate comparison. "No lap data, so this is a session average" is a
+usable sentence; quietly comparing the averages is not.
+
+The trap is that the average is the figure the tooling hands over first,
+so the invalid comparison is also the convenient one. Treat a pace or HR
+claim built from two session averages as unfounded until the blocks have
+been checked, however plausible the numbers look side by side.
+
+**Drift incident pattern** (canonical case to learn from): an easy run
+whose main block was markedly faster than any comparable recent session
+was reported back to the athlete as "no faster than two weeks ago",
+because the two session averages happened to match. They matched because
+the earlier run was longer and carried proportionally more easy volume.
+On the main block the two sessions were about 14 s/km apart. The athlete
+rejected it immediately — he knew which part of the session had been
+fast — and asked for the comparison to be put on the block level
+systematically.
+
+*Enforcement: `history_fetcher._extract_blocks`, surfaced in the type
+history as `main_block` / `work_blocks` per session, with
+`comparison_unit` naming which basis is available. A session without lap
+data reports `session_average` explicitly instead of passing an average
+off as comparable. Tests: `tests/test_history_block_extraction.py`.*
+
 ### Warm-up drill rule (mandatory)
 
 Running-technique drills (A-skips, leg swings, hip-flexor work, ankle
