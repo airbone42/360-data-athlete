@@ -1968,11 +1968,24 @@ def _compute_planning_constraints(
     # Break-keyword detection in athlete NOTEs — bilingual to support both
     # German and English note text.  Word boundaries prevent compound-word
     # false positives (e.g. "Ruheposition", "Reisefoto").
+    #
+    # Two words are too ambiguous to stand alone and therefore carry a
+    # context requirement: bare German "Ruhe" is clinical prose far more
+    # often than a vacation ("Ruhe-VAS 0", "Anlaufschmerz aus der Ruhe"),
+    # and German "Rest" means *remainder* ("unabhängig vom Rest"), which has
+    # nothing to do with resting.  A symptom NOTE carrying either one used to
+    # announce a training break that did not exist — and a phantom break
+    # silently deletes training days from the plan, so the failure is
+    # expensive and invisible.  The genuine uses keep firing, because a real
+    # break says what it is: "Ruhe bis Donnerstag", "rest day", "rest week".
     break_keywords = re.compile(
         r"\burlaub\b|\bpause\b|\btrainingspause\b"
-        r"|\bkein training\b|\bruhe\b|\breise\b"
+        r"|\bkein training\b|\breise\b"
+        r"|\bruhe\s+(?:bis|ab|von|vom)\b"
         r"|\bverreist\b|\bauszeit\b"
-        r"|\bvacation\b|\bno training\b|\brest\b|\btravel\b"
+        r"|\bvacation\b|\bno training\b|\btravel\b"
+        r"|\brest\s+(?:day|days|week)\b|\brest\s+until\b"
+        r"|\b(?:complete|full|total)\s+rest\b"
         r"|\baway\b|\btime off\b|\bbreak\b",
         re.IGNORECASE,
     )

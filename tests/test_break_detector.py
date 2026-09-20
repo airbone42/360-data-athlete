@@ -86,6 +86,52 @@ class TestBreakDetectorFalsePositives:
         )
 
 
+class TestBreakDetectorClinicalProse:
+    """Symptom / gate NOTEs — must NOT announce a training break.
+
+    German "Ruhe" is clinical prose ("Ruhe-VAS", "aus der Ruhe") far more
+    often than a vacation, and German "Rest" means *remainder*.  A phantom
+    break deletes training days from the plan without anyone deciding to.
+    """
+
+    @pytest.mark.parametrize(
+        "desc",
+        [
+            "Ruhe-VAS 0, Squeeze negativ",
+            "In Ruhe 0. Weder sauer noch flaechig, eher verklemmt.",
+            "Anlaufschmerz aus der Ruhe > 5 min ist die rote Flagge",
+            "Nachtruhe-Schmerz: keiner",
+            "Neuro JA (unabhaengig vom Rest) ODER Ruhe-VAS > 2",
+            "Der Rest der Woche bleibt wie geplant",
+        ],
+    )
+    def test_clinical_prose_ignored(self, desc: str) -> None:
+        result = _compute_planning_constraints(
+            [_make_note(desc)], [], TODAY, None
+        )
+        assert "Break/vacation" not in result, (
+            f"False positive break detection for: {desc!r}"
+        )
+
+    @pytest.mark.parametrize(
+        "desc",
+        [
+            "Ruhe ab Donnerstag",
+            "Ruhe von Montag an",
+            "Rest week before the race",
+            "Rest until Friday",
+            "Complete rest this weekend",
+        ],
+    )
+    def test_genuine_break_still_triggers(self, desc: str) -> None:
+        result = _compute_planning_constraints(
+            [_make_note(desc)], [], TODAY, None
+        )
+        assert "Break/vacation" in result, (
+            f"Expected break detection for: {desc!r}"
+        )
+
+
 class TestBreakDetectorCompoundWords:
     """Compound words containing break keywords — must NOT trigger."""
 
