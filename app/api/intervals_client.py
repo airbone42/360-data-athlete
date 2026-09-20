@@ -299,6 +299,17 @@ class IntervalsClient:
 
     @traced("intervals.icu · post activity message", kind="tool")
     async def post_activity_message(self, activity_id: str, content: str) -> dict:
+        """Post a comment onto an activity.
+
+        There is no edit, and removing one is not where you would look for it:
+        ``DELETE /activity/{id}/messages/{msgId}`` answers 404. The message
+        lives on the activity's *chat*, so the working call is
+        ``DELETE /chats/{chatId}/messages/{msgId}`` with the id from
+        :meth:`get_activity_chat_id` — note the plural ``chats``, since the
+        singular 404s as well. Written down because finding it again costs
+        four wrong guesses, and a stray comment on an athlete's activity is
+        visible to them until it goes.
+        """
         async with httpx.AsyncClient(auth=self._auth) as c:
             r = await c.post(
                 f"{BASE_URL}/activity/{activity_id}/messages",
