@@ -27,7 +27,14 @@ ist die operative Fuel-/Hydro-/Hitze-Regel:
    indiziert, wenn die letzte volle Mahlzeit > 3 h zurückliegt ODER die
    Anfahrt in oberes Z2 driftet ODER die Rad-Rückfahrt Teil des
    Tagesplans ist (kumulierter Glykogen-Bedarf).
-4. **Intra-Session-KH bei 70 min ist NICHT leistungsrelevant** (Jeukendrup
+4. **Intra-Session-KH bei 70 min ist NICHT leistungsrelevant** — ⚠️ **diese
+   Aussage gilt für DIESE Dauerklasse und skaliert nicht.** Für 90–150 min
+   siehe [long-run-carbohydrate-dose-and-gut-training-90-150min.md](long-run-carbohydrate-dose-and-gut-training-90-150min.md)
+   (dort setzt in einer Renn-Vorbereitung die Renntag-Dosis die Dosis, nicht
+   der Energiebedarf), für die Obergrenzen und die Overfueling-Kosten
+   [carbohydrate-upper-limit-and-overfueling-by-duration-and-modality.md](carbohydrate-upper-limit-and-overfueling-by-duration-and-modality.md).
+   Wer den Satz unten nach oben verlängert, begründet eine Unterversorgung mit
+   einer Quelle, die davon nichts sagt — (Jeukendrup
    2014: < 60 min braucht keine KH; Mouth-Rinse bringt 30–60 min-Bereich
    ~1–3 %). Ein kleiner KH-Bolus (~20–30 g) macht als **Darm-Training**
    ("gut training") in einer Race-Prep-Phase Sinn (Jeukendrup 2017), nicht

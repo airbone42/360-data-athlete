@@ -311,6 +311,58 @@ cut. Duration stays on the phase band.
 
 Source: [heat-pace-penalty-at-fixed-hr.md](../research/heat-pace-penalty-at-fixed-hr.md)
 
+## Intra-session carbohydrate — the ceiling, and which question sets the dose
+
+Three different questions produce three different doses, and answering the
+wrong one is how a session ends up under- or over-fuelled. Ask in this order:
+
+1. **Is this a race rehearsal?** In a race build-up, a long run's dose is
+   derived **backwards from the planned race-day dose** — product, amount and
+   minute anchors — not from the session's energy need. The error direction is
+   counter-intuitive: taking *more* in training than on race day is gut
+   training; taking *less* and meeting the target dose for the first time on
+   race day is the mistake.
+2. **If not a rehearsal, what does the session actually need?** At low
+   intensity the carbohydrate oxidation rate is proportionally lower, and the
+   textbook band is explicitly adjusted downwards for it. A single gel on a
+   90-minute Z2 run is not an error on energy grounds.
+3. **Only then: what is the ceiling?** Below.
+
+**Ceiling by duration** — an upper bound, not a target:
+
+| Race / session duration | Population ceiling |
+|---|---|
+| < 3 h | **60 g/h** |
+| > 3 h | **90 g/h** |
+
+Above 90 g/h the benefit plateaus while the cost keeps rising — measured
+oxidation *efficiency* falls, the unoxidised remainder stays in the gut, and
+escalating further means either more concentration (malabsorption) or more
+fluid (hyponatremia risk, which carbohydrate in the bottle does **not**
+protect against). There is no inverted U to find: the curve is a plateau in
+benefit and a monotone rise in cost.
+
+**Exceeding 90 g/h needs all four, documented:** a duration class above 3 h ·
+four weeks of gut training at the target rate · at least two rehearsals at the
+exact race-day dose · a glucose:fructose mix (roughly 0.8:1 to 1:1, not
+optional at that rate). Missing two of the four → drop back to the ceiling.
+
+**Know how thin the base is.** The ceiling rests on a measured oxidation
+saturation plus an expert synthesis — not on a meta-analysis, and **not** on
+replicated running evidence above 90 g/h: the positive 120 g/h running data is
+two analyses of a single event cohort. That thinness argues *for* the limit
+rather than against it, since a narrow base supports a bound more easily than a
+licence. Individual practice above the ceiling is an athlete datum and belongs
+in `config/athlete_static.md`; it does not raise the number the coach
+prescribes to someone else.
+
+Sources:
+[carbohydrate-upper-limit-and-overfueling-by-duration-and-modality.md](../research/carbohydrate-upper-limit-and-overfueling-by-duration-and-modality.md)
+· [long-run-carbohydrate-dose-and-gut-training-90-150min.md](../research/long-run-carbohydrate-dose-and-gut-training-90-150min.md)
+· [fueling-hydration-heat-threshold-70min.md](../research/fueling-hydration-heat-threshold-70min.md)
+(the 70-minute note's "not yet performance-relevant" applies to **that**
+duration class only and does not scale)
+
 ## Warm-up priming before quality sessions
 
 A pure easy Z1–Z2 warm-up does NOT prime VO2 on-kinetics. Without

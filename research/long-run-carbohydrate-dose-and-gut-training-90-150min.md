@@ -37,7 +37,12 @@ die nicht gegeneinander ausgespielt werden dürfen:
    significant increases in the SGLT1 content").
 3. **Nicht der Fehler-Modus, aber nennenswert:** Im Long Run **mehr** zu
    nehmen als am Renntag geplant ist **kein Fehler** — es ist einer der
-   zwei etablierten Wege, wie Darm-Training funktioniert. Der Fehler ist,
+   zwei etablierten Wege, wie Darm-Training funktioniert. ⚠️ **„Mehr" hat
+   trotzdem eine Decke, und sie liegt in dieser Dauerklasse bei 60 g/h**
+   (unter 3 h Dauer): oberhalb davon wird der Nutzen flach, während die
+   Kosten weiter steigen. Der Satz oben ist kein Freibrief nach oben —
+   Herleitung und Ausnahmebedingungen in
+   [carbohydrate-upper-limit-and-overfueling-by-duration-and-modality.md](carbohydrate-upper-limit-and-overfueling-by-duration-and-modality.md). Der Fehler ist,
    im Long Run **weniger** zu nehmen als am Renntag geplant und dann am
    Renntag zum ersten Mal die Ziel-Dosis zu testen.
 
