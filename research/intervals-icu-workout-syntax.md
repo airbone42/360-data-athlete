@@ -322,6 +322,29 @@ the description-text + plan-view duration is the only stable way.
 - Reserve `Zn HR` / `% LTHR` / `% HR` / `Zn` notations exclusively
   for the structural target slot of a real loaded step.
 
+### Trap H: watt / cadence figures inside cue free text — override the step target
+
+**Push attempt** (cue gives a fallback figure as advice):
+```
+- 48m 200W 86rpm — stay seated; if the symptom rises, back off to 150 W
+- 8m ramp 150W-195W 85rpm — easy spin-up, cadence 85-88 rpm
+```
+
+**What intervals.icu does:** it parses the whole line, cue included, and
+the later watt / rpm figure wins. The 48-min main set landed in
+`workout_doc` as `power: {value: 150, units: 'w'}`, and the head unit
+showed 150 W for the full block; the ramp's cadence became 85–88 from
+the cue. A check of ~75 pushed run/ride workouts showed percent figures
+in cues (treadmill incline, "~90 % effort", "83 % is the ceiling") did
+**not** leak — watts and rpm did.
+
+**Fix:** no watt or rpm figures after the `—`. Write the advice in words
+("ease off clearly") or make the figure a step of its own.
+
+**Enforcement:** `validate_plan.py` R030 — watt / rpm in a cue → ERROR;
+a bare `Zn` in the cue of a step that already has a structural target →
+WARNING (stray power-zone tag, see Trap G).
+
 ### Trap C: indoor-ride cool-down with only HR zone
 
 **Push attempt:**

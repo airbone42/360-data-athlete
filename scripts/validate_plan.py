@@ -3024,6 +3024,86 @@ def check_repeat_session_within_cadence(workouts: list[dict], ctx: Context) -> l
     return findings
 
 
+def check_cue_target_leak(workouts: list[dict], ctx: Context) -> list[Finding]:
+    """R030 — no target tokens in the free-text cue of an intervals_icu step.
+
+    intervals.icu parses the WHOLE step line, including the cue after the
+    `—` separator. A power, percent or cadence figure written as advice in
+    the cue ("if it hurts, back off to 150 W", "Kadenz 85-88 rpm") is read
+    as the step's target and overrides the one in the step syntax — the
+    athlete's head unit then shows the cue figure for the full step.
+    Observed: a 48-min main set pushed as `48m 200W 86rpm — … auf 150 W
+    lockern …` arrived on the trainer as 150 W for the whole block.
+
+    Rule: everything after the first `—` / `–` separator must be free of
+    watt and rpm tokens (ERROR — observed to override the step target). A
+    bare zone token (`Z3` without `HR`/`Pace`) in the cue of a step that
+    already has a structural target is a WARNING: it was observed to add a
+    stray power-zone target next to the HR target (target-less steps with a
+    bare zone are R012's, research Trap G). Percent
+    figures in cues were checked against pushed workouts and did not leak,
+    so they are not flagged. Write "ease off clearly" instead of a number,
+    or put the number into the step syntax itself.
+    """
+    import re
+
+    SEP_RE = re.compile(r"\s[—–]\s")
+    LEAK_RE = re.compile(
+        r"\b\d+(?:\s*[-–]\s*\d+)?\s*(?:W|watt)\b"
+        r"|\b\d+(?:\s*[-–]\s*\d+)?\s*rpm\b",
+        re.IGNORECASE,
+    )
+    BARE_ZONE_RE = re.compile(r"\bZ[1-7](?:-Z[1-7])?\b(?!\s+(?:HR|Pace))")
+    findings = []
+    for w in workouts:
+        icu = w.get("intervals_icu") or ""
+        for raw in icu.split("\n"):
+            line = raw.strip()
+            if not line.startswith("-"):
+                continue
+            parts = SEP_RE.split(line, maxsplit=1)
+            if len(parts) < 2:
+                continue
+            m = LEAK_RE.search(parts[1])
+            if not m:
+                z = BARE_ZONE_RE.search(parts[1])
+                # Steps without a structural target are R012's (ERROR) —
+                # R030 only covers the stray zone on an otherwise-targeted step.
+                has_struct_target = re.search(
+                    r"\d+\s*%|\d+\s*W\b|\bZ\d\s+(?:HR|Pace)\b|/km\s*Pace",
+                    parts[0], re.IGNORECASE,
+                )
+                if z and has_struct_target:
+                    findings.append(Finding(
+                        rule_id="R030",
+                        severity=SEVERITY_WARNING,
+                        workout=_workout_name(w),
+                        message=(
+                            f"intervals_icu step `{line[:80]}` carries bare `{z.group(0)}` "
+                            f"in its cue text — intervals.icu may read it as a "
+                            f"power-zone target."
+                        ),
+                        suggestion="Write the zone as 'Zn HR' or describe it in words in the cue.",
+                    ))
+                continue
+            findings.append(Finding(
+                rule_id="R030",
+                severity=SEVERITY_ERROR,
+                workout=_workout_name(w),
+                message=(
+                    f"intervals_icu step `{line[:80]}` carries `{m.group(0)}` in its "
+                    f"cue text — intervals.icu parses the whole line and uses it as "
+                    f"the step target, overriding the step syntax."
+                ),
+                suggestion=(
+                    "Remove watt / rpm figures from the cue after the `—` "
+                    "(say 'ease off clearly' instead of a number), or move the "
+                    "figure into the step syntax itself."
+                ),
+            ))
+    return findings
+
+
 RULES: list[tuple[str, Callable[[list[dict], Context], list[Finding]]]] = [
     ("R001", check_reps_ceiling),
     ("R002", check_injury_locks_shoulder),
@@ -3054,6 +3134,7 @@ RULES: list[tuple[str, Callable[[list[dict], Context], list[Finding]]]] = [
     ("R027", check_hr_band_matches_intensity),
     ("R028", check_repeat_session_within_cadence),
     ("R029", check_feedback_load_matches_prescription),
+    ("R030", check_cue_target_leak),
 ]
 
 
