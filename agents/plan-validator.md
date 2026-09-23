@@ -144,6 +144,17 @@ For every strength / ninja exercise in the plan:
 - WARNING if tag and content drift apart — the planner's pillar
   rotation accounting relies on tags reflecting reality.
 
+### S11 — one executable path per description
+- A `description` carries alternative branches ("Main A / Main B",
+  "if … then instead …"), names exercises that are deferred / moved /
+  excluded, or carries "no X today" lists → **ERROR**: remove them; the
+  gate is resolved before the push or the substitute is pushed later as
+  its own event (`CLAUDE.md` → "One executable path per workout").
+- A substitute or fallback exercise that `exercise_progressions.md` /
+  `athlete_static.md` records as too easy, retired, or replaced in its
+  slot → **ERROR**: use the slot's current carrier or declared fallback.
+- Stop criteria that only end an exercise are fine.
+
 ### S10 — goal-drift / staleness (macro advisory)
 Cheap macro check that surfaces the re-evaluation flag in the validator —
 it does NOT perform the re-evaluation (that is the `exercise-reviewer`

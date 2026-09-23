@@ -337,6 +337,18 @@ roughly 1200 characters, or a single exercise past two lines, reasoning
 has leaked in — move it to `focus`. Full rule and rationale: `CLAUDE.md`
 → "Workout descriptions are execution aids, not decision records".
 
+**One executable path (MANDATORY).** The description lists only the
+exercises to do today — no "Main A / Main B" branches, no "if X, do Y
+instead", no deferred or excluded exercises, no "no X today" lists. A
+gate that would change the exercise list is resolved by the head coach
+before the push; if it can only be read in-session, output the primary
+path and put the substitute into `focus` as a separate proposal for a
+later incremental push. Any substitute you propose (including a
+consultant's suggestion) must be checked against
+`exercise_progressions.md` / `athlete_static.md`: nothing recorded as
+too easy, retired or replaced in its slot. Full rule: `CLAUDE.md` →
+"One executable path per workout".
+
 ---
 
 ## Rules

@@ -1701,6 +1701,49 @@ that has bloated real plans:
 - Meta-commentary about the coach's own decision process.
 - Re-stating standing restrictions at length. A restriction the athlete has
   lived with for weeks needs a keyword, not a recap.
+- **Any exercise the athlete is not supposed to do in this session** —
+  alternative branches ("Main A / Main B", "if the probe flags, do X
+  instead"), deferred or moved exercises ("X is not today, it moves to
+  …"), and "no X / no Y today" exclusion lists. See
+  [One executable path per workout](#one-executable-path-per-workout-mandatory).
+
+#### One executable path per workout (mandatory)
+
+Every exercise name that appears in a `description` is read as an
+instruction. A skimming athlete cannot tell a branch header or a
+"not today" sentence from the plan itself — and an exercise listed as
+excluded is still an exercise listed. So the description carries
+**exactly one executable path**: the exercises to do, in order, and
+nothing else.
+
+- **Gates that change the exercise list are resolved before the push.**
+  Put the gate question into the morning check / plan presentation and
+  push only the branch that applies. If the gate can only be read inside
+  the session (a probe set), push the primary path and, on the athlete's
+  report, push the substitute as its own event (`push_workouts.py
+  --incremental`) — never both paths in one description.
+- **Stop criteria stay** — "signal rises → end the exercise and report"
+  removes work, it does not offer an alternative. A stop criterion must
+  not name a replacement exercise.
+- **Deferred, moved or excluded exercises** go into the plan presentation
+  and the coach log with their named replacement slot, not into the
+  workout.
+- **Substitutes are prescriptions and pass the same history check.** A
+  fallback or substitute — including one suggested by a consultant agent —
+  is checked against the athlete's exercise record
+  (`config/exercise_progressions.md`, `config/athlete_static.md`) before
+  it is used. An exercise recorded as too easy, retired, or replaced in
+  its slot is not a valid substitute; use the slot's declared current
+  carrier or its declared fallback at its anchor.
+
+Failure mode this prevents: a session description carried the primary
+path and a fallback path side by side. The athlete skimmed, did part of
+each, and the fallback itself consisted of exercises the record already
+marked as too easy or as superseded in their slot — neither path was
+executed as intended, and the day's reading was lost.
+
+*Enforcement: specialist agents (description output) and `plan-validator`
+S11. Not mechanised — branch wording is free text.*
 
 **Why this is a correctness rule and not a style preference:** a long
 description gets skimmed, and what gets skipped is not evenly distributed —
