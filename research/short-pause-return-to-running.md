@@ -264,6 +264,25 @@ muskuloskelettaler Signale aus der Pausen-Aktivität** (Steh-Last,
 Reise-Immobilität, Schlafdefizit). Die Coach-Aufgabe ist damit
 **Signal-Lesen, nicht Kalender-Zählen**.
 
+**Die Pausen-Länge zählt in lauffreien Tagen — Cross-Training in der
+Pause verschiebt die Zeile nicht.** Rad- oder andere impaktfreie
+Einheiten in der Pause halten plausibel das Plasmavolumen (§1) und
+damit die HF-Signatur, aber keine der hier zitierten Quellen belegt,
+dass sie die **laufspezifische** Bereitschaft für einen Quality-Reiz
+erhalten (Impact-Toleranz, laufspezifische neuromuskuläre Ökonomie
+unter Renntempo, Ermüdungsresistenz spät in einer langen Einheit).
+„Der Athlet ist ja Rad gefahren, also gilt die ≤ 3-d-Zeile" ist deshalb
+eine **nicht belegte Extrapolation**: Die Rampen-Tabelle wird mit der
+Zahl der lauffreien Tage gelesen, und die erste Quality liegt nach
+5–10 lauffreien Tagen auch mit Cross-Training frühestens auf **Lauf 2**.
+Das ist keine Konservativ-Regel aus der Pausen-Länge — der erste Lauf
+bleibt voll dosiert (90–100 %, Strides erlaubt); verschoben wird nur
+der Quality-Slot um einen Lauf. Besonders relevant, wenn der
+Quality-Reiz am Ende eines Long Runs sitzt: Dort kommen mangelnde
+laufspezifische Re-Adaption und späte Ermüdung zusammen, und der erste
+Lauf nach der Pause ist der schlechteste Ort, beides gleichzeitig zu
+testen.
+
 ### 5. Neuromuskuläre Reize (Strides) im Wiedereinstieg
 
 Die Kernfrage: schadet ein Stride im ersten Lauf zurück oder hilft er?

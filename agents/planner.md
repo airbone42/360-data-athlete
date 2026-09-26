@@ -209,6 +209,27 @@ named session, the athlete's time budget is spent, readiness says stop.
 Invalid reason: "the hard version of this modality is not scheduled this
 week."
 
+## Quality after a run-free break (MANDATORY)
+
+`runDayStreak` shows the run days in the trailing window. When the last
+run lies **≥ 5 days** back, read
+[short-pause-return-to-running.md](../research/short-pause-return-to-running.md)
+§4 before placing a Quality session, and count the break in **run-free
+days** — cross-training during the break (bike, swim, row) does not move
+the athlete into a shorter row of the ramp table. It plausibly maintains
+plasma volume; nothing in the evidence shows it preserves run-specific
+readiness for race-pace work late in a long session.
+
+- The first run back stays fully dosed (90–100 % of the last easy
+  duration, strides allowed) — this is not a conservatism surcharge.
+- The Quality slot moves to **run 2 at the earliest**. If the slot is a
+  Quality block embedded at the end of a long run, the first run back is
+  the worst place for it: late fatigue and incomplete run-specific
+  re-adaptation are tested at the same time and cannot be separated
+  afterwards.
+- A dated slot (e.g. a race-pace rehearsal) that would land on run 1 is
+  deferred by one run with a named slot, not dropped.
+
 ## Sauna as a slot (MANDATORY when you plan one)
 
 Anchor: `research/sauna-dosis-und-platzierung-endurance.md`; the paradigm block
