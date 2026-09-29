@@ -1608,29 +1608,9 @@ Two layers: (1) the **mechanical validator** `scripts/validate_plan.py` — plug
 
 ### A validator finding's own severity is an input, not a verdict (policy)
 
-The semantic `plan-validator` writes both the finding **and** its severity,
-and it will sometimes attach its own exoneration in the same breath — "formally
-an S1 trigger, but no must-fix, the rotation is deliberately justified". That
-sentence is the agent's hypothesis about the coach's intent, produced from the
-briefing the coach wrote. Accepting it closes the loop: the coach's own framing
-comes back labelled as an independent verdict.
+A finding is cleared by the underlying arithmetic, never by the label the agent put on it: when a rule fires on a cadence, a due-date, a streak or a count, recompute it from the verified last occurrence and the documented interval (see "Due / overdue claims are computed, not inherited") and state the recomputed numbers where the decision is recorded — if they cannot be stated, the finding stands. The report is input in both directions (ignoring a warning, or accepting an exemption the agent wrote itself). Rationale and the two failure directions: `commands/training.md` step 3.5b.
 
-**Rule:** a finding is cleared by the underlying arithmetic, never by the
-label the agent put on it. When a rule fires on a cadence, a due-date, a
-streak or a count, recompute it from the verified last occurrence and the
-documented interval (see "Due / overdue claims are computed, not inherited")
-before deciding it does not apply. State the recomputed numbers where the
-decision is recorded — if they cannot be stated, the finding stands.
-
-This is the mirror image of the already-documented failure where a block the
-validator called dispensable got pushed anyway. Both come from treating the
-report as a verdict rather than as evidence: once in the direction of ignoring
-a warning, once in the direction of accepting an exemption. The report is
-input in both directions.
-
-*Enforcement: head-coach judgment. The drift it guards against is invisible
-afterwards — a dismissed finding and a correctly-cleared one look identical in
-the record unless the arithmetic is written down.*
+*Enforcement: head-coach judgment. The drift it guards against is invisible afterwards — a dismissed finding and a correctly-cleared one look identical in the record unless the arithmetic is written down.*
 
 New rules: add `check_<name>(workouts, ctx)` in `validate_plan.py`,
 register in `RULES`. Auditable via `audit_consistency.py`.

@@ -215,6 +215,8 @@ form findings from `exercise_log.md`).
 Review the report. On ERRORs: adjust the plan (in the specialist pane or
 yourself). WARNINGs: use judgment.
 
+**A finding's own severity is an input, not a verdict.** The `plan-validator` writes both the finding **and** its severity, and it will sometimes attach its own exoneration in the same breath ("formally an S1 trigger, but no must-fix, the rotation is deliberately justified"). That sentence is the agent's hypothesis about the coach's intent, produced from the briefing the coach wrote — accepting it closes the loop, and the coach's own framing comes back labelled as an independent verdict. Clear a finding by recomputing the arithmetic behind it (see CLAUDE.md "Due / overdue claims are computed, not inherited"), never by the label the agent put on it; the mirror image is a block the validator called dispensable that got pushed anyway — the report is input in both directions.
+
 ### Step 4: Present the plan
 
 Show readable markdown with coaching_notes + per workout: name, duration,
