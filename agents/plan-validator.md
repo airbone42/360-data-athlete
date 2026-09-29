@@ -111,7 +111,9 @@ For every strength / ninja exercise in the plan:
   rationale fits
 - Leg-driven endurance **quality** (hard >30-min / interval run, **or bike
   VO2max / threshold**) with a heavy **eccentric** leg-strength or plyo
-  session in the **same day or prior 24–48 h** (DOMS-peak window) → WARNING
+  session on the **same day or inside the spacing floor for its eccentric
+  signature** (ballistic ≈ 48 h, slow eccentric at long muscle length
+  ≥ 72 h, bodyweight concentric-dominant ≥ 24 h) → WARNING
   (legs pre-fatigued; the bike is concentric and doesn't damage — the
   constraint is the residual DOMS from the prior eccentric session). See
   CLAUDE.md "Leg-quality cross-modality DOMS spacing" +

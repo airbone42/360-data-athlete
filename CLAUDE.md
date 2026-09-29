@@ -1083,17 +1083,18 @@ verifiable from the listed sources, the entry is removed.
 ### Leg-quality cross-modality DOMS spacing (policy)
 
 A leg-driven endurance **quality** session (bike VO2max / threshold, hard
-or > ~30 min run) inside the **24–48 h DOMS-peak window** after a heavy
-eccentric leg / plyo day is paid on pre-fatigued legs: RPE inflates 1–2
-points, the limiter flips to local muscular endurance, and the session
-stops being a comparable stimulus (timeline:
+or > ~30 min run) inside the **DOMS window** of a heavy eccentric leg / plyo
+day (soreness peaks roughly 24–72 h after it) is paid on pre-fatigued legs:
+RPE inflates 1–2 points, the limiter flips to local muscular endurance, and
+the session stops being a comparable stimulus (timeline:
 [doms-peak-timing.md](research/doms-peak-timing.md)).
 
-**Rule:** Do not schedule a leg-driven endurance quality inside the 24–48 h
-DOMS window of a heavy eccentric leg / plyo day. Either
+**Rule:** Do not schedule a leg-driven endurance quality inside the spacing
+floor of a heavy eccentric leg / plyo day. Either
 
-- **decouple the two by ≥ 48 h** (the same-muscle eccentric-spacing floor from
-  `doms-peak-timing.md`), or
+- **decouple the two by the floor for its eccentric signature** (table
+  below: ballistic ≈ 48 h, slow eccentric at long muscle length ≥ 72 h,
+  bodyweight concentric-dominant ≥ 24 h), or
 - **sequence the endurance quality first** (before the leg-strength / plyo
   day), so the quality lands on fresh legs and the strength day absorbs the
   residual fatigue.
@@ -1181,9 +1182,9 @@ reduction. Sources:
 [peroneal-doms-inversion-defense-and-mtss-differential.md](research/peroneal-doms-inversion-defense-and-mtss-differential.md).
 
 *Enforcement: `plan-validator` S8 surfaces it (WARNING) when a heavy
-eccentric leg / plyo session sits in the same day or prior 48 h of a
-leg-driven endurance quality; head-coach judgment for the decouple-vs-sequence
-decision at plan time.*
+eccentric leg / plyo session sits on the same day as a leg-driven
+endurance quality or inside its signature's spacing floor before it;
+head-coach judgment for the decouple-vs-sequence decision at plan time.*
 
 ### Impact-load streak — structural load is not an autonomic signal (policy)
 

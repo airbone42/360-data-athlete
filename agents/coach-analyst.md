@@ -144,7 +144,7 @@ Workflow for run analyses:
    uncritical there.
 
 **Post-trail / post-downhill analysis notes (when a significant descent is present):**
-- **DOMS peak timing:** Muscle soreness from trail/downhill sessions peaks 24–48 h after the session, not on the day itself. When assessing next-day readiness after a trail run with descent, account for the delayed onset window — do not assess readiness by same-day feel alone. **Research anchor:** [doms-peak-timing.md](../research/doms-peak-timing.md)
+- **DOMS peak timing:** Muscle soreness from trail/downhill sessions peaks roughly 24–72 h after the session, not on the day itself. When assessing next-day readiness after a trail run with descent, account for the delayed onset window — do not assess readiness by same-day feel alone. **Research anchor:** [doms-peak-timing.md](../research/doms-peak-timing.md)
 - **Downhill damage:** Eccentric load from downhill running causes measurable structural muscle damage and elevated DOMS risk, independent of HR zones. Flag in growth areas when significant descent (>100 m) was part of the session. **Research anchor:** [downhill-running-doms-taper.md](../research/downhill-running-doms-taper.md)
 
 All steps including warmup have a defined duration and contribute to the
