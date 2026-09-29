@@ -524,8 +524,10 @@ Concretely:
 **Watt-anchor validation via history + compliance obligation:** before
 repeating an interval format, read `interval_summary`, `compliance`,
 `decoupling` of the most recent same-format session. On compliance
-< 95 % OR decoupling > 10 %: reduce volume AND/OR intensity, NEVER
-repeat 1:1.
+< 95 % OR decoupling > 10 %: reduce volume AND/OR intensity — no 1:1
+repeat, unless the athlete's feedback names a one-off cause for the day
+(stress, short sleep, illness, heat). How early the session broke decides
+how far to reduce.
 
 **Volume scaling by CTL/TSB AND compliance history:**
 - CTL ≥ 30 or fully recovered, previous session fully completable:

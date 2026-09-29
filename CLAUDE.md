@@ -873,7 +873,9 @@ change reaches the athlete:
 3. **Re-running the same protocol after compliance < 95% or decoupling
    > 10%** counts as a scaling decision (down-scale): the research
    document for that protocol must be consulted, NOT a naive 1:1
-   repeat.
+   repeat. An unchanged re-attempt needs a one-off cause named in the
+   athlete's feedback (stress, short sleep, illness, heat); how early
+   the session broke sets how far the correction goes.
 4. **New athlete-specific application** of an existing
    research-backed protocol does NOT require new research — only the
    application notes in the relevant `config/*.md` file. But the

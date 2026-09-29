@@ -553,7 +553,8 @@ valid patterns:
   counts them in full. Use direct compliance (actual_time / planned_time)
   for progression decisions.
 
-**Pace progression:**
+**Pace progression (steady runs — structured formats follow the decision
+matrix below):**
 - If the last 2 sessions show compliance ≥ 95 % AND positive feedback:
   pace −5 s/km or +1 repetition
 - At compliance 80–95 %: hold
@@ -643,6 +644,19 @@ The fields to inspect once the matching session is in hand:
 
 **Research anchor:** [compliance-decoupling-thresholds.md](../research/compliance-decoupling-thresholds.md)
 
+**The athlete's report decides how far the matrix goes.** The matrix reads
+the numbers; the feedback says what they mean. Check two things before
+scaling:
+
+- **Where did the session break?** Missing the last rep or two is a small
+  miss and gets the small end of the correction; stopping in the first
+  half means the prescription itself was out of reach.
+- **Was it the day?** When the athlete's feedback or the day's readiness
+  data name a one-off cause — stress, short sleep, a beginning illness,
+  heat, travel, missing fuel — the shortfall says little about the
+  prescription. Holding it unchanged for a re-attempt is then legitimate;
+  name the cause in `focus`. Without such a cause the matrix row applies.
+
 **Cross-check with `framework/research/`:** When the
 re-prescribed format has a research entry in `framework/research/`,
 read it and cite it in `focus`. If the prior session's compliance drop
@@ -651,7 +665,10 @@ inferior — Frontiers 2024"), the corrective scaling step must address
 that root cause, not just the symptom.
 
 **Never re-prescribe an identical structured workout when compliance < 95%
-on the most recent attempt.** A naive repeat reproduces the shortfall. See
+on the most recent attempt** — unless the feedback names a one-off cause
+(see above). At 80–94 % that means holding the volume while changing what
+the shortfall points at (watt anchor, rest, rep length). A naive repeat
+reproduces the shortfall. See
 [`framework/research/vo2max-short-intervals.md`](../research/vo2max-short-intervals.md)
 for the case that motivated the rule.
 
