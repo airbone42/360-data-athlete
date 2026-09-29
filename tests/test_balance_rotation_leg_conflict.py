@@ -1,6 +1,6 @@
 """Tests for the `--leg-conflict` swap in `get_balance_rotation.py`.
 
-Covers the leg-conflict routing rule in framework/CLAUDE.md: pool exercises
+Covers the leg-conflict routing rule in framework/docs/balance-rotation.md: pool exercises
 flagged `leg_conflict: true` (slow-eccentric leg loading, e.g. a TRX-assisted
 single-leg squat) must be swapped for a pure stability drill when the head
 coach sets the flag — i.e. when today already carries a leg-strength block or

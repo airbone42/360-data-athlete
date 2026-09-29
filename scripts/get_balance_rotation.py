@@ -158,13 +158,13 @@ def _render_description(session: dict, travel: bool, leg_conflict: bool = False)
             chunks.append(
                 "⚠️ Travel mode: pool uses the legacy description-only schema — "
                 "equipment exercises could NOT be auto-swapped; coach must swap "
-                "manually (see CLAUDE.md pool-content rules)."
+                "manually (see docs/balance-rotation.md, pool-content rules)."
             )
         if leg_conflict:
             chunks.append(
                 "⚠️ Leg-conflict mode: pool uses the legacy description-only schema — "
                 "slow-eccentric leg exercises could NOT be auto-swapped; coach must "
-                "swap manually (see CLAUDE.md pool-content rules)."
+                "swap manually (see docs/balance-rotation.md, pool-content rules)."
             )
         return "\n\n".join(chunks)
 
@@ -216,7 +216,7 @@ def build_rotation_workout(
     `travel=True` swaps every equipment-dependent exercise for its
     `travel_fallback` (or a generic bodyweight substitute when none is
     declared) — see "Equipment availability (travel / limited kit)" in
-    framework/CLAUDE.md.
+    framework/docs/balance-rotation.md.
 
     `leg_conflict=True` swaps every `leg_conflict`-flagged exercise for its
     `leg_conflict_fallback` (or a generic pure-stability substitute) — set it

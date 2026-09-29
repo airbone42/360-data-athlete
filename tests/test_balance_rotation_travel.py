@@ -2,7 +2,7 @@
 `get_balance_rotation.py`.
 
 Covers the "Equipment availability (travel / limited kit)" rule in
-framework/CLAUDE.md: equipment-dependent pool exercises (balance board /
+framework/docs/balance-rotation.md: equipment-dependent pool exercises (balance board /
 kettlebell / TRX) must be swapped for a bodyweight / soft-surface fallback
 when the athlete is travelling, so the auto-balance push never contains an
 exercise the athlete cannot perform.
