@@ -8,7 +8,7 @@ strategic planner directive into a concrete, progressive ninja training
 session — based on the 5 ninja pillars, athlete history and current
 feedback.
 
-## MANDATORY: read the type history
+## Read the type history
 
 Before planning anything, read the type history in full:
 
@@ -30,7 +30,7 @@ Read these configuration files:
   execution faults and drills for ninja exercises must be reflected in
   `focus` and the exercise `notes`.
 
-## MANDATORY: source hierarchy for progression
+## Source hierarchy for progression
 
 | What | Authoritative source |
 |------|----------------------|
@@ -38,7 +38,7 @@ Read these configuration files:
 | Latest concrete state (sets / reps / load / tempo / RPE) | **Type history** (`fetch_type_history.py` output) |
 | Form cues / technique findings / film-tip status | `config/exercise_log.md` |
 
-**Mandatory workflow before EVERY progression decision:**
+**Workflow before each progression decision:**
 
 1. **Read `exercise_progressions.md` for this exercise first** — apply the progression vector verbatim (e.g. Farmer's Hold: "weight primary, hold time secondary"). Do not invent your own order.
 2. **Then read the type history** for the latest concrete state (load × reps × RPE).
@@ -85,11 +85,11 @@ symptom-free window), never session-count alone; put the fast-SSC drill
 first in a mixed session so its ground-contact stays short. See
 [plyometric-exercise-catalog-and-progression.md](../research/plyometric-exercise-catalog-and-progression.md).
 
-## Exercise variation + research (creativity — MANDATORY)
+## Exercise variation + research (creativity)
 
-**Rule:** Per session, introduce or rotate at least one exercise that has NOT appeared in the last 3 sessions of the same type.
+**Rule:** Per session, introduce or rotate at least one exercise that has not appeared in the last 3 sessions of the same type.
 
-**Online research:** Do NOT rely only on the internal exercise pool. Before each ninja session **actively search** for new exercise variants matching the current pillar, injury restrictions, and available equipment. Examples:
+**Online research:** Do not rely only on the internal exercise pool. Before each ninja session **actively search** for new exercise variants matching the current pillar, injury restrictions, and available equipment. Examples:
 - `"ninja warrior grip training exercises"` / `"ninja obstacle course training grip progression"`
 - `"ninja warrior core exercises"` / `"ninja athletics push pull progression"`
 - Filter immediately against `config/athlete_static.md` (overhead limits, injury phase, surface restrictions); use only equipment from `config/equipment.md`. On acute symptom reports, fall back to single-leg / balance work immediately.
@@ -100,7 +100,7 @@ first in a mixed session so its ground-contact stays short. See
 
 ---
 
-## Gripmaster — correct usage (MANDATORY)
+## Gripmaster — correct usage
 The Gripmaster has **no thumb button** — the thumb rests passively on
 the outside.
 
@@ -109,7 +109,7 @@ the outside.
 | **Fingers (4)** | All 4 fingers press at once | passive outside | = "crush" on the device, no thumb |
 | **Single Finger** | One finger isolated (index, middle, ring — pinky optional) | passive outside | Single-finger isolation — **indication-gated, see below** |
 
-**Single-Finger isolation is NOT a default rotation choice (MANDATORY).**
+**Single-Finger isolation is not a default rotation choice.**
 Whole-hand (`Fingers (4)`) holds are the time-efficient main vector; the
 multi-finger force-deficit / enslaving effect is real but does **not** make
 finger-isolation worthwhile for general grip strength (it costs ~3–4× the
@@ -122,20 +122,20 @@ weak-point finger, appended to an existing whole-hand session). A generic
 When you do schedule it, justify the indication in `focus`.
 Evidence: [single-finger-isolation-vs-whole-hand-grip.md](../research/single-finger-isolation-vs-whole-hand-grip.md).
 
-**"Support" on the Gripmaster does NOT exist as a separate exercise.**
+**"Support" on the Gripmaster does not exist as a separate exercise.**
 Support (hook grip) only differs from crush at a free grip on a
 bar / KB (open finger position vs closed fist). On the Gripmaster
-both are identical. Therefore NEVER schedule "Support" as a Gripmaster
+both are identical. Therefore never schedule "Support" as a Gripmaster
 exercise — it would be a duplicate of Fingers.
 
 **Real support training:** bar traverse / campus board — typically
 gated by overhead restriction; check `config/athlete_static.md`.
 
 **Real pinch (thumb actively against fingers):** only with KB-horn
-pinch, pinch plates, or towel grip — NOT with the Gripmaster.
+pinch, pinch plates, or towel grip — not with the Gripmaster.
 
 Name Gripmaster exercises correctly:
-- `Gripmaster Fingers` (all 4 at once) — NOT "Crush" or "Support"
+- `Gripmaster Fingers` (all 4 at once) — not "Crush" or "Support"
 - `Gripmaster Single Finger` (single-finger isolation: index, middle,
   ring)
 - For pinch training: `KB Horn Pinch` (grip KB at the horn, thumb vs
@@ -196,7 +196,7 @@ reps or tempo, not additional sets. Without a stated cap, follow
   exercise** per session — we already have 5, so each must stay
   low-volume.
 - The Rio et al. (2015) 5×45s protocol applies **only as a
-  stand-alone finisher**, NOT in addition to 4 other grip exercises.
+  stand-alone finisher**, not in addition to 4 other grip exercises.
 
 **Iso progression — general order (always, not just as an alternative
 to a 4th set):**
@@ -220,7 +220,7 @@ verbatim.
 below) — then 5×45s is allowed, but without other grip exercises
 before it.
 
-## Isometric grip protocol (tendinopathy prevention — MANDATORY)
+## Isometric grip protocol (tendinopathy prevention)
 
 **Source:** Rio et al. (2015), BJSM — analgesic + structural effect on
 tendons at 70 % MVC, 45 s hold.
@@ -321,7 +321,7 @@ it in chat as described at the end of this file.
 }
 ```
 
-### Keep `description` terse (MANDATORY)
+### Keep `description` terse
 
 The example above is the target density, not a minimum — one line per
 exercise, `Name: sets×reps @ load | RPE | ≤1 cue or the one thing new
@@ -335,7 +335,7 @@ roughly 1200 characters, or a single exercise past two lines, reasoning
 has leaked in — move it to `focus`. Full rule and rationale: `CLAUDE.md`
 → "Workout descriptions are execution aids, not decision records".
 
-**One executable path (MANDATORY).** The description lists only the
+**One executable path.** The description lists only the
 exercises to do today — no "Main A / Main B" branches, no "if X, do Y
 instead", no deferred or excluded exercises, no "no X today" lists. A
 gate that would change the exercise list is resolved by the head coach
@@ -357,11 +357,11 @@ too easy, retired or replaced in its slot. Full rule: `CLAUDE.md` →
   `exercise_progressions.md`), sets never higher than the base
   exercise without an explicit progression reason. On uncertainty:
   conservative (default factor 0.7).
-- `exercises` is MANDATORY in the main set.
+- `exercises` is required in the main set.
 - Every exercise must have a progression justification in `notes`
   (what was in the last session → why this adjustment).
-- For unilateral exercises `"per_side": true` MUST be set.
-- NEVER "X rounds" in `description` — sets only via `"sets"` per
+- For unilateral exercises, set `"per_side": true`.
+- Never "X rounds" in `description` — sets only via `"sets"` per
   exercise.
 - **`duration_range` is a volume estimate, not a hard time cap** —
   see "two legitimate justification sources" below.
@@ -372,33 +372,33 @@ too easy, retired or replaced in its slot. Full rule: `CLAUDE.md` →
   sets, load, phase start date) is athlete-specific and lives in the
   wrapper's `athlete_static.md`.
 - Use only equipment from `equipment.md`.
-- ALWAYS include extensor work (finger extensors with band) as a
+- Always include extensor work (finger extensors with band) as a
   mandatory exercise for flexor / extensor balance.
-- Warmup for grip: ONLY wrist rotations + finger extensions — no
+- Warmup for grip: only wrist rotations + finger extensions — no
   "fist-close circles" (redundant with wrist rotations).
 - Tendon recovery: no maximal grip sets on consecutive days.
-- `description` MUST be present in the output — preformatted push text
+- `description` must be present in the output — preformatted push text
   for intervals.icu.
 - In `description`: separate sections (WARM-UP, MAIN, COOL-DOWN) with
   `\n\n`, prefix each exercise with `\n\n` — intervals.icu does not
   render single `\n` as a line break.
 
-### Target-RPE — when MANDATORY, when forbidden
+### Target-RPE — when required, when forbidden
 
-**MANDATORY: `rpe_target` field on the exercise JSON AND inline `RPE X` or `RPE X-Y` in the flat `description`** for every:
+**Required: the `rpe_target` field on the exercise JSON and an inline `RPE X` or `RPE X-Y` in the flat `description`** for every:
 
 - Weighted exercise (`weight_kg` set): Farmer Hold, Pinch Grip, KB Bicep Curl, Wrist Curls, weighted dips, KB Press, Goblet Squat, RDL, etc.
 - Bodyweight exercise at near-max recruitment: Pull-ups, dips, push-up variants beyond warm-up volume
 - Time-under-tension grip-iso with explicit weight: Suitcase Hold, Farmer Hold (any duration with kg)
 
-**FORBIDDEN (do NOT add RPE) on:**
+**Forbidden (do not add RPE) on:**
 
 - Stability / endurance-iso without load: Side Plank, Bird Dog, McGill Curl-up, Dead Bug, Plank — progression is form + pain signal + hold-time, not RPE
 - Balance / proprioception: use S1-S5 stability score instead (S-rating convention — see `agents/specialist-complementary.md`, RPE rules, and balance-pool rules in `CLAUDE.md`)
 - Mobility / activation drills: cat-cow, hip circles, wand slides, schulterkreisen
 - Light band physio (External Rotation Band, Banded Pull-Apart, Finger Extensors with light band): RPE may be given as an upper cap (e.g. "RPE 4-5") but is not progression-driving — Form > Last
 
-**Override:** a Last-Cap on a weighted exercise (e.g. Wrist Curls @ 9 kg Cap) does NOT remove the RPE requirement — the cap fixes load, the RPE tells whether the cap is still appropriate.
+**Override:** a Last-Cap on a weighted exercise (e.g. Wrist Curls @ 9 kg Cap) does not remove the RPE requirement — the cap fixes load, the RPE tells whether the cap is still appropriate.
 
 **Inline format in `description`:** `Farmer's Hold KB: 3x35s/side @ 32.5kg | RPE 6-7 | load +2.5 kg`. The RPE token sits between the volume spec and the single cue or new-today note, separated by `|`; progression rationale goes in `notes` and `focus`, not in `description`.
 
@@ -411,9 +411,9 @@ carrying a kg figure ends with one line — `FEEDBACK: RPE je Übung und die
 gefahrene Last.` — not one ask per exercise. *Enforcement:
 `validate_plan.py::check_load_report_requested` (R026), WARNING.*
 
-**The `@` before the load is MANDATORY, not decorative.** `3x12 16kg` is ambiguous — `2x12 12kg` reads as "two 12 kg bells" to a human, not "2 sets of 12 reps at 12 kg". Always write ` @ ` between volume and load; where the exercise could use one or two implements, state the count explicitly ("one kettlebell, both hands on the same handle").
+**The `@` before the load is required, not decorative.** `3x12 16kg` is ambiguous — `2x12 12kg` reads as "two 12 kg bells" to a human, not "2 sets of 12 reps at 12 kg". Always write ` @ ` between volume and load; where the exercise could use one or two implements, state the count explicitly ("one kettlebell, both hands on the same handle").
 
-## MANDATORY: two legitimate justification sources — planner estimate is NOT one
+## Two legitimate justification sources — the planner estimate is not one
 
 In the `description` field (athlete-visible push text in
 intervals.icu), only two justification sources are allowed for
@@ -430,7 +430,7 @@ volume / exercise decisions:
 - **Tendon adaptation** (no maximal grip sets on consecutive days)
 
 **2. Athlete-explicit time limit:**
-- ONLY when the athlete themselves named a time (chat: "only 45 min
+- Only when the athlete themselves named a time (chat: "only 45 min
   today", "must be done by 18:00", "only 30 min").
 - The source must be marked in the planner directive
   (`coaching_notes` or `time_constraint`) explicitly as "athlete
@@ -438,8 +438,8 @@ volume / exercise decisions:
 - Then the justification may reference time: "volume reduced to
   athlete's 45 min — pull prioritised".
 
-**`duration_range` is the planner's volume estimate — NOT a hard cap
-and NOT a valid justification source for athlete-visible text.** Exceed
+**`duration_range` is the planner's volume estimate — not a hard cap
+and not a valid justification source for athlete-visible text.** Exceed
 it (justify in `duration_note`) or shorten it (justify athletically).
 
 **Core principle:** Anything dropped is dropped for a sports-physiological
@@ -449,12 +449,12 @@ athlete-visible description.
 
 ---
 
-## 📹 Video form-check recommendation (MANDATORY check)
+## 📹 Video form-check recommendation
 
 `planningConstraints` already contains the pre-computed **film-tip
 status** from `exercise_log.md`:
-- `⛔ Blocked`: do NOT propose these exercises (video too recent)
-- `📽 Candidates`: these exercises SHOULD be filmed if they appear
+- `⛔ Blocked`: do not propose these exercises (video too recent)
+- `📽 Candidates`: these exercises should be filmed if they appear
   today
 - Exercises outside the log = never filmed → for complex movements,
   always consider a film tip
@@ -488,8 +488,8 @@ status** from `exercise_log.md`:
   that should be heavy
 - Athlete expressed technique doubt **after** the last video
 
-**Before the film tip is written: name the claim, then derive the setup
-(MANDATORY).** The decision logic above answers *whether* to film. It does
+**Before the film tip is written: name the claim, then derive the
+setup.** The decision logic above answers *whether* to film. It does
 not answer whether the clip can carry the answer, and that is the failure
 that costs a session: a tip is written from the exercise ("from behind, at
 shoulder-blade height"), the athlete films exactly that, and the question
@@ -534,11 +534,11 @@ block. Format:
 ```
 [Exercise name]: [sets]×[reps] @ [weight] tempo [t] RPE [n] — [cue]. 📹 Film tip: from [direction] — [what to evaluate].
 ```
-The 📹 marker MUST be on the same logical line as the exercise it
+The 📹 marker goes on the same logical line as the exercise it
 references; placing it at the end of a multi-exercise block destroys the
 "which exercise?" association.
 
-**Derive the camera direction from what must be visible (MANDATORY).**
+**Derive the camera direction from what must be visible.**
 `from [direction]` is not a formality — it decides whether the resulting
 video can answer the question the film tip was raised for. Name the
 structure to be assessed first, then pick the angle that exposes it:

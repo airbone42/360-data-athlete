@@ -10,7 +10,7 @@ Required: intervals.icu activity ID, e.g. `i12345678`
 
 ## Workflow
 
-**Analysis standard (MANDATORY):**
+**Analysis standard:**
 - FIT file + sub-laps is the primary data path — intervals.icu streams
   alone are not enough
 - **Compliance — one canonical definition:** direct compliance = actual
@@ -18,7 +18,7 @@ Required: intervals.icu activity ID, e.g. `i12345678`
   plan data. The **precomputed `compliance` property** from intervals.icu
   is unreliable — it is never cited and never used as a gate; coaching
   feedback never comments on it
-- **ERG-trainer power is not an athlete signal (MANDATORY).** On an
+- **ERG-trainer power is not an athlete signal.** On an
   ERG-controlled smart trainer the device holds target watts whatever the
   athlete is doing, so a flat power trace is the trainer working, not the
   rider. Never report "power held to the last rep", "zero decay", "watts
@@ -32,7 +32,7 @@ Required: intervals.icu activity ID, e.g. `i12345678`
   for a structured session and state the assumption. Prescribed watt
   anchors remain valid as *dose* — only the inference from held watts
   back to athlete state is invalid.
-- **Never compare two session averages (MANDATORY).** A session average
+- **Never compare two session averages.** A session average
   spans warm-up, cool-down, drills, strides and recoveries, and that
   mixture differs per session — so the comparison measures how the
   sessions were built, not the athlete. Compare the main block against
@@ -46,7 +46,7 @@ Required: intervals.icu activity ID, e.g. `i12345678`
   not error. Only evaluate GCT as a fatigue indicator when the GCT rise
   disproportionately exceeds the pace slowdown (pace-normalized). Do not
   comment negatively on absolute GCT values in recovery phases.
-- **Cool-down running dynamics are out of scope (MANDATORY).** The
+- **Cool-down running dynamics are out of scope.** The
   cool-down is run at a shuffle — far below any pace the athlete trains
   at — and gait at that speed is a different movement pattern, not a
   slower version of the same one. Ground-contact time, vertical
@@ -68,7 +68,7 @@ python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/fetch_activity.py --activity-id {ID}
 Read in parallel: `config/athlete_static.md`, `config/athlete_status.md`,
 `config/equipment.md`.
 
-**Check athlete-entered feedback BEFORE asking (MANDATORY).** Athletes
+**Check athlete-entered feedback before asking.** Athletes
 log per-exercise feedback (RPE, symptoms, notes — e.g. `-> Feedback:`
 annotations) directly on the activity description in intervals.icu after
 training. Read the activity `description` first — for strength/core

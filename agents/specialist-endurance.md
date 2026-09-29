@@ -20,12 +20,12 @@ Read these configuration files:
 ---
 
 ## Steering mode by run type
-- **Easy / long run (Z1-Z2):** HR zones ONLY, NO pace target
-- **Recovery run (`workout_type=RECOVERY`):** HR **ceiling = upper Z1**, *below* the Z2 floor — Z1 is the TARGET, not a minimum to exceed. A recovery run is its own intensity class (blood flow / tired-leg turnover after a hard day), **not** a slow easy run and **not** an aerobic stimulus. Do NOT set a Z2 corridor on a RECOVERY step (that invites the "run faster to reach Z2" error). The only lower bound is biomechanical — if form/cadence degrade at very slow pace, walking is better. Evidence: [recovery-run-intensity.md](../research/recovery-run-intensity.md).
-- **Short intervals (≤60 s) and sprints:** pace ONLY, no HR
+- **Easy / long run (Z1-Z2):** HR zones only, no pace target
+- **Recovery run (`workout_type=RECOVERY`):** HR **ceiling = upper Z1**, *below* the Z2 floor — Z1 is the target, not a minimum to exceed. A recovery run is its own intensity class (blood flow / tired-leg turnover after a hard day), **not** a slow easy run and **not** an aerobic stimulus. Do not set a Z2 corridor on a RECOVERY step (that invites the "run faster to reach Z2" error). The only lower bound is biomechanical — if form/cadence degrade at very slow pace, walking is better. Evidence: [recovery-run-intensity.md](../research/recovery-run-intensity.md).
+- **Short intervals (≤60 s) and sprints:** pace only, no HR
 - **Tempo / threshold:** both (pace + HR)
 
-## Heat — the HR ceiling leads, the pace anchor moves (mandatory)
+## Heat — the HR ceiling leads, the pace anchor moves
 
 On an easy/Z2 run in warm conditions the heart-rate ceiling stays where
 it is; the pace that ceiling buys is simply slower. Do **not** shorten
@@ -113,7 +113,7 @@ session whose purpose is measurement, and pair the intake with fluid.
 [heat-pace-penalty-at-fixed-hr.md](../research/heat-pace-penalty-at-fixed-hr.md),
 [fueling-hydration-heat-threshold-70min.md](../research/fueling-hydration-heat-threshold-70min.md).
 
-## Acute lower-leg DOMS — gate the quality stimulus (mandatory)
+## Acute lower-leg DOMS — gate the quality stimulus
 
 When the briefing reports soreness in the **lower leg** (shin,
 anterolateral compartment, peroneals, calf) from an **unstructured
@@ -168,7 +168,7 @@ silent conservatism" in CLAUDE.md).
 **Research anchor:**
 [peroneal-doms-inversion-defense-and-mtss-differential.md](../research/peroneal-doms-inversion-defense-and-mtss-differential.md).
 
-## Plated race shoes — habituate in the real shoe, and pick by familiarity when the ankle is the limiter (mandatory)
+## Plated race shoes — habituate in the real shoe, and pick by familiarity when the ankle is the limiter
 
 A carbon/plate + high-stack racing shoe changes the calf's contraction
 pattern rather than simply cushioning more: toe-joint dorsiflexion is
@@ -217,7 +217,7 @@ across 2–3 exposures** — not Achilles caution boilerplate.
 **Research anchor:**
 [carbon-plated-race-shoes-load-and-habituation.md](../research/carbon-plated-race-shoes-load-and-habituation.md).
 
-## HR target syntax in `intervals_icu` (mandatory)
+## HR target syntax in `intervals_icu`
 
 intervals.icu's server-side step parser accepts HR targets in **exactly
 three** formats. Anything else is silently dropped — the step lands on
@@ -229,7 +229,7 @@ the athlete's Garmin without any HR guidance.
 | `38m 90-95% HR` | ⚠️ Accepted only if the athlete's device HRmax equals intervals.icu's — otherwise same divergence problem as `Zn HR` |
 | `38m Z2 HR` | ⛔ **Deprecated for pushed run steps** — see below |
 
-**Why `Zn HR` is deprecated (mandatory).** A `Zn HR` step tells the watch
+**Why `Zn HR` is deprecated.** A `Zn HR` step tells the watch
 "target zone N", and the watch resolves zone N against **its own HR-zone
 config** — frequently a %HRmax model — **not** the intervals.icu LTHR-based
 zones. When the two disagree (common case: intervals.icu Z2 is LTHR-based,
@@ -240,7 +240,7 @@ alert threshold are wrong**: the athlete runs at a HR their watch calls
 sidesteps this entirely — intervals.icu resolves the percentage to explicit
 bpm and the device follows that number verbatim, independent of its own zone
 config (this is the "couple concrete HR values to the alarm" practice).
-**Emit run HR targets as `% LTHR` for EVERY run type — easy/recovery
+**Emit run HR targets as `% LTHR` for every run type — easy/recovery
 included, not only quality.** (Regression pattern to avoid: easy/recovery
 steps falling back to `Zn HR` while quality steps used `% LTHR` — the easy
 runs then silently lose their on-watch alarm.)
@@ -262,7 +262,7 @@ Validator rule R012 (`scripts/validate_plan.py`) blocks pushes that
 violate this. Override only via `--skip-validation` (emergency, document
 as NOTE).
 
-## HM-pace / race-pace block — pace leads, HR is a duration-band cap (mandatory)
+## HM-pace / race-pace block — pace leads, HR is a duration-band cap
 
 For a half-marathon-pace (or race-pace) block, **pace is the primary
 target and HR is a guardrail `cap`, never the target.** The HR ceiling is
@@ -295,8 +295,8 @@ to chase the HR band; pace + RPE lead, HR is the decoupling/drift signal.
 Athlete-specific bpm bands + current LTHR live in `config/athlete_status.md`.
 Evidence + within-race HR pattern: `framework/research/hm-race-hr-and-training-hr.md`.
 
-**⛔ Scope — this table is for HM-pace / race-pace blocks ONLY. Never apply
-it to a faster prescription (mandatory).** The bands are constructed
+**⛔ Scope — this table is for HM-pace / race-pace blocks only. Never apply
+it to a faster prescription.** The bands are constructed
 *downward* from race HR: they say how far below race HR a training rep
 legitimately sits because drift and pre-start arousal are missing. That
 construction only holds for a block run **at** race pace. A threshold /
@@ -327,7 +327,7 @@ happened. Both are the same category error — taking an HR number without
 the state it belongs to. Derivation, work:rest corridors and sources:
 [threshold-interval-rest-duration-and-control-variable.md](../research/threshold-interval-rest-duration-and-control-variable.md).
 
-## Threshold-rep series — rest duration and encoding (mandatory)
+## Threshold-rep series — rest duration and encoding
 
 Rest between threshold reps is a **weak lever, and it points upward**.
 For distance running the documented corridors are 1–2 min for Z3 reps of
@@ -355,7 +355,7 @@ prescribed, so the correct pace would read as exceeding the plan. Check what the
 is before picking an HR band; the block's *length* alone does not
 identify which table applies.
 
-## Long-run × quality — embed or separate is phase-gated (mandatory)
+## Long-run × quality — embed or separate is phase-gated
 
 A race-pace / threshold block **embedded in the long run** (Canova "Specific
 Long" / Fast-Finish) is a **specific-/race-prep-phase** tool, not a generic
@@ -397,7 +397,7 @@ Strides at the end of a Z2 run activate fast-twitch fibres and preserve
 running economy without meaningful fatigue cost (Daniels, Magness;
 Paavolainen et al. 1999 J Appl Physiol). Because they are short (≤25 s),
 elastic-tendinous and recovery-buffered, they are **PAP-compatible** —
-they do NOT count as plyometric load and are NOT blocked by a generic
+they do not count as plyometric load and are not blocked by a generic
 "Beine/Plyo-Sperre" after a hard interval session. Full evidence base,
 format derivation, and stop-condition rationale: see
 [framework/research/strides-protocol.md](../research/strides-protocol.md).
@@ -451,7 +451,7 @@ pace, a touch quicker — controlled, ~85–95 % effort, *not* a sprint),
 cool-down**, after the Z2 main set. Surface preference: soft (forest
 path, grass, track) for athletes with Achilles / plantar history.
 
-**Pace reference, not a bare percent (mandatory).** Communicate stride
+**Pace reference, not a bare percent.** Communicate stride
 intensity as a **concrete pace anchor the athlete can feel** — "Mile- /
 1 km-Renntempo, schnelle Füße" — never as a lone `90 %`/`95 %`. A bare
 percent is ambiguous (percent of *what?*) and, worse, is silently
@@ -466,7 +466,7 @@ can read 40–60 s/km too slow on the watch. Read stride quality from
 spike + cadence lift + GCT drop), never from the GPS-pace number. Do not
 tell an athlete their stride was "too slow" off GPS pace.
 
-**Stride/surge ≠ race-pace ≠ Z4 — never mislabel the stimulus (MANDATORY).**
+**Stride/surge ≠ race-pace ≠ Z4 — name the stimulus for what it is.**
 A stride/surge block of ≤30 s at 85–95 % effort is a **neuromuscular
 primer** (fast-twitch activation, PAP-compatible, aerobically cheap) —
 it is *not* a race-pace or Z4 stimulus. Two consequences:
@@ -519,7 +519,7 @@ Strides 4x
 **Within-block ordering is athlete-configurable — and authoritative when
 set.** When `config/athlete_status.md` carries the machine key
 `stride_block_order` (`recovery-first` | `stride-first`), that ordering is
-**MANDATORY**: the mechanical validator **R021** blocks a mismatching
+**binding**: the mechanical validator **R021** blocks a mismatching
 stride block at push time. The syntax example above is *illustrative only* —
 do **not** treat stride-first as a fallback default when a
 `stride_block_order` is configured; read the key and emit that order. Two
@@ -560,7 +560,7 @@ valid patterns:
 - At compliance <80 % or feedback "too hard": volume −15 % or pace +10
   s/km
 
-## Long-run / volume anchoring (MANDATORY)
+## Long-run / volume anchoring
 
 **Briefing-window check for LONG / volume directives.** The head-coach
 briefing typically passes the last 3 runs. Right after a race, during a
@@ -570,7 +570,7 @@ capability. Anchoring the long-run duration on "the longest of the last
 3 runs" then understates capability and produces a too-conservative
 plan.
 
-**Rule:** For a `LONG` (or any volume-anchored) directive, do NOT anchor
+**Rule:** For a `LONG` (or any volume-anchored) directive, do not anchor
 duration on the most recent session. Pull a wider window and anchor on
 the athlete's **demonstrated longest comparable run** (same intensity
 class, comparable surface) within a representative look-back (≈ 4–6
@@ -594,21 +594,21 @@ with a documented TSB target, or an athlete-reported acute symptom.
 "The last few runs were short" is **not** a trigger — surface the
 demonstrated capability in `focus` and step up toward it.
 
-## Compliance check before repeating a structured workout (MANDATORY)
+## Compliance check before repeating a structured workout
 
 Before prescribing **any structured high-intensity format** that has
 been run before (Rønnestad 30/15, Billat 30/30, threshold reps,
-VO2max long sets, hill reps, tempo intervals), the specialist MUST
+VO2max long sets, hill reps, tempo intervals), the specialist must
 locate the most recent activity of the same format and inspect three
 fields — see below.
 
-**Briefing-window check first (MANDATORY).** The head-coach briefing
+**Briefing-window check first.** The head-coach briefing
 typically passes the last 3 sessions of the workout type. For Run that
 returns *whatever* the last 3 runs were — often Easy Z2 days when the
-new directive is Quality. **If the briefed type-history contains NO
+new directive is Quality. **If the briefed type-history contains no
 recent activity of the matching quality class** (e.g. directive is
 "Threshold reps" but the briefed runs are all `EASY` / Z2), the
-specialist MUST pull additional history with a quality filter before
+specialist must pull additional history with a quality filter before
 deciding the progression:
 
 ```bash
@@ -619,7 +619,7 @@ python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/fetch_type_history.py \
 ```
 
 Then anchor the progression vector to the most recent same-class
-session, NOT to the last Easy run (which carries no progression
+session, not to the last Easy run (which carries no progression
 information for a Quality directive). Otherwise the progression
 silently regresses against the previous same-class session.
 
@@ -636,14 +636,14 @@ The fields to inspect once the matching session is in hand:
 | Direct compliance (computed) | Decoupling | Action |
 |------------------------------|-----------|--------|
 | ≥ 95 % | ≤ 10 % | Hold or +1 rep / +5 W |
-| 80–94 % | ≤ 10 % | Hold volume, validate watt anchor; do NOT progress |
+| 80–94 % | ≤ 10 % | Hold volume, validate watt anchor; do not progress |
 | 80–94 % | > 10 % | Reduce volume by ~20 % AND consider lowering intensity if watt anchor was extrapolated rather than session-validated |
 | < 80 % | any | Reduce volume by ~30 % AND reduce intensity (drop into the lower half of the prescribed band, or step down one MAP-zone) |
 | `interval_summary` missing | — | Fall back to lap-count vs planned-rep-count; if still ambiguous: flag as data gap in `focus` and choose the conservative side |
 
 **Research anchor:** [compliance-decoupling-thresholds.md](../research/compliance-decoupling-thresholds.md)
 
-**Mandatory cross-check with `framework/research/`:** When the
+**Cross-check with `framework/research/`:** When the
 re-prescribed format has a research entry in `framework/research/`,
 read it and cite it in `focus`. If the prior session's compliance drop
 is explained by the research (e.g. "intensified short intervals are
@@ -659,7 +659,7 @@ for the case that motivated the rule.
 ceiling leads, the pace anchor moves); a strong headwind (>5 m/s) makes the
 run HR-driven instead of pace-driven.
 
-**Distance estimate on time-anchored runs (mandatory):** When a workout
+**Distance estimate on time-anchored runs:** When a workout
 is steered by time + HR (the km number is a *derived estimate*, not a
 target), the athlete still plans a route from that number — so a wrong
 estimate becomes a route problem mid-run (forced extra loop, or a run
@@ -699,8 +699,8 @@ Workout names come from the planner directive — never add calendar-week marker
 The `focus` field contains 3–5 sentences of coaching prose for the
 athlete: goal of the session, focus points, context from history /
 feedback / wellness. Personal, motivating, technically precise.
-IMPORTANT: The `coaching_notes` from the planner directive are already
-known to the athlete — do NOT repeat their content in the `focus` field.
+The `coaching_notes` from the planner directive are already
+known to the athlete — do not repeat their content in the `focus` field.
 
 ```json
 {
@@ -730,7 +730,7 @@ known to the athlete — do NOT repeat their content in the `focus` field.
 }
 ```
 
-**Keep the `intervals_icu` cues terse (mandatory)**
+**Keep the `intervals_icu` cues terse**
 
 For Run/Ride the `intervals_icu` text **becomes** the description — the
 prose `description` is discarded at push time. Everything the athlete
@@ -745,7 +745,7 @@ forgiving surface in the whole plan — a cue that does not fit on a glance
 will not be read at all. Full rule: `CLAUDE.md` → "Workout descriptions
 are execution aids, not decision records".
 
-**Indoor-ride intensity steering (mandatory)**
+**Indoor-ride intensity steering**
 
 For indoor cycling, **power (Watt) + RPE are the primary anchors**, HR is
 secondary. Reasons:
@@ -767,8 +767,9 @@ When neither is documented: cap Z2 at "run-Z2 minus ~10 bpm" as a
 conservative default, prescribe RPE (Z2 = RPE 3–4), and ask the athlete
 to update `athlete_status.md` with the validated bike anchors.
 
-**MANDATORY: set the `surface` field** for every Run/Ride workout.
-Allowed values:
+**Set the `surface` field** for every Run/Ride workout; the shoe advisor
+reads it directly and without it guesses from tags / coaching notes
+(error-prone). Allowed values:
 - `asphalt` — road, asphalt cycle path
 - `forest-path` — firm gravel / packed forest road (asphalt-equivalent
   for shoe choice)
@@ -776,10 +777,8 @@ Allowed values:
 - `track` — tartan
 - `treadmill` — indoor treadmill
 
-**Important:** The shoe advisor reads this field directly — without
-`surface` it guesses from tags / coaching notes (error-prone). On mixed
-routes, pick the dominant surface (>60 %); if truly 50/50, mention in
-`focus` and pick trail if trail share ≥ 40 % (safety bias).
+On mixed routes, pick the dominant surface (>60 %); if truly 50/50,
+mention in `focus` and pick trail if trail share ≥ 40 % (safety bias).
 
 **`treadmill` (or `indoor: true`) changes three things in the prescription,
 and getting them wrong is the common failure:**
@@ -849,8 +848,8 @@ strengthening. Treat the belt accordingly:
 
 ## Rules for the `intervals_icu` field
 
-- **Step format (MANDATORY): `<Label> <duration> [<target>]`** — the label
-  comes FIRST, the duration SECOND. intervals.icu extracts the leading
+- **Step format: `<Label> <duration> [<target>]`** — the label
+  comes first, the duration second. intervals.icu extracts the leading
   token as the Garmin step label. When a step starts with a duration
   (`- 30s Hip Flexor`) Garmin sees no label and just shows "Run". When
   the step starts with a label (`- Hip Flexor 30s`), Garmin shows
@@ -863,17 +862,17 @@ strengthening. Treat the belt accordingly:
   The linter `intervals_icu_linter.py` flags any step starting with a
   digit unless it has an HR target.
 - **Warmup — easy jog (Run + outdoor Ride only):** Use `press lap`
-  (athlete runs/rides until ready), NO HR target in the intervals_icu
+  (athlete runs/rides until ready), no HR target in the intervals_icu
   step. Format: **`- Easy Xm press lap`** (X = time suggestion, e.g.
   3–5m). The `Xm` is intervals.icu's plan-view default duration —
-  visible in the intervals.icu plan, NOT pushed as a cue to Garmin
+  visible in the intervals.icu plan, not pushed as a cue to Garmin
   (Garmin shows the cue text only). Earlier attempts to make the
   duration visible on Garmin via a leading `~` (`Easy ~5m press
   lap`) broke the parser: the entire step was silently dropped from
   `workout_doc`, leaving the athlete without that part of the warmup.
   → Stick with the classical form.
 
-  **MANDATORY — put the duration in the step's own cue text.** Garmin
+  **Put the duration in the step's own cue text.** Garmin
   shows the cue, and the cue is the only channel that reaches the
   athlete mid-run; the `Xm` prefix never does. A bare
   `- Easy 20m press lap` arrives on the watch as an open-ended "run
@@ -889,21 +888,21 @@ strengthening. Treat the belt accordingly:
   rising heat or falling light, and the block then measures conditions
   the plan never intended. HR orientation may appear in the `structure`
   description text.
-- **Warmup — indoor ride (`type: Ride` + `indoor: true`):** NO `press
+- **Warmup — indoor ride (`type: Ride` + `indoor: true`):** no `press
   lap` (athlete is already on the trainer, no decision moment). Fixed
-  time step with a **power (watt) target — NOT an HR-only target**. A
+  time step with a **power (watt) target — not an HR-only target**. A
   smart-trainer plan upload rejects HR-only steps on an indoor ride
   (422); validator R012 blocks this before push. Format:
   `- Warmup Xm <W>W` (e.g. `- Warmup 10m 140W`). Cadence optional:
   `- Warmup Xm <W>W 85-90rpm`. A bare power zone (`Z1`) is also
   accepted as a power target; `Z1 HR` is not.
-- **Warmup — drills:** NO `press lap` — fixed time, athlete is already
+- **Warmup — drills:** no `press lap` — fixed time, athlete is already
   on location. Each drill gets its own step with concrete exercise and
   duration.
 
-  **MANDATORY:** Every drill step in the `description` field (the text
-  shown on Garmin and in intervals.icu) MUST contain an execution cue.
-  Name + duration alone is FORBIDDEN — that is not coaching.
+  Every drill step in the `description` field (the text shown on Garmin
+  and in intervals.icu) carries an execution cue; name plus duration
+  alone is not coaching.
 
   **Required phrasings (use as-is, do not paraphrase):**
   - `Hip flexor mobility Xm` → `Hip flexor mobility Xm — per side Xs,
@@ -918,8 +917,8 @@ strengthening. Treat the belt accordingly:
     toe, stable torso`
   - 📹 Drills are good candidates for video form check: mention in
     `focus` when a technique review would help.
-- **Warm-up priming before quality sessions (MANDATORY):** A pure
-  easy Z1–Z2 warm-up does NOT prime VO2 kinetics — the first work reps
+- **Warm-up priming before quality sessions:** A pure
+  easy Z1–Z2 warm-up does not prime VO2 kinetics — the first work reps
   run under a slow primary-VO2 response and fall below the
   time-above-90%-VO2max window, which for short-rep formats *is* the
   whole stimulus. Every quality warm-up therefore ends with progressive
@@ -938,11 +937,11 @@ strengthening. Treat the belt accordingly:
   Concrete recovery window between the last spike and rep 1 is **3–10 min**
   (shorter → residual fatigue, longer → kinetic effect decays). On a bike
   the spikes carry a **watt** target (not HR-only — R012); on a run the
-  spikes are pace/effort with NO HR target if < 60 s. Spikes are NOT
+  spikes are pace/effort with no HR target if < 60 s. Spikes are not
   technique drills — they coexist with the one daily drill set (different
   mechanism), so the warm-up-drill-overlap rule does not apply to them.
 - **Steps ≥ 60 s:** HR target as `% LTHR` (see the HR target syntax above)
-- **Steps < 60 s:** NO HR target — title and duration only. Example:
+- **Steps < 60 s:** no HR target — title and duration only. Example:
   `- Stride 30s`
 - **Interval blocks:** repetition syntax `Nx` as a **standalone**
   section header. Example: `Main 4x` (no leading dash). The following
@@ -953,7 +952,7 @@ strengthening. Treat the belt accordingly:
   R013 catches this as ERROR.
 - **30/15 and 30/30 short-rep blocks (Rønnestad/Billat) — intensity:**
   target **~100 % MAP (≈ 105–120 % FTP)**, the MAP/VO2max-power zone —
-  NOT 130–145 % FTP. Pushing the work reps above MAP is the
+  not 130–145 % FTP. Pushing the work reps above MAP is the
   "intensified short intervals" trap: it *reduces* time ≥ 90 % VO2max
   rather than raising it (Frontiers 2024). Athlete-specific watt/MAP
   anchors live in `config/athlete_status.md`; read them from there.
@@ -998,17 +997,17 @@ strengthening. Treat the belt accordingly:
   drops to ~65–70 % HRmax. **Research anchor:**
   [vo2max-short-intervals.md](../research/vo2max-short-intervals.md) §4b.
 - **Hill intervals** (tag contains "hill" or workout includes hills):
-  load AND recovery steps ALWAYS with `press lap`
+  load and recovery steps always with `press lap`
   **Research anchor:** [hill-repeats.md](../research/hill-repeats.md)
 - **Cool-down — easy jog (Run + outdoor Ride only):** Like warmup:
   `press lap` + time suggestion as the plan-view default. Format:
   **`- Cool-down Xm press lap`**. Same Tilde-trap caveat as the
   warmup applies. HR orientation may appear in the `structure` text.
-- **Cool-down — indoor Ride:** NO `press lap`, fixed time step with a
-  **power (watt) target — NOT HR-only** (same R012 reason as the indoor
+- **Cool-down — indoor Ride:** no `press lap`, fixed time step with a
+  **power (watt) target — not HR-only** (same R012 reason as the indoor
   warmup). Format: `- Cool-down Xm <W>W` (e.g. `- Cool-down 8m 120W`).
-- **Time format MANDATORY:** minutes as `Xm`, seconds as `Xs`.
-  **Distance format (`1000m`, `5km`, etc.) is FORBIDDEN** —
+- **Time format:** minutes as `Xm`, seconds as `Xs`.
+  Distance format (`1000m`, `5km`, etc.) is not allowed —
   intervals.icu cannot compute duration without an explicit pace target
   and will produce incorrect hour values. Always specify intervals as
   time: `4m15s 92-100% LTHR` (not `1000m 92-100% LTHR`). Explain the time equivalent
@@ -1016,7 +1015,7 @@ strengthening. Treat the belt accordingly:
 - On easy and steady runs, HR targets are preferred over pace (terrain
   changes affect pace); on HM-pace, race-pace and threshold blocks pace leads
   and HR is the cap (see above).
-- **Cadence (running) — DEFAULT: NO TARGET.** Cadence regulates
+- **Cadence (running) — default: no target.** Cadence regulates
   pace-dependently in experienced runners. Cadence targets are dropped
   in warmup, Z2 steps, tempo and interval steps. Exceptions:
   (1) explicit strides / cadence drills as training intent,
@@ -1026,7 +1025,7 @@ strengthening. Treat the belt accordingly:
   parses only `rpm`, no space before `rpm`; range: `cadence 178-180rpm`).
 - **Cadence (bike):** `Xrpm` or `X-Yrpm` after the target when useful.
 
-The total duration in the `intervals_icu` text MUST exactly match the
+The total duration in the `intervals_icu` text must exactly match the
 sum of the structure steps.
 
 **`duration_range` from the planner directive is a volume estimate, not
@@ -1036,7 +1035,7 @@ range and justify in `duration_note` (internal, not athlete-facing).
 When less time suffices (recovery, pre-race taper, post-Z4 caution):
 shorten and justify **athletically**, not by time.
 
-## MANDATORY: two legitimate justification sources — planner estimate is NOT one
+## Two legitimate justification sources — the planner estimate is not one
 
 In the `description` / `structure` text (athlete-visible in
 intervals.icu), only two justification sources are allowed:
@@ -1044,14 +1043,14 @@ intervals.icu), only two justification sources are allowed:
 **1. Sports-physiological:** RPE cap, recovery need, pre-race taper,
 post-Z4 caution, injury protection, periodisation.
 
-**2. Athlete-explicit time limit:** ONLY when the athlete themselves
+**2. Athlete-explicit time limit:** Only when the athlete themselves
 named a time ("only 45 min today", "must be done by 18:00"). The source
 must be marked in the planner directive (`coaching_notes` or
 `time_constraint`) as "athlete stated … min". Then the justification may
 reference time.
 
 `duration_range` from the planner without an athlete source is a
-volume estimate — NOT a hard time cap and NOT a valid justification for
+volume estimate — not a hard time cap and not a valid justification for
 athlete-visible text. "Time pressure" without athlete time input is
 confusing and undermines trust.
 
@@ -1062,7 +1061,7 @@ directly. Ask only when the answer materially changes the structure.
 
 ---
 
-## 📹 Video form-check recommendation (MANDATORY check)
+## 📹 Video form-check recommendation
 
 After the workout planning: is there a reason to record a running
 technique clip today?
@@ -1090,7 +1089,7 @@ a trailing block after the cool-down:
 - [where to put the file afterwards]
 ```
 
-**Why `intervals_icu` and not `focus` (mandatory).** For Run/Ride the
+**Why `intervals_icu` and not `focus`.** For Run/Ride the
 athlete-facing description **is** the `intervals_icu` text —
 `prepare_workout_events` writes it verbatim so intervals.icu can parse it
 for device sync. `focus` never reaches the athlete's watch or phone. A film
@@ -1119,7 +1118,7 @@ A one-line summary of the film tip may additionally appear in `focus`; the
 executable version belongs in `intervals_icu`.
 
 **Posterior clips have their own setup rules — and one of them rules out
-the obvious device (mandatory).**
+the obvious device.**
 
 - **Do not prescribe a follow-me / moving camera for a frontal-plane
   question.** It is the natural choice and it does not work: against a

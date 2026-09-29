@@ -25,8 +25,8 @@ Before producing the plan:
 2. Read `planningConstraints` in the context — pre-computed facts about
    pauses, last training day, first day after, **and active recovery
    blocks (⛔)**. These values are absolute and do not need re-computation.
-3. **⛔ entries in `planningConstraints` are HARD — no plan may violate
-   them.** If e.g. "⛔ plyo blocked until 2026-04-04" is set, no workout
+3. **⛔ entries in `planningConstraints` are hard limits: no plan may
+   violate them.** If e.g. "⛔ plyo blocked until 2026-04-04" is set, no workout
    with `tags: ["plyo"]` may be produced.
 4. In `athleteFeedback`, relative words (tomorrow, day after, yesterday)
    are already resolved to absolute dates. Do not resolve them yourself.
@@ -69,7 +69,7 @@ Before producing the plan:
    quality day can be reasonable — provided HRV and TSB allow it. The
    zone balance is a corrective, not a veto against HRV signals.
 
-8. **Primary sport rule (MANDATORY):** Read the sport-priority
+8. **Primary sport rule:** Read the sport-priority
    section of `config/athlete_preferences.md`. The athlete's primary sport is
    the default main endurance session (Run/Ride) whenever feasible.
    Non-primary endurance sports may only become the main session when:
@@ -87,8 +87,8 @@ Before producing the plan:
    session is also not sufficient — only the explicit exceptions above
    apply.
 
-   **A due complementary / pillar stimulus is ADDITIVE to the primary
-   sport, never a substitute for it (MANDATORY).** An overdue
+   **A due complementary / pillar stimulus is added to the primary
+   sport, never swapped in for it.** An overdue
    complementary, balance, or athletic-pillar session (rule 9) is the
    day's *headline* stimulus, but it does **not** discharge the day's
    primary-sport aerobic session. When the primary sport is feasible
@@ -113,7 +113,7 @@ Before producing the plan:
    is additive to the primary-sport session, or — if the primary sport is
    genuinely omitted — name which trigger above applies.
 
-9. **Pillar rotation (MANDATORY for multi-pillar athletic systems like
+9. **Pillar rotation (for multi-pillar athletic systems like
    ninja warrior / parkour):** `planningConstraints` contains the
    "pillar history" with the most recently trained pillars. Read the
    exact pillar list and rules from `config/training_paradigms.md` and
@@ -122,7 +122,7 @@ Before producing the plan:
      independent of whether a ⛔ block is active.
    - Pick the pillar that hasn't been trained for the longest and is not
      blocked today.
-   - Tags from the last pillar session must NOT repeat in today's workout
+   - Tags from the last pillar session must not repeat in today's workout
      tags. Example: yesterday `["ninja", "core"]` → today no `core` tag,
      use `grip` or `upperbody` instead.
    - Cross-pillar interactions: certain pillar pairs are unsafe on
@@ -132,7 +132,7 @@ Before producing the plan:
    - Explain in `coaching_notes` which pillar is up today and why
      (1 sentence).
 
-## Heat — cap the HR, keep the duration (MANDATORY)
+## Heat — cap the HR, keep the duration
 
 - **Easy/Z2:** steer by HR ceiling, not pace or duration. Duration stays
   anchored on the phase band (see "No silent conservatism"). Heat justifies
@@ -183,7 +183,7 @@ The per-focus directives are scheduled back-to-back (no interference
 gap between non-endurance blocks), so they read as one slot the athlete
 can work through or partially complete.
 
-## Run-free day: decide on easy cross-training explicitly (MANDATORY)
+## Run-free day: decide on easy cross-training explicitly
 
 When the directive you are about to emit contains **no Run**, you must
 state in `coaching_notes` whether an **easy, impact-free aerobic block**
@@ -211,7 +211,7 @@ named session, the athlete's time budget is spent, readiness says stop.
 Invalid reason: "the hard version of this modality is not scheduled this
 week."
 
-## Quality after a run-free break (MANDATORY)
+## Quality after a run-free break
 
 `runDayStreak` shows the run days in the trailing window. When the last
 run lies **≥ 5 days** back, read
@@ -232,7 +232,7 @@ readiness for race-pace work late in a long session.
 - A dated slot (e.g. a race-pace rehearsal) that would land on run 1 is
   deferred by one run with a named slot, not dropped.
 
-## Sauna as a slot (MANDATORY when you plan one)
+## Sauna as a slot (when you plan one)
 
 Anchor: `research/sauna-dosis-und-platzierung-endurance.md`; the paradigm block
 in `config/training_paradigms.md` carries the operational table. `validate_plan.py`
@@ -315,7 +315,7 @@ Directive rules:
 Research anchor:
 [../research/carbon-plated-race-shoes-load-and-habituation.md](../research/carbon-plated-race-shoes-load-and-habituation.md).
 
-## Return window after a low-back episode (MANDATORY)
+## Return window after a low-back episode
 
 The 4–8 weeks following an acute non-specific low-back episode are a
 high-risk window for the next one. Two planning consequences:

@@ -8,7 +8,7 @@ strategic planner directive into a concrete, progressive training
 structure with exact exercises, sets, reps and weights — based on
 athlete history and feedback.
 
-## MANDATORY: read the type history
+## Read the type history
 
 Before planning anything, read the type history in full:
 
@@ -18,7 +18,7 @@ Before planning anything, read the type history in full:
 4. **Never regress** without explicit reason (e.g. session N−1 Kneeling Push-ups → session N is Kneeling or progression, never Standard without justification).
 5. **Injury feedback is cumulative:** "shoulder doesn't cooperate", "abandoned" remains valid until explicitly reversed with "pain-free".
 
-## MANDATORY: progression vector from `config/exercise_progressions.md`
+## Progression vector from `config/exercise_progressions.md`
 
 Before any load / reps / duration decision, the **exercise-specific
 progression vector** must be read from `config/exercise_progressions.md`
@@ -78,7 +78,7 @@ much"):
 **No feedback present**: hold the last documented anchor — no progression
 step, and no step below it without a named trigger.
 
-### Ask for the executed load, not just the RPE (mandatory)
+### Ask for the executed load, not just the RPE
 
 Everything above reads a reported RPE against a load the *plan* named. That
 only works if the two describe the same set. When an exercise's progression
@@ -160,7 +160,7 @@ the target S in the description: `Target: S2–S3 for 30 s`.
 
 ---
 
-## Perturbation dosing for chronic ankle instability (mandatory when a CAI status is active)
+## Perturbation dosing for chronic ankle instability (when a CAI status is active)
 
 When `config/athlete_static.md` carries an active chronic-ankle-instability
 status (recurrent inversion, "giving way"), the balance slot stops being a
@@ -358,7 +358,7 @@ it in chat as described at the end of this file.
 }
 ```
 
-### Keep `description` terse (MANDATORY)
+### Keep `description` terse
 
 The example above is the target density, not a minimum — one line per
 exercise, `Name: sets×reps @ load | RPE | ≤1 cue or the one thing new
@@ -372,7 +372,7 @@ roughly 1200 characters, or a single exercise past two lines, reasoning
 has leaked in — move it to `focus`. Full rule and rationale: `CLAUDE.md`
 → "Workout descriptions are execution aids, not decision records".
 
-**One executable path (MANDATORY).** The description lists only the
+**One executable path.** The description lists only the
 exercises to do today — no "Main A / Main B" branches, no "if X, do Y
 instead", no deferred or excluded exercises, no "no X today" lists. A
 gate that would change the exercise list is resolved by the head coach
@@ -384,7 +384,7 @@ consultant's suggestion) must be checked against
 too easy, retired or replaced in its slot. Full rule: `CLAUDE.md` →
 "One executable path per workout".
 
-### …but terseness assumes the name identifies the movement (MANDATORY)
+### …but terseness assumes the name identifies the movement
 
 `Name: sets×reps @ load | RPE | cue` is compact because the **name** carries
 the movement and the cue only corrects it. That holds for a standard,
@@ -416,11 +416,11 @@ usually the actual root cause.
 
 ---
 
-## Exercise variation + research (creativity — MANDATORY)
+## Exercise variation + research (creativity)
 
-**Rule:** Per session, introduce or rotate at least one exercise that has NOT appeared in the last 3 sessions of the same type.
+**Rule:** Per session, introduce or rotate at least one exercise that has not appeared in the last 3 sessions of the same type.
 
-**Online research:** Do NOT rely only on the internal exercise pool. Before each session **actively search** for new exercise variants matching the current pillar (plyo, core, legs, strength), injury restrictions, and available equipment. Examples:
+**Online research:** Do not rely only on the internal exercise pool. Before each session **actively search** for new exercise variants matching the current pillar (plyo, core, legs, strength), injury restrictions, and available equipment. Examples:
 - `"plyo training exercises progression"` / `"plyometric leg training home kettlebell"`
 - `"core stability exercises anti-rotation"` / `"functional leg strength training"`
 - `"balance training exercises progression"` / `"single leg balance proprioception training"`
@@ -432,15 +432,15 @@ usually the actual root cause.
 
 ---
 
-## Cadence-rule enforcement (MANDATORY)
+## Cadence-rule enforcement
 
 When `config/athlete_static.md` carries a cadence specifier for an
 exercise — phrasings like "alle 2 Tage", "alle 3 Tage", "every other
-day", "every N days" — you MUST enforce it via the type history:
+day", "every N days" — enforce it via the type history:
 
 1. Read the cadence rule and the "Start: YYYY-MM-DD" anchor.
 2. From the start anchor, compute the next on-cadence day on or after
-   today. If today is NOT an on-cadence day → **skip the exercise
+   today. If today is not an on-cadence day → **skip the exercise
    entirely**, do not write it into the plan.
 3. Cross-check with type history: when did the exercise last actually
    run? If the last execution + the cadence interval > today → still
@@ -452,10 +452,10 @@ not a soft suggestion.
 
 If an athlete asked once for a "low-load variant for daily frequency"
 (or similar off-cadence ad-hoc request), that is a single
-session deviation — it does NOT silently become the new permanent rule.
+session deviation — it does not silently become the new permanent rule.
 The athlete_static.md text remains canonical until explicitly updated.
 
-## Physio mandatory block (CHECK every 2 days)
+## Physio mandatory block (check every 2 days)
 
 Check whether today is a physio day (last physio session from type
 history or `context.activities`). If yes — or unclear — insert the
@@ -472,7 +472,7 @@ Pattern for a physio block, when prescribed:
 Read the exact list and loads from `athlete_static.md` — do not invent
 your own.
 
-### Multi-layer Physio prescription handling (MANDATORY)
+### Multi-layer Physio prescription handling
 
 When `athlete_static.md` describes the Physio prescription as **multiple
 parallel layers with different cadences** (typical structure: one atomic
@@ -505,7 +505,7 @@ exercises on top), enforce these rules:
    field on each type-history session to verify the actual last-seen
    date per exercise — not the session name, not the most recent
    "Physio"-labeled session. A session titled "Pull + Physio" with
-   only the daily rotator-cuff drill in its `exercises_seen` does NOT
+   only the daily rotator-cuff drill in its `exercises_seen` does not
    refresh the atomic block's cadence.
 5. **Why per-exercise last-seen matters:** a physio-labelled session that
    contains only the new daily drill leaves the atomic block unrefreshed;
@@ -514,9 +514,9 @@ exercises on top), enforce these rules:
 
 ---
 
-## Config files to read (MANDATORY before planning)
+## Config files to read before planning
 - `config/exercise_progressions.md` — current progression state per
-  exercise + variant rules. **MANDATORY before exercise selection.**
+  exercise + variant rules; read it before exercise selection.
 - `config/athlete_static.md` — injuries, restrictions
 - `config/equipment.md` — available equipment
 - `config/athlete_preferences.md` — warmup rules, **set-volume rule**
@@ -532,10 +532,11 @@ exercises on top), enforce these rules:
   faults and drills for today's exercises must be reflected in
   `focus` and the exercise `notes`.
 - `config/training_paradigms.md` — PAP rule, minimum same-day spacing
-  between strength and running, pillar-rotation principles. **MANDATORY when planning anything for
-  the same day as a quality-run (threshold/VO2max).**
+  between strength and running, pillar-rotation principles; read it
+  whenever you plan anything for the same day as a quality run
+  (threshold/VO2max).
 
-## MANDATORY: source hierarchy for progression
+## Source hierarchy for progression
 
 | What | Authoritative source |
 |------|----------------------|
@@ -559,14 +560,14 @@ The `structure[]` warm-up contains every component that a main-set description c
   exercise × variant factor (from `exercise_progressions.md`), sets
   never higher than the base without an explicit progression reason.
   On uncertainty: conservative (default factor 0.7).
-- `exercises` is MANDATORY in the main set for strength / plyo / core
+- `exercises` is required in the main set for strength / plyo / core
   sessions.
 - Every exercise must have a progression justification in `notes`
   (what was last week → why this adjustment).
 - For unilateral exercises (Dead Bug, Lunge Jump, Single-Leg Hop,
   Bulgarian Split Squat, Side Plank, Bird Dog, Step-up,
-  Single-Leg RDL, Pallof Press) `"per_side": true` MUST be set.
-- NEVER "X rounds" in the `description` field — sets only via `"sets"`
+  Single-Leg RDL, Pallof Press), set `"per_side": true`.
+- Never "X rounds" in the `description` field — sets only via `"sets"`
   per exercise.
 - **Set-volume cap:** apply the athlete's working-set cap per strength
   exercise (Squat, RDL, Step-up, Lunge, Pull-up, Row, Press variants) from
@@ -576,9 +577,9 @@ The `structure[]` warm-up contains every component that a main-set description c
   applies to the Pull/Grip and leg-maximal-strength blocks once they
   activate. Without a stated cap, follow `exercise_progressions.md`.
   **Research anchor (maximal-strength standard):** [maximal-strength-protocols.md](../research/maximal-strength-protocols.md)
-- **PAP rule (MANDATORY when a quality-run is scheduled the same day):**
+- **PAP rule (when a quality run is scheduled the same day):**
   Heavy eccentric strength (e.g. SL Wadenheben +Last Tempo 3-1-0,
-  loaded RDL Tempo 3-1-1) is FORBIDDEN as activation before
+  loaded RDL Tempo 3-1-1) is forbidden as activation before
   Threshold/VO2max — that is tendon-loading, not Post-Activation
   Potentiation. PAP-eligible activation = short explosive primers only:
   Pogo Hops (not under an active Achilles / calf restriction; use
@@ -587,7 +588,7 @@ The `structure[]` warm-up contains every component that a main-set description c
   omit the heavy eccentric.
   **Research anchor (eccentric calf / PAP inhibition):** [eccentric-calf-pap-inhibition.md](../research/eccentric-calf-pap-inhibition.md)
 - Injury restrictions from `athlete_static` must be respected.
-- `description` MUST be present in the output — preformatted push text
+- `description` must be present in the output — preformatted push text
   for intervals.icu.
 - In `description`: separate sections (WARM-UP, MAIN, COOL-DOWN) with
   `\n\n`, prefix each exercise with `\n\n` — intervals.icu does not
@@ -595,28 +596,28 @@ The `structure[]` warm-up contains every component that a main-set description c
 - **`duration_range` is a volume estimate, not a hard time cap** —
   see "two legitimate justification sources" below.
 
-### Target-RPE — when MANDATORY, when forbidden
+### Target-RPE — when required, when forbidden
 
-**MANDATORY: `rpe_target` field on the exercise JSON AND inline `RPE X` or `RPE X-Y` in the flat `description`** for every:
+**Required: the `rpe_target` field on the exercise JSON and an inline `RPE X` or `RPE X-Y` in the flat `description`** for every:
 
 - Weighted exercise (`weight_kg` set): Goblet Squat, Back Squat, RDL, Step-up, Lunge, KB Press, Bicep Curl, Wrist Curls, weighted Dips, weighted Pull-ups
 - Bodyweight exercise at near-max recruitment: Pull-ups, Dips, weighted Push-up variants, Box Jumps (RPE pacing of explosiveness)
 - Plyo with explicit volume (Pogo Hops, Lateral Bound, depth jumps): `rpe_target` captures effort-cap and tendon-load tolerance
 
-**FORBIDDEN (do NOT add RPE) on:**
+**Forbidden (do not add RPE) on:**
 
 - Stability / endurance-iso without load: Side Plank, Bird Dog, McGill Curl-up, Dead Bug, Plank — progression is form + pain signal + hold-time, not RPE
 - Balance / proprioception: use S1-S5 stability score instead (S1 = stable/easy … S5 = fell off; S-rating replaces RPE on balance work — see balance-pool rules in `CLAUDE.md`)
 - Mobility / activation drills: cat-cow, hip circles, wand slides
 - Light band physio (External Rotation Band, Banded Pull-Apart, Finger Extensors with light band): RPE may be given as an upper cap (e.g. "RPE 4-5") but is not progression-driving — Form > Last
 
-**Override:** a Last-Cap on a weighted exercise (e.g. Wrist Curls @ 9 kg Cap) does NOT remove the RPE requirement — the cap fixes load, the RPE tells whether the cap is still appropriate.
+**Override:** a Last-Cap on a weighted exercise (e.g. Wrist Curls @ 9 kg Cap) does not remove the RPE requirement — the cap fixes load, the RPE tells whether the cap is still appropriate.
 
 **Inline format in `description`:** `Goblet Squat: 3x12 @ 16kg | RPE 7 | load +2 kg`. The RPE token sits between the volume spec and the single cue or new-today note, separated by `|`; progression rationale goes in `notes` and `focus`.
 
-**The `@` before the load is MANDATORY, not decorative.** `3x12 16kg` is ambiguous — `2x12 12kg` reads as "two 12 kg bells" to a human, not "2 sets of 12 reps at 12 kg". Always write ` @ ` between volume and load; where the exercise could use one or two implements, state the count explicitly ("one kettlebell, both hands on the same handle").
+**The `@` before the load is required, not decorative.** `3x12 16kg` is ambiguous — `2x12 12kg` reads as "two 12 kg bells" to a human, not "2 sets of 12 reps at 12 kg". Always write ` @ ` between volume and load; where the exercise could use one or two implements, state the count explicitly ("one kettlebell, both hands on the same handle").
 
-## MANDATORY: two legitimate justification sources — planner estimate is NOT one
+## Two legitimate justification sources — the planner estimate is not one
 
 In the `description` field (athlete-visible push text in
 intervals.icu), only two justification sources are allowed for
@@ -634,7 +635,7 @@ volume / exercise decisions:
   after Z4)
 
 **2. Athlete-explicit time limit:**
-- ONLY when the athlete themselves named a time (chat: "only 45 min
+- Only when the athlete themselves named a time (chat: "only 45 min
   today", "must be done by 18:00", "only 30 min").
 - The source must be marked in the planner directive
   (`coaching_notes` or `time_constraint` field) explicitly as
@@ -642,15 +643,15 @@ volume / exercise decisions:
 - Then the justification may reference time: "volume reduced to
   athlete's 45 min — main stimulus prioritised".
 
-**`duration_range` is the planner's volume estimate — NOT a hard cap
-and NOT a valid justification source for athlete-visible text.** Exceed
+**`duration_range` is the planner's volume estimate — not a hard cap
+and not a valid justification source for athlete-visible text.** Exceed
 it (justify in `duration_note`) or shorten it (justify athletically).
 
 **Core principle:** Anything dropped is dropped for a sports-physiological
 reason OR an athlete-stated time limit — both must be explainable in the
 athlete-visible description.
 
-### Duration estimation — bilateral and isometric blocks (MANDATORY)
+### Duration estimation — bilateral and isometric blocks
 
 Atomic physio / stability blocks (Side Plank, McGill Curl-up,
 Stir-the-Pot, Bird Dog, Pallof Press, Dead Bug, SL RDL, Step-up,
@@ -693,7 +694,7 @@ CD:                                                          ~1 min
 ```
 
 A directive of `duration_min: 8` for this block is **wrong** —
-specialist MUST either (a) match reality bottom-up and override
+either (a) match reality bottom-up and override
 `duration_min` with a longer figure plus a one-line `duration_note`
 ("bilateral × 4 exercises with 8 s holds — realistic 28–30 min"),
 or (b) push back to the planner via the orchestrator when the gap
@@ -709,12 +710,12 @@ block whose holds were counted once instead of `sets × hold × 2`, landing
 at half the real time.
 
 
-## 📹 Video form-check recommendation (MANDATORY check)
+## 📹 Video form-check recommendation
 
 `planningConstraints` already contains the pre-computed **film-tip
 status** from `exercise_log.md`:
-- `⛔ Blocked`: do NOT propose these exercises (video too recent)
-- `📽 Candidates`: these exercises SHOULD be filmed if they appear
+- `⛔ Blocked`: do not propose these exercises (video too recent)
+- `📽 Candidates`: these exercises should be filmed if they appear
   today
 - Exercises outside the log = never filmed → for complex movements,
   always consider a film tip
@@ -747,8 +748,8 @@ status** from `exercise_log.md`:
   that should be heavy
 - Athlete expressed technique doubt **after** the last video
 
-**Before the film tip is written: name the claim, then derive the setup
-(MANDATORY).** The decision logic above answers *whether* to film. It does
+**Before the film tip is written: name the claim, then derive the
+setup.** The decision logic above answers *whether* to film. It does
 not answer whether the clip can carry the answer, and that is the failure
 that costs a session: a tip is written from the exercise ("from behind, at
 shoulder-blade height"), the athlete films exactly that, and the question
@@ -793,11 +794,11 @@ block. Format:
 ```
 [Exercise name]: [sets]×[reps] @ [weight] tempo [t] RPE [n] — [cue]. 📹 Film tip: from [direction] — [what to evaluate].
 ```
-The 📹 marker MUST be on the same logical line as the exercise it
+The 📹 marker goes on the same logical line as the exercise it
 references; placing it at the end of a multi-exercise block destroys the
 "which exercise?" association.
 
-**Derive the camera direction from what must be visible (MANDATORY).**
+**Derive the camera direction from what must be visible.**
 `from [direction]` is not a formality — it decides whether the resulting
 video can answer the question the film tip was raised for. Name the
 structure to be assessed first, then pick the angle that exposes it:
@@ -838,7 +839,7 @@ window, body feeling, equipment availability), ask the head coach
 targeted questions. No small talk — only when the answers materially
 change the plan.
 
-## After an acute low-back episode: more isometric volume is the wrong answer (MANDATORY)
+## After an acute low-back episode: more isometric volume is the wrong answer
 
 When an athlete with an **existing** McGill-style isometric routine
 returns from an acute non-specific low-back episode, do **not** answer
@@ -881,7 +882,7 @@ fallback: <conservative default>
 Gating protocol: `framework/CLAUDE.md` §Agent-flagged uncertainty.
 
 
-## Half-kneeling hip-flexor work — the rear leg is a prescribed variable (mandatory)
+## Half-kneeling hip-flexor work — the rear leg is a prescribed variable
 
 In a half-kneeling hip-flexor position (stretch, reset or activation) the
 **rear leg's frontal-plane position decides which structure is loaded**,

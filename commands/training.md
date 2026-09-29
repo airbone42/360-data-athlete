@@ -37,7 +37,7 @@ Check `planningConstraints` for the `🔄 Exercise re-evaluation due` flag
 boundaries — recovery week, periodization phase change, or staleness).
 
 - **Flag absent (the normal case):** skip this step entirely — the daily
-  flow is unchanged. Do NOT run the reviewer; micro-progression via the
+  flow is unchanged. Do not run the reviewer; micro-progression via the
   specialists is enough.
 - **Flag present:** re-challenge the exercise selection *before* the
   specialists carry it forward:
@@ -74,9 +74,10 @@ boundaries — recovery week, periodization phase change, or staleness).
 Launch the `planner` agent in a pane as a teammate. Hand it:
 - The full `fetch_context.py` output (all relevant fields)
 - The date
-- **`athleteFeedback`** from the context (MANDATORY, even if "no feedback")
+- **`athleteFeedback`** from the context (always, even if "no feedback" —
+  the planner must see the athlete's latest notes)
 - **`activities[-3:]`** — the 3 most recent activities (array is
-  oldest-first, NOT `[:3]`!)
+  oldest-first, not `[:3]`!)
 - **`weeklyZoneBalance`** — zone distribution over the last 7 days (for
   polarization check)
 - **`mesoLoadTrend`** — 4-week load trend (deload recommended or not)
@@ -104,7 +105,7 @@ python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/fetch_type_history.py \
   --date {DATE} --type {type} --tags {tags} --max-sessions {3 for endurance, 5 otherwise}
 ```
 
-**Widen the window for a LONG / volume directive (MANDATORY).** The
+**Widen the window for a LONG / volume directive.** The
 default 3-session endurance window is *systematically unrepresentative*
 right after a race, during a rebuild, in a taper, or on return from
 illness — the last 3 runs are short, so the long-run anchor collapses to
@@ -118,7 +119,7 @@ Down-anchor below demonstrated capability only with a concrete trigger
 tags-filter rule below: both prevent a short, unrepresentative window
 from silently shrinking the stimulus.
 
-**Tags filter is MANDATORY when the directive carries them.** For a
+**Filter the type history by tags when the directive carries them.** For a
 Quality Run (`tags: ["run", "intervals"]` or contains "intervals"), pass
 `--tags run,intervals` — otherwise the unfiltered call returns whatever
 the last 3 runs happened to be (often Easy Z2 days), which carries no
@@ -159,12 +160,12 @@ The specialist reads `config/` files itself (incl.
 **3c. Cross-workout review:**
 After all specialist outputs — explicit checklist:
 - Same exercise in multiple sessions? → adjust one side or drop
-- **Warmup drill duplication (MANDATORY):** running drills (A-skips,
-  B-skips, leg swings / hip flexor, ankle bounces, easy calf raises,
-  strides) MUST NEVER appear in two consecutive workouts of the same
-  day. Rule: **drill belongs in the warmup of the workout with the
-  highest matching stimulus** (e.g. A-skips into the run, not into the
-  plyo activation before it; hip flexor into the longer session). When
+- **Warm-up drill duplication:** running drills (A-skips, B-skips, leg
+  swings / hip flexor, ankle bounces, easy calf raises, strides) appear
+  in exactly one warm-up per day — the **drill belongs in the warmup of
+  the workout with the highest matching stimulus** (e.g. A-skips into the
+  run, not into the plyo activation before it; hip flexor into the
+  longer session). When
   complementary + endurance fall on the same day → keep the
   complementary warmup minimal, move drills to the run warmup.
 - Muscle group from `planningConstraints → yesterday's sessions` heavily
@@ -218,7 +219,7 @@ yourself). WARNINGs: use judgment.
 Show readable markdown with coaching_notes + per workout: name, duration,
 focus, structure overview.
 
-**Shoe recommendation (MANDATORY when the plan contains Run or Ride):**
+**Shoe recommendation (whenever the plan contains Run or Ride):**
 Embed directly in the plan presentation — not after the push.
 
 **Compute it from the *planned* run — `context.shoeRecommendation` is empty
@@ -258,8 +259,8 @@ Ask: "Does that fit, or should I adjust something?"
 echo '{workouts_json_array}' | python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/push_workouts.py --date {DATE}
 ```
 
-`push_workouts.py` invokes the mechanical validator (`validate_plan.py`)
-MANDATORILY again before every push — as last-defence, in case step 3.5
+`push_workouts.py` always runs the mechanical validator (`validate_plan.py`)
+again before every push — as last-defence, in case step 3.5
 was skipped or plan changes happened in between. ERRORs block the push
 (exit 2). Override only via `--skip-validation` (emergency, document as
 NOTE).
