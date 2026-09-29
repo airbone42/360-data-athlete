@@ -25,6 +25,7 @@ from app.graphs.main_daily_planner.workout_parser import (
     VALID_TAGS,
     VALID_TYPES,
     parse_workouts,
+    prepare_workout_events,
 )
 
 # Allowed enum values per the planner agent definition (agents/planner.md).
@@ -61,9 +62,20 @@ FIXTURE_REST_DAY: dict[str, Any] = {
 }
 
 FIXTURE_DOUBLE_DAY: dict[str, Any] = {
-    "coaching_notes": "Quality day: strength + run with mandatory 6 h gap.",
+    "coaching_notes": "Quality day: threshold run first, leg strength at least 6 h later.",
     "active_blocks": [],
     "workouts": [
+        {
+            "type": "Run",
+            "name": "Threshold intervals",
+            "duration_min": 65,
+            "duration_range": [55, 75],
+            "intensity": "high",
+            "workout_type": "INTERVALS",
+            "indoor": False,
+            "tags": ["run", "intervals"],
+            "coaching_notes": "4x4 min Z4 on fresh legs.",
+        },
         {
             "type": "WeightTraining",
             "name": "Lower body strength",
@@ -77,17 +89,6 @@ FIXTURE_DOUBLE_DAY: dict[str, Any] = {
             # "legs" instead.
             "tags": ["beine"],
             "coaching_notes": "Squat / RDL focus, RPE cap 8.",
-        },
-        {
-            "type": "Run",
-            "name": "Threshold intervals",
-            "duration_min": 65,
-            "duration_range": [55, 75],
-            "intensity": "high",
-            "workout_type": "INTERVALS",
-            "indoor": False,
-            "tags": ["run", "intervals"],
-            "coaching_notes": "4x4 min Z4 after legs are recovered.",
         },
     ],
 }
@@ -239,16 +240,23 @@ def test_coaching_notes_under_500_chars(fixture_name: str) -> None:
     )
 
 
-def test_double_day_ordering_is_strength_first() -> None:
-    """Mandatory order rule from planner.md: strength/plyo always first, run after."""
+def test_double_day_order_matches_the_parser() -> None:
+    """Order rule from planner.md: the session that carries the day's
+    adaptation goes first. With leg strength on the day (here the legacy
+    `beine` tag) a quality run takes the first slot and the strength block
+    follows at least 6 h later; `workout_parser` schedules the day the same
+    way, so the canonical output lists the sessions in the parser's order."""
     fixture = FIXTURE_DOUBLE_DAY
-    types = [w["type"] for w in fixture["workouts"]]
-    if "WeightTraining" in types and "Run" in types:
-        first_strength = next(i for i, t in enumerate(types) if t == "WeightTraining")
-        first_run = next(i for i, t in enumerate(types) if t == "Run")
-        assert first_strength < first_run, (
-            "Strength must come before Run in a double-day plan"
-        )
+    _, parsed = parse_workouts(fixture)
+    events = prepare_workout_events(parsed, date="2026-01-01")
+    assert [e["name"] for e in events] == [w["name"] for w in fixture["workouts"]]
+    assert fixture["workouts"][0]["workout_type"] == "INTERVALS", (
+        "a quality run goes before leg strength in a double-day plan"
+    )
+    run, strength = (e["start_date_local"] for e in events)
+    assert (run, strength) == ("2026-01-01T06:00:00", "2026-01-01T13:05:00"), (
+        "leg strength follows the quality run at the 6 h interference gap"
+    )
 
 
 def test_planner_output_round_trips_through_parser() -> None:
