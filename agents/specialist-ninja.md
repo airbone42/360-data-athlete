@@ -456,42 +456,7 @@ status** from `exercise_log.md`:
   that should be heavy
 - Athlete expressed technique doubt **after** the last video
 
-**Before the film tip is written: name the claim, then derive the
-setup.** The decision logic above answers *whether* to film. It does
-not answer whether the clip can carry the answer, and that is the failure
-that costs a session: a tip is written from the exercise ("from behind, at
-shoulder-blade height"), the athlete films exactly that, and the question
-turns out not to be answerable from any dorsal clip at all. The structure
-gate then reports no finding — correctly, and far too late.
-
-So state, in this order:
-
-1. **The claim** — one question, not "have a look at it".
-2. **Its class** — absolute position of a structure / pattern present or
-   absent under movement / comparison of two conditions within one
-   recording / symptom response to a manoeuvre. The classes and what each
-   can carry are in `framework/CLAUDE.md` → "Setup and scale are derived
-   from the marker".
-3. **The scale** — categorical or ordinal. Degrees, millimetres and
-   side-separated absolute values are not available from a single clip
-   unless the marker's own evidence says otherwise; assume they are not.
-4. **Only then the setup** — camera height, distance, framing, light, and
-   how many repetitions or which sets have to be in frame.
-
-Two shapes that keep going wrong and are cheap to avoid:
-
-- **A comparison needs both sides of it in the recording.** If the claim is
-  "does it hold in the loaded variant when it slips in the unloaded one",
-  then a clip containing one of the two answers nothing — the comparison
-  *is* the measurement. Say explicitly which sets belong in frame and that
-  the camera must not move between them.
-- **Backlight erases the thing being judged.** Bone edges and joint
-  contours read as edges only with raking light. A window behind the
-  athlete flattens the relief, and no resolution compensates. Name the
-  light in the tip when the claim depends on a contour.
-
-If the claim fits no class that carries a scale, **do not write the film
-tip** — propose the marker or method that does, and say so in `focus`.
+**Before the film tip is written: name the claim, then derive the setup.** The decision logic above answers *whether* to film, not whether the clip can carry the answer — a tip written from the exercise alone ("from behind, at shoulder-blade height") can film exactly what was asked and still be unanswerable from any dorsal clip; the structure gate then reports no finding, correctly and far too late. State in order: (1) the **claim** — one question, not "have a look at it"; (2) its **class** — absolute position of a structure / pattern present or absent under movement / comparison of two conditions within one recording / symptom response to a manoeuvre; (3) the **scale** — categorical or ordinal (degrees, millimetres and side-separated absolute values are not available from a single clip unless the marker's own evidence says otherwise); (4) only then the setup — camera height, distance, framing, light, and how many repetitions or which sets have to be in frame. A comparison needs both sides of it in the recording (camera untouched between them); backlight erases the bone edges a contour claim depends on — name the light in the tip. If the claim fits no class that carries a scale, **do not write the film tip** — propose the marker or method that does and say so in `focus`. Class table and landmark check: `framework/docs/film-tip-setup.md`.
 
 **When multiple candidates:** pick the most technique-heavy /
 injury-risky one. Always **one** film tip per session, never more.
@@ -519,21 +484,7 @@ structure to be assessed first, then pick the angle that exposes it:
 | Hip drop / lateral stability | frontal or from behind |
 | Limb path, depth, joint angles | true lateral |
 
-Two usability constraints:
-
-- **Camera height.** Default to the height of the joint being assessed —
-  a floor-level camera makes spine curvature and hip height unjudgeable.
-- **The angle must show the side the open question concerns.** An angle
-  that keeps the rehab-side structure out of frame produces a video that
-  cannot clear the progression gate.
-
-When one angle cannot cover every criterion, pick the angle that answers
-the **gating** question and say so in the tip; do not ask for two videos.
-
-*Anti-pattern:* a film tip for a scapular-control exercise that requested
-a generic side/45° view — the shoulder blade never entered frame, so the
-progression gate could not be resolved. The angle must be right in the
-plan.
+Camera height = the joint being assessed (a floor-level camera makes spine curvature and hip height unjudgeable); the angle must show the side the open question concerns; when one angle cannot cover every criterion, pick the one that answers the **gating** question and say so in the tip — never ask for two videos. Anti-pattern and details: `framework/docs/film-tip-setup.md`.
 
 Camera-placement helper per exercise:
 `python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/analyse_video.py --exercise "[name]" --angle-only`
