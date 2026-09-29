@@ -210,7 +210,7 @@ wiegt hier schwerer als 15–20 min Core-Erhalt.
 - **`framework/agents/planner.md` — Active-Block-Regel:** "Race-Woche"
   ist als Trigger legitim für "no heavy eccentric core / plyo / new
   exercise" — aber NICHT für "no core at all". Blanket-Sperren müssen
-  nach der [Active-block discipline](../CLAUDE.md#active-block-discipline-mandatory)
+  nach der [Active-block discipline](../CLAUDE.md#active-block-discipline-policy)
   auf konkrete Trigger verweisen.
 - **`framework/config.example/training_paradigms.md` — falls ein Taper-
   Abschnitt existiert:** Prinzipien "Volumen ↓, Intensität/Frequenz

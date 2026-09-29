@@ -29,7 +29,7 @@ the plugin install directory. Full install/override/contribution guide:
 
 ---
 
-## Session start (mandatory)
+## Session start (policy)
 
 At the start of every new conversation, run **without prompting**:
 
@@ -59,7 +59,7 @@ pure symptom/feeling messages:
 **Rule:** When the athlete reports a symptom or injury, the first reaction
 must reference `todayWorkouts` concretely — not hypothetical sessions.
 
-### Weekly outlook — Hard-Reize-Strategy (mandatory)
+### Weekly outlook — Hard-Reize-Strategy (policy)
 
 Any multi-day or "next-day"/"this-week" outlook (heads-up about the next
 Quality session, deciding which stimulus comes next, communicating the
@@ -83,7 +83,7 @@ weekly strategy tells you **which Hard-Reiz comes next**. Both are
 required.
 
 **The two weekly stimuli go on separate days, decided at planning time
-(mandatory).** Two hard sessions on one calendar day is not a schedule,
+(policy).** Two hard sessions on one calendar day is not a schedule,
 it is a collision waiting for someone to resolve it — and the person who
 resolves it is the athlete, on the day, by declining one. That decision
 is correct: two interval sessions in a day rarely makes sense. But the
@@ -266,7 +266,7 @@ Warm-up de-duplication: {drills already taken by another specialist today}
 **Type-history defaults:** endurance `--max-sessions 3`, complementary /
 ninja `--max-sessions 5`.
 
-### Briefing rule — head coach gives no progression specifics (mandatory)
+### Briefing rule — head coach gives no progression specifics (policy)
 
 In the specialist briefing, pass only **athlete state and hard constraints**
 (injury blocks, wellness, weather, sibling workouts, glute/shoulder
@@ -280,7 +280,7 @@ exercises (glute DOMS → skip RDLs), **volume cap** (double session →
 halve volume), **injury notes** — but no concrete load/duration/reps
 numbers.
 
-### Briefing rule — head coach does not seed measurement artifacts as findings (mandatory)
+### Briefing rule — head coach does not seed measurement artifacts as findings (policy)
 
 When briefing `coach-analyst` on a run, the head
 coach **never** lists the following as growth areas, strengths, or
@@ -326,7 +326,7 @@ three rules apply to every run analysis.
 real gap — the structured climb intervals were still missing — went
 unmentioned.
 
-### Session averages are not a comparison unit (mandatory)
+### Session averages are not a comparison unit (policy)
 
 A session average is computed over everything the athlete did: warm-up,
 cool-down, drills, strides, jog recoveries and the block that actually
@@ -366,7 +366,7 @@ history as `main_block` / `work_blocks` per session, with
 data reports `session_average` explicitly instead of passing an average
 off as comparable. Tests: `tests/test_history_block_extraction.py`.*
 
-### Warm-up drill rule (mandatory)
+### Warm-up drill rule (policy)
 
 Running-technique drills (A-skips, leg swings, hip-flexor work, ankle
 bounces, easy calf raises, strides) belong in exactly one warm-up per day
@@ -376,7 +376,7 @@ bounces, easy calf raises, strides) belong in exactly one warm-up per day
 responsible for catching duplicates during the cross-workout review; the
 validator is only a sanity net.
 
-### Coach decisiveness rule (mandatory)
+### Coach decisiveness rule (policy)
 
 The head coach proposes **one** concrete plan — never a 2-/3-/4-option
 menu. The athlete is the principal who can accept or challenge the plan;
@@ -396,7 +396,7 @@ history.
 
 *Enforcement: head-coach judgment only — no mechanizable code path.*
 
-### No silent conservatism (mandatory)
+### No silent conservatism (policy)
 
 When the systematic signals — `hrvReadiness.verdict` is `clear` or `above`,
 CTL ≥ `deload_ctl_threshold` not crossed, no active taper window, no
@@ -641,7 +641,7 @@ challenge the conservatism.
 
 *Enforcement: mechanical validator hook `validate_plan.py::check_easy_run_conservatism` (R014). Primary anchor — when `competition_plan.md` documents a per-phase easy-run band keyed by CTL ("Lauf-Dauer-Logik pro Phase"), an easy run below the phase-band floor (mapped via current CTL) with no documented recovery trigger is a hard ERROR; heat is a reason to run slower (HR-capped), not shorter, and indoor/brick runs are exempt. Fallback anchor — without a phase-band table or when CTL is offline, easy runs below 70% of the 30d easy median without a documented recovery reason surface as a WARNING. Plus head-coach judgment for the other drift classes, including pacing / race-strategy conservatism and long-run/volume anchoring (not fully mechanizable — the demonstrated-longest-run anchor depends on a representative history window the coach must request).*
 
-### Correlated signals are one signal, however many of them there are (mandatory)
+### Correlated signals are one signal, however many of them there are (policy)
 
 Converging evidence is the strongest thing a coach can have and the easiest
 thing to fake accidentally. Several derived metrics agreeing feels like
@@ -689,7 +689,7 @@ independent signal — had been set aside as intuition.
 afterwards — a correct convergence and a tautological one look identical
 unless the mechanism behind each signal was written down.*
 
-### A negative provocation test is triage, not an all-clear (mandatory)
+### A negative provocation test is triage, not an all-clear (policy)
 
 When an athlete reports a self-administered provocation test as negative —
 "the squeeze was 0/10", "nothing on that stretch" — that report is **not**
@@ -723,7 +723,7 @@ prescriptions"). Record what was actually tested, not just the verdict.
 *Enforcement: head-coach judgment — the report arrives as free text in
 `athleteFeedback` and cannot be mechanically validated.*
 
-### Never silently drop or replace standing prescriptions (mandatory)
+### Never silently drop or replace standing prescriptions (policy)
 
 A **standing prescription** is anything the athlete files or athlete
 state carry as a recurring obligation:
@@ -851,7 +851,7 @@ flag plans that contain a new physio layer while the underlying
 atomic block's per-exercise last-seen exceeds its cadence — a hard
 ERROR before push.
 
-### Research-before-scaling-or-new-protocol (mandatory)
+### Research-before-scaling-or-new-protocol (policy)
 
 Before the coach team **scales an existing stimulus** (volume up/down,
 intensity up/down, set/rep change), **introduces a new exercise**, or
@@ -921,7 +921,7 @@ decision_blocked: <which recommendation / plan this gates>
 fallback: <conservative default to use if the athlete declines research>
 ```
 
-**Gating — flag, then confirm (MANDATORY).** When the head coach sees a
+**Gating — flag, then confirm (policy).** When the head coach sees a
 `RESEARCH-FLAG` in an agent's output, it does **not** research immediately.
 It surfaces `question` + `uncertainty` to the athlete and asks **one**
 yes/no question (consistent with the "Coach decisiveness rule" — never a
@@ -944,7 +944,7 @@ plan-presentation discipline, not a mechanizable code path. The agent-side
 flag emission is specified in each sport-science agent's "Research-uncertainty
 flag" section.*
 
-### Interim updates during a flow stay terse (mandatory)
+### Interim updates during a flow stay terse (policy)
 
 A multi-step flow (`/training`, `/analyse`, `/audit`) runs several agents
 in sequence and can take many minutes. Everything the head coach sends the
@@ -987,7 +987,7 @@ individual message was.
 code path. Per-athlete verbosity can be tightened further in
 `config/athlete_preferences.md`.*
 
-### Plan-vs-example clarity (mandatory)
+### Plan-vs-example clarity (policy)
 
 The athlete should never have to guess whether an exercise name in a
 plan presentation is the final selection or a hypothetical example.
@@ -1010,7 +1010,7 @@ Physio-Routine, Core-Accessory") — not with cherry-picked exercises
 that may not survive the specialist's review of
 `config/exercise_progressions.md` + type-history.
 
-### Surface gated-but-ready stimuli in the plan (mandatory)
+### Surface gated-but-ready stimuli in the plan (policy)
 
 When a stimulus is **due or overdue** (pillar rotation cadence exceeded,
 weekly Hard-Reiz open, last-seen older than the rotation window) but the
@@ -1047,7 +1047,7 @@ it was missing.
 *Enforcement: head-coach judgment — plan-presentation discipline, not a
 mechanizable code path.*
 
-### Active-block discipline (mandatory)
+### Active-block discipline (policy)
 
 Every entry in the "ACTIVE BLOCKS" / "active_blocks" list at the top of
 a plan presentation, planner directive, or specialist briefing **must
@@ -1080,7 +1080,7 @@ the PAP rule only applies when today or tomorrow carries a quality session.
 the coach states the trigger in one phrase. If no trigger is
 verifiable from the listed sources, the entry is removed.
 
-### Leg-quality cross-modality DOMS spacing (mandatory)
+### Leg-quality cross-modality DOMS spacing (policy)
 
 A leg-driven endurance **quality** session (bike VO2max / threshold, hard
 or > ~30 min run) inside the **24–48 h DOMS-peak window** after a heavy
@@ -1099,7 +1099,7 @@ DOMS window of a heavy eccentric leg / plyo day. Either
   residual fatigue.
 
 **Not every eccentric is the same — the spacing floor differs by signature
-(mandatory).** "Eccentric" covers two mechanically different stimuli, and one
+(policy).** "Eccentric" covers two mechanically different stimuli, and one
 floor for both is wrong in both directions: it over-restricts ballistic work
 and under-restricts slow-eccentric work. Classify before spacing:
 
@@ -1185,7 +1185,7 @@ eccentric leg / plyo session sits in the same day or prior 48 h of a
 leg-driven endurance quality; head-coach judgment for the decouple-vs-sequence
 decision at plan time.*
 
-### Impact-load streak — structural load is not an autonomic signal (mandatory)
+### Impact-load streak — structural load is not an autonomic signal (policy)
 
 Running is the only modality in a typical endurance plan that transmits
 ground impact; bike, swim and trainer work do not. Bone, tendon and fascia
@@ -1245,7 +1245,7 @@ the consecutive-day streak was only two.
 never blocking; downgraded to INFO when the run's notes document the
 rationale. Tests: `tests/test_impact_day_streak.py`.*
 
-### Planner systematic-input rule (mandatory)
+### Planner systematic-input rule (policy)
 
 Before the planner is briefed, the coach verifies the context carries
 **all three** decision-shaping signals — never wait for the athlete to
@@ -1262,7 +1262,7 @@ signal — the planner overrides the gate-based suggestion and documents
 the reasoning in `coaching_notes`. The athlete should not have to remind
 the coach of agreed deload thresholds or taper plans.
 
-### Inter-session recovery window — account for the clock-time of the previous session (mandatory)
+### Inter-session recovery window — account for the clock-time of the previous session (policy)
 
 Recovery between two sessions is a function of the **elapsed clock-time**,
 not the calendar-day gap. Two sessions on consecutive calendar days can be
@@ -1293,7 +1293,7 @@ alone hides a late-night → morning compression.
 field (analogous to `daysSinceIntense`); reading it before intensity
 decisions is head-coach judgment.*
 
-### Hands-on therapy coverage check (mandatory)
+### Hands-on therapy coverage check (policy)
 
 On days where the athlete attends a hands-on therapy / rehab / physio
 practice session, the planner and the head coach must check **what
@@ -1362,7 +1362,7 @@ Row the appointment did cover.
 therapy-scope note in `config/athlete_static.md` and the
 sibling-workout treatment in step 2.*
 
-### Load before range of motion on an irritable tendon (mandatory)
+### Load before range of motion on an irritable tendon (policy)
 
 When an exercise provokes a symptom **at the end position** of the
 movement rather than under fatigue in mid-range, the reflex to lower the
@@ -1425,7 +1425,7 @@ in `config.example/exercise_progressions.md`, empty by default) — they put
 the range criterion where the specialist reads it, next to the load
 anchor, so the two cannot silently merge back into one lever.*
 
-### Per-exercise last-seen verification (mandatory)
+### Per-exercise last-seen verification (policy)
 
 Specialists must check the `exercises_seen` field on each session in the
 type-history before claiming "exercise X was last performed on date Y".
@@ -1445,7 +1445,7 @@ When a specialist's progression rationale cites a "last performed on
 <date>", that date must come from `exercises_seen` — not from the
 session name, not from an athlete NOTE, not from memory.
 
-### HR-zone briefing rule (mandatory)
+### HR-zone briefing rule (policy)
 
 HR-zone values in the specialist briefing must always be copy-pasted 1:1
 from `context.hrZones` (output of `fetch_context.py`). Never reconstruct
@@ -1467,7 +1467,7 @@ propagates into the whole session.
   energy cost all arrive inside the same displayed pace. Anchor:
   [treadmill-vs-outdoor-pace-hr-and-1-percent-grade.md](research/treadmill-vs-outdoor-pace-hr-and-1-percent-grade.md)
 
-### Sport-specific HR-zone application (MANDATORY)
+### Sport-specific HR-zone application (policy)
 
 **`context.hrZones` are by convention RUN-derived HR zones** (LTHR from
 last race, MaxHR from running activity). They are NOT directly portable
@@ -1501,7 +1501,7 @@ prescribed range because the legs gave out first.
 
 **Research anchor:** [cross-sport-hr-differential.md](research/cross-sport-hr-differential.md)
 
-### Race surface is a training demand, not only a routing default (mandatory)
+### Race surface is a training demand, not only a routing default (policy)
 
 The `surface` field has two readers, and only one of them is mechanical. The
 shoe advisor reads it to pick a shoe. The **athlete's tissue** reads it as a
@@ -1611,7 +1611,7 @@ Plan directive (planner output):
   for shoe choice.
 - Non-endurance: strip time patterns from descriptions
 
-### Workout descriptions are execution aids, not decision records (mandatory)
+### Workout descriptions are execution aids, not decision records (policy)
 
 The `description` field is read **during** the session — on the gym floor
 between sets, at the trailhead, often on a phone or watch. It has to be
@@ -1643,7 +1643,7 @@ that has bloated real plans:
   "last done N days ago", "frozen not reset").
 - Explanations of what is **not** in today's plan and why. That belongs in
   the plan presentation, where the athlete can respond to it — see
-  [Never silently drop or replace standing prescriptions](#never-silently-drop-or-replace-standing-prescriptions-mandatory),
+  [Never silently drop or replace standing prescriptions](#never-silently-drop-or-replace-standing-prescriptions-policy),
   which requires a **named replacement slot**, not a paragraph of
   justification inside the workout.
 - Meta-commentary about the coach's own decision process.
@@ -1653,9 +1653,9 @@ that has bloated real plans:
   alternative branches ("Main A / Main B", "if the probe flags, do X
   instead"), deferred or moved exercises ("X is not today, it moves to
   …"), and "no X / no Y today" exclusion lists. See
-  [One executable path per workout](#one-executable-path-per-workout-mandatory).
+  [One executable path per workout](#one-executable-path-per-workout-policy).
 
-#### One executable path per workout (mandatory)
+#### One executable path per workout (policy)
 
 Every exercise name that appears in a `description` is read as an
 instruction. A skimming athlete cannot tell a branch header or a
@@ -1709,7 +1709,7 @@ Endurance `intervals_icu` steps carry their cue inline after the `—` and
 follow the same rule: the cue is an instruction, not an explanation.
 
 **A load in a description is a target until the athlete says otherwise
-(mandatory).** The description states the planned load, the same description
+(policy).** The description states the planned load, the same description
 is what gets parsed back after the session, and the athlete typically answers
 with a bare RPE. Nothing in that loop establishes what was actually lifted, so
 the planned figure is booked as the executed one and the progression anchor
@@ -1726,7 +1726,7 @@ WARNING, never blocking; the agent-side contract lives in
 `agents/specialist-complementary.md` and `agents/specialist-ninja.md`.*
 
 **And when a load changes, the question that asks about it changes too
-(mandatory).** The rule above establishes that the description must ask what
+(policy).** The rule above establishes that the description must ask what
 was lifted. The other half is that it must ask about the **right** load. A
 load gets revised late — a step deferred, a cap applied, an anchor held — the
 exercise line is corrected, and the trailing feedback question keeps naming
@@ -1791,7 +1791,7 @@ are unaffected in both modes.
 
 ---
 
-## Mental-coach triggers (mandatory)
+## Mental-coach triggers (policy)
 
 Start `mental-coach` automatically in these situations:
 
@@ -1822,7 +1822,7 @@ A clear acceptance pushes to intervals.icu. Judge it by intent, in any
 wording — a reply that also asks for a change is feedback first. An
 athlete may list preferred phrases in `athlete_preferences.md`.
 
-**Read in-unit feedback before asking (mandatory):** Athletes can record
+**Read in-unit feedback before asking (policy):** Athletes can record
 post-session feedback directly in intervals.icu — as a `Feedback:` line
 in the event/activity description or as an activity message. When the
 athlete reports a session as done, or when an analysis / progression
@@ -1833,7 +1833,7 @@ only for what is still missing. Asking for values the athlete already
 logged in the unit is a context violation — same class as ignoring
 `athleteFeedback` from `fetch_context.py`.
 
-**Balance rotation (mandatory after main workout push):**
+**Balance rotation (policy, after main workout push):**
 A balance unit runs as a third, separate workout. `push_workouts.py`
 enforces this in code: after each successful main push it auto-pushes the
 rotation, unless a `balance`-tagged event for the date already exists or the
@@ -1871,7 +1871,7 @@ python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/get_balance_rotation.py --date YYYY-M
   justified (surgical recovery day, athlete-requested skip). Default is
   auto-on.
 
-**Pool-content rules (MANDATORY):**
+**Pool-content rules (policy):**
 - **Every rotation entry MUST carry an S-rating column** (S1–S5,
   S1=stabil/easy, S5=umgefallen). Balance/proprioception sessions
   replace RPE with the stability rating — see the S-rating convention
@@ -1932,7 +1932,7 @@ python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/get_balance_rotation.py --date YYYY-M
   unevaluated; express the conflict as `leg_conflict` flags + fallbacks
   in the pool.
 
-**Push discipline — always push the complete day set (mandatory):**
+**Push discipline — always push the complete day set (policy):**
 `push_workouts.py`'s pre-push dedup matches existing WORKOUT events by
 **(type, balance-tag)** — not name — and deletes every non-paired event
 of a pushed partition before re-creating (the balance partition keeps the
@@ -2030,7 +2030,7 @@ pending flag.
 
 ---
 
-## Pre-planning health check (mandatory before planner)
+## Pre-planning health check (policy, before planner)
 
 1. **HRV traffic light** — `intensityReadiness: 🔴` → ask before proceeding.
 2. **Active injuries from `athlete_static.md`** — every zone with status
@@ -2083,7 +2083,7 @@ pending flag.
 
 ---
 
-## Persistence preference — files over memory (mandatory)
+## Persistence preference — files over memory (policy)
 
 Coach memory (`memory/*.md` under the Claude harness) is the **last
 resort**, not the default store. Almost everything an athlete tells the
@@ -2107,7 +2107,7 @@ that don't fit any of the above (e.g. "the user prefers terse responses
 during evening sessions"). Whenever you catch yourself writing to memory,
 ask first whether one of the canonical files would carry it better.
 
-## Config hygiene — removed entries are deleted, not annotated (mandatory)
+## Config hygiene — removed entries are deleted, not annotated (policy)
 
 When an entry in a config / knowledge file becomes obsolete — a cancelled
 race, a lifted restriction, a superseded load cap, a resolved agenda item,
@@ -2140,7 +2140,7 @@ more clearly.
 agent confirms semantically and the head coach deletes on sight during any
 edit.*
 
-## Athlete feedback persistence (mandatory)
+## Athlete feedback persistence (policy)
 
 Whenever the athlete provides feedback — feeling, restriction, plan, status
 — save it to intervals.icu. The **routing decision** is whether the
@@ -2169,7 +2169,7 @@ activity messages are visible when the athlete (or coach) opens the
 activity. intervals.icu is the canonical source — never store athlete
 state only in Claude memory.
 
-### One NOTE per day — upsert, never stack (mandatory)
+### One NOTE per day — upsert, never stack (policy)
 
 A date carries **exactly one** NOTE event. Both write paths
 (`post_message.py --date` and `save_feedback.py`) upsert via
@@ -2193,7 +2193,7 @@ Consequences for the head coach and agents:
   oldest and logs a warning listing the extras — consolidate them via
   `delete_workouts.py --event-ids` when you see it.
 
-### Exercise-specific feedback — canonical locations (mandatory)
+### Exercise-specific feedback — canonical locations (policy)
 
 NOTEs are activity-scoped and decay out of context. Feedback that should
 shape **future exercise selection, load, or progression** therefore does
@@ -2228,7 +2228,7 @@ exercise weeks later.
 
 ---
 
-### Scheduling decisions have exactly one canonical home (mandatory)
+### Scheduling decisions have exactly one canonical home (policy)
 
 A **scheduling decision** is any statement that fixes *when* something
 happens: a session moved to a named day, a deferred stimulus given a
@@ -2281,7 +2281,7 @@ makes the filing matter less.*
 ## Video form check (strength / core / balance / ninja)
 
 **Chat channels are not a valid transport for form-check video
-(mandatory).** Telegram and comparable channels re-encode on upload:
+(policy).** Telegram and comparable channels re-encode on upload:
 resolution drops and compression artefacts appear. A form check reads
 joint angles, limb positions and left/right detail out of single frames,
 so that loss does not degrade the analysis gracefully — it produces
@@ -2311,7 +2311,7 @@ Once the original is in the inbox:
    `--context` so they reach the analysis. Without `--context` the
    Challenge layer has no athlete-specific grounding.
 
-   **Neutral prompting (mandatory) — no leading questions.** Pass
+   **Neutral prompting (policy) — no leading questions.** Pass
    injuries/restrictions/sport profile as *state*, but do NOT seed a
    prior form finding as a yes/no leading question (e.g. "is the
    hollow-back from last time still there?"). An LLM video analysis
@@ -2321,7 +2321,7 @@ Once the original is in the inbox:
    and reconcile against any prior finding *after* the model has
    reported, not before.
 3b. **Verify the structure against the frames — always, before the athlete
-   sees anything (mandatory).** The script extracts stills, asks the
+   sees anything (policy).** The script extracts stills, asks the
    structural questions of them (contact points, anatomical side,
    implement, camera geometry), and returns them under a
    `⚠️ STRUKTUR UNVERIFIZIERT` banner with the frame file backing each
@@ -2377,7 +2377,7 @@ Once the original is in the inbox:
    description.
 
 **Setup and scale are derived from the marker, before anything is filmed
-(mandatory).** The structure gate catches a wrong claim after the clip
+(policy).** The structure gate catches a wrong claim after the clip
 exists. This rule sits *before* the clip and catches the clip that could
 never have answered the question — which is the more common and the more
 expensive failure, because it costs the athlete a session and comes back
@@ -2436,7 +2436,7 @@ show no fatigue → use intervals or tempo runs for the fatigued section.
 
 ---
 
-## DFA-α1 zone validation pre-check (mandatory)
+## DFA-α1 zone validation pre-check (policy)
 
 Before suggesting a DFA-α1 analysis, verify the protocol prerequisites
 (stepped test, HR strap, surface, warm-up, no intense session in 48 h)
@@ -2445,7 +2445,7 @@ required recording setup get no DFA suggestion.
 
 ---
 
-## Plan validator (mandatory in every /training flow)
+## Plan validator (policy, in every /training flow)
 
 Two-layer architecture:
 
@@ -2466,7 +2466,7 @@ Two-layer architecture:
    adequacy vs. wellness, weekly volume jump, progression consistency,
    form findings from `exercise_log.md`.
 
-### A validator finding's own severity is an input, not a verdict (mandatory)
+### A validator finding's own severity is an input, not a verdict (policy)
 
 The semantic `plan-validator` writes both the finding **and** its severity,
 and it will sometimes attach its own exoneration in the same breath — "formally
@@ -2516,7 +2516,7 @@ Audit reports are committed — audit history stays in the repo.
 
 ---
 
-## Technical errors — surface them actively (mandatory)
+## Technical errors — surface them actively (policy)
 
 Notify the athlete via the active channel for:
 - Permission Denied on cache/data/config files
@@ -2530,7 +2530,7 @@ Format:
 
 ---
 
-## Security rules (mandatory)
+## Security rules (policy)
 
 ### Telegram — destructive commands
 On requests via Telegram (recognisable as
@@ -2549,7 +2549,7 @@ See [SECURITY.md](SECURITY.md) for the full threat model.
 
 ---
 
-## Scheduled tasks (mandatory)
+## Scheduled tasks (policy)
 
 When the athlete schedules a concrete time ("run X at 22:00", "fire Y
 tomorrow morning"):
@@ -2565,7 +2565,7 @@ opaque to the athlete. CronCreate is the right tool.
 
 ---
 
-## Date arithmetic (mandatory)
+## Date arithmetic (policy)
 
 Before writing a NOTE or event with a concrete date, verify the weekday
 in Python:
@@ -2594,7 +2594,7 @@ the snippet above is the canonical verification step.*
 
 ---
 
-## Due / overdue claims are computed, not inherited (mandatory)
+## Due / overdue claims are computed, not inherited (policy)
 
 Any statement that a recurring stimulus is **due / overdue / on a given
 date** — long run, pillar rotation, physio block, weekly Hard-Reiz,
@@ -2635,7 +2635,7 @@ mechanical aid is warranted where a cadence is stable and machine-known
 
 ## Development rules
 
-### Git (mandatory)
+### Git (policy)
 Commit after every change — athlete state and training are the primary
 versioned artefacts.
 
@@ -2662,7 +2662,7 @@ not training cycle.*
 - 3.11, strict type hints
 - Test scripts: `python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/...` or `pytest tests/`
 
-### CI parity (mandatory before push)
+### CI parity (policy, before push)
 `bash scripts/ci_local.sh` mirrors `.github/workflows/test.yml` locally
 (plugin-manifest validation, advisory ruff, pytest on every locally
 installed matrix interpreter — missing legs are reported loudly, CI

@@ -1603,7 +1603,7 @@ async def _fetch_online() -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 _POLICY_HEADING_RE = re.compile(
-    r"^(#{2,4})\s+(.+?)\s+\((mandatory|MANDATORY)\)\s*$",
+    r"^(#{2,4})\s+(.+?)\s+\((policy|mandatory|MANDATORY)\)\s*$",
     re.MULTILINE,
 )
 
@@ -1611,7 +1611,7 @@ _POLICY_HEADING_RE = re.compile(
 # drift class that caused the balance unit to vanish (no `###` heading,
 # therefore easy to overlook).
 _POLICY_INLINE_RE = re.compile(
-    r"^\*\*(.+?)\s+\((mandatory|MANDATORY)[^)]*\)\s*[:.]?\*\*",
+    r"^\*\*(.+?)\s+\((policy|mandatory|MANDATORY)[^)]*\)\s*[:.]?\*\*",
     re.MULTILINE,
 )
 
@@ -1699,7 +1699,7 @@ def _extract_mandatory_sections(text: str) -> list[dict[str, Any]]:
         h_stop = re.search(r"^#{1,4}\s", tail, re.MULTILINE)
         h_idx = h_stop.start() if h_stop else len(tail)
         # Stop at next inline (mandatory) bold marker
-        b_stop = re.search(r"^\*\*[^*]+\((?:mandatory|MANDATORY)", tail, re.MULTILINE)
+        b_stop = re.search(r"^\*\*[^*]+\((?:policy|mandatory|MANDATORY)", tail, re.MULTILINE)
         b_idx = b_stop.start() if b_stop else len(tail)
         body = tail[: min(h_idx, b_idx)]
         sections.append({
@@ -1779,7 +1779,7 @@ def check_policy_workflow_coverage() -> list[dict]:
             "policy_coverage_drift",
             "framework/CLAUDE.md",
             source_line=section["line"],
-            evidence=f"(mandatory) section '{section['heading']}' without code anchor, "
+            evidence=f"(policy) section '{section['heading']}' without code anchor, "
                      f"workflow xref, or policy-only marker",
             canonical_source="framework/CLAUDE.md",
             suggested_action="add_enforcement_anchor",
@@ -1792,7 +1792,7 @@ def check_policy_workflow_coverage() -> list[dict]:
                 "when no mechanisation is possible."
             ),
             description=(
-                f"`{section['heading']}` is marked (mandatory) but "
+                f"`{section['heading']}` is marked (policy) but "
                 "neither a concrete code path nor a workflow doc xref is "
                 "discoverable. This is the drift class that caused the "
                 "balance unit to be silently dropped."

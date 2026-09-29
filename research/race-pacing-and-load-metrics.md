@@ -96,7 +96,7 @@ quotations.*
 
 ## Application in framework
 
-- `framework/CLAUDE.md` → "No silent conservatism (mandatory)" → new
+- `framework/CLAUDE.md` → "No silent conservatism (policy)" → new
   pacing & race-strategy clause: forbids anchoring short-race pacing on
   CTL/recent-load; requires anchoring on event demands + athlete race
   history; requires a named trigger for any down-conservative pacing

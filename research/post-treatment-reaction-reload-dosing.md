@@ -298,7 +298,7 @@ strukturierter Reha-Kraftblock oben drauf ist keine Evidenz-Konfiguration
   Needling — das Same-Day-Loading-Risiko skaliert mit.
 
 Diese Same-Day-Regel ist die Feinkörnung der Coverage-Check-Regel in
-[framework/CLAUDE.md → Hands-on therapy coverage check](../CLAUDE.md#hands-on-therapy-coverage-check-mandatory):
+[framework/CLAUDE.md → Hands-on therapy coverage check](../CLAUDE.md#hands-on-therapy-coverage-check-policy):
 diese sagt „doppel-den-selben-Mechanismus-nicht"; das hier präzisiert
 sie um die *Toleranz-Kinetik* des behandelten Gewebes.
 
@@ -383,7 +383,7 @@ Progressions-Reiz), nicht weil die Arbeitslast unsicher wäre.
 
 1. **Head-Coach-Rule „Post-treatment reaction re-load"** — als
    Präzisierung des bestehenden „Hands-on therapy coverage check"
-   ([framework/CLAUDE.md](../CLAUDE.md#hands-on-therapy-coverage-check-mandatory)).
+   ([framework/CLAUDE.md](../CLAUDE.md#hands-on-therapy-coverage-check-policy)).
    Kern: am Tag nach Hands-on-Therapie klassifiziert der Head-Coach die
    Ziel-Struktur nach STAR-Irritability (30-s-Check-in mit den vier
    Fragen aus §5), und wählt den Load-Level pro §3a. Kein
