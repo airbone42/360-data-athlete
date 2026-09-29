@@ -10,8 +10,8 @@
 > (`CONFIG_DIR → CONFIG_FALLBACK`).
 
 ## HR zones
-The heart-rate zones are loaded dynamically from intervals.icu and are
-available as `{hr_zones}` in prompts.
+The heart-rate zones are loaded dynamically from intervals.icu and reach
+the agents as `hrZones` in the `fetch_context.py` output.
 
 **Research anchor:** [HRV & RHR baseline — methodology, LTHR derivation](../research/hrv-rhr-baseline-methodology.md)
 

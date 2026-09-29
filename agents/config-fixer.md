@@ -40,16 +40,16 @@ before/after block:
 ```
 ## Fix for F001 (hardcoded_restriction)
 
-File: prompts/specialist_ninja.yaml:169
+File: agents/specialist-ninja.md:365
 
 Current:
   - Always respect injury restrictions from athlete_static (esp. overhead)
 
 Proposed:
-  - Always respect injury restrictions from {athlete_static}
+  - Always respect injury restrictions from `config/athlete_static.md`
 
 Reason: Hardcoded "overhead" reference goes stale as soon as the
-restriction is lifted. A generic config-placeholder reference is robust.
+restriction is lifted. A reference to the config file is robust.
 
 Apply? (yes / no / different)
 ```
@@ -70,7 +70,7 @@ Before the first `Edit` call, append a JSONL entry to
 `data/approvals/YYYY-MM-DD-config-fixer.jsonl` with this content:
 
 ```json
-{"ts": "2026-05-11T14:23:00+02:00", "finding_id": "F001", "source_file": "prompts/specialist_ninja.yaml", "diff_hash": "<sha256 of the full new_string>", "approval_text": "<exact athlete reply, e.g. 'yes, go'>"}
+{"ts": "2026-05-11T14:23:00+02:00", "finding_id": "F001", "source_file": "agents/specialist-ninja.md", "diff_hash": "<sha256 of the full new_string>", "approval_text": "<exact athlete reply, e.g. 'yes, go'>"}
 ```
 
 Compute `diff_hash` e.g. via
@@ -89,7 +89,7 @@ it makes every config edit traceable and harder to do silently.
 - **Configs** (`config/`): Edit tool, preserve the surrounding idiom
 - **JSON** (`exercise_muscle_mapping.json`): validate after edit via
   `python3 -c "import json; …"`
-- **YAML** (`prompts/*.yaml`): validate after edit via
+- **YAML** (`config/*.yaml`): validate after edit via
   `python3 -c "import yaml; yaml.safe_load(open('...'))"`
 
 ### Step 5: Update audit report
@@ -119,7 +119,7 @@ After the fix run a mini-check:
 
 Output:
 ```
-✅ F001 fixed: prompts/specialist_ninja.yaml:169
+✅ F001 fixed: agents/specialist-ninja.md:365
    Verification: grep "overhead" shows 0 hits in the changed section.
 ```
 

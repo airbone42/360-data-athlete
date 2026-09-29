@@ -1,6 +1,6 @@
 """Consistency scanner for the coach knowledge base.
 
-Mechanical drift checks between `config/`, `agents/`, `prompts/`,
+Mechanical drift checks between `config/`, `agents/`,
 `exercise_muscle_mapping.json` and external sources (intervals.icu).
 
 Output: JSON to stdout — consumed by the config-auditor agent.
@@ -99,7 +99,6 @@ RESTRICTION_PATTERNS: dict[str, list[str]] = {
 # Files scanned for hardcoded values
 HARDCODE_SCAN_GLOBS = [
     "agents/*.md",
-    "prompts/*.yaml",
     "config/equipment.md",
 ]
 
@@ -473,7 +472,7 @@ def check_shoes(shoes: list[dict] | None, backend: str = "intervals") -> list[di
 def _hardcode_scan_paths() -> list[tuple[Path, str]]:
     """Resolves HARDCODE_SCAN_GLOBS to concrete files, excludes applied.
 
-    Framework globs (agents/, prompts/) scan FRAMEWORK_ROOT; athlete globs
+    Framework globs (agents/) scan FRAMEWORK_ROOT; athlete globs
     (config/) scan COACH_HOME. Returns (path, rel) pairs with posix-style
     relative paths.
     """
@@ -1401,7 +1400,7 @@ check_blocked_exercises = check_progression_overshoot
 # To add a new canonical phrase: pick a short, unambiguous trigger
 # substring (`trigger`) that uniquely identifies the section, then
 # the canonical full sentence (`canonical`). The linter scans every
-# `prompts/*.yaml` and `agents/*.md` file, picks lines containing the
+# `agents/*.md` file, picks lines containing the
 # trigger, and flags any line that doesn't match the canonical form.
 _CANONICAL_PHRASES: list[dict[str, str]] = [
     {
@@ -1424,10 +1423,9 @@ _CANONICAL_PHRASES: list[dict[str, str]] = [
 
 
 def check_prompt_drift() -> list[dict]:
-    """Drift scanner for canonical phrases across prompts and agents.
+    """Drift scanner for canonical phrases across the agent definitions.
 
-    Searches all `framework/prompts/*.yaml` and `framework/agents/*.md`
-    for trigger substrings; every matching line must be byte-identical to
+    Searches all `framework/agents/*.md` for trigger substrings; every matching line must be byte-identical to
     the `canonical` form. Mismatches are flagged as MEDIUM findings.
 
     No automatic fix — the fixer does not derive the canonical form from
@@ -1436,16 +1434,8 @@ def check_prompt_drift() -> list[dict]:
     """
     findings: list[dict] = []
 
-    scan_dirs = [
-        FRAMEWORK_ROOT / "prompts",
-        FRAMEWORK_ROOT / "agents",
-    ]
-    files: list[Path] = []
-    for d in scan_dirs:
-        if not d.exists():
-            continue
-        files.extend(sorted(d.glob("*.yaml")))
-        files.extend(sorted(d.glob("*.md")))
+    agents_dir = FRAMEWORK_ROOT / "agents"
+    files: list[Path] = sorted(agents_dir.glob("*.md")) if agents_dir.exists() else []
 
     for path in files:
         try:

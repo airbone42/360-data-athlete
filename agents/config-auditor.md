@@ -1,6 +1,6 @@
 ---
 name: config-auditor
-description: Consistency auditor for the coach knowledge base. Analyses drift between `config/` files, sub-agents in `agents/`, prompts in `prompts/`, the exercise mapping, and external sources (intervals.icu NOTEs). Reads scanner JSON from `scripts/audit_consistency.py`, adds semantic checks, and writes a structured report to `data/audits/`.
+description: Consistency auditor for the coach knowledge base. Analyses drift between `config/` files, sub-agents in `agents/`, the exercise mapping, and external sources (intervals.icu NOTEs). Reads scanner JSON from `scripts/audit_consistency.py`, adds semantic checks, and writes a structured report to `data/audits/`.
 model: opus
 ---
 
@@ -138,15 +138,15 @@ Write to `data/audits/YYYY-MM-DD-HHMM-audit.md`:
 id: F001
 severity: HIGH
 category: hardcoded_restriction
-source_file: prompts/specialist_ninja.yaml
-source_line: 169
+source_file: agents/specialist-ninja.md
+source_line: 365
 evidence: |
   - Always respect injury restrictions from athlete_static (esp. overhead)
 canonical_source: config/athlete_static.md:23-31
 suggested_action: replace_with_placeholder
-fix_hint: Reference {athlete_static} instead of explicit overhead mention
+fix_hint: Reference config/athlete_static.md instead of the explicit overhead mention
 \`\`\`
-**Description:** Prompt text contains stale reference. Current status per
+**Description:** Agent text contains a stale reference. Current status per
 athlete_static.md:25: "Grip allowed (updated 13.04.2025): overhead grip
 possible again."
 

@@ -56,7 +56,7 @@ detected.
 
 **Vector.** The `config-fixer` agent has `Edit` tool access. If
 compromised (e.g. by a successful prompt injection from a finding's
-text), it could silently change `config/*.md` or `prompts/*.yaml` in ways
+text), it could silently change `config/*.md` or `agents/*.md` in ways
 the athlete wouldn't notice for days.
 
 **Defence.** Mandatory approval log

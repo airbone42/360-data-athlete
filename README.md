@@ -322,10 +322,8 @@ modes are mostly visible at the right stage.
   fresh-vs-fatigued comparison.
 - **Telegram bot** if you want to talk to the coach from your phone.
 - **OpenRouter API key** — required for the video form check
-  (`scripts/analyse_video.py` calls Gemini through OpenRouter) and used
-  by the planner/specialist prompts whose YAML metadata names an
-  OpenRouter model. Swap those prompts for Anthropic models if you
-  prefer; the video form check stays on OpenRouter.
+  (`scripts/analyse_video.py` calls Gemini through OpenRouter). Nothing
+  else uses it: the agents run as Claude Code subagents.
 
 ### What you do not need
 
@@ -522,7 +520,7 @@ flags (🟢 trainable / 🟡 moderate / 🔴 rest).
 
 ### `/aicoach-framework:audit` — Consistency audit
 
-Scans configs, agents, prompts and external NOTEs for drift, refines
+Scans configs, agents and external NOTEs for drift, refines
 findings via the `config-auditor` subagent (fresh context), and writes
 a markdown report. Fixes go through the `config-fixer` (also fresh
 context) with an explicit approval log per edit.
@@ -622,7 +620,7 @@ outputs, and applies cross-workout consistency rules before pushing.
 | `mental-coach` | Pre-workout motivation, setback processing | auto-triggered on LONG / RACE / setback / motivation signal; on request | wellness, last 3 activities, free-text context | short chat message |
 | `video-analyst` | Form check + sports-physiology challenge | Telegram video upload or manual `analyse_video.py` invocation | video frames, athlete restrictions, exercise checklist | execution + drill + challenge block (≤ 10 sentences) |
 | `plan-validator` | Semantic plan check before push | `/training` step 3.5b | final plan JSON + mechanical validator output + wellness + last 7 days | findings (ERROR / WARNING / INFO) + clearance |
-| `config-auditor` | Drift scanner across configs / agents / prompts | `/audit` | scanner JSON from `audit_consistency.py` | markdown report at `data/audits/...md` |
+| `config-auditor` | Drift scanner across configs / agents | `/audit` | scanner JSON from `audit_consistency.py` | markdown report at `data/audits/...md` |
 | `config-fixer` | Implements one audit finding at a time, with approval log | `/audit` after auditor handoff | one finding YAML + audit report path | diff applied + approval log entry + report mark |
 | `physio-consultant` | Physiotherapy consultation on injuries / symptoms | athlete invokes manually | symptoms, training history, athlete_static | rehab / load / red-flag assessment (≤ 300 words, with disclaimer) |
 | `sports-ortho-consultant` | Orthopaedic consultation, imaging indication | athlete invokes manually | symptoms, training history, athlete_static | differential diagnoses + imaging + return-to-sport (≤ 300 words, with disclaimer) |

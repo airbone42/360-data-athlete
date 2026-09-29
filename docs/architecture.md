@@ -70,11 +70,6 @@ this plugin — copy its contents into a private repo and customise
 │    config-auditor / config-fixer                                  │
 │    physio-consultant / sports-ortho-consultant                    │
 ├──────────────────────────────────────────────────────────────────┤
-│  Prompts (prompts/*.yaml) — reference templates, not loaded       │
-│    by any production path                                         │
-│    template uses {config_key} placeholders — auto-substituted     │
-│    from config/*.md by app.utils.prompt_loader                    │
-├──────────────────────────────────────────────────────────────────┤
 │  Domain logic (app/)                                              │
 │    api/         — intervals.icu / Garmin clients                  │
 │    analytics/   — exercise parser, recovery rules                 │
@@ -101,22 +96,13 @@ this plugin — copy its contents into a private repo and customise
 ## Module map (`app/`)
 
 - `app/api/` — intervals.icu HTTP client + file cache (`cache/`)
-- `app/utils/` — FIT parser, Garmin download, prompt loader, HR zones,
+- `app/utils/` — FIT parser, Garmin download, HR zones,
   windowing, **path resolution (`paths.py`)**, **prompt sanitization (`sanitize.py`)**
 - `app/graphs/` — context builder, type-history fetcher, workout parser
-- Prompts: `prompts/*.yaml` (template + version).
-  `agents/<name>.md` is the **authoritative** agent definition. The
-  `prompts/*.yaml` files are **simplified reference templates**
-  (renderable via `scripts/load_prompt.py --name <prompt>`) —
-  they are deliberate subsets, NOT content-identical copies: the agent
-  .md files carry the full rule sets (e.g. the coach-analyst mandatory
-  exclusion rules) that the YAMLs omit. None of them runs in production:
-  the planner and specialists read `config/` files themselves, so
-  `fetch_context.py` carries data fields only, no rendered prompt.
-  Wiring a YAML into a production path requires porting the
-  corresponding agent's mandatory rules first.
-- Config: `config/*.md` (read by the agents directly; substituted into
-  `{config_key}` placeholders only when a reference YAML is rendered)
+- Agents: `agents/<name>.md` is the only agent definition. The planner
+  and specialists read `config/` files themselves, so `fetch_context.py`
+  carries data fields only, no rendered prompt.
+- Config: `config/*.md` (read by the agents directly)
 
 ## Path resolution (`app/utils/paths.py`)
 
@@ -130,7 +116,6 @@ CONFIG_DIR       = $COACH_HOME/config (overridable via $CONFIG_DIR)
 DATA_DIR         = $COACH_HOME/data   (overridable via $DATA_DIR)
 CACHE_DIR        = $COACH_HOME/cache  (overridable via $CACHE_DIR
                                        or $INTERVALS_CACHE_DIR)
-PROMPTS_DIR      = $FRAMEWORK_ROOT/prompts (always framework-relative)
 CONFIG_FALLBACK  = $FRAMEWORK_ROOT/config.example
 ```
 
@@ -154,7 +139,7 @@ aicoach-private/                          ← private repo (Gitea / similar)
 │   │   └── marketplace.json
 │   ├── agents/                            generic sub-agents
 │   ├── commands/                          slash commands
-│   ├── app/, scripts/, prompts/, …
+│   ├── app/, scripts/, …
 │   ├── config.example/                    defaults (Alex Demo)
 │   └── CLAUDE.md                          generic, English
 ├── config/                                 athlete-specific
@@ -251,31 +236,24 @@ If you're exploring the codebase:
 1. [`CLAUDE.md`](../CLAUDE.md) — head-coach role + workflow rules
 2. [`agents/planner.md`](../agents/planner.md) and one specialist
    (e.g. `agents/specialist-endurance.md`)
-3. [`app/utils/prompt_loader.py`](../app/utils/prompt_loader.py) — how
-   templates and configs get fused
-4. [`app/graphs/sub_athlete_context/context_builder.py`](../app/graphs/sub_athlete_context/context_builder.py) — the
+3. [`app/graphs/sub_athlete_context/context_builder.py`](../app/graphs/sub_athlete_context/context_builder.py) — the
    single most important piece of domain logic; everything the planner
    sees flows through here
-5. [`scripts/validate_plan.py`](../scripts/validate_plan.py) — the
+4. [`scripts/validate_plan.py`](../scripts/validate_plan.py) — the
    mechanical validator with its rule set
 
 ## Prompt-drift discipline
 
 The HR-zone-briefing rule and a handful of cross-specialist directives
 (warmup-drill de-duplication, RPE autoregulation table) appear in
-multiple prompt YAMLs and agent definitions. This is duplication on
-purpose — each specialist gets a self-contained brief — but it creates
-drift risk when one rule evolves.
+several agent definitions. This is duplication on purpose — subagents do
+not inherit `CLAUDE.md`, so each specialist gets a self-contained brief —
+but it creates drift risk when one rule evolves.
 
-`scripts/audit_consistency.py` (function `check_override_drift`) scans
-for the most common drift pattern: divergence between the framework
-default and a wrapper override of `training_paradigms.md` or
-`exercise_progressions.md`. New drift checks should follow that pattern
-— add `check_<name>(...)` to `RULES`, register a category, and the
-`config-auditor` will pick it up dynamically.
-
-For prompt-level drift (e.g. the HR-zone block in three specialist
-YAMLs), there is currently no automated check. The recommended workflow
-is: edit the central rule in `config.example/training_paradigms.md`,
-then re-render the prompts manually and run `/audit` to surface
-inconsistencies before pushing.
+`scripts/audit_consistency.py` covers two patterns: `check_override_drift`
+(divergence between the framework default and a wrapper override of
+`training_paradigms.md` or `exercise_progressions.md`) and
+`check_prompt_drift` (canonical phrases that must read identically in
+every agent that carries them). New drift checks follow the same pattern
+— add `check_<name>(...)`, register it in `CHECK_MAP`, and the
+`config-auditor` will pick it up.

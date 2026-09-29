@@ -1,7 +1,8 @@
 """Central path resolution for the coach system.
 
-The framework code (under app/, scripts/, prompts/) is portable: it can be
-embedded as a submodule inside an athlete-specific wrapper repository.
+The framework code (under app/, scripts/, agents/, commands/) is portable:
+it can be embedded as a submodule inside an athlete-specific wrapper
+repository.
 Runtime data (config/, data/, cache/) lives in the wrapper, not in the
 framework itself.
 
@@ -32,7 +33,6 @@ CACHE_DIR: Path = Path(
     or os.environ.get("INTERVALS_CACHE_DIR")
     or (COACH_HOME / "cache")
 ).resolve()
-PROMPTS_DIR: Path = (FRAMEWORK_ROOT / "prompts").resolve()
 CONFIG_FALLBACK: Path = (FRAMEWORK_ROOT / "config.example").resolve()
 
 

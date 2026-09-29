@@ -1,7 +1,7 @@
 # /audit — Consistency audit of the knowledge base
 
 Scans the coach system for contradictions between `config/` files,
-sub-agents, prompts, the exercise mapping, and external sources
+sub-agents, commands, the exercise mapping, and external sources
 (intervals.icu NOTEs). Findings are refined by the
 `config-auditor` (fresh context) and written as a markdown report to
 `data/audits/`. Fixes go through the `config-fixer` (fresh context)

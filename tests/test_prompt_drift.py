@@ -30,10 +30,9 @@ def test_check_is_registered_in_check_map():
 
 
 def test_drift_catches_injected_divergence(tmp_path, monkeypatch):
-    """Inject a fake prompt directory with a deliberately-drifted line."""
+    """Inject a fake agents directory with a deliberately-drifted line."""
     fake_root = tmp_path / "framework_fake"
-    (fake_root / "prompts").mkdir(parents=True)
-    (fake_root / "agents").mkdir()
+    (fake_root / "agents").mkdir(parents=True)
 
     # Trigger present, but wording deliberately diverged from canonical.
     drifted = (
@@ -57,8 +56,7 @@ def test_drift_catches_injected_divergence(tmp_path, monkeypatch):
 def test_drift_accepts_canonical_form(tmp_path, monkeypatch):
     """Same trigger, but exact canonical wording → no finding."""
     fake_root = tmp_path / "framework_fake"
-    (fake_root / "prompts").mkdir(parents=True)
-    (fake_root / "agents").mkdir()
+    (fake_root / "agents").mkdir(parents=True)
 
     canonical = (
         "Pass HR zones from `context.hrZones` verbatim — never reconstruct "
@@ -78,7 +76,7 @@ def test_drift_accepts_canonical_form(tmp_path, monkeypatch):
 
 
 def test_drift_handles_missing_dirs(tmp_path, monkeypatch):
-    """Linter must not crash if prompts/ or agents/ is absent."""
+    """Linter must not crash if agents/ is absent."""
     empty = tmp_path / "framework_empty"
     empty.mkdir()
     monkeypatch.setattr(audit_consistency, "FRAMEWORK_ROOT", empty)

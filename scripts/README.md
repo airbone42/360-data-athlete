@@ -86,7 +86,6 @@ through `app/utils/paths.py` — set `COACH_HOME`, `CONFIG_DIR`,
 | `shoe_recommend.py` | Shoe recommendation given today's workouts | `--date YYYY-MM-DD` | shoe state + workouts | stdout JSON |
 | `save_feedback.py` | Persist athlete feedback to intervals.icu NOTE | `--date YYYY-MM-DD --note "..."` | — | intervals.icu API |
 | `training_flow.py` | End-to-end training flow orchestration (debug / batch) | `--date YYYY-MM-DD` | full context | full plan push |
-| `load_prompt.py` | Render a `prompts/*.yaml` template with config substitution (the YAMLs are manually renderable reference prompts; `agents/*.md` are the active definitions) | `--name daily_planner` | `prompts/`, `config/` | stdout |
 | `validate_dfa_vs_nolds.py` | Sanity-check internal DFA-α1 against `nolds` reference | (no args) | RR fixture | stdout report |
 
 ---

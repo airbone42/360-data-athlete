@@ -167,8 +167,8 @@ needs are named directly in its own definition.
 
 ## `fetch_context.py` output schema
 
-Code layout (`app/api`, `app/utils`, `app/graphs`, prompts, config
-loading): [docs/architecture.md](docs/architecture.md).
+Code layout (`app/api`, `app/utils`, `app/graphs`, config loading):
+[docs/architecture.md](docs/architecture.md).
 
 **Key fields:**
 
@@ -239,7 +239,7 @@ otherwise                         →  specialist-complementary
 | `exercise-reviewer` | Periodic exercise-selection review against current goals — runs only when the re-evaluation trigger fires (recovery week / phase change / staleness) |
 | `research-analyst` | Evidence research for a flagged uncertainty — persists an athlete-agnostic doc under `framework/research/` (`/research`) |
 | `citation-verifier` | Adversarial re-check of a freshly written research doc — every quote, number and identifier against the source, fresh context, before the doc is used as evidence (`/research` step 2.5) |
-| `config-auditor` | Drift validator (configs ↔ agents ↔ prompts) |
+| `config-auditor` | Drift validator (configs ↔ agents) |
 | `config-fixer` | Audit-finding remediation with approval log |
 | `physio-consultant` | Injury consultation (physiotherapy view) |
 | `sports-ortho-consultant` | Injury consultation (orthopaedic view) |

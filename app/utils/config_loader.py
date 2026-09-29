@@ -61,7 +61,5 @@ def load_all_configs() -> dict[str, str]:
 
 
 def reload_configs() -> None:
-    """Clear all config and prompt caches so next access re-reads from disk."""
-    from app.utils.prompt_loader import load_prompt
+    """Clear the config cache so next access re-reads from disk."""
     load_config.cache_clear()
-    load_prompt.cache_clear()
