@@ -189,26 +189,7 @@ red flags and the re-progression timing:
 
 ## Acute lower-leg soreness from an unstructured exposure
 
-When `athleteFeedback` reports lower-leg soreness (shin, anterolateral
-compartment, peroneals) from a **non-training** cause (bad footwear,
-barefoot session, long walk, downhill hike):
-
-- **24–72 h peak:** impact quality is gated, not cancelled. Name the
-  gate in `coaching_notes` so the specialist builds an easy opening block
-  + abort criteria.
-- **Terrain default:** even surface is well-supported only with a
-  **recurrent** lateral-instability history (those athletes lose
-  protective landing compensation under fatigue). Without that history,
-  state the surface choice as exposure reduction, not protection.
-- **A terrain default is not a restriction.** If a standing terrain
-  restriction was previously lifted, say in `coaching_notes` it is a
-  single-session symptom-driven default — the lifted restriction stays
-  lifted. Restrictions return only by explicit athlete confirmation.
-- **>72 h:** route to physio consultant for differential before scheduling
-  the next quality stimulus.
-
-Research anchor:
-[../research/peroneal-doms-inversion-defense-and-mtss-differential.md](../research/peroneal-doms-inversion-defense-and-mtss-differential.md).
+When `athleteFeedback` reports lower-leg soreness (shin, anterolateral compartment, peroneals) from a **non-training** cause (bad footwear, barefoot session, long walk, downhill hike): impact quality is **gated, not cancelled** in the 24–72 h peak — name the gate in `coaching_notes` so the specialist builds an easy opening block + abort criteria; an even-surface default is a single-session, symptom-driven choice, never a reinstated restriction (a standing terrain restriction that was lifted stays lifted; restrictions return only by explicit athlete confirmation); > 72 h → route to the physio consultant for a differential before scheduling the next quality stimulus. Details: `framework/docs/lower-leg-soreness-gate.md`.
 
 ## Race-equipment rehearsal is a planning obligation, not a detail
 
