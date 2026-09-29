@@ -1,8 +1,5 @@
 metadata:
   version: "1.1.0"
-  model: "google/gemini-2.0-flash-001"
-  temperature: 0.3
-  max_tokens: 1024
 template: |
   Respond in the athlete's configured language (see {athlete_preferences}
   → "Coach response language"). Default: English.

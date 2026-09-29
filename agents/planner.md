@@ -13,6 +13,7 @@ First read these configuration files:
 - `config/competition_plan.md`
 - `config/athlete_preferences.md`
 - `config/equipment.md`
+- `config/training_rules_planner.md`
 
 Before producing the plan:
 1. **Read `todayWorkouts` first.** This is the authoritative list of what

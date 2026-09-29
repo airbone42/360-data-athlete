@@ -33,8 +33,7 @@ def main() -> None:
     args = parser.parse_args()
 
     cfg = load_prompt(args.name)
-    print(f"# Prompt: {args.name}")
-    print(f"# Model: {cfg.model} | Temp: {cfg.temperature} | MaxTokens: {cfg.max_tokens}")
+    print(f"# Prompt: {args.name} (v{cfg.version}, reference template)")
     print()
     print(cfg.template)
 

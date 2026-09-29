@@ -13,7 +13,6 @@ CONFIG_EXAMPLE = Path(__file__).resolve().parents[1] / "config.example"
 PLACEHOLDER_RE = re.compile(r"\{([a-zA-Z_][a-zA-Z0-9_]*)\}")
 
 REQUIRED_FIELDS = {"template"}
-OPTIONAL_FIELDS = {"model", "temperature", "version", "max_tokens", "system"}
 
 
 @pytest.mark.parametrize("yaml_path", sorted(PROMPTS_DIR.glob("*.yaml")))
@@ -37,15 +36,14 @@ def test_prompt_yaml_template_is_string(yaml_path: Path):
 
 
 @pytest.mark.parametrize("yaml_path", sorted(PROMPTS_DIR.glob("*.yaml")))
-def test_prompt_temperature_in_range(yaml_path: Path):
+def test_prompt_yaml_carries_no_request_parameters(yaml_path: Path):
+    """Reference templates are sent to no API; a model or sampling field
+    would describe a request that does not exist."""
     with yaml_path.open(encoding="utf-8") as fh:
         data = yaml.safe_load(fh)
-    temp = data.get("temperature")
-    if temp is None:
-        pytest.skip("temperature not set")
-    assert 0.0 <= float(temp) <= 2.0, (
-        f"{yaml_path.name}: temperature {temp} outside [0, 2]"
-    )
+    meta = data.get("metadata") or {}
+    unused = {"model", "temperature", "max_tokens", "response_format"} & meta.keys()
+    assert not unused, f"{yaml_path.name}: unused request fields {sorted(unused)}"
 
 
 def test_prompt_placeholders_have_some_referent():

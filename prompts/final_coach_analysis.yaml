@@ -6,9 +6,6 @@
 # porting those rules.
 metadata:
   version: "1.0.0"
-  model: "anthropic/claude-opus-4-6"
-  temperature: 0.5
-  max_tokens: 4096
 template: |
   Respond in the athlete's configured language (see {athlete_preferences}
   → "Coach response language"). Default: English.

@@ -168,7 +168,7 @@ needs are named directly in its own definition.
 ## `fetch_context.py` output schema
 
 Code layout (`app/api`, `app/utils`, `app/graphs`, prompts, config
-injection): [docs/architecture.md](docs/architecture.md).
+loading): [docs/architecture.md](docs/architecture.md).
 
 **Key fields:**
 
@@ -207,8 +207,8 @@ When this repository is loaded as a Claude Code plugin
 (`aicoach-framework@360-data-athlete`), agents live in `agents/` at the
 plugin root and are exposed under the namespaced name
 `aicoach-framework:<agent>`. Slash commands live in `commands/` and are
-invoked as `/aicoach-framework:<command>`. Plugin agents load `config/`
-files themselves through prompt substitution.
+invoked as `/aicoach-framework:<command>`. Plugin agents read the `config/`
+files they need themselves — each agent definition names them.
 
 Project-level agents in `.claude/agents/<name>.md` (in the
 consumer's repo) take precedence by name resolution — unqualified

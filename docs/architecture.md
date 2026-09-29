@@ -22,7 +22,8 @@ commands.
 
 **Configuration-driven specialisation.** Plugin agents are intentionally
 generic. They read athlete-specific facts (PRs, HR zones, restrictions,
-language) from `config/` at runtime via `app.utils.prompt_loader`. The
+language) from `config/` at runtime — each agent definition names the
+files it reads. The
 canonical pattern for "I want this agent to behave differently for my
 athlete" is therefore to edit `config/`, not to fork the agent.
 
@@ -69,8 +70,8 @@ this plugin — copy its contents into a private repo and customise
 │    config-auditor / config-fixer                                  │
 │    physio-consultant / sports-ortho-consultant                    │
 ├──────────────────────────────────────────────────────────────────┤
-│  Prompts (prompts/*.yaml)                                         │
-│    model + temperature + template                                 │
+│  Prompts (prompts/*.yaml) — reference templates, not loaded       │
+│    by any production path                                         │
 │    template uses {config_key} placeholders — auto-substituted     │
 │    from config/*.md by app.utils.prompt_loader                    │
 ├──────────────────────────────────────────────────────────────────┤
@@ -103,17 +104,19 @@ this plugin — copy its contents into a private repo and customise
 - `app/utils/` — FIT parser, Garmin download, prompt loader, HR zones,
   windowing, **path resolution (`paths.py`)**, **prompt sanitization (`sanitize.py`)**
 - `app/graphs/` — context builder, type-history fetcher, workout parser
-- Prompts: `prompts/*.yaml` (template + model + temperature).
+- Prompts: `prompts/*.yaml` (template + version).
   `agents/<name>.md` is the **authoritative** agent definition. The
-  `prompts/*.yaml` files are **simplified reference templates** for the
-  code path (renderable via `scripts/load_prompt.py --name <prompt>`) —
+  `prompts/*.yaml` files are **simplified reference templates**
+  (renderable via `scripts/load_prompt.py --name <prompt>`) —
   they are deliberate subsets, NOT content-identical copies: the agent
   .md files carry the full rule sets (e.g. the coach-analyst mandatory
-  exclusion rules) that the YAMLs omit. Only `daily_planner.yaml` runs
-  in production (it assembles the `systemPrompt` in `context_builder`);
-  wiring any other YAML into a production path requires porting the
+  exclusion rules) that the YAMLs omit. None of them runs in production:
+  the planner and specialists read `config/` files themselves, so
+  `fetch_context.py` carries data fields only, no rendered prompt.
+  Wiring a YAML into a production path requires porting the
   corresponding agent's mandatory rules first.
-- Config: `config/*.md` (auto-injected as placeholders into prompts)
+- Config: `config/*.md` (read by the agents directly; substituted into
+  `{config_key}` placeholders only when a reference YAML is rendered)
 
 ## Path resolution (`app/utils/paths.py`)
 

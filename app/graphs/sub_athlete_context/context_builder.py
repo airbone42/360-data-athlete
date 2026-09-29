@@ -76,7 +76,6 @@ from app.analytics.hrv import (  # noqa: F401 — re-exported for callers/tests
     _compute_rhr_trend,
     _compute_sleep_trend,
 )
-from app.utils.prompt_loader import load_prompt
 
 
 # ── Coach markers persisted on planned event descriptions ────────────
@@ -357,9 +356,6 @@ def build_context(state: AthleteContextState) -> dict:
     athlete_settings = state.get("athlete_settings") or {}
     hr_bounds = extract_run_hr_bounds(athlete_settings)
     hr_zones_text = format_hr_zones(hr_bounds)
-    _raw_prompt = load_prompt("daily_planner").template.replace("{hr_zones}", hr_zones_text)
-    # shoeContext will be filled after shoe_ctx is built — placeholder replaced below
-    system_prompt = _raw_prompt  # final substitution happens after shoe_ctx is computed
     weather_warning = state.get("weather_warning", False)
     warnings = _collect_warnings(
         hrv, rhr, sleep_score, ctl, atl, hr_zones_text, athlete_settings, weather_warning,
@@ -424,8 +420,8 @@ def build_context(state: AthleteContextState) -> dict:
     today_workouts = _summarize_today_workouts(events, today)
 
     # Context-lean gating: the full shoe fleet is only planning-relevant when
-    # today actually carries a Run/Ride. On other days the fleet list and the
-    # systemPrompt shoe block are dropped (recommendation stays {} anyway —
+    # today actually carries a Run/Ride. On other days the fleet list is
+    # dropped (recommendation stays {} anyway —
     # the push-time advisor in push_workouts/shoe_recommend fetches gear
     # itself, independent of this context field).
     run_or_ride_today = any(
@@ -438,9 +434,6 @@ def build_context(state: AthleteContextState) -> dict:
             "shoes": [],
             "shoeRecommendation": shoe_ctx.get("shoeRecommendation", {}),
         }
-
-    shoe_context_text = _format_shoe_context(shoe_ctx)
-    system_prompt = system_prompt.replace("{shoeContext}", shoe_context_text)
 
     # coaching_notes (paired event descriptions, up to 500 chars each) are
     # briefing-relevant only for the recent window; older activities keep
@@ -496,7 +489,6 @@ def build_context(state: AthleteContextState) -> dict:
         "hrvReadiness": hrv_readiness,
         "hrvCvTrend": hrv_cv_trend,
         "skippedWorkouts": skipped_workouts,
-        "systemPrompt": system_prompt,
         "dataWarnings": warnings,
         # Shoe context (empty dicts/lists when no shoe backend configured)
         "shoes": shoe_ctx.get("shoes", []),
@@ -2250,7 +2242,7 @@ def _collect_warnings(
     if ctl is None or atl is None:
         warnings.append("CTL/ATL not available — fitness state unknown, TSB cannot be computed")
     if hr_zones_text == "HR-Zonen nicht verfügbar" or hr_zones_text == "HR zones not available":
-        warnings.append("HR zones not available — dynamic zone target missing in the prompt")
+        warnings.append("HR zones not available — dynamic zone target missing from the context")
     if weather_warning:
         warnings.append("Weather data not available — weather context missing from plan")
     if "⚠️" in sleep_trend:
@@ -2260,50 +2252,3 @@ def _collect_warnings(
             f"⚠️ RHR rise: +{rhr_trend_delta:.0f} bpm in 7 days — possible overreaching signal"
         )
     return warnings
-
-
-def _format_shoe_context(shoe_ctx: dict) -> str:
-    """Render shoe context as a compact Markdown section for the planner prompt."""
-    if not shoe_ctx:
-        return ""
-
-    lines: list[str] = ["## Shoe manager"]
-
-    shoes = shoe_ctx.get("shoes") or []
-    if shoes:
-        lines.append("\n**Active shoes:**")
-        for s in shoes:
-            pct = s.get("pct_used", 0)
-            since = s.get("days_since_used")
-            since_str = f", {since}d unused" if since is not None else ""
-            role_str = " [Race★]" if s.get("primary_race") else (" [Race]" if s.get("role") == "race" else "")
-            lines.append(
-                f"- {s['name']}{role_str}: {s.get('distance_km', 0):.0f} km"
-                f" ({pct:.0f}%{since_str})"
-            )
-
-    rec = shoe_ctx.get("shoeRecommendation") or {}
-    if rec.get("primary"):
-        p = rec["primary"]
-        lines.append(f"\n**Recommendation today:** {p['name']} — {p.get('reason', '')}")
-        if rec.get("alternative"):
-            a = rec["alternative"]
-            lines.append(f"**Alternative:** {a['name']} — {a.get('reason', '')}")
-
-    for w in shoe_ctx.get("shoeWarnings") or []:
-        lines.append(f"\n{w['msg']}")
-
-    fleet = shoe_ctx.get("shoeFleetWarning") or {}
-    if fleet:
-        parts: list[str] = []
-        if fleet.get("missing_types"):
-            parts.append("Fehlende Kategorien: " + ", ".join(fleet["missing_types"]))
-        if fleet.get("soon_missing"):
-            parts.append("Bald fehlend: " + ", ".join(fleet["soon_missing"]))
-        sug = fleet.get("suggestions") or {}
-        for cat, model in sug.items():
-            parts.append(f"Empfehlung {cat}: {model}")
-        if parts:
-            lines.append("\n⚠ Sortiments-Warnung: " + " | ".join(parts))
-
-    return "\n".join(lines)

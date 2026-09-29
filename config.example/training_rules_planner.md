@@ -4,27 +4,25 @@
 - 80 % der Einheiten in Z1–Z2 (easy)
 - 20 % in Z4–Z5 (intensiv)
 - Z3 wird aktiv gemieden
-- Nach 2–3 aufeinanderfolgenden Easy-Einheiten kann eine intensive folgen, sofern HRV ≥ Baseline und TSB > −5
-- HRV ≥ Baseline und TSB > 0 = grünes Licht für Intensität
+- Nach 2–3 aufeinanderfolgenden Easy-Einheiten kann eine intensive folgen, sofern die Readiness-Signale es zulassen (siehe Intensitätssteuerung)
 
 ## Pyramidales Training (8–10 Wochen vor Wettkampf)
 - 70–80 % in Z1–Z2 (easy)
 - 15–20 % in Z3–Z4 (moderat/Schwelle)
 - 5–10 % in Z5 (hochintensiv)
 - Z3 und Z4 werden gezielt trainiert (nicht gemieden), oft als Tempoläufe oder Schwellen-Intervalle
-- Nach 2–3 Easy-Einheiten kann Schwellen- oder hochintensive Einheit folgen, sofern HRV ≥ Baseline und TSB > −5
-- HRV ≥ Baseline und TSB > 0 = grünes Licht für spezifische Intensität (z. B. 10 km, Halbmarathon)
+- Nach 2–3 Easy-Einheiten kann eine Schwellen- oder hochintensive Einheit folgen, sofern die Readiness-Signale es zulassen (siehe Intensitätssteuerung)
 
 ## Intensitätssteuerung
 - TSB < −20: Sofortige Reduktion auf Z1 oder Ruhetag (zwingend, auch wenn Plan anderes vorsieht)
-- TSB > 0 + HRV ≥ Baseline: Grünes Licht für Intensität
+- Grünes Licht für Intensität geben die systematischen Signale aus `CLAUDE.md` → „No silent conservatism" (`hrvReadiness`, `intensityReadiness`, CTL-Schwelle, Taper, Sperren) — nicht eine einzelne Tageszahl wie HRV knapp unter Baseline oder TSB leicht negativ.
 
 ## HRV-Readiness (hrvReadiness — 7d-rollender ln-rMSSD vs 60d-Normalband)
 
 `fetch_context.py` liefert das Top-Level-Feld `hrvReadiness`: der 7-Tage-rollende
 Mittelwert des ln-rMSSD wird gegen ein 60-Tage-Normalband klassifiziert
-(mean ± 0,5·SD der Tageswerte). Ersetzt den retired Last→HRV-Forecast — Last ist
-kein Prädiktor mehr, nur paralleler CTL/TSB-Strom.
+(mean ± 0,5·SD der Tageswerte). Der Verdict klassifiziert den beobachteten
+HRV-Verlauf; er prognostiziert keinen HRV-Wert aus der Trainingslast.
 
 **Felder:**
 - `verdict`: `clear` | `above` | `watch` | `hold` | `insufficient_data`

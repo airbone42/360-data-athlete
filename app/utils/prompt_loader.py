@@ -13,11 +13,7 @@ from app.utils.paths import PROMPTS_DIR as _PROMPTS_DIR
 @dataclass
 class PromptConfig:
     template: str
-    model: str
-    temperature: float
     version: str
-    response_format: str | None = None
-    max_tokens: int | None = None
 
 
 @lru_cache(maxsize=None)
@@ -31,14 +27,8 @@ def load_prompt(name: str) -> PromptConfig:
         data = yaml.safe_load(f)
 
     meta = data.get("metadata", {})
-    model = meta.get("model")
-    temperature = meta.get("temperature")
     template = data.get("template")
 
-    if not model:
-        raise ValueError(f"Prompt '{name}': metadata.model is required")
-    if temperature is None:
-        raise ValueError(f"Prompt '{name}': metadata.temperature is required")
     if not template:
         raise ValueError(f"Prompt '{name}': template is required")
 
@@ -52,9 +42,5 @@ def load_prompt(name: str) -> PromptConfig:
 
     return PromptConfig(
         template=template,
-        model=model,
-        temperature=float(temperature),
         version=meta.get("version", "0.0.0"),
-        response_format=meta.get("response_format"),
-        max_tokens=meta.get("max_tokens"),
     )
