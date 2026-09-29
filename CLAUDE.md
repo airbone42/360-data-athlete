@@ -1114,6 +1114,7 @@ The git history is the authoritative provenance record; a manually maintained gr
 
 - **Default: delete.** `git log` / `git blame` carry the why.
 - **Narrow exception:** a brief, dated supersession note only when the *change itself* is the decision-relevant information and the old value carries a needed contrast (a load step "X→Y kg"); even then prefer the lean form.
+- **History archive:** text that is no longer current but still worth reading — session logs, derivations, verbatim quotes, completed ledger weeks — moves verbatim to `config/archive/<file>-history.md` (append-only, one `## <section>` heading per moved block) and leaves a one-line pointer in the main file. Nothing loads `config/archive/` automatically (the config loader and the audit read `config/*.md` only), so a rule that still applies never lives only in the archive.
 - Covers `config/*.md`, `config/*.json` and the framework knowledge files — keep them lean.
 
 *Enforcement: `audit_consistency.py::check_stale_cancellation_markers`
@@ -1191,9 +1192,12 @@ sole home of qualitative feedback:
 **Lift-rule:** Whenever raw athlete feedback arrives via parser/queue/lap
 output and contains a verdict the athlete expects to influence future
 planning, lift it into the relevant `config/exercise_*.md` file **in the
-same session** — before the next planning cycle. Cite the source date
-and the verbatim athlete quote in the entry, so the persistence chain
-stays auditable.
+same session** — before the next planning cycle. Write it as **one
+sentence plus the source date** (the date keeps the persistence chain
+auditable); quote the athlete verbatim only when the rule cannot be
+stated without the exact wording. The session-by-session history does
+not go into the entry: it stays in the type history and, once
+superseded, in the file's history archive (see *Config hygiene*).
 
 The specialist agents read `config/exercise_progressions.md` and
 `config/exercise_log.md`. Feedback that does not reach those files does
@@ -1241,6 +1245,12 @@ does not consult for dates.
   due-date the gate cannot satisfy, and the coach then either breaks the
   gate or defers again. Park it as an open item with its unlock
   condition, not as a dated row.
+- **The ledger holds open items plus the current and the next week.**
+  At the week change, completed weeks move to
+  `config/archive/competition_plan-history.md` (see *Config hygiene* →
+  history archive); open items from a completed week stay in the
+  ledger. `check_slot_authority` only needs the `DD.MM.` mirror for dates
+  within the next 14 days, so past weeks can leave at once.
 
 *Enforcement: `audit_consistency.py::check_slot_authority` (audit check
 `SLOT_AUTHORITY`) flags near-term dated slot assertions that live outside

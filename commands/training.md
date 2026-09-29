@@ -30,6 +30,13 @@ Check `hrvReviewPending`. If present → **before the planner** ask the
 athlete (see CLAUDE.md "HRV readiness review"). Persist answer as NOTE,
 then continue with step 1.5.
 
+**Week change — ledger rollover.** On the first `/training` run of a new
+week, roll the slot ledger in `config/competition_plan.md` over before
+planning: move the completed week(s) verbatim to
+`config/archive/competition_plan-history.md`, keep their open items
+(with the unlock condition) in the ledger, and leave a one-line pointer
+(CLAUDE.md → "Scheduling decisions have exactly one canonical home").
+
 ### Step 1.5: Exercise re-evaluation (CONDITIONAL — only when flagged)
 
 Check `planningConstraints` for the `🔄 Exercise re-evaluation due` flag
