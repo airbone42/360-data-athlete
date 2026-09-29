@@ -30,6 +30,7 @@ from app.graphs.shoe_advisor import SHOE_ADVISOR_LOOKBACK_DAYS, gear_to_shoes
 from app.graphs.sub_athlete_context.context_builder import build_context
 from app.utils.date_windows import cutoff_iso
 from app.utils.logging import configure
+from app.utils.recovery_week import parse_recovery_week
 from app.utils.tracing import configure_tracing
 
 configure("fetch_context", level="WARNING")
@@ -46,27 +47,14 @@ def _athlete_status_path() -> str:
 
 
 def _parse_deload_state() -> dict:
-    """Parse Erholungswoche-Status from config/athlete_status.md."""
+    """Parse the recovery-week status block from config/athlete_status.md
+    (German or English spelling, see ``app.utils.recovery_week``)."""
     try:
         with open(_athlete_status_path(), encoding="utf-8") as f:
             content = f.read()
     except OSError:
         return {}
-
-    import re
-    section_match = re.search(
-        r"## Erholungswoche-Status\n(.*?)(?=\n##|\Z)", content, re.DOTALL
-    )
-    if not section_match:
-        return {}
-
-    section = section_match.group(1)
-    result: dict = {}
-    for key in ("aktiv", "start", "ende_geplant", "begründung"):
-        m = re.search(rf"\*\*{re.escape(key)}:\*\*\s*(.+)", section)
-        if m:
-            result[key] = m.group(1).strip()
-    return result
+    return parse_recovery_week(content)
 
 
 def _parse_deload_ctl_threshold() -> float | None:

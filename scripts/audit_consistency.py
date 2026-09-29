@@ -31,6 +31,7 @@ sys.path.insert(0, str(ROOT))
 
 from app.utils.activity_helpers import activity_date  # noqa: E402
 from app.utils.date_parse import parse_config_date  # noqa: E402
+from app.utils.recovery_week import parse_recovery_week  # noqa: E402
 from app.utils.sanitize import escape_for_prompt  # noqa: E402
 from app.utils.paths import (  # noqa: E402
     CONFIG_DIR,
@@ -983,19 +984,15 @@ def check_config_drift() -> list[dict]:
 
 def check_deload_consistency() -> list[dict]:
     """Checks whether recovery-week status is consistent (date vs. active flag)."""
-    text = _read(resolve_config("athlete_status.md"))
-    m = re.search(r"## Erholungswoche-Status\n(.*?)(?=\n##|\Z)", text, re.DOTALL)
-    if not m:
-        return []
-    section = m.group(1)
-    aktiv = re.search(r"\*\*aktiv:\*\*\s*(\S+)", section)
-    ende = re.search(r"\*\*ende_geplant:\*\*\s*(\S+)", section)
+    state = parse_recovery_week(_read(resolve_config("athlete_status.md")))
+    aktiv = (state.get("aktiv") or state.get("active") or "").split()
+    ende = (state.get("ende_geplant") or state.get("planned_end") or "").split()
     if not aktiv or not ende:
         return []
-    aktiv_val = aktiv.group(1).strip().lower()
-    ende_val = ende.group(1).strip()
+    aktiv_val = aktiv[0].lower()
+    ende_val = ende[0]
     findings: list[dict] = []
-    if aktiv_val != "ja":
+    if aktiv_val not in ("ja", "yes", "true"):
         return findings
     ende_date = parse_config_date(ende_val)
     if ende_date is None:
@@ -1003,12 +1000,12 @@ def check_deload_consistency() -> list[dict]:
             MEDIUM,
             "deload_end_unparseable",
             "config/athlete_status.md",
-            evidence=f"aktiv: ja, ende_geplant: {ende_val} (unparseable)",
+            evidence=f"active: {aktiv_val}, planned end: {ende_val} (unparseable)",
             canonical_source="config/athlete_status.md",
             suggested_action="fix_deload_end_date",
-            fix_hint="Set ende_geplant to a parseable date (YYYY-MM-DD or DD.MM.YYYY)",
+            fix_hint="Set the planned end to a parseable date (YYYY-MM-DD or DD.MM.YYYY)",
             description=(
-                "Recovery-week flag is 'aktiv: ja' but ende_geplant is not a "
+                "Recovery week is marked active but its planned end is not a "
                 "parseable date — automatic expiry can never trigger"
             ),
         ))
@@ -1017,11 +1014,11 @@ def check_deload_consistency() -> list[dict]:
             MEDIUM,
             "deload_expired",
             "config/athlete_status.md",
-            evidence=f"aktiv: ja, ende_geplant: {ende_val} (past)",
+            evidence=f"active: {aktiv_val}, planned end: {ende_val} (past)",
             canonical_source="Today",
             suggested_action="reset_deload",
-            fix_hint="Reset recovery-week status to aktiv: nein",
-            description="Recovery-week flag is 'aktiv: ja' but ende_geplant is in the past",
+            fix_hint="Set the recovery-week status to inactive (aktiv: nein / active: no)",
+            description="Recovery week is marked active but its planned end is in the past",
         ))
     return findings
 
