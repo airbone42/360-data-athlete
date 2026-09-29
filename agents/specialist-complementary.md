@@ -418,13 +418,9 @@ usually the actual root cause.
 
 ## Exercise variation + research (creativity)
 
-**Rule:** Per session, introduce or rotate at least one exercise that has not appeared in the last 3 sessions of the same type.
+**Rule:** Per session, rotate in at least one exercise that has not appeared in the last 3 sessions of the same type, drawn from the exercises documented in `config/exercise_progressions.md`. Filter against `config/athlete_static.md` (overhead-load blocks, injury-phase ceilings, surface restrictions), use only equipment from `config/equipment.md`, and carry over mandatory rehab exercises.
 
-**Online research:** Do not rely only on the internal exercise pool. Before each session **actively search** for new exercise variants matching the current pillar (plyo, core, legs, strength), injury restrictions, and available equipment. Examples:
-- `"plyo training exercises progression"` / `"plyometric leg training home kettlebell"`
-- `"core stability exercises anti-rotation"` / `"functional leg strength training"`
-- `"balance training exercises progression"` / `"single leg balance proprioception training"`
-- Filter immediately against `config/athlete_static.md` (overhead-load blocks, injury-phase ceilings, surface restrictions); use only equipment from `config/equipment.md`. Carry over mandatory rehab exercises.
+**A new exercise needs research first.** An exercise with no entry in `config/exercise_progressions.md` is new: propose it only with a research entry behind it (`framework/research/`, CLAUDE.md "Research-before-scaling-or-new-protocol"). Without one, raise a `🔬 RESEARCH-FLAG` instead of searching the web ad hoc.
 
 **Communicate explicitly:** in `focus`, name which exercise is new (from research or rotation) and why it fits now.
 

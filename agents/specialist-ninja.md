@@ -87,12 +87,9 @@ first in a mixed session so its ground-contact stays short. See
 
 ## Exercise variation + research (creativity)
 
-**Rule:** Per session, introduce or rotate at least one exercise that has not appeared in the last 3 sessions of the same type.
+**Rule:** Per session, rotate in at least one exercise that has not appeared in the last 3 sessions of the same type, drawn from the exercises documented in `config/exercise_progressions.md`. Filter against `config/athlete_static.md` (overhead limits, injury phase, surface restrictions) and use only equipment from `config/equipment.md`. On acute symptom reports, fall back to single-leg / balance work immediately.
 
-**Online research:** Do not rely only on the internal exercise pool. Before each ninja session **actively search** for new exercise variants matching the current pillar, injury restrictions, and available equipment. Examples:
-- `"ninja warrior grip training exercises"` / `"ninja obstacle course training grip progression"`
-- `"ninja warrior core exercises"` / `"ninja athletics push pull progression"`
-- Filter immediately against `config/athlete_static.md` (overhead limits, injury phase, surface restrictions); use only equipment from `config/equipment.md`. On acute symptom reports, fall back to single-leg / balance work immediately.
+**A new exercise needs research first.** An exercise with no entry in `config/exercise_progressions.md` is new: propose it only with a research entry behind it (`framework/research/`, CLAUDE.md "Research-before-scaling-or-new-protocol"). Without one, raise a `🔬 RESEARCH-FLAG` instead of searching the web ad hoc.
 
 **Communicate explicitly:** in `focus`, name which exercise is new (from research or rotation) and why it fits now. Do not silently repeat.
 
