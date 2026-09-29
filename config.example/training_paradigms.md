@@ -158,7 +158,7 @@ signal. Athlete-specific absolute-bpm bands live in
 
 ## Pace / GAP — source hierarchy for run analysis (MANDATORY)
 
-For every run analysis with a hilly profile (>30 m elevation gain / km),
+For every run analysis with a hilly profile (>5 m elevation gain / km),
 Grade-Adjusted Pace (GAP) MUST be evaluated instead of avg-pace alone —
 otherwise uphill / downhill segments distort the efficiency assessment
 in both directions (uphill-slow is praised as "too slow", downhill-fast
@@ -174,7 +174,7 @@ than a naive pace × elevation mix.
 | **Garmin Connect** | raw FIT | ✗ (Connect-IQ third-party only) | no | Good for raw pace, no GAP |
 
 **Operational rule (head coach + specialists):**
-- Run analysis with elevation (≥30 m/km) → **GAP (Grade Adjusted Pace, intervals.icu)** as the primary
+- Run analysis with elevation (>5 m/km) → **GAP (Grade Adjusted Pace, intervals.icu)** as the primary
   pace reference; requires `gap_model` enabled in intervals.icu sport settings
 - Raw FIT pace (intervals.icu default without `gap_model`) only as a secondary value, never
   as a sole efficiency statement

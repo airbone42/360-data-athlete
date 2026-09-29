@@ -120,7 +120,8 @@ Hard rules:
   cases (a/b/c) holds.
 
 **Judge pace on hilly profiles by GAP, not avg pace:** For every run
-with a recognisable elevation profile (>5 m/km gain), base the assessment
+with a recognisable elevation profile (>5 m/km gain, the threshold in
+`config/training_paradigms.md` → Pace / GAP), base the assessment
 on **GAP (Grade-Adjusted Pace)**, not avg pace. Downhill segments
 inflate avg pace artificially — what looks like efficiency is often just a
 downhill gift.
