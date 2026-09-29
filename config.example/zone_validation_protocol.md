@@ -14,7 +14,7 @@ Wenn die Zonen unsicher sind (siehe Trigger unten), erhält der Athlet beim näc
 **Testprotokoll:**
 1. RR-fähigen Brustgurt anlegen, 10–15 min vor Test befeuchten
 2. DFA-α1-Live-App (z.B. Fatmaxxer für Android/iOS) → Brustgurt via BLE verbinden → DFA-α1 live anzeigen
-3. Lauf: 10 min Einlaufen Z1, dann alle 3–5 min Pace um ~10 s/km steigern bis über LTHR
+3. Lauf: 10 min Einlaufen Z1, dann Stufen von je ≥ 6 min, Pace je Stufe um ~10 s/km steigern bis über LTHR (die ersten 2 min jeder Stufe bleiben in der Auswertung außen vor)
 4. DFA-α1 = 0.75: aerobe Schwelle (neue Z2-Obergrenze); DFA-α1 = 0.5: LTHR (neue Z4-Obergrenze)
 5. Post-hoc-Analyse: RR-Daten aus der Gurt-App exportieren → Kubios HRV (kostenlos) für präzise Auswertung
 
@@ -33,5 +33,4 @@ Before suggesting a DFA-α1 analysis to the athlete, verify all of:
 | Warm-up | ≥ 10 min below the lowest test step; exclude the first 2 min of each step from analysis |
 | Step range | Start below suspected VT1 |
 
-Default step protocol lives in `config.example/zone_validation_protocol.md`
-(or `config/`). Athlete-specific step ranges in `athlete_status.md`.
+Athlete-specific step ranges belong in `athlete_status.md`.

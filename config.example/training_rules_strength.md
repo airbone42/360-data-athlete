@@ -12,7 +12,9 @@
 - WeightTraining (without leg focus) → run: **≥3 h** (`workout_parser.py`
   enforces this automatically)
 - WeightTraining with leg focus (`legs` / `plyo` tags) → run: **≥6 h**
-- Order is fixed: strength / plyo ALWAYS before the run
+- Order: strength / plyo before the run by default; on a leg-strength day a
+  quality run goes first and the strength block follows ≥ 6 h later
+  (`workout_parser.py` sorts and spaces the day)
 
 ## Feedback-based load control (RPE autoregulation)
 

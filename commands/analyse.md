@@ -183,7 +183,7 @@ Show the analysis. Ask: "How was the session for you?"
 **Feedback** → react briefly (1 sentence), adjust the analysis in the
 coach-analyst pane (max 3×).
 
-**Acceptance** ("ok", "thanks", "fits", "good") or empty reply:
+**Acceptance** (the athlete accepts the analysis, in any wording) or empty reply:
 ```bash
 python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/post_message.py \
   --activity-id {ID} --message "Coaching feedback:

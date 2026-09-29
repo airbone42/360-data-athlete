@@ -28,7 +28,7 @@ Read these configuration files:
 - `config/exercise_log.md` — **only** technique findings + form drills
   from video analyses (not for sets / reps / load / tempo). Known
   execution faults and drills for ninja exercises must be reflected in
-  coaching_notes.
+  `focus` and the exercise `notes`.
 
 ## MANDATORY: source hierarchy for progression
 
@@ -121,7 +121,7 @@ session time for equal set-volume). Schedule `Gripmaster Single Finger`
 preparation — at a minimal effective dose (≈1×/week, 2–3 sets per
 weak-point finger, appended to an existing whole-hand session). A generic
 "variation stimulus" with no concrete indication is **not** a valid reason.
-When you do schedule it, justify the indication in `coaching_notes`.
+When you do schedule it, justify the indication in `focus`.
 Evidence: [single-finger-isolation-vs-whole-hand-grip.md](../research/single-finger-isolation-vs-whole-hand-grip.md).
 
 **"Support" on the Gripmaster does NOT exist as a separate exercise.**
@@ -175,17 +175,16 @@ rather than "more of the same".
 **Research anchors:** [grip-training-progression.md](../research/grip-training-progression.md),
 [grip-diameter-vs-load-progression.md](../research/grip-diameter-vs-load-progression.md)
 
-## Set limit for ALL strength + isometric exercises (MANDATORY)
+## Set limit for strength and isometric exercises
 
-**Rule:** Maximum **3 working sets** per exercise across the entire
-session — applies to Pull (TRX Row, Pull-up, Lat-Zug), Push (Push-ups,
-Dips), Core (Hollow, L-Sit, Dead Bug), Grip-Isometrics (Farmer Hold,
-KB Horn Pinch, Dead Hang, Towel Hold) and any other strength reiz.
-Never 4+ sets as "progression". This overrides the generic 4×4–6
-maximalkraft default in `framework/config.example/exercise_progressions.md`
-(athlete-specific preference, see `config/athlete_preferences.md` →
-"Set-Volumen"). Grip isometrics in multi-exercise sessions have always
-followed this cap; it now applies uniformly across all pillars.
+**Rule:** If `config/athlete_preferences.md` states a working-set cap per
+exercise, apply it across the whole session — Pull (TRX Row, Pull-up,
+Lat-Zug), Push (Push-ups, Dips), Core (Hollow, L-Sit, Dead Bug),
+Grip-Isometrics (Farmer Hold, KB Horn Pinch, Dead Hang, Towel Hold) and
+any other strength stimulus. It overrides the generic 4×4–6 maximal-strength
+default in `config.example/exercise_progressions.md`; progress via load,
+reps or tempo, not additional sets. Without a stated cap, follow
+`exercise_progressions.md`.
 
 **Research anchor (Volume-Tolerance):** [ninja-set-volume-tolerance.md](../research/ninja-set-volume-tolerance.md)
 
@@ -270,7 +269,8 @@ tendons at 70 % MVC, 45 s hold.
 
 ## Output format
 
-Respond with valid JSON only. Start directly with `{`.
+Return the session as one JSON object with the shape below, and present
+it in chat as described at the end of this file.
 
 ```json
 {
@@ -366,7 +366,7 @@ too easy, retired or replaced in its slot. Full rule: `CLAUDE.md` →
 - NEVER "X rounds" in `description` — sets only via `"sets"` per
   exercise.
 - **`duration_range` is a volume estimate, not a hard time cap** —
-  see "athletic justifications" block below.
+  see "two legitimate justification sources" below.
 - Overhead restrictions from `athlete_static` must be respected.
 - **Physio mandatory block check (every 2 days):** if today is a
   physio day per `athlete_static.md` prescription, insert the
@@ -402,15 +402,13 @@ too easy, retired or replaced in its slot. Full rule: `CLAUDE.md` →
 
 **Override:** a Last-Cap on a weighted exercise (e.g. Wrist Curls @ 9 kg Cap) does NOT remove the RPE requirement — the cap fixes load, the RPE tells whether the cap is still appropriate.
 
-**Inline format in `description`:** `Farmer's Hold KB: 3x35s/side @ 32.5kg | RPE 6-7 | last 13.05. 30kg @ 35s @ RPE 6-7 — Vektor 'load primary' triggered`. RPE token belongs **between** the volume spec and the progression rationale, separated by `|`.
+**Inline format in `description`:** `Farmer's Hold KB: 3x35s/side @ 32.5kg | RPE 6-7 | load +2.5 kg`. The RPE token sits between the volume spec and the single cue or new-today note, separated by `|`; progression rationale goes in `notes` and `focus`, not in `description`.
 
 **The RPE alone is not enough on a weighted exercise — ask for the executed
 load too.** The plan names a target load, the description is also what gets
 parsed back after the session, and a bare RPE answer never contradicts it. So
 the target gets booked as the result and the anchor advances on a number
-nobody measured; the entry is indistinguishable from a real data point. It
-happened to this very block class: an auto-sync filed 38 kg for a carry that
-had run at ~33 kg, and the athlete caught it, not the system. Any session
+nobody measured; the entry is indistinguishable from a real data point. Any session
 carrying a kg figure ends with one line — `FEEDBACK: RPE je Übung und die
 gefahrene Last.` — not one ask per exercise. *Enforcement:
 `validate_plan.py::check_load_report_requested` (R026), WARNING.*

@@ -54,8 +54,13 @@ You return:
   today
 
 ### S2 — stimulus adequacy (wellness vs plan)
-- HRV ≥ baseline + TSB > −5 + 3+ easy days → intensity is OK
-- HRV below baseline → ERROR if plan has hard Z4/Z5 intervals
+- Green light for a hard session follows the relative rule in
+  `config/training_paradigms.md` (green-light rule), not an absolute TSB threshold
+- `intensityReadiness` 🔴 together with `hrvReadiness.verdict` `watch` or
+  `hold` → ERROR if the plan has hard Z4/Z5 intervals; `intensityReadiness`
+  🔴 alone or `hold` alone → WARNING (the plan must say why it proceeds);
+  `watch` alone or a single HRV value below baseline → no finding (soft
+  signal, see CLAUDE.md "No silent conservatism")
 - TSB < −20 → ERROR if not Z1 / rest day (special rule in
   athlete_status.md)
 - daysSinceIntense > 21 → WARNING if plan volume >120 % of the last
@@ -68,7 +73,8 @@ You return:
   - +20–30 % after 7–10 days of pause = OK
   - +50 % at <7 days = WARNING
   - +100 % after >21 days = WARNING (too large for re-entry)
-- Weekly CTL ramp plausibility (special rule CTL <24 → ignore CTL)
+- Weekly CTL ramp plausibility (below the athlete's `deload_ctl_threshold`
+  CTL is a rebuild phase — skip the ramp check)
 
 ### S4 — progression consistency with exercise_progressions.md
 For every strength / ninja exercise in the plan:
@@ -181,7 +187,7 @@ agent's job, run earlier in the flow when the flag is present).
 
 ### Findings
 [Per finding:]
-**[severity]** — [aspect S1–S10] — [workout name or global]
+**[severity]** — [aspect S1–S11] — [workout name or global]
 **Finding:** [concrete]
 **Suggestion:** [concrete + actionable]
 
@@ -201,11 +207,12 @@ agent's job, run earlier in the flow when the flag is present).
   `RULES` registry in `scripts/validate_plan.py` (also visible in the
   `--json` output that is passed to you). Don't repeat any of these
   mechanical findings — treat them as already shown and focus your
-  semantic analysis on the S1–S10 aspects.
+  semantic analysis on the S1–S11 aspects.
 - You do NOT block the push directly — the head coach decides on your
   ERRORs whether to adjust or push.
 - On uncertainty: WARNING + concrete suggestion. No coercion.
-- Better 3 concise findings than 10 marginal ones.
+- Report every finding you can support, each with its severity; put
+  marginal observations at INFO instead of omitting them. The head coach
+  filters.
 - Answer in the athlete's preferred language (see
-  `config/athlete_preferences.md`). Be precise and grounded in sports
-  physiology.
+  `config/athlete_preferences.md`).

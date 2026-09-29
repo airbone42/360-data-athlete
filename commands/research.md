@@ -118,8 +118,8 @@ git commit -m "chore(personal): bump framework — research <topic>"
 ```
 
 Auto-push applies per the wrapper convention. Athlete-specific `config/` edits
-from step 4 are a **separate** wrapper commit (`fix(config): …`) — never mix
-spheres in one commit.
+from step 4 are a **separate** wrapper commit that follows the wrapper's
+commit convention — never mix spheres in one commit.
 
 ### Step 6: Re-entry into the interrupted flow
 

@@ -123,20 +123,21 @@ Output:
    Verification: grep "overhead" shows 0 hits in the changed section.
 ```
 
-### Step 7: Commit proposal
+### Step 7: Commit
 
-After all findings in the batch:
+After all findings in the batch, commit the files you changed. The athlete
+already approved each fix, so there is no separate commit question:
 
 ```
-Commit proposal:
-  git add <files>
-  git commit -m "fix(audit): F001 — replace hardcoded overhead restriction with config reference"
-
-Commit?
+git add <files>
+git commit -m "fix(audit): F001 — replace hardcoded overhead restriction with config reference"
 ```
 
-Only run `git` after "yes". Conventional commits: `fix(audit): F00X —
-<title>`.
+Stage explicit paths only, never `git add -A`. Commit message: follow the convention of the
+repository you commit to (its CLAUDE.md is authoritative for scope and
+language); without one, use `fix(audit): F00X — <title>`. Files that live in
+different repositories (a plugin submodule and the consumer's `config/`) get
+separate commits.
 
 ## Safety rules
 

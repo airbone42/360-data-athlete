@@ -51,7 +51,7 @@ template: |
   {athlete_preferences}
 
   ## Output format
-  Respond ONLY with a valid JSON object. Start directly with `{{`.
+  The result is a JSON object of this shape:
 
   {{
     "structure": [

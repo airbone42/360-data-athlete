@@ -61,12 +61,14 @@ Rationale: Coggan/Allen TSB-stages indicate "diminishing returns" below -30 — 
 
 ## Convergence signal (Meeusen-consensus)
 
-When **two or more** of the following signals are red over 3+ consecutive days, the planner should propose deload regardless of 3-gate or TSB triggers:
+When **two or more** of the following markers are red on the same day, on 3+ consecutive days, the planner should propose deload regardless of 3-gate or TSB triggers:
 
-- HRV below baseline (≥1 × within-athlete CV — see [hrv-rhr-baseline-methodology.md](../research/hrv-rhr-baseline-methodology.md))
-- RHR trend +3 bpm or more
-- TSB consistently < -15
+- HRV below its 90-day median ([hrv-rhr-baseline-methodology.md](../research/hrv-rhr-baseline-methodology.md))
+- RHR at least `rhr_overload_bpm` above its 90-day median (default 5 bpm, overridable per athlete in `config/athlete_status.md`)
+- TSB ≤ −15
+
+A day with fewer than two readable markers cannot be judged and ends the streak — a data gap, not an all-clear.
 
 Rationale: Meeusen et al. 2013 consensus statement — "no single reliable diagnostic marker for OTS exists — diagnosis requires the convergence of multiple indicators over time." Single-marker red is acute, multi-marker red over 3+ days is non-functional-overreaching risk.
 
-**Implemented** in `app/analytics/hrv.py::_compute_combined_overload_signal` and surfaced as `combinedOverloadSignal`. Until 2026-09-04 the code checked HRV **and** RHR only — stricter than this text in one specific way: it could not fire without HRV, so an HRV non-responder or a dropped wearable value removed the trigger entirely. It now counts two of the three markers, with TSB computed per day from that day's CTL/ATL. Thresholds (`rhr_overload_bpm`, the TSB cut) are operating conventions, overridable per athlete in `config/athlete_status.md`.
+**Implemented** in `app/analytics/hrv.py::_compute_combined_overload_signal` and surfaced as `combinedOverloadSignal`. The bpm step and the TSB cut are operating conventions, not literature values; only the bpm step is configurable.

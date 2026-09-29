@@ -1225,11 +1225,11 @@ be green on **every** autonomic marker — HRV above baseline, RHR below it,
 TSB positive, `hrvReadiness: clear` — and still be accumulating structural
 load purely because the runs sit close together.
 
-None of the older derived signals surface that pattern:
+None of the other derived signals surface that pattern:
 
-- `lastRestDay` counts **any** logged activity as a training day, so a
-  10-minute mobility block masks a rest day and a pure bike day is
-  indistinguishable from a hard run day.
+- `lastRestDay` sees load, not impact: it reports a short accessory-only
+  day as `LOAD-LESS`, but a pure bike day and a hard run day both count
+  as training days.
 - `daysSinceIntense` is backward-looking and about **intensity**, not about
   the impact pattern the *planned* day would create.
 - R014 (easy-run conservatism) argues in the **opposite** direction — it
@@ -1493,12 +1493,13 @@ session name, not from an athlete NOTE, not from memory.
 
 HR-zone values in the specialist briefing must always be copy-pasted 1:1
 from `context.hrZones` (output of `fetch_context.py`). Never reconstruct
-from memory, never write LTHR or zone bounds from recall. The rationale
-is documented in `config/athlete_status.md` (athlete-specific incident log).
+from memory, never write LTHR or zone bounds from recall: a specialist
+builds every target on the zones it is handed, so one recalled value
+propagates into the whole session.
 
 - Copy the HR-zone block verbatim from `context.hrZones`
-- LTHR value from `context.athleteStatus` or explicitly from the
-  current-LTHR slot in `athlete_status.md`, never heuristic
+- LTHR value from the current-LTHR slot in `config/athlete_status.md`,
+  never heuristic
 - Easy/recovery runs: HR ceiling must stay below Z3 — validator rule R010
   blocks violations as a hard ERROR before the push
 - **Indoor / treadmill sessions: raise the HR ceiling by ~5–8 bpm** for the
@@ -1853,7 +1854,7 @@ Start `mental-coach` automatically — initially rather too often.
 | After a setback | Injury NOTE, abandoned session, race well below goal | Head-coach judgment | Note + activity context |
 | Unexplained HRV drop | Review yields no external factor | Head-coach judgment | HRV data, training load |
 | Motivation signal | "no energy", "tired", "not motivated" | Head-coach judgment (text) | Direct text |
-| Direct invocation | `/mental` or similar | Head-coach launches on request | Free interaction |
+| Direct invocation | Athlete asks for mental support directly | Head-coach launches on request | Free interaction |
 
 The Pre-long-effort row is mechanically surfaced — every `push_workouts.py`
 invocation that contains a Long/RACE workout emits a `🧠 MENTAL-COACH-TRIGGER`
@@ -1869,8 +1870,9 @@ Everything in chat:
 - **Plan:** athlete responds → adjust → re-present.
 - **Analysis:** "How was the session?" → analyse, refine.
 
-Acceptance phrases push to intervals.icu — list configurable per athlete
-in `athlete_preferences.md`.
+A clear acceptance pushes to intervals.icu. Judge it by intent, in any
+wording — a reply that also asks for a change is feedback first. An
+athlete may list preferred phrases in `athlete_preferences.md`.
 
 **Read in-unit feedback before asking (mandatory):** Athletes can record
 post-session feedback directly in intervals.icu — as a `Feedback:` line
@@ -2504,7 +2506,7 @@ DJI / drone videos (filename contains `dji_fly_`): always analyse with
 
 For running videos, additionally pull Garmin running dynamics for the time
 window and pass them as `--garmin-sections`. Three reasonable sections:
-`frisch,bergauf,müde` (or `fresh,uphill,fatigued`). Z2 runs after 20 min
+`frisch,bergauf,müde` (the script accepts only its German tokens). Z2 runs after 20 min
 show no fatigue → use intervals or tempo runs for the fatigued section.
 
 ---

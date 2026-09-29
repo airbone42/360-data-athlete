@@ -53,8 +53,8 @@ Before producing the plan:
    for the first time.** Proceed:
    - Plan a deload session today (Z1/Z2, volume −20 %)
    - Write in `coaching_notes`: "Recovery week recommended — head coach
-     please update `config/athlete_status.md`: `active: yes`, `start:
-     YYYY-MM-DD`, `planned_end: YYYY-MM-DD`"
+     please set the recovery-week status block in `config/athlete_status.md`
+     (active, start, planned end)"
    - **Do not write athlete_status.md yourself** — that's the head
      coach's job
 
@@ -69,8 +69,8 @@ Before producing the plan:
    quality day can be reasonable — provided HRV and TSB allow it. The
    zone balance is a corrective, not a veto against HRV signals.
 
-8. **Primary sport rule (MANDATORY):** Read `Sportarten-Priorisierung`
-   from `config/athlete_preferences.md`. The athlete's primary sport is
+8. **Primary sport rule (MANDATORY):** Read the sport-priority
+   section of `config/athlete_preferences.md`. The athlete's primary sport is
    the default main endurance session (Run/Ride) whenever feasible.
    Non-primary endurance sports may only become the main session when:
    - the primary sport is blocked (⛔ in `planningConstraints`, active
@@ -147,13 +147,14 @@ Before producing the plan:
 **Research anchor:**
 [heat-pace-penalty-at-fixed-hr.md](../research/heat-pace-penalty-at-fixed-hr.md).
 
-## Ordering with multiple sessions (MANDATORY)
-When the plan contains multiple sessions and one is plyo or strength
-(WeightTraining):
-- Plyo / strength always comes first in the array (session 1)
-- Run always comes after (session 2)
-This order is non-negotiable, regardless of HRV, intensity or other
-factors.
+## Ordering with multiple sessions
+When the plan holds a run or ride and a plyo / strength session, the session
+that carries the day's adaptation goes first in the array: plyo / strength
+before an easy or Z2 session; a quality endurance session (intervals, race
+pace) before leg-loading strength, because leg strength degrades running
+economy at the intensities where a quality session lives. `workout_parser.py`
+orders each day the same way and applies the interference spacing
+(`config/training_paradigms.md`, same-day ordering).
 
 ## Complementary split — one workout per focus (preference-gated)
 When `config/athlete_preferences.md` requests per-focus tracking of
@@ -314,10 +315,6 @@ Directive rules:
 Research anchor:
 [../research/carbon-plated-race-shoes-load-and-habituation.md](../research/carbon-plated-race-shoes-load-and-habituation.md).
 
-Decide WHAT is trained — a workout specialist will produce the detailed
-structure afterwards.
-
-## Output format
 ## Return window after a low-back episode (MANDATORY)
 
 The 4–8 weeks following an acute non-specific low-back episode are a
@@ -335,14 +332,17 @@ high-risk window for the next one. Two planning consequences:
   cautious plan that reduces general activity trades a strong protective
   factor for a weak one.
 
-Respond with valid JSON only. No explanatory text, no preamble. Start
-directly with `{`.
-IMPORTANT: No `structure` field — the specialist creates that separately
-based on your coaching_notes.
+Decide WHAT is trained — a workout specialist will produce the detailed
+structure afterwards.
+
+## Output format
+Return the plan directive as one JSON object with the shape below, and
+present it in chat as described at the end of this file. Omit the
+`structure` field: the specialist creates it from your `coaching_notes`.
 
 ```json
 {
-  "coaching_notes": "Today's athlete state and overarching daily goal — applies to all sessions. Frame positively; do not mention that something is overdue. [max 500 chars]",
+  "coaching_notes": "Today's athlete state and overarching daily goal — applies to all sessions. Frame positively; name a due stimulus together with what unlocks it, never as a lapse. [max 500 chars]",
   "active_blocks": [
     {"area": "e.g. push-ups/dips", "reason": "shoulder phase X", "since": "YYYY-MM-DD"}
   ],

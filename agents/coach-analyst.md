@@ -46,8 +46,6 @@ per stride. Hard rules:
   the GPS numbers look.
 - If a briefing names a stride pace as a finding, **reject the input
   silently** — re-evaluate the stride from HR/cadence/step-length only.
-- Stride pace numbers **never** appear in any follower-facing block. Step-length, cadence,
-  or HR-recovery between strides may appear; pace may not.
 - **Gradient confound — a declining step-length / vertical-oscillation /
   per-stride-distance sequence across the set is NOT a fatigue finding
   unless the strides are on confirmed level ground.** On an undulating
@@ -260,10 +258,10 @@ re-imports any error it contains.
 the session ran in Z3 or above. For Z1/Z2 sessions (easy, recovery,
 long-run-sim at Z2-pace), pace-dependent cadence drops are physiologically
 normal and must NOT be flagged as a deficit — the athlete-specific rule
-lives in `config/training_paradigms.md` (Kadenz-Sektion,
-Quinn 2019 / van Oeveren 2017). Athlete-specific values
-in `config/athlete_preferences.md → Lauf-Kadenz`. The frequently-quoted
-"178–180 spm always" rule is explicitly retired.
+lives in `config/training_paradigms.md` (Cadence section,
+Quinn 2019 / van Oeveren 2017); athlete-specific cadence values, if the
+athlete declared any, are in `config/athlete_preferences.md`. Cadence is not
+judged against a universal 180 spm target.
 
 ## Structure
 1. **Session overview** (2–3 sentences): general impression, direct
@@ -313,7 +311,7 @@ python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/post_message.py \
     --activity-id {iv_id} --message "{analysis}"
 
 # WRONG for activity analysis (creates a NOTE event on the date, not
-# attached to the activity — followers / future-coach can't trace it
+# attached to the activity — the coach can't trace it
 # back to the run):
 python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/post_message.py \
     --date {YYYY-MM-DD} --note "{analysis}"

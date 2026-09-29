@@ -65,7 +65,7 @@ Bei Doppeleinheiten mit WeightTraining + Lauf gelten folgende Mindestabstände:
 
 Grund: Bein-Kraft vor dem Lauf erhöht metabolische Interferenz und CNS-Ermüdung signifikant. Der Abstand ermöglicht partielle Glykogen-Resynthese und reduziert mechanische Ermüdung.
 
-**Reihenfolge:** WeightTraining IMMER vor dem Lauf (gleicher Tag). Nie umgekehrt.
+**Reihenfolge:** standardmäßig Kraft vor dem Lauf (gleicher Tag). An einem Tag mit Bein-Kraft (`legs` / `plyo`) geht eine Qualitätseinheit (Intervalle, Renntempo) zuerst; die Kraft folgt frühestens 6 h später. `workout_parser.py` setzt Reihenfolge und Abstände um.
 
 **Startzeiten (workout_parser.py setzt dies automatisch um):**
 - Standard-Doppeltag: Kraft 06:00 → Lauf 09:30 (06:00 + Kraft-Dauer + 3h)

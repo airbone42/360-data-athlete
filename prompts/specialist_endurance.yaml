@@ -81,7 +81,7 @@ template: |
   - TSB strongly negative (<-15): volume -10%, avoid Z3+
 
   ## Output format
-  Respond ONLY with a valid JSON object. Start directly with `{{`.
+  The result is a JSON object of this shape:
 
   The `focus` field contains 3-5 sentences of coaching text for the athlete: session goal, focus points, context from history / feedback / wellness. This text is displayed in Telegram — personal, motivating, technically precise.
   IMPORTANT: The `coaching_notes` from the planner directive are already known to the athlete — do NOT repeat their content in the `focus` field. Use them only as context for the training structure.

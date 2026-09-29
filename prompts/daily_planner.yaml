@@ -43,18 +43,14 @@ template: |
 
   Produce a strategic training proposal for today only. Decide WHAT is trained — a workout specialist will then produce the detailed structure.
 
-  ## Ordering when multiple sessions (MANDATORY)
-  If the plan contains multiple sessions and one of them is Plyo or Strength (WeightTraining):
-  - Plyo/Strength is ALWAYS the first object in the array (session 1)
-  - Run is ALWAYS scheduled after (session 2)
-  This ordering is non-negotiable and applies independently of HRV, intensity, or other factors.
+  ## Ordering when multiple sessions
+  Default order when a plan holds Plyo/Strength and a Run: Plyo/Strength first (session 1), Run after (session 2). Exception: on a day with leg strength (`legs` / `plyo`), a quality endurance session (`INTERVALS` / `RACE`, or tagged `intervals`) goes first and the strength block follows ≥ 6 h later. `workout_parser.py` sorts and spaces the day accordingly.
 
   ## Output format
-  Respond ONLY with a valid JSON object. No explanatory text, no preamble – start your response directly with `{{`.
-  IMPORTANT: No "structure" field – the specialist creates that separately based on your coaching_notes.
+  The plan directive is a JSON object of this shape (no "structure" field – the specialist creates that separately from your coaching_notes). The authoritative schema is in agents/planner.md.
 
   {{
-    "coaching_notes": "Today's athlete status and overarching daily goal – applies to all sessions. Phrase positively, do not mention that anything is overdue. [max. 500 characters]",
+    "coaching_notes": "Today's athlete status and overarching daily goal – applies to all sessions. Phrase positively; name a due stimulus together with what unlocks it, never as a lapse. [max. 500 characters]",
     "workouts": [
       {{
         "type": "Run|Ride|WeightTraining|Workout",

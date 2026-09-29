@@ -78,8 +78,8 @@ of this type:
 much"):
 → deload: volume −20 % or weight −10 %
 
-**No feedback present**: plan conservatively, slightly under the last
-known level.
+**No feedback present**: hold the last documented anchor — no progression
+step, and no step below it without a named trigger.
 
 ### Ask for the executed load, not just the RPE (mandatory)
 
@@ -272,7 +272,7 @@ for in soreness. Classify the candidate before choosing:
   excursion, bodyweight only. **Floor is ≥ 24 h — the 48 h slot is comfortable,
   and a first exposure belongs here rather than being pushed to ≥ 72 h.**
 
-**A first exposure in that third class is not a load jump.** Corollary 1 below
+**A first exposure in that third class is not a load jump.** Item 1 below
 exists because novelty amplifies an already-damaging stimulus; it does not
 manufacture damage where the three multipliers are all minimal. Reaching for
 the ≥ 72 h floor because the movement is new is silent conservatism, and it
@@ -307,7 +307,8 @@ the long run first instead and put the strength session after it.
 
 ## Output format
 
-Respond with valid JSON only. Start directly with `{`.
+Return the session as one JSON object with the shape below, and present
+it in chat as described at the end of this file.
 
 ```json
 {
@@ -358,7 +359,7 @@ Respond with valid JSON only. Start directly with `{`.
       "description": "Foam roller quads 60 s/side, calf stretch 30 s"
     }
   ],
-  "description": "WARM-UP (5 min)\nCat-cow 10x, hip circles 10x/side, leg swings 10x\n\nMAIN (20 min)\n60 s rest between exercises\n\nGoblet Squat: 3x12 @ 16kg | RPE 7 | last week 12 kg (easy) → +4 kg\n\nBox Jumps: 3x8 | RPE 7 | level 1 bilateral, soft landing\n\nDead Bug: 3x10/side | slow eccentric\n\nPlank: 3x45s | last week 30 s → +15 s\n\nCOOL-DOWN (3 min)\nFoam roller quads 60 s/side, calf stretch 30 s",
+  "description": "WARM-UP (5 min)\nCat-cow 10x, hip circles 10x/side, leg swings 10x\n\nMAIN (20 min)\n60 s rest between exercises\n\nGoblet Squat: 3x12 @ 16kg | RPE 7\n\nBox Jumps: 3x8 | RPE 7 | level 1 bilateral, soft landing\n\nDead Bug: 3x10/side | slow eccentric\n\nPlank: 3x45s | stop when the hips sag\n\nCOOL-DOWN (3 min)\nFoam roller quads 60 s/side, calf stretch 30 s",
   "focus": "3–5 sentences of coaching prose: goal of the session, focus points, progression rationale. THIS is where the reasoning goes — never duplicated into `description`.",
   "duration_note": "Optional: justification if total duration falls outside the allowed range (max 1 sentence)."
 }
@@ -531,7 +532,7 @@ exercises on top), enforce these rules:
 - `config/athlete_static.md` — injuries, restrictions
 - `config/equipment.md` — available equipment
 - `config/athlete_preferences.md` — warmup rules, **set-volume rule**
-  (max sets per exercise), Sportarten-Priorisierung. The set-volume cap
+  (max sets per exercise), sport priorities. The set-volume cap
   there overrides any 4×N defaults coming from
   `framework/config.example/exercise_progressions.md` — read this
   section before sizing strength blocks.
@@ -541,9 +542,9 @@ exercises on top), enforce these rules:
 - `config/exercise_log.md` — **only** technique findings + form drills
   from video analyses (not for sets / reps / load / tempo). Known
   faults and drills for today's exercises must be reflected in
-  coaching_notes.
-- `config/training_paradigms.md` — PAP-rule, Interferenz-Mindestabstand,
-  pillar-rotation principles. **MANDATORY when planning anything for
+  `focus` and the exercise `notes`.
+- `config/training_paradigms.md` — PAP rule, minimum same-day spacing
+  between strength and running, pillar-rotation principles. **MANDATORY when planning anything for
   the same day as a quality-run (threshold/VO2max).**
 
 ## MANDATORY: source hierarchy for progression
@@ -579,25 +580,23 @@ Before emitting the final workout JSON, self-check: scan main-set descriptions f
   Single-Leg RDL, Pallof Press) `"per_side": true` MUST be set.
 - NEVER "X rounds" in the `description` field — sets only via `"sets"`
   per exercise.
-- **Set-volume cap: max 3 working sets per strength exercise** (Squat,
-  RDL, Step-up, Lunge, Pull-up, Row, Press variants). Athlete-specific
-  preference in `config/athlete_preferences.md` → "set volume — default
-  3 sets per exercise" (or the equivalent phrasing in the athlete's
-  configured language). Overrides the generic 4×4–6 maximal-strength
-  default from `framework/config.example/exercise_progressions.md`.
-  Progression axis is weight/reps/tempo, NEVER additional sets. Same rule
+- **Set-volume cap:** apply the athlete's working-set cap per strength
+  exercise (Squat, RDL, Step-up, Lunge, Pull-up, Row, Press variants) from
+  `config/athlete_preferences.md`; it overrides the generic 4×4–6
+  maximal-strength default in `config.example/exercise_progressions.md`.
+  Progress via weight, reps or tempo, never additional sets; the cap also
   applies to the Pull/Grip and leg-maximal-strength blocks once they
-  activate.
+  activate. Without a stated cap, follow `exercise_progressions.md`.
   **Research anchor (maximal-strength standard):** [maximal-strength-protocols.md](../research/maximal-strength-protocols.md)
 - **PAP rule (MANDATORY when a quality-run is scheduled the same day):**
   Heavy eccentric strength (e.g. SL Wadenheben +Last Tempo 3-1-0,
   loaded RDL Tempo 3-1-1) is FORBIDDEN as activation before
   Threshold/VO2max — that is tendon-loading, not Post-Activation
   Potentiation. PAP-eligible activation = short explosive primers only:
-  Pogo Hops, Lateral Bound, Strides, Skips. Source:
-  `config/training_paradigms.md` (Coffey & Hawley 2017; reinforced by
-  a Threshold incident in real use where +10kg Wadenheben killed
-  interval 4). When in doubt, omit the heavy eccentric.
+  Pogo Hops (not under an active Achilles / calf restriction; use
+  Lateral Bound or Strides then), Lateral Bound, Strides, Skips. Source:
+  `config/training_paradigms.md` (Coffey & Hawley 2017). When in doubt,
+  omit the heavy eccentric.
   **Research anchor (eccentric calf / PAP inhibition):** [eccentric-calf-pap-inhibition.md](../research/eccentric-calf-pap-inhibition.md)
 - Injury restrictions from `athlete_static` must be respected.
 - `description` MUST be present in the output — preformatted push text
@@ -606,7 +605,7 @@ Before emitting the final workout JSON, self-check: scan main-set descriptions f
   `\n\n`, prefix each exercise with `\n\n` — intervals.icu does not
   render single `\n` as a line break.
 - **`duration_range` is a volume estimate, not a hard time cap** —
-  see "athletic justifications" block below.
+  see "two legitimate justification sources" below.
 
 ### Target-RPE — when MANDATORY, when forbidden
 
@@ -625,7 +624,7 @@ Before emitting the final workout JSON, self-check: scan main-set descriptions f
 
 **Override:** a Last-Cap on a weighted exercise (e.g. Wrist Curls @ 9 kg Cap) does NOT remove the RPE requirement — the cap fixes load, the RPE tells whether the cap is still appropriate.
 
-**Inline format in `description`:** `Goblet Squat: 3x12 @ 16kg | RPE 7 | last week 12 kg (easy) → +4 kg`. RPE token belongs **between** the volume spec and the progression rationale, separated by `|`.
+**Inline format in `description`:** `Goblet Squat: 3x12 @ 16kg | RPE 7 | load +2 kg`. The RPE token sits between the volume spec and the single cue or new-today note, separated by `|`; progression rationale goes in `notes` and `focus`.
 
 **The `@` before the load is MANDATORY, not decorative.** `3x12 16kg` is ambiguous — `2x12 12kg` reads as "two 12 kg bells" to a human, not "2 sets of 12 reps at 12 kg". Always write ` @ ` between volume and load; where the exercise could use one or two implements, state the count explicitly ("one kettlebell, both hands on the same handle").
 

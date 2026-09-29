@@ -255,7 +255,7 @@ Ask: "Does that fit, or should I adjust something?"
 
 **Feedback** → adjust (in the respective pane or yourself), re-present.
 
-**Acceptance** ("ok", "fits", "yes", "good", "go"):
+**Acceptance** (the athlete clearly accepts the plan, in any wording; a reply that also asks for a change is feedback first):
 ```bash
 echo '{workouts_json_array}' | python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/push_workouts.py --date {DATE}
 ```
@@ -267,8 +267,7 @@ was skipped or plan changes happened in between. ERRORs block the push
 NOTE).
 
 After the main push, `push_workouts.py` **auto-pushes the daily balance
-rotation** (rule "Daily balance rotation (mandatory)" from
-`framework/CLAUDE.md`) — no extra step needed. The auto-push is
+rotation** (rule "Balance rotation" in `framework/CLAUDE.md` → Feedback loop) — no extra step needed. The auto-push is
 idempotent (skips if a `balance`-tagged event already exists for the
 date) and fail-soft (never blocks the main push). Opt out with
 `--no-auto-balance` only when explicitly justified (e.g. surgical

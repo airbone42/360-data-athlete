@@ -88,7 +88,7 @@ template: |
   - Level 3: Hanging Leg Raise, Toes-to-Bar — only if no active restrictions on hang/overhead movements are documented in {athlete_static}
 
   ## Output format
-  Respond ONLY with a valid JSON object. Start directly with `{{`.
+  The result is a JSON object of this shape:
 
   {{
     "structure": [

@@ -20,7 +20,8 @@ Each document follows this schema:
 One to three lines — the operative statement the coach system applies.
 
 ## Question / Trigger
-What did we want to know, and why (trigger, date, affected incident).
+Generic framing of the question and why it matters. No dated incident
+anchors and no athlete data points (see the research-analyst's sphere rules).
 
 ## Findings
 The scientific answer to the question, evidence-based. Structured by

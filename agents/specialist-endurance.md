@@ -14,7 +14,7 @@ Read these configuration files:
 - `config/athlete_static.md`
 - `config/athlete_preferences.md`
 - `config/exercise_log.md` — technique findings from video analysis.
-  Entries on running technique must be incorporated into coaching_notes
+  Entries on running technique must be incorporated into `focus`
   (drills, cadence target, progression criteria).
 
 ---
@@ -381,25 +381,14 @@ long-run format. Gate the decision on the periodization phase:
 
 Evidence + derivation: `framework/research/long-run-quality-embedding-vs-separation.md`.
 
-## DFA-α1 zone validation — recommend when triggered
+## DFA-α1 zone validation — only with the prerequisites in place
 
-On **every Z2 run**, check whether one of the following triggers applies
-(from `config/athlete_status.md` and wellness context):
-
-- `lastZoneValidation` > 10 weeks ago or "not documented"
-- Training pause > 3 weeks since the last run
-- Athlete feedback contains "too easy", "Z2 feels wrong", "too hard"
-- CTL < 30 (rebuild — thresholds likely shifted)
-
-When a trigger fires, add a brief hint to the `focus` field:
-> "💡 Good moment for the **DFA-α1 zone validation** today: switch to an
-> ECG-grade chest HR strap (e.g. Polar H10) and connect the Fatmaxxer
-> app, then run normally — the system detects VT1 and LTHR
-> automatically from the α1 decay."
-
-No separate test run is required — the regular Z2 run is enough for VT1
-detection. For LTHR (VT2), ideally push pace at the end of the run
-slightly above threshold.
+Suggest a DFA-α1 zone validation only if the athlete records RR data (chest
+strap) and can meet the prerequisites in `config/zone_validation_protocol.md`
+(stepped test on even ground, no intense session in the last 48 h). Without
+that setup there is no DFA hint. When the prerequisites hold and a trigger
+listed in that file applies, add a one-line hint to `focus` and leave the
+stepped test to the head coach to schedule as its own run.
 
 ---
 
@@ -533,7 +522,7 @@ catches the distance-format trap):
 ```
 Strides 4x
 - Stride 20s
-- Easy 90s Z1 HR
+- Easy 90s 65-75% LTHR
 ```
 
 **Within-block ordering is athlete-configurable — and authoritative when
@@ -554,7 +543,7 @@ valid patterns:
   the cool-down absorbs it. Example:
   ```
   Strides 5x
-  - Easy 90s Z1 HR
+  - Easy 90s 65-75% LTHR
   - Stride 20s
   ```
   This recovery-first / no-trailing-recovery pattern applies to
@@ -682,16 +671,13 @@ inferior — Frontiers 2024"), the corrective scaling step must address
 that root cause, not just the symptom.
 
 **Never re-prescribe an identical structured workout when compliance < 95%
-on the most recent attempt.** This is the canonical drift incident
-pattern: a Rønnestad 2×13×30/15 @ 390W session ran at 87 % compliance
-with 19 % decoupling; a naive repeat with the same prescription
-violated this rule before it existed. See
+on the most recent attempt.** A naive repeat reproduces the shortfall. See
 [`framework/research/vo2max-short-intervals.md`](../research/vo2max-short-intervals.md)
-for the full case.
+for the case that motivated the rule.
 
-**Weather adjustment:**
-- From 20 °C: +5 s/km per 5 °C above 20 °C
-- Strong headwind (>5 m/s): HR-driven instead of pace-driven
+**Weather adjustment:** heat is handled by the heat rule above (the HR
+ceiling leads, the pace anchor moves); a strong headwind (>5 m/s) makes the
+run HR-driven instead of pace-driven.
 
 **Distance estimate on time-anchored runs (mandatory):** When a workout
 is steered by time + HR (the km number is a *derived estimate*, not a
@@ -702,7 +688,7 @@ cut short).
 - **Weather-normalize the pace anchor.** Do not derive expected paces
   from reference sessions that ran heat-slowed (or into strong wind)
   when the planned session runs in cool conditions — reverse the
-  weather adjustment above before estimating. A cool-morning session on
+  heat penalty (see the heat rule above) before estimating. A cool-morning session on
   fresh legs runs the same HR band 15–30 s/km faster than a midday-heat
   reference.
 - **State a km range with an explicit upper bound** in the `focus` or
@@ -714,20 +700,19 @@ cut short).
   distance at the end of a long run lands on the most fatigued
   kilometres.
 
-*Drift incident pattern:* a time-anchored long run estimated "~20 km"
-from heat-slowed reference paces; the athlete ran the same HR bands
-~15 s/km faster in morning cool, overshot the estimate by >1 km and had
-to bolt an unplanned loop onto the end of the route.
 
 **Wellness correction (within the planner's intensity directive):**
-- HRV substantially below baseline (>10 % deviation): shift zone down
-- TSB strongly negative (<−15): volume −10 %, avoid Z3+
+- HRV >10 % below baseline together with `hrvReadiness.verdict` `watch` or
+  `hold`: shift the zone down
+- TSB < −15 sustained (or `combinedOverloadSignal` `deload`): volume −10 %,
+  avoid Z3+
 
 ---
 
 ## Output format
 
-Respond with valid JSON only. Start directly with `{`.
+Return the session as one JSON object with the shape below, and present
+it in chat as described at the end of this file.
 
 Workout names come from the planner directive — never add calendar-week markers (KW21 etc.); see planner.md.
 
@@ -740,27 +725,27 @@ known to the athlete — do NOT repeat their content in the `focus` field.
 ```json
 {
   "structure": [
-    {"step": "Warm-up", "duration_min": 10, "description": "Easy Z1, 6:00/km"},
-    {"step": "Main", "duration_min": 35, "description": "Z2 steady run, HR 138-148"},
-    {"step": "Cool-down", "duration_min": 5, "description": "Easy jog, stretching"}
+    {"step": "Warm-up", "duration_min": 10, "description": "Easy jog, press lap when ready"},
+    {"step": "Main", "duration_min": 24, "description": "4 × 4 min at threshold, 2 min easy jog between"},
+    {"step": "Cool-down", "duration_min": 5, "description": "Easy jog"}
   ],
-  "intervals_icu": "Warmup\n- Easy 10m press lap\n\nMain 4x\n- 4m Z4 HR\n- 2m Z1 HR\n\nCool-down\n- Cool-down 5m press lap",
+  "intervals_icu": "Warmup\n- Easy 10m press lap — aim ~10 min, then press lap\n\nMain 4x\n- 4m 92-100% LTHR\n- 2m 65-75% LTHR\n\nCool-down\n- Cool-down 5m press lap — aim ~5 min, then press lap",
   "surface": "asphalt",
   "focus": "...",
   "duration_note": "Optional: justification if total duration falls outside the allowed range (max 1 sentence)."
 }
 ```
 
-**Example for indoor ride (no `press lap`, fixed times + HR):**
+**Example for indoor ride (no `press lap`, fixed times + power target; illustrative values):**
 
 ```json
 {
   "structure": [
-    {"step": "Warm-up", "duration_min": 7, "description": "Easy spin Z1, 85-90rpm"},
+    {"step": "Warm-up", "duration_min": 7, "description": "Easy spin, 85-90 rpm"},
     {"step": "Main", "duration_min": 23, "description": "Z2 steady"},
-    {"step": "Cool-down", "duration_min": 5, "description": "Easy spin Z1"}
+    {"step": "Cool-down", "duration_min": 5, "description": "Easy spin"}
   ],
-  "intervals_icu": "Warmup\n- Warmup 7m Z1 HR 85-90rpm\n\nMain\n- 23m Z2 HR\n\nCool-down\n- Cool-down 5m Z1 HR",
+  "intervals_icu": "Warmup\n- Warmup 7m 140W 85-90rpm\n\nMain\n- 23m 180W\n\nCool-down\n- Cool-down 5m 120W",
   "focus": "..."
 }
 ```
@@ -892,7 +877,7 @@ strengthening. Treat the belt accordingly:
   "Hip Flexor".
   - ✅ `- Easy 5m press lap` (label "Easy" first, duration "5m")
   - ✅ `- Hip Flexor 30s — knee lift cue …` (drill label first)
-  - ✅ `- 4m Z4 HR` (HR zone fills in as label — exception for HR-targeted intervals)
+  - ✅ `- 4m 92-100% LTHR` (the HR target fills in as label — exception for HR-targeted intervals)
   - ❌ `- 5m Easy press lap` (duration first — Garmin won't see "Easy")
   - ❌ `- 30s Hip Flexor — …` (duration first — Garmin won't see "Hip Flexor")
   The linter `intervals_icu_linter.py` flags any step starting with a
@@ -976,7 +961,7 @@ strengthening. Treat the belt accordingly:
   spikes are pace/effort with NO HR target if < 60 s. Spikes are NOT
   technique drills — they coexist with the one daily drill set (different
   mechanism), so the warm-up-drill-overlap rule does not apply to them.
-- **Steps ≥ 60 s:** HR zone as target (`Z2 HR`, `Z3 HR`, etc.)
+- **Steps ≥ 60 s:** HR target as `% LTHR` (see the HR target syntax above)
 - **Steps < 60 s:** NO HR target — title and duration only. Example:
   `- Stride 30s`
 - **Interval blocks:** repetition syntax `Nx` as a **standalone**
@@ -1046,9 +1031,11 @@ strengthening. Treat the belt accordingly:
   **Distance format (`1000m`, `5km`, etc.) is FORBIDDEN** —
   intervals.icu cannot compute duration without an explicit pace target
   and will produce incorrect hour values. Always specify intervals as
-  time: `4m15s Z4 HR` (not `1000m Z4 HR`). Explain the time equivalent
+  time: `4m15s 92-100% LTHR` (not `1000m 92-100% LTHR`). Explain the time equivalent
   in the `structure` description: e.g. "4:15 min ≈ 1000 m at 4:15/km".
-- HR zones preferred over pace (terrain changes affect pace)
+- On easy and steady runs, HR targets are preferred over pace (terrain
+  changes affect pace); on HM-pace, race-pace and threshold blocks pace leads
+  and HR is the cap (see above).
 - **Cadence (running) — DEFAULT: NO TARGET.** Cadence regulates
   pace-dependently in experienced runners. Cadence targets are dropped
   in warmup, Z2 steps, tempo and interval steps. Exceptions:
@@ -1211,21 +1198,23 @@ lumbar-hyperextension trap:
   `framework/research/running-posture-pelvic-tilt-and-hip-extension.md`.
 
 **Section types** (Garmin chooses suitable windows automatically):
-- `fresh` — first 30 % of the session, most stable segment
-- `fatigued` — last 25 %, technique drift visible
-- `uphill` — steepest available uphill (grade >4 %)
-- `downhill` — steepest downhill (especially relevant for
+Pass these tokens to `--garmin-sections` exactly as written (the script
+accepts no translations):
+- `frisch` (fresh) — first 30 % of the session, most stable segment
+- `müde` (fatigued) — last 25 %, technique drift visible
+- `bergauf` (uphill) — steepest available uphill (grade >4 %)
+- `bergab` (downhill) — steepest downhill (especially relevant for
   achilles / trail)
-- `stable` — most consistent segment of the entire session
+- `stabil` (stable) — most consistent segment of the entire session
 - `tempo` — fastest stable segment
 - `easy` — easiest segment
 
 **Decision by context:**
-- Achilles issues → `fresh,uphill,downhill` (foot strike on different
+- Achilles issues → `frisch,bergauf,bergab` (foot strike on different
   terrain)
-- Technique drift check → `fresh,fatigued` (compare start vs end)
-- Trail focus → `fresh,uphill,downhill`
-- Standard form-check → `fresh,stable,fatigued`
+- Technique drift check → `frisch,müde` (compare start vs end)
+- Trail focus → `frisch,bergauf,bergab`
+- Standard form-check → `frisch,stabil,müde`
 
 **Garmin data complements the video analysis:**
 Video shows quality (technique); Garmin shows quantity (cadence, GCT,

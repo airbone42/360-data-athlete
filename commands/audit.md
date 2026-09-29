@@ -82,13 +82,10 @@ After fixes: suggest running `/audit` again — idempotency should hold
 
 ### Step 6: Commit
 
-When the fixer is done: remind the athlete to commit (the head coach
-does this, not the fixer):
-
-```bash
-git add -A
-git commit -m "fix(audit): F00X, F00Y — <short description>"
-```
+The fixer commits the files it changed right after its batch (its step 7).
+The head coach commits the audit report (`data/audits/…`) the same way:
+explicit paths, never `git add -A`, following the repository's commit
+convention.
 
 ---
 
