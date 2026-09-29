@@ -48,7 +48,7 @@ def mapping() -> dict:
     """Use the real framework mapping (config.example) — keys are stable."""
     from app.utils.paths import resolve_config
 
-    with open(resolve_config("exercise_muscle_mapping.json")) as f:
+    with open(resolve_config("exercise_muscle_mapping.json"), encoding="utf-8") as f:
         data = json.load(f)
     data.pop("_meta", None)
     return data

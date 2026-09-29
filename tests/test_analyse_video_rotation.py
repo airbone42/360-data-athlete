@@ -95,7 +95,7 @@ def test_rotating_calls_neutralise_the_container_flag():
     """Baking a rotation in and leaving the matrix behind rotates it twice."""
     assert ROTATION_NEUTRAL_INPUT[0].startswith("-display_rotation")
     assert ROTATION_NEUTRAL_INPUT[1] == "0"
-    source = (ROOT / "scripts" / "analyse_video.py").read_text()
+    source = (ROOT / "scripts" / "analyse_video.py").read_text(encoding="utf-8")
     # Both picture-producing calls go through the constant; only the probes,
     # which need the matrix to still be readable, may omit it.
     assert '"-noautorotate"' not in source
