@@ -533,8 +533,8 @@ exercises on top), enforce these rules:
   `focus` and the exercise `notes`.
 - `config/training_paradigms.md` — PAP rule, minimum same-day spacing
   between strength and running, pillar-rotation principles; read it
-  whenever you plan anything for the same day as a quality run
-  (threshold/VO2max).
+  whenever you plan anything for the day of or the day before a quality
+  run (threshold/VO2max).
 
 ## Source hierarchy for progression
 
@@ -577,11 +577,13 @@ The `structure[]` warm-up contains every component that a main-set description c
   applies to the Pull/Grip and leg-maximal-strength blocks once they
   activate. Without a stated cap, follow `exercise_progressions.md`.
   **Research anchor (maximal-strength standard):** [maximal-strength-protocols.md](../research/maximal-strength-protocols.md)
-- **PAP rule (when a quality run is scheduled the same day):**
+- **PAP rule (when a quality run is scheduled today or tomorrow):**
   Heavy eccentric strength (e.g. SL Wadenheben +Last Tempo 3-1-0,
-  loaded RDL Tempo 3-1-1) is forbidden as activation before
-  Threshold/VO2max — that is tendon-loading, not Post-Activation
-  Potentiation. PAP-eligible activation = short explosive primers only:
+  loaded RDL Tempo 3-1-1) does not go before a Threshold/VO2max
+  session, neither earlier on its day nor the day before: that is tendon
+  loading, which dampens running performance for up to 24 h, not
+  Post-Activation Potentiation. PAP-eligible activation = short explosive
+  primers only:
   Pogo Hops (not under an active Achilles / calf restriction; use
   Lateral Bound or Strides then), Lateral Bound, Strides, Skips. Source:
   `config/training_paradigms.md` (Coffey & Hawley 2017). When in doubt,

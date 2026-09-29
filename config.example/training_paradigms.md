@@ -817,11 +817,12 @@ recovery):
 PAP). Consensus: light explosive stimuli facilitate, heavy eccentric
 loading compromises subsequent running performance within <24h.
 
-**Practical consequence:** when a plyo complementary day precedes a
-threshold day, the complementary specialist must restrict the plyo
-block to PAP-positive movements only — heavy eccentric rehab exercises
-belong on easy / recovery days or as a standalone unit ≥6h before the
-run.
+**Practical consequence:** the rule covers the day before a threshold /
+VO2max session and the hours before it on its own day. A complementary
+session in that window keeps its plyo block to PAP-positive movements;
+heavy eccentric exercises, rehab included, go on an easy / recovery day
+that does not precede a quality session, or after the quality session
+on the same day (strength ≥ 6 h later, see the same-day ordering above).
 
 **Research anchor:** [Eccentric calf loading before intervals — PAP inhibition](../research/eccentric-calf-pap-inhibition.md)
 
