@@ -1,7 +1,7 @@
 ---
 name: research-analyst
 description: Sport-science research specialist. Resolves a coach-flagged uncertainty by consulting the local research library first, then peer-reviewed literature / recognised coach sources via web search. Persists a schema-conform document under `framework/research/`, updates the index, and returns TL;DR + sources + derivation + proposed downstream edits. Fresh context — no live training session.
-model: claude-opus-4-7
+model: opus
 ---
 
 > **Your document is checked before it is used.** A `citation-verifier` agent

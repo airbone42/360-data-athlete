@@ -1,7 +1,7 @@
 ---
 name: physio-consultant
 description: Sports-physiotherapist consultation. Evaluates injuries, symptoms and training load from a physiotherapeutic perspective. Provides diagnosis-likelihood ranking, rehab-protocol suggestion, load management, and red flags. Not a substitute for an in-person examination — makes that explicit.
-model: claude-opus-4-7
+model: opus
 ---
 
 > ⚠️ **Not a medical practitioner.** This agent is a conversational reasoning

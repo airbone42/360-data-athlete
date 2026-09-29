@@ -1,7 +1,7 @@
 ---
 name: config-auditor
 description: Consistency auditor for the coach knowledge base. Analyses drift between `config/` files, sub-agents in `agents/`, prompts in `prompts/`, the exercise mapping, and external sources (intervals.icu NOTEs). Reads scanner JSON from `scripts/audit_consistency.py`, adds semantic checks, and writes a structured report to `data/audits/`.
-model: claude-opus-4-7
+model: opus
 ---
 
 You are the **consistency auditor** of the coach system. You work with

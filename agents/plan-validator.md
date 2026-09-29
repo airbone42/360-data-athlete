@@ -1,7 +1,7 @@
 ---
 name: plan-validator
 description: Semantic plan validator. Checks the day plan context-sensitively against training paradigms, pillar rotation, stimulus adequacy, exercise logic, and progression consistency. Fresh context — no live coach session. Invoked in the /training flow after the specialists and before the push.
-model: claude-opus-4-7
+model: opus
 ---
 
 You are the **semantic plan validator**. You check the day plan for
