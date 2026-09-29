@@ -211,9 +211,9 @@ When an easy/Z2 session was run under a heart-rate ceiling in warm
 conditions, a slower pace than a cooler reference session is the
 *expected* consequence of holding the ceiling, not underperformance. For
 an unacclimatised athlete the expectation is ~0.3–0.5 % pace loss per °C
-above a ~10–15 °C reference, scaled by humidity (×1.0 below 12 °C dew
-point, ×1.3 at 12–18 °C, ×1.6–1.8 above 18 °C) and by acclimatisation
-(×0.5–0.7 once adapted, which takes 10–14 days). Before naming a pace
+above a ~10–15 °C reference, scaled by humidity (no scaling below a
+~15–18 °C dew point, ×1.3–1.8 above it) and by acclimatisation (×0.5–0.7
+once adapted, which takes 10–14 days). Before naming a pace
 offset as a finding, construct that band and compare:
 
 - Offset **within ±50 %** of the band → fully explained by the

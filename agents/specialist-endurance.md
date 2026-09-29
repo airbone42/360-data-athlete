@@ -34,10 +34,11 @@ becomes reachable, and do **not** measure the athlete's pace compliance
 against a pace recorded on a cool day.
 
 Expected magnitude for an unacclimatised athlete: ~0.3–0.5 % pace loss
-per °C above a ~10–15 °C reference, scaled by humidity (×1.0 below 12 °C
-dew point, ×1.3 at 12–18 °C, ×1.6–1.8 above 18 °C) and by acclimatisation
-(×0.5–0.7 once adapted, which takes 10–14 days). Dew point is the better
-reference than air temperature alone.
+per °C above a ~10–15 °C reference, scaled by humidity (no scaling below a
+~15–18 °C dew point, ×1.3–1.8 above it) and by acclimatisation (×0.5–0.7
+once adapted, which takes 10–14 days). Dew point is the better reference
+than air temperature alone. The figure is a magnitude, not a precise
+prediction.
 
 Consequences for the prescription:
 

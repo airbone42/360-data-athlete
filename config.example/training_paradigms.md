@@ -283,9 +283,10 @@ expected_pace_loss_pct ≈ (0.3 … 0.5) × °C_delta × humidity_factor × accl
 
 - `°C_delta` — versus a ~10–15 °C reference (or versus the cool-weather
   session being compared against)
-- `humidity_factor` — ×1.0 below 12 °C dew point, ×1.3 at 12–18 °C,
-  ×1.6–1.8 above 18 °C. **Dew point beats air temperature** as the
-  reference quantity; a degrees-only rule does not carry.
+- `humidity_factor` — ×1.0 below a ~15–18 °C dew point, ×1.3–1.8 above
+  it. **Dew point beats air temperature** as the reference quantity:
+  below that threshold a degrees-only rule carries, above it humidity has
+  to be counted. The factor is a magnitude, not a precise step.
 - `acclim_factor` — ×1.0 unacclimatised, ×0.5–0.7 once adapted.
   Adaptation takes 10–14 days of repeated heat exposure.
 
