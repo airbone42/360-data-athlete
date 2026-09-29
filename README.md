@@ -485,8 +485,8 @@ Plan:
 
 Pulls the activity, parses the FIT file, builds sub-laps, then the
 data-scientist agent produces a factual lap chronicle and the
-coach-analyst writes coaching feedback (max 250 words, GAP-aware on
-hilly profiles).
+coach-analyst writes coaching feedback (short enough to read as one
+activity message, GAP-aware on hilly profiles).
 
 ```
 > /aicoach-framework:analyse i12345678
@@ -618,8 +618,8 @@ outputs, and applies cross-workout consistency rules before pushing.
 | `specialist-complementary` | Strength, plyo, core structure (sets, reps, weights) | per-workout pane after planner (WeightTraining / Workout w/o ninja tag) | planner directive, type history, `exercise_progressions.md` | workout JSON with exercises[] |
 | `specialist-ninja` | Ninja athletics (5 pillars, grip, push/pull balance) | per-workout pane after planner (ninja tag) | planner directive, type history, pillar rotation | workout JSON with exercises[] |
 | `data-scientist` | Factual lap chronicle — no interpretation | `/analyse` after FIT parse | sub-laps JSON, HR zones | per-lap chronicle markdown |
-| `coach-analyst` | Coaching feedback on the lap chronicle | `/analyse` after data-scientist | data-scientist output + activity + wellness | feedback markdown (overview / strengths / growth, max 250 words) |
-| `mental-coach` | Pre-workout motivation, setback processing | auto-triggered on LONG / RACE / setback / motivation signal; `/mental` | wellness, last 3 activities, free-text context | 3–7 sentence message |
+| `coach-analyst` | Coaching feedback on the lap chronicle | `/analyse` after data-scientist | data-scientist output + activity + wellness | feedback markdown (overview / strengths / growth, one short activity message) |
+| `mental-coach` | Pre-workout motivation, setback processing | auto-triggered on LONG / RACE / setback / motivation signal; on request | wellness, last 3 activities, free-text context | short chat message |
 | `video-analyst` | Form check + sports-physiology challenge | Telegram video upload or manual `analyse_video.py` invocation | video frames, athlete restrictions, exercise checklist | execution + drill + challenge block (≤ 10 sentences) |
 | `plan-validator` | Semantic plan check before push | `/training` step 3.5b | final plan JSON + mechanical validator output + wellness + last 7 days | findings (ERROR / WARNING / INFO) + clearance |
 | `config-auditor` | Drift scanner across configs / agents / prompts | `/audit` | scanner JSON from `audit_consistency.py` | markdown report at `data/audits/...md` |

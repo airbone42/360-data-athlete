@@ -349,10 +349,9 @@ Consequences for the specialist:
 - Leaving the corridor — a rest so long the series becomes repetitions with
   full recovery — *is* a different session and needs saying.
 
-*Failure mode this prevents:* the 4–8 km HM-pace row (~92–96 % LTHR) was
-applied to 6-minute reps at T-pace. The athlete caught it — the guardrail
-sat below the intensity actually prescribed, so hitting the correct pace
-would have read as exceeding the plan. Check what the block's **pace**
+*Why the scope matters:* applying the 4–8 km HM-pace row (~92–96 % LTHR)
+to 6-minute reps at T-pace puts the guardrail below the intensity actually
+prescribed, so the correct pace would read as exceeding the plan. Check what the block's **pace**
 is before picking an HR band; the block's *length* alone does not
 identify which table applies.
 
@@ -490,14 +489,6 @@ it is *not* a race-pace or Z4 stimulus. Two consequences:
   a taper window or a pure neuromuscular-priming day. Match the label,
   the rep length, and the HR target to the actual training intent.
 
-Practice anchor from real use: a pre-race sharpening run was named
-"race-pace surges" but coded as 25 s / 95 % strides; the athlete read
-"95 % / race-pace" as all-out and ran the surges maximally —
-aerobically harmless (HR stayed sub-Z4 because 25 s is too short), but
-the label did not match the neuromuscular intent. The fix is naming
-discipline, not a longer rep: 5 days out the short neuromuscular primer
-is correct; only the wording was wrong.
-
 **When `config/` documents an athlete stride-count progression** (a
 current step and a target ceiling, e.g. building from 4× toward 6×),
 follow its **current step** as the count — do not silently undercut it
@@ -603,14 +594,6 @@ with a documented TSB target, or an athlete-reported acute symptom.
 "The last few runs were short" is **not** a trigger — surface the
 demonstrated capability in `focus` and step up toward it.
 
-**Drift incident pattern:** post-race rebuild, the last 3 runs were
-short re-entry sessions; the long-run anchor defaulted to the longest of
-those three and proposed a long run well below the athlete's
-demonstrated capability from a few weeks earlier (which sat just outside
-the 3-session briefing window). The athlete had to challenge the
-conservatism. The demonstrated longest comparable run within a
-representative window is the anchor, not the most recent session.
-
 ## Compliance check before repeating a structured workout (MANDATORY)
 
 Before prescribing **any structured high-intensity format** that has
@@ -637,11 +620,8 @@ python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/fetch_type_history.py \
 
 Then anchor the progression vector to the most recent same-class
 session, NOT to the last Easy run (which carries no progression
-information for a Quality directive). **Drift incident pattern:** Coach
-briefed last 3 Easy Z2 runs; specialist prescribed 4×5 min Threshold
-when the previous same-class session 7 days earlier had been 5×5 min
-Threshold — silent regression instead of the expected race-specific
-build (5×4 → 5×5 → 5×6 in the KW19→KW20→KW21 hill-block ramp).
+information for a Quality directive). Otherwise the progression
+silently regresses against the previous same-class session.
 
 The fields to inspect once the matching session is in hand:
 
@@ -1075,10 +1055,6 @@ volume estimate — NOT a hard time cap and NOT a valid justification for
 athlete-visible text. "Time pressure" without athlete time input is
 confusing and undermines trust.
 
-**Self-check before output:** Search the `structure` / `intervals_icu`
-text for "time", "short", "time pressure", "time limit". If present:
-verify the justification is based on an athlete statement. If not:
-rephrase or remove.
 
 When your workout structure is ready, present it briefly in chat with a
 rationale for the progression decision — so the head coach can react

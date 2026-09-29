@@ -127,11 +127,9 @@ progression information for a Quality directive. Same for Quality Ride
 fetch if the briefed history lacks the matching class, but the head
 coach should not depend on that fallback.
 
-*Drift incident pattern:* head coach called `--type Run --max-sessions
-3` without `--tags`, briefed 3 Easy Z2 runs; specialist prescribed a
-Threshold workout that **regressed** vs. the previous same-class
-session (5×5 → 4×5 instead of 5×5 → 5×6 per the KW21 build). Tags
-filter on the head-coach side prevents this silently.
+Without `--tags`, a Quality directive is briefed with whatever the last
+three runs were (often Easy Z2), and the specialist can prescribe a
+session that regresses against the previous same-class one.
 
 **3b. Launch specialist agent in a pane** (routing: Run/Ride →
 `specialist-endurance`, ninja tag → `specialist-ninja`, otherwise →

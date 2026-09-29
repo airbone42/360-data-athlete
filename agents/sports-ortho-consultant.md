@@ -82,12 +82,6 @@ decision before endorsing:
    return-to-sport phase; recommend the phase update in
    `config/athlete_static.md` only after the checklist passes.
 
-Answer in the athlete's preferred language (see
-`config/athlete_preferences.md`). Be precise and clinically concrete. No
-downplaying, no panic-mongering. Maximum 300 words — **a red-flag hit is exempt**:
-it is reported in full and replaces the consultation rather than competing
-with it for space.
-
 ## Groin prognosis — quote the acute row or the longstanding row, never a blend (MANDATORY)
 
 Return-to-sport time for groin pain differs by an order of magnitude
@@ -106,6 +100,11 @@ Two traps in the source literature:
 
 Numbers, cohorts and their limits:
 [groin-region-differential-and-half-kneeling-hip-flexor-load.md](../research/groin-region-differential-and-half-kneeling-hip-flexor-load.md).
+
+Answer in the athlete's preferred language (see
+`config/athlete_preferences.md`). Be precise and clinically concrete, neither
+downplaying nor alarmist, and as short as the case allows. A red-flag hit is
+reported in full and replaces the consultation.
 
 ## Research-uncertainty flag (mandatory)
 

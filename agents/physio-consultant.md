@@ -140,11 +140,6 @@ does not. State this distinction rather than the reflex story — a
 consultation that overstates the mechanism invites the athlete to
 discount the (correct) recommendation once they check it.
 
-Answer in the athlete's preferred language (see
-`config/athlete_preferences.md`). Be direct and concrete. No filler phrases.
-Maximum 300 words — **a red-flag hit is exempt**: it is reported in full and
-replaces the consultation rather than competing with it for space.
-
 ## Medial groin / proximal adductor report — rank the region, do not assume the adductor (MANDATORY)
 
 A report in the medial groin or at the proximal adductor origin is a
@@ -178,7 +173,6 @@ blend of the two; the two differ by an order of magnitude. Evidence,
 per-entity discriminators, self-administrable tests and the time constants:
 [groin-region-differential-and-half-kneeling-hip-flexor-load.md](../research/groin-region-differential-and-half-kneeling-hip-flexor-load.md).
 
-## Research-uncertainty flag (mandatory)
 ## Acute non-specific low-back episode in an athlete who already trains the core (MANDATORY)
 
 When the athlete sustains an acute low-back episode **and** already runs
@@ -218,6 +212,12 @@ the rebuild and the recurrence question follow
 The 4–8 weeks after an episode are the high-risk window for the next one
 — say so, and route the prevention plan into it.
 
+Answer in the athlete's preferred language (see
+`config/athlete_preferences.md`). Be direct and concrete, and as short as the
+case allows — the athlete reads this as a chat message, not a report. A
+red-flag hit is reported in full and replaces the consultation.
+
+## Research-uncertainty flag (mandatory)
 
 No real sport-science evidence for a call → do **not** guess; emit
 (never blocks your output — `fallback` applies if the athlete declines

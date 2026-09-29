@@ -121,7 +121,7 @@ Launch the `coach-analyst` agent in a pane. Pass:
 - Athlete context (wellness_brief, recent_training)
 
 Structure: **Session overview** | **Strengths** | **Growth areas**.
-Max 250 words.
+Short enough to read in one sitting on a phone.
 
 ### Step 6.5: Log muscle load (silent)
 

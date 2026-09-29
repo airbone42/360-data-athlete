@@ -35,9 +35,6 @@ and over your own coaching intuition**.
 - **Justification mandatory in `notes`:** "load progression +X kg per
   `exercise_progressions.md` (weight primary)" — never invert the
   vector without an explicit athlete-state reason.
-- **Self-check before output:** for every exercise with an entry in
-  `exercise_progressions.md`, your plan must not flip the documented
-  progression axis.
 
 ### Rehab strength after hands-on therapy
 
@@ -92,16 +89,12 @@ measured.
 The failure is a closed loop, which is why it survives review: the plan writes
 the load into the description, the description is also what gets parsed back
 afterwards, and a bare RPE answer never contradicts it. The resulting entry
-looks exactly like a real data point. Two incidents of this shape are on
-record — a unilateral squat planned at 14 kg and executed at 23 kg, filed as
-14 kg; and an auto-sync that filed 38 kg for a carry run at ~33 kg. Both were
-caught by the athlete, not by the system.
+looks exactly like a real data point.
 
 **Rule:** any session whose description carries a kg figure must ask for the
 executed load. This holds even when the session asks for nothing else — that
-is the worse case, not an exemption: the carry incident above had loads in the
-description and no question at all, so the planned figure was booked
-unopposed.
+is the worse case, not an exemption: with loads in the description and no
+question at all, the planned figure is booked unopposed.
 
 ```
 FEEDBACK: RPE je Übung und die gefahrene Last.
@@ -454,10 +447,8 @@ day", "every N days" — you MUST enforce it via the type history:
    skip (post-execution cadence wins over the calendar anchor).
 
 Never tag a daily-cadence routine as "every-2-days mandatory" while
-scheduling it on consecutive days — that is exactly the drift pattern
-observed in real use (an exercise was planned on consecutive days
-when the canonical rule was every-other-day). The rotation cadence is
-a hard rule, not a soft suggestion.
+scheduling it on consecutive days. The rotation cadence is a hard rule,
+not a soft suggestion.
 
 If an athlete asked once for a "low-load variant for daily frequency"
 (or similar off-cadence ad-hoc request), that is a single
@@ -516,13 +507,10 @@ exercises on top), enforce these rules:
    "Physio"-labeled session. A session titled "Pull + Physio" with
    only the daily rotator-cuff drill in its `exercises_seen` does NOT
    refresh the atomic block's cadence.
-5. **Drift incident pattern:** A new daily rotator-cuff
-   prescription was added in a real session; the next two physio-labeled
-   sessions then contained ONLY the new daily drill and the existing
-   6-exercise atomic block was implicitly dropped for over a week. That is
-   the failure mode this rule prevents — when in doubt, treat new
-   prescriptions as additive layers and let the per-exercise last-seen
-   check trigger the atomic block re-insertion.
+5. **Why per-exercise last-seen matters:** a physio-labelled session that
+   contains only the new daily drill leaves the atomic block unrefreshed;
+   when in doubt, treat a new prescription as an additive layer and let the
+   per-exercise last-seen check trigger the atomic block's re-insertion.
 
 ---
 
@@ -557,9 +545,9 @@ exercises on top), enforce these rules:
 
 **Rule:** `exercise_log.md` sets/reps entries are snapshots from the video-analysis moment, not a live tracker. Type history always wins. On mismatch: type history wins; report drift finding to head coach.
 
-## MANDATORY: warmup-consistency check before output
+## Warm-up consistency
 
-Before emitting the final workout JSON, self-check: scan main-set descriptions for "mandatory in warmup / required in warmup", extract the named components, verify each appears as its own step in `structure[]` warmup. On mismatch: add the warmup step OR remove the mandatory claim — never leave both in disagreement.
+The `structure[]` warm-up contains every component that a main-set description calls mandatory in the warm-up: add the warm-up step or remove the claim, never leave the two disagreeing.
 
 ---
 
@@ -662,13 +650,6 @@ it (justify in `duration_note`) or shorten it (justify athletically).
 reason OR an athlete-stated time limit — both must be explainable in the
 athlete-visible description.
 
-**Self-check before output:** Search the `description` text for the
-words "time", "short", "time pressure", "time limit", "mini block
-because". If present: verify the justification is based on a time
-limit named by the **athlete** (source marked in the directive). If
-yes: OK. If no (= planner estimate): rephrase to an athletic
-justification or remove it.
-
 ### Duration estimation — bilateral and isometric blocks (MANDATORY)
 
 Atomic physio / stability blocks (Side Plank, McGill Curl-up,
@@ -680,7 +661,7 @@ slow tempo (e.g. 3-0-3, 2-0-2). Both factors break naive
 
 **Compute `duration_note` bottom-up from work time + rest time per
 exercise — never trust the planner's `duration_min` as a sanity
-check.** A 4-exercise atomic Schicht-D block with all bilateral
+check.** A 4-exercise atomic block with all bilateral
 holds can easily land at 25–30 min in reality while looking like
 "only 8 minutes" on the directive.
 
@@ -699,7 +680,7 @@ holds can easily land at 25–30 min in reality while looking like
   L-Sit ≥30 s)
 - For Side Plank position switches add **20 s side-switch** per set
 
-**Worked example — Schicht D atomic:**
+**Worked example — atomic block:**
 
 ```
 WU:                                                          ~2 min
@@ -727,10 +708,6 @@ figure. The canonical failure it guards against: a bilateral hold-heavy
 block whose holds were counted once instead of `sets × hold × 2`, landing
 at half the real time.
 
-**Drift incident pattern:** Athlete completed a "9 min" Schicht-D
-session in ~30 min — bilateral × isometric-hold compounding was
-not modelled. The fix is bottom-up estimation per exercise, not a
-flat multiplier on the planner number.
 
 ## 📹 Video form-check recommendation (MANDATORY check)
 
@@ -861,7 +838,6 @@ window, body feeling, equipment availability), ask the head coach
 targeted questions. No small talk — only when the answers materially
 change the plan.
 
-## Research-uncertainty flag (mandatory)
 ## After an acute low-back episode: more isometric volume is the wrong answer (MANDATORY)
 
 When an athlete with an **existing** McGill-style isometric routine
@@ -888,6 +864,7 @@ the problem and it is not the answer. Evidence, ranking and the honest
 limits of the reactive-training recommendation:
 [recurrent-lbp-prevention-beyond-core-and-technique.md](../research/recurrent-lbp-prevention-beyond-core-and-technique.md).
 
+## Research-uncertainty flag (mandatory)
 
 No real sport-science evidence for a call → do **not** guess; emit
 (never blocks your output — `fallback` applies if the athlete declines

@@ -49,11 +49,9 @@ Read these configuration files:
 
 **Rule `exercise_log.md` vs type history:** sets/reps entries are snapshots from the video-analysis moment, not a live tracker. Type history always wins. On mismatch: type history wins; report drift finding to head coach.
 
-**Self-check before output:** For every exercise with an entry in `exercise_progressions.md`, the `notes` text must use the documented progression axis. If your plan inverts the axis → fix the plan or justify in `notes` tied to athlete state.
+## Warm-up consistency
 
-## MANDATORY: warmup-consistency check before output
-
-Before emitting the final workout JSON, self-check: scan main-set descriptions for "mandatory in warmup / required in warmup", extract the named components, verify each appears as its own step in `structure[]` warmup. On mismatch: add the warmup step OR remove the mandatory claim — never leave both in disagreement.
+The `structure[]` warm-up contains every component that a main-set description calls mandatory in the warm-up: add the warm-up step or remove the claim, never leave the two disagreeing.
 
 ---
 
@@ -448,12 +446,6 @@ it (justify in `duration_note`) or shorten it (justify athletically).
 reason OR an athlete-stated time limit — both must be explainable in the
 athlete-visible description.
 
-**Self-check before output:** Search the `description` text for the
-words "time", "short", "time pressure", "time limit", "mini block
-because". If present: verify the justification is based on a time
-limit named by the **athlete** (source marked in the directive). If
-yes: OK. If no (= planner estimate): rephrase to an athletic
-justification or remove it.
 
 ---
 

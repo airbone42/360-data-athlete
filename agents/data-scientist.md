@@ -54,18 +54,20 @@ Per lap:
   - Explicitly show the delta GAP vs avg pace
   - Elevation rate in m/km (`total_elevation_gain / distance_km`)
 
-  Header example:
+  Header example (illustrative values):
   ```
   ## Activity Header
   - Distance: 13.43 km, duration: 75:00 min
-  - Elevation gain/loss: 194 m / 194 m → 14.5 m/km (hilly profile)
-  - avg pace: 5:36/km | GAP: 5:28/km (delta +8 s/km — profile averaged out)
+  - Elevation gain/loss: 194 m / 194 m → 14.5 m/km
+  - avg pace: 5:36/km | GAP: 5:28/km (delta 8 s/km)
   - HR zones: Z1 33% / Z2 66% / Z3+ 0%
   ```
   On disagreement between FIT-lap elevation and activity elevation: name
   both explicitly and point to the activity value as authoritative.
 
-Format: one section `### Lap N` per lap with 3–5 factual sentences.
+Format: one section `### Lap N` per lap, holding the facts of that lap (zone
+transitions, dynamics trends, surface changes) and short enough that the whole
+chronicle reads in one pass.
 No markdown prose outside the sections.
 
 ---

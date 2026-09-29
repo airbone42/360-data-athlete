@@ -321,16 +321,10 @@ to **reject** these inputs silently if they appear in a briefing — but
 the head coach removes the risk at the source by not listing them. All
 three rules apply to every run analysis.
 
-**Drift incident pattern** (canonical case to learn from): an Easy-Z2
-plan listed `surface: forest-path` for routing/shoe purposes; the head
-coach briefed the analyst with "Plan said 'forest-path flat', actual was
-259 m ascent on 6 km — race-prep bonus elevation". The athlete
-corrected: the route in question is the regular home-loop, that ascent
-profile is the **default**, not a deviation — and the actual race-prep
-quality (structured Z4 climb intervals) was still missing. Lesson: the
-"flach" wording in the surface-tag context is a shoe-advisor default,
-not a topography claim about the route. Always check the type-history
-elevation pattern before treating elevation as exceptional.
+**Drift incident pattern:** a home loop's normal ascent was briefed as
+"race-prep bonus elevation" against a `forest-path` surface tag, and the
+real gap — the structured climb intervals were still missing — went
+unmentioned.
 
 ### Session averages are not a comparison unit (mandatory)
 
@@ -362,15 +356,9 @@ so the invalid comparison is also the convenient one. Treat a pace or HR
 claim built from two session averages as unfounded until the blocks have
 been checked, however plausible the numbers look side by side.
 
-**Drift incident pattern** (canonical case to learn from): an easy run
-whose main block was markedly faster than any comparable recent session
-was reported back to the athlete as "no faster than two weeks ago",
-because the two session averages happened to match. They matched because
-the earlier run was longer and carried proportionally more easy volume.
-On the main block the two sessions were about 14 s/km apart. The athlete
-rejected it immediately — he knew which part of the session had been
-fast — and asked for the comparison to be put on the block level
-systematically.
+**Drift incident pattern:** two matching session averages were reported
+as "no faster than two weeks ago" while the main blocks were clearly
+apart — the earlier run simply carried more easy volume.
 
 *Enforcement: `history_fetcher._extract_blocks`, surfaced in the type
 history as `main_block` / `work_blocks` per session, with
@@ -397,7 +385,7 @@ recommendation from wellness data, sport-science evidence, and athlete
 history.
 
 - After specialists return their structures, present **one** plan with
-  a 1-sentence rationale and ask "Passt das, oder soll ich anpassen?".
+  a 1-sentence rationale and ask whether it fits or should be adjusted.
 - When the coach is genuinely torn between two reasonable plans, the
   resolution happens **internally** (planner pane feedback, mental-coach
   cross-check) — never by handing the dilemma back to the athlete as
@@ -430,12 +418,11 @@ below band) defaults to recovery. Do not treat "verdict ≠ clear" as a
 reason to downgrade.
 
 **Discount load-less days when reading accumulation signals.**
-**`lastRestDay` now does part of this for you:** when no day in the window
+**`lastRestDay` flags the common case:** when no day in the window
 is empty but one carried only short accessory work (no endurance session,
 no logged training load, ≤ 45 min total), the field reports that day as
-`LOAD-LESS` and names it. Treat such a day as effective rest. The rule
-below stays, because the field still cannot see everything — but the
-common case is now mechanical rather than remembered.
+`LOAD-LESS` and names it. Treat such a day as effective rest. The field
+does not see every load-less day, so the rule below still applies.
 
 `cycleHint`
 ("N consecutive load weeks") count **any day with ≥1 logged activity**
@@ -693,18 +680,10 @@ Two consequences that keep recurring:
   Discounting it as intuition while treating four correlated metrics as
   corroboration inverts the actual evidence ranking.
 
-**Drift incident pattern** (canonical case to learn from): an athlete reported
-that his legs felt far fresher than the session's effort implied. The coach
-built a quantitative case from ground-contact time, cadence and the watch's
-recorded pace, found all three consistent with a substantially slower speed,
-and concluded the treadmill belt was running about 12 % slow. The athlete
-doubted it on two grounds — that the slip figure was implausibly large, and
-that his own sense of the pace would have had to be badly wrong. A five-minute
-belt-revolution count under load then showed the belt accurate to under 1 %
-at three speeds. The three "independent" signals were three views of one
-stride, which on a treadmill simply differed from the athlete's outdoor
-stride; the one genuinely independent signal available beforehand had been the
-athlete's perception, and it had been set aside as intuition.
+**Drift incident pattern:** ground-contact time, cadence and watch pace
+"converged" on a slow treadmill belt; a five-minute belt-revolution count
+showed the belt accurate, and the athlete's perception — the one
+independent signal — had been set aside as intuition.
 
 *Enforcement: head-coach judgment. The failure is invisible in the record
 afterwards — a correct convergence and a tautological one look identical
@@ -952,8 +931,8 @@ menu):
   consults `framework/research/` first, then web sources, persists an
   athlete-agnostic document, and reports TL;DR + sources + derivation +
   proposed downstream edits).
-- **No** → apply the flag's `fallback`, communicated transparently ("kein
-  Research gewünscht → ich gehe konservativ mit {fallback}").
+- **No** → apply the flag's `fallback`, communicated transparently ("no
+  research wanted, so I'm going with the conservative {fallback}").
 
 **Re-entry.** If the flag interrupted a `/training` or `/analyse` flow,
 after `/research` completes re-brief the agent that raised it with the new
@@ -980,7 +959,7 @@ plan, not a commentary track on how the plan is being built.
 - **Results** that are already final and that the athlete would otherwise
   be surprised by later (a stimulus deliberately deferred, a restriction
   that fired, a step frozen rather than taken).
-- A one-line progress marker when a flow runs long ("Plan kommt gleich").
+- A one-line progress marker when a flow runs long ("plan is on its way").
 
 **What it must not contain:**
 
@@ -1061,13 +1040,9 @@ even when the omission was a defensible conservative default.
   the concrete plan without re-deriving "should we even do this" — the
   due-ness already established it.
 
-**Pattern anchor (from real use):** a coach held an overdue pillar back
-behind an acute injury gate (correct, conservative) but presented a
-plan that simply *omitted* it and asked a separate yes/no question
-about the injury. The athlete had to ask twice why the obviously-due
-stimulus wasn't in the plan. The fix is transparency, not a looser
-gate: show the queued stimulus and its unlock condition in the first
-proposal.
+**Pattern anchor:** an overdue pillar held back correctly behind an injury
+gate was simply left out of the plan, and the athlete had to ask twice why
+it was missing.
 
 *Enforcement: head-coach judgment — plan-presentation discipline, not a
 mechanizable code path.*
@@ -1096,16 +1071,10 @@ Permitted triggers (each entry must cite one):
 - "Calf raises locked today (PAP)" — when neither `todayWorkouts` nor tomorrow's plan contains a Threshold/VO2max/RACE workout. The PAP rule is conditional, not blanket.
 - "Pillar X off today" — when nothing in `planningConstraints` or the pillar-rotation history actually blocks it. Quiet rest > fabricated reason.
 
-**Drift incident pattern** (canonical case): A non-quality pillar day
-(no quality today, no quality tomorrow, no race scheduled) listed
-"Weighted calf raises locked (PAP rule)" and "Leg strength locked
-(race specificity)" as active blocks — both fabricated. The athlete
-caught it because the system docs (`training_paradigms.md` §339,
-`framework/research/eccentric-calf-pap-inhibition.md`,
-`framework/agents/specialist-complementary.md:374`) all correctly
-constrain the rule to "same-day quality". The error was at the
-head-coach briefing layer: pulling a contextual rule into a blanket
-ban without checking the trigger condition.
+**Drift incident pattern:** the first two forbidden blocks above were
+listed together on a day with no quality session and no race — a
+contextual rule pulled into a blanket ban at the briefing layer, although
+the PAP rule only applies when today or tomorrow carries a quality session.
 
 **Operational rule:** Before each "ACTIVE BLOCKS" line is written,
 the coach states the trigger in one phrase. If no trigger is
@@ -1268,16 +1237,9 @@ impact_density_max_5d: 4    # run days per trailing 5d (default: off)
 The density axis is deliberately **opt-in** — a fresh plugin user gets only
 the generous consecutive-day check and is never spammed.
 
-**Drift incident pattern** (canonical case to learn from): three running
-days in the week including a >90-min long run, a fourth easy run in the
-day's plan, and the week's quality session scheduled for the next day — four
-impact days in five, bracketing both a long run and a quality session, on an
-athlete whose documented limiters were impact-driven. Every individual
-signal was green, every validator rule passed, and the plan was presented.
-The athlete spotted the pattern and asked for a cross-training swap. Note
-what this implies for the guard's design: a strict consecutive-day counter
-would **not** have caught it (the streak was only two) — which is why the
-density axis exists.
+**Drift incident pattern:** four impact days in five, bracketing a long run
+and a quality session, passed every signal and every validator rule while
+the consecutive-day streak was only two.
 
 *Enforcement: `validate_plan.py::check_impact_day_streak` (R022) — WARNING,
 never blocking; downgraded to INFO when the run's notes document the
@@ -1392,15 +1354,9 @@ duplicated stimulus, not a complementary one.
    structure on the **same** day. Details and sources:
    [post-treatment-reaction-reload-dosing.md](research/post-treatment-reaction-reload-dosing.md).
 
-**Drift incident pattern:** A day with a physio appointment is
-planned with a "Physio-Termin" placeholder that claims to cover
-multiple home layers (shoulder + biceps + LBP), plus a parallel home
-plan with a Row main set. Athlete points out (a) the therapy
-appointment only covers shoulder, so biceps and LBP need to stay in
-the home plan, and (b) the home Row duplicates the physio Row from
-the atomic shoulder block. Fix: scope check up-front and route
-uncovered layers into the remaining session; drop the duplicated
-pillar main stimulus and defer it to a later weekday.
+**Drift incident pattern:** a therapy placeholder claimed to cover
+layers the appointment never touched, while the home plan repeated the
+Row the appointment did cover.
 
 *Enforcement: head-coach judgment — relies on a persisted
 therapy-scope note in `config/athlete_static.md` and the
@@ -1525,18 +1481,13 @@ few bpm below Run-HFmax, or a documented Rad-Z2 ceiling), the Ride
 workout MUST use the Rad-specific zones, not the Run zones.
 
 Typical Cross-Sport differential for runners with low cycling volume:
-~5-10 bpm lower HRmax on the bike, proportionally narrower zones. This
-is not optional — applying Run-zone targets to a Ride pushes the
-athlete into upper-Z5 / near-HRmax territory when they think they are
-"barely Z4" by Run terms.
+~5-10 bpm lower HRmax on the bike, proportionally narrower zones.
+Applying Run-zone targets to a Ride pushes the athlete into upper-Z5 /
+near-HRmax territory when they think they are "barely Z4" by Run terms.
 
-**Drift incident pattern:** Coach answers an HR-pacing question for a
-Ride/VirtualRide workout with Run-zone targets without checking the
-Rad-HF section that documents the athlete's bike-HRmax differential.
-The Run-zone target lands in upper-Z5 on the bike; the actual Rad-Z4-mid
-target would have been several bpm lower. The empirical mismatch
-surfaces when HR doesn't reach the prescribed range at the prescribed
-power, with legs as the limiter long before HR catches up.
+**Drift incident pattern:** Run-zone targets given for a bike session
+sat several bpm above the documented bike zones; HR never reached the
+prescribed range because the legs gave out first.
 
 **Operational rule:**
 - For Ride / VirtualRide work: read Rad-HR zones from
@@ -1612,13 +1563,9 @@ still time to react. That makes the **early** exposures the informative ones, no
 the ones nearest the race. Derivation:
 [race-surface-exposure-in-easy-volume.md](research/race-surface-exposure-in-easy-volume.md).
 
-**Drift incident pattern** (canonical case to learn from): a target race changed
-to a different surface than the previous one. The coach correctly moved the
-race-pace work and the race-pace segments of the long run onto the new surface
-and documented that decision. The easy runs were never named in it, so they kept
-running on the old surface week after week — until the athlete asked why the
-plan was still routing him onto the previous race's terrain. The specificity
-decision had covered *pace* and been read as covering *terrain*.
+**Drift incident pattern:** after a race change, the race-pace work moved to
+the new surface but the easy runs were never named in the decision and kept
+the previous race's terrain for weeks.
 
 *Enforcement: head-coach judgment. Mechanical support is limited to the
 mandatory `surface` field on Run/Ride, which makes the per-session choice
@@ -1768,8 +1715,9 @@ with a bare RPE. Nothing in that loop establishes what was actually lifted, so
 the planned figure is booked as the executed one and the progression anchor
 moves on a number nobody measured — while looking exactly like a real data
 point in the record. Any session whose description carries a kg figure
-therefore asks for the load in the same breath as the RPE (`FEEDBACK: RPE je
-Übung und die gefahrene Last.`), once per session rather than per exercise.
+therefore asks for the load in the same breath as the RPE (e.g. `FEEDBACK:
+RPE per exercise and the actual load.`, in the athlete's language), once per
+session rather than per exercise.
 The exception is a load fixed by equipment rather than chosen — say so on the
 line and the ask can be dropped.
 
@@ -1845,7 +1793,7 @@ are unaffected in both modes.
 
 ## Mental-coach triggers (mandatory)
 
-Start `mental-coach` automatically — initially rather too often.
+Start `mental-coach` automatically in these situations:
 
 | Situation | When | Mechanization | Context to pass |
 |-----------|------|---------------|-----------------|
@@ -1904,9 +1852,7 @@ sessions per week, not a short daily drill.
 
 **Placement.** The unit is scheduled before the day's earliest existing
 session. Balance work belongs on fresh legs — the perturbation effect comes
-from unfatigued sessions — and because the balance push is a second call
-with its own numbering, both events used to land on 06:00 with no ordering
-between them.
+from unfatigued sessions.
 Manual invocation remains available for ad-hoc / preview purposes:
 
 ```bash
@@ -1953,14 +1899,10 @@ python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/get_balance_rotation.py --date YYYY-M
   swapped mechanically (see "Leg-conflict routing" below). The athlete
   must receive a decided plan — shipping an unevaluated if-then
   addressed to themselves counts as a planning miss, not as delegation.
-  (Drift incident pattern, twice: a rotation with a TRX single-leg
-  squat plus its conditional trailing note went out unevaluated the day
-  before a leg-priority run; the athlete had to raise the conflict —
-  which is why the swap is now a code path, not description text.)
 - **Equipment availability (travel / limited kit):** The pool contains
   equipment-dependent exercises (balance board, kettlebell loading, TRX),
   each declaring an `equipment` list and an optional `travel_fallback` in
-  `balance_pool.json`. This is now mechanized: `get_balance_rotation.py
+  `balance_pool.json`. `get_balance_rotation.py
   --travel` (alias `--no-equipment`) swaps every equipment-dependent
   exercise for its pool-declared `travel_fallback` — e.g. a *balance-board
   single-leg + head-rotation* drill becomes *single-leg stand on an
@@ -1985,12 +1927,10 @@ python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/get_balance_rotation.py --date YYYY-M
   duty:** set the flag whenever today carries a leg-strength block OR
   tomorrow carries a leg-driven quality / long session — the next-day
   plan is often not an intervals.icu event yet, so nothing can infer the
-  conflict mechanically. What is gone is the manual text-surgery on the
-  rendered description: the conditional trailing note addressed to the
-  coach is no longer an acceptable carrier for this rule (drift incident
-  pattern: the note went out verbatim, unevaluated, the day before a
-  long run — twice). Pools should migrate such notes into
-  `leg_conflict` flags + fallbacks.
+  conflict mechanically. A conditional trailing note addressed to the
+  coach is not a carrier for this rule — it goes out verbatim,
+  unevaluated; express the conflict as `leg_conflict` flags + fallbacks
+  in the pool.
 
 **Push discipline — always push the complete day set (mandatory):**
 `push_workouts.py`'s pre-push dedup matches existing WORKOUT events by
@@ -2136,16 +2076,10 @@ pending flag.
    `weeklyHardReizeBalance` already shows the primary-system Reiz done
    and no taper window is open.
 
-   *Drift incident pattern* (canonical case to learn from): athlete
-   waived the cross-training Hard-Reiz of the week ("I'd rather run
-   today, the weather is too good"); the head coach treated the
-   resulting open slot as "needs filling with a Lauf-Quality" and
-   briefed the planner with a race-specific Bergauf-Z4 block, despite
-   the primary-system Threshold-Reiz already being logged 4 days
-   earlier in the same rolling 7d window. The athlete caught the
-   double-load. Fix: cross-training slot semantics treat the slot as
-   the *purpose* (cross-training), not as a *container* for the next
-   available Reiz.
+   *Drift incident pattern:* a waived cross-training slot was refilled
+   with a second primary-system quality session four days after the
+   first — the slot is a *purpose* (cross-training), not a *container*
+   for the next available Reiz.
 
 ---
 
@@ -2225,19 +2159,10 @@ python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/post_message.py --activity-id {ID} --
 python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/post_message.py --date {DATE} --note "{feedback}"
 ```
 
-**Drift incident pattern** (canonical case): a coach analysis was
-posted with `--activity-id {ID} --note "{text}"`. The script silently
-ignored `--note` in combination with `--activity-id` (it only accepted
-`--message` for the activity-bound path) and fell through to the
-date-NOTE path, creating a stray NOTE event next to the activity
-instead of attaching feedback to the session. The athlete reported
-"das Coaching-Feedback ist schon wieder als NOTE gespeichert, nicht
-in der Einheit". `post_message.py` now accepts `--message` and
-`--note` as aliases when `--activity-id` is set; the **routing is
-driven by `--activity-id` being present**, not by the text flag the
-caller chose. The `/analyse` flow (step 6.5) explicitly uses
-`--activity-id {ID} --message "..."` — head coach always uses the
-activity-id form when posting coach-analyst output.
+The **routing is driven by `--activity-id` being present**, not by the
+text flag: with `--activity-id` set, `--message` and `--note` are
+aliases. Post coach-analyst output with `--activity-id {ID} --message
+"..."` (`/analyse` Step 7).
 
 `fetch_context.py` reads date-scoped NOTEs into the planner context;
 activity messages are visible when the athlete (or coach) opens the
@@ -2697,13 +2622,9 @@ challenges a due-date, recompute from cadence + last-occurrence and
 **concede explicitly if the recompute disagrees** (per "No silent
 conservatism — athlete evidence outranks a single-metric heuristic").
 
-**Drift incident pattern** (canonical case to learn from): the coach
-repeated "Long Run was due on the 18th" from an `athleteFeedback`
-planning note. The athlete pointed out that was only 5 days after the
-last long run, while the long run runs ~weekly (7-day cadence). Recompute
-from last-occurrence (Sat) + 7-day cadence put the next long run exactly
-on the coming Sat — *on time, not overdue*. The error was inheriting the
-note's "due" label instead of recomputing it.
+**Drift incident pattern:** a long run was called overdue by repeating a
+planning note's "due" label; recomputed from last occurrence + the weekly
+cadence it was on time.
 
 *Enforcement: head-coach judgment (anti-hallucination protocol). A
 mechanical aid is warranted where a cadence is stable and machine-known
@@ -2750,6 +2671,4 @@ red CI is never the first place a failure shows up. `CI_LOCAL_STRICT=1`
 makes ruff blocking.
 
 ### Token efficiency
-- Diff-only on code changes
-- No trailing summaries
-- No redundancy
+- Show diffs rather than whole files when reporting code changes

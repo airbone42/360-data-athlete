@@ -144,11 +144,9 @@ exactly the standard coaching cue of the named exercise, reported for a clip
 that never showed it. The name enters at stage C, where a hypothesis is
 legitimate.
 
-**Why structure is asked of stills.** For video, Gemini bills a frame at 70
-tokens on every media-resolution tier the OpenRouter transport can request; a
-still image gets 1120. A contact point is a small region of a full-body
-frame, so at 70 tokens it is not meaningfully represented. Derivation and
-sources: [`research/video-form-check-model-selection.md`](../research/video-form-check-model-selection.md).
+**Why structure is asked of stills.** A contact point is a small region of a
+full-body frame; a still at source resolution shows it, a video frame does
+not. Derivation and sources: [`research/video-form-check-model-selection.md`](../research/video-form-check-model-selection.md).
 
 Prompts, enumerations and the model ids all live in the script — this file
 never restates them, so they cannot drift apart. Model tiers: `--model pro`
