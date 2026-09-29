@@ -8,6 +8,29 @@
 `icu_gear_id` values with your real intervals.icu gear IDs. Demo IDs below
 let the framework run end-to-end without a gear connection.)*
 
+**Field reference.** Each profile starts with `- icu_gear_id: <id>` (the intervals.icu gear id;
+`gear_id:` is accepted too), followed by indented `key: value` lines. HTML
+comments are stripped before parsing.
+
+| Field | Values | Effect |
+|---|---|---|
+| `name` | free text | Display name. |
+| `type` | `tempo` · `easy` · `long` · `trail` · `recovery` | Shoe category. The fleet check warns when one of these five has no active shoe, or only one that is past 80 % of its `threshold_km`. |
+| `role` | `daily` (default) · `race` | `race` locks the shoe to RACE sessions and to the `race_prep_days` before a race — never on a treadmill. |
+| `primary_race` | `true` | Marks the current main race shoe (set it on one shoe only): strong bonus for matching sessions inside the prep window. |
+| `terrain` | `asphalt` (default) · `trail` · `mixed` · `track` | Trail sessions need `trail` or `mixed`; asphalt and track sessions exclude `trail`. |
+| `race_prep_days` | integer, default 7 | Days before a race from which a `role: race` shoe is released. |
+| `active` | `false` | Keeps a profile on file but out of the rotation. |
+| `cushion` | `low` · `medium` · `max` | Descriptive only; no code reads it. |
+
+**Replacement mileage by category** (`threshold_km`, default 800; manufacturer
+guidance and practitioner consensus, not a per-shoe measurement): carbon-plated
+race shoe 400–500 km (plate and foam lose energy return first) · carbon-plated
+trainer 600–700 km · lightweight tempo shoe without a plate 600–700 km ·
+medium-cushion daily trainer 700–800 km · max-cushion daily trainer 900–1000 km
+(thicker foam stacks degrade more slowly) · trail shoe 700–800 km (outsole wear
+adds to foam fatigue; earlier on rough terrain).
+
 Optional per-shoe fields that steer the recommendation:
 
 | Field | Effect |
@@ -25,21 +48,21 @@ permissive on purpose.
   name: "Demo Daily Trainer"
   role: daily
   type: easy
-  surface: asphalt
+  terrain: asphalt
   threshold_km: 800
 
 - icu_gear_id: b2345678
   name: "Demo Tempo Shoe"
   role: tempo
   type: tempo
-  surface: asphalt
+  terrain: asphalt
   threshold_km: 600
 
 - icu_gear_id: b3456789
   name: "Demo Race Carbon"
   role: race
   type: race
-  surface: asphalt
+  terrain: asphalt
   threshold_km: 250
   race_prep_days: 14
 
@@ -47,7 +70,7 @@ permissive on purpose.
   name: "Demo Trail Shoe"
   role: trail
   type: trail
-  surface: trail
+  terrain: trail
   threshold_km: 600
 
 ## Strength equipment
