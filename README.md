@@ -315,10 +315,10 @@ modes are mostly visible at the right stage.
   keeps working.
 - **Video recording device** for the form-check workflow. For
   strength / core / ninja / balance any phone on a tripod is fine. For
-  running, the best results come from a **drone with a follow-me mode**
-  — the maintainer uses a **DJI Neo 2** (keeps a runner in frame, gimbal
-  stable enough for biomechanical analysis). Any drone with a working
-  follow-me works; phone-on-tripod gives you only one angle and no
+  running side views, a **drone with a follow-me mode** gives the best
+  results (it keeps the runner in frame, and a gimbal is stable enough for
+  biomechanical analysis); rear-view questions need a fixed camera
+  instead. A phone on a tripod gives you only one angle and no
   fresh-vs-fatigued comparison.
 - **Telegram bot** if you want to talk to the coach from your phone.
 - **OpenRouter API key** — required for the video form check

@@ -2427,8 +2427,9 @@ covering 3–6 repetitions, camera fixed on a tripod, perpendicular to the
 plane being assessed, whole body in frame, no zoom or pan, ≥ 720p. Camera
 movement is its own source of movement-interpretation error.
 
-DJI / drone videos (filename contains `dji_fly_`): always analyse with
-`--trim-start 5 --trim-end 5`.
+Drone videos: trim the take-off and landing phase with `--trim-start` /
+`--trim-end` (a few seconds each); athlete-specific values, e.g. per device,
+belong in the wrapper.
 
 ## Video form check (running)
 
