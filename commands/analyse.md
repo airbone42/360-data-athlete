@@ -114,6 +114,14 @@ transitions, running dynamics, surface). No interpretation.
 
 ### Step 6: Coaching analysis (coach-analyst)
 
+**Briefing coach-analyst (measurement artifacts).** When briefing `coach-analyst` on a run, the head coach **never** lists the following as growth areas, strengths, or talking points:
+
+1. **Minute-0–10 HR spike** (cardiac startup drift / sympathetic onset overshoot / chest-strap dry-contact phase). A "Lap-X HF-Spike", "Z4 in WU", "kalter Start" or "warm-up too fast" framing referring to the first 10 min is a **measurement / kinetics phenomenon, not athlete error** — it has no place in a coaching finding. Research anchor: `framework/research/cardiac-startup-drift.md`.
+2. **Stride pace numbers** (lap duration ≤ 30 s). GPS pace on strides is unreliable by 10–40 s/km per segment; "schnellste Stride 3:57/km", "S3 langsamer als S5" or pace-trend interpretations across the stride set are forbidden in the briefing. Stride-quality talk uses step length, cadence, HR peak, GCT — not pace.
+3. **Surface / elevation framed as a finding without a route-history baseline.** "Today was hilly", "wellig statt flach", "unerwartete Höhenmeter", "Race-Prep-Höhenmeter-Anker", or any comparison of today's ascent against the planner's surface tag (`forest-path`, `trail`, …) are forbidden. The surface field is a routing default for the shoe advisor, **not** an elevation oath. Athletes typically re-run a small set of home routes weekly; the elevation profile is **a property of the route**, not of today's session. Before listing elevation as a finding, cross-reference the same-name / same-region runs in the `fetch_type_history.py` output: if last week's Z2 on the same loop carried similar ascent, today's ascent is no finding. The legitimate "elevation matters" cases are (a) a real route change confirmed in the briefing context, (b) structured Z3/Z4 climb intervals as the workout itself, (c) elevation **per minute of training time** that is a clear outlier vs. the type-history median. Otherwise elevation is descriptive metadata, not a finding.
+
+`agents/coach-analyst.md` rejects these inputs silently if they appear in a briefing, but the head coach removes the risk at the source by not listing them. All three rules apply to every run analysis.
+
 Launch the `coach-analyst` agent in a pane. Pass:
 - Lap chronicle from the data scientist
 - Activity data (planned workout, actual values)

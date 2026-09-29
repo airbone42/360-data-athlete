@@ -165,49 +165,7 @@ numbers.
 
 ### Briefing rule — head coach does not seed measurement artifacts as findings (policy)
 
-When briefing `coach-analyst` on a run, the head
-coach **never** lists the following as growth areas, strengths, or
-talking points:
-
-1. **Minute-0–10 HR spike** (cardiac startup drift / sympathetic onset
-   overshoot / chest-strap dry-contact phase). A "Lap-X HF-Spike",
-   "Z4 in WU", "kalter Start" or "warm-up too fast" framing referring
-   to the first 10 min is a **measurement / kinetics phenomenon, not
-   athlete error** — it has no place in a coaching finding.
-   **Research anchor:** [cardiac-startup-drift.md](research/cardiac-startup-drift.md).
-2. **Stride pace numbers** (lap duration ≤30 s). GPS-pace on strides
-   is unreliable by 10–40 s/km per segment; "schnellste Stride
-   3:57/km", "S3 langsamer als S5", or pace-trend interpretations
-   across the stride set are forbidden in the briefing. Stride-quality
-   talk uses step length, cadence, HR peak, GCT — not pace.
-3. **Surface / elevation framed as a finding without a route-history
-   baseline.** Phrasings like "today was hilly", "wellig statt flach",
-   "unerwartete Höhenmeter", "Race-Prep-Höhenmeter-Anker", or any
-   comparison of today's ascent against the **planner's surface tag**
-   (`forest-path`, `trail`, etc.) are forbidden. The surface field is a
-   routing default for the shoe advisor, **not** an elevation oath —
-   it does NOT carry a "flat" claim. Athletes typically have a small
-   set of home routes that they re-run weekly; the elevation profile
-   on those routes is **a property of the route**, not a property of
-   today's session. Before listing elevation as a finding, the head
-   coach MUST cross-reference the same-name / same-region runs in
-   `fetch_type_history.py` output: if last week's Z2 on the same loop
-   carried similar ascent, today's ascent is no finding. The legitimate
-   "elevation matters" cases are (a) a real route change confirmed in
-   the briefing context, (b) structured Z3/Z4 climb intervals as the
-   workout itself, (c) elevation **per minute of training time** that
-   is a clear outlier vs. the type-history median. Otherwise: elevation
-   is descriptive metadata, not a finding.
-
-The corresponding agent contract (`coach-analyst.md`) requires the agent
-to **reject** these inputs silently if they appear in a briefing — but
-the head coach removes the risk at the source by not listing them. All
-three rules apply to every run analysis.
-
-**Drift incident pattern:** a home loop's normal ascent was briefed as
-"race-prep bonus elevation" against a `forest-path` surface tag, and the
-real gap — the structured climb intervals were still missing — went
-unmentioned.
+When briefing `coach-analyst` on a run, never list any of these as a growth area, strength or talking point: (1) the **minute-0–10 HR spike** (cardiac startup drift — a measurement / onset-kinetics phenomenon, not athlete error; [cardiac-startup-drift.md](research/cardiac-startup-drift.md)); (2) **stride pace numbers** (laps ≤ 30 s; GPS pace is off by 10–40 s/km per segment — talk step length, cadence, HR peak, GCT); (3) **surface / elevation as a finding without a route-history baseline** (the `surface` tag is a routing default, not an elevation claim — cross-check same-route runs in the `fetch_type_history.py` output first). All three apply to every run analysis; wording, the legitimate elevation cases and the briefing checklist: `commands/analyse.md` → "Briefing coach-analyst". `agents/coach-analyst.md` rejects such inputs silently, but the head coach removes the risk at the source. *Enforcement: head-coach judgment.*
 
 ### Session averages are not a comparison unit (policy)
 
