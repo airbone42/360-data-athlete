@@ -818,66 +818,11 @@ the clip is meant to answer, which baseline it is compared against).
 A one-line summary of the film tip may additionally appear in `focus`; the
 executable version belongs in `intervals_icu`.
 
-**Posterior clips have their own setup rules — and one of them rules out
-the obvious device.**
-
-- **Do not prescribe a follow-me / moving camera for a frontal-plane
-  question.** It is the natural choice and it does not work: against a
-  fixed camera, six of eight markers — contralateral pelvic drop among
-  them — fall to fair-to-poor rater agreement, and only foot-strike
-  pattern and rearfoot position survive. This holds for body-relative
-  markers too, so "reference and subject move together" is not a defence.
-  Follow-me stays right for sagittal and overview clips.
-- **Fixed camera, perpendicular to the plane of motion.** For a treadmill
-  setup roughly 1.5 m distance and 1 m height is a documented starting
-  point; overground, the distance has to be large enough that **both feet
-  are visible in the same stance-phase frame**. Make that an explicit
-  pre-clip check: where one leg fully occludes the other, a step-width or
-  crossover question cannot be answered no matter how good the footage is
-  — and a narrow gait *produces* exactly that occlusion, so the failure
-  correlates with the finding.
-- **Several independent passes in one session**, not one long sequence —
-  a single pass with persistent occlusion yields nothing, while a handful
-  of short passes give multiple independent contact events per side.
-- **A comparison clip is run at the baseline's pace**, inside a narrow
-  window. Step width narrows as speed rises: the direction is established,
-  the magnitude at endurance paces is not measured anywhere, so the effect
-  is eliminated rather than corrected for. The window width is a
-  convention, not a literature figure — say so when prescribing it.
-- **Scale rule for the report:** degrees from a posterior clip only for
-  peak hip adduction. Everything else posterior is categorical.
-- **Record the conditions when the baseline is set, not when it is
-  compared** — surface, pace, position in the session, camera geometry. A
-  baseline whose conditions are unknown cannot be compared against later,
-  and that is discovered at the worst possible moment.
-
-Sources and per-marker figures:
-[posterior-video-running-marker-scale-and-setup.md](../research/posterior-video-running-marker-scale-and-setup.md).
+**Posterior clips have their own setup rules** — never a follow-me / moving camera for a frontal-plane question (six of eight markers, contralateral pelvic drop among them, fall to fair-to-poor rater agreement against a fixed camera); a fixed camera perpendicular to the plane of motion with **both feet visible in one stance-phase frame** (pre-clip check); several short independent passes rather than one long sequence; a comparison clip at the baseline's pace; degrees only for peak hip adduction, everything else posterior is categorical; record the conditions (surface, pace, position in the session, camera geometry) when the baseline is set, not when it is compared. Full list: `framework/docs/running-video-clips.md`; sources and per-marker figures: [posterior-video-running-marker-scale-and-setup.md](../research/posterior-video-running-marker-scale-and-setup.md).
 
 **Running-posture cue library (pelvis / hip extension).** Cue the *good* version of hip extension and avoid the lumbar-hyperextension trap. ✅ *run tall (grow through the crown)* → *lean from the ankles, not the waist* (small lean, ~4°) → *low-ab / deep-core on* (neutral pelvis) → *glute squeeze at toe-off* (that IS the hip extension). ❌ Never prescribe *"push / drive the hips (pelvis) forward"*: with limited hip-extension ROM (tight hip flexors / weak glutes) it routes straight into anterior pelvic tilt + lumbar hyperextension (hollow-back). Video checkpoint (side-on): pelvic tilt at toe-off + lumbar lordosis in stance — lordosis increases with speed and fatigue, so a fatigued / long-run clip diagnoses it better than a fresh easy jog. The off-run fix is coupled, not cue-only (hip-flexor mobility + glute-max strength + neutral-spine core); derivation: `framework/research/running-posture-pelvic-tilt-and-hip-extension.md`.
 
-**Section types** (Garmin chooses suitable windows automatically):
-Pass these tokens to `--garmin-sections` exactly as written (the script
-accepts no translations):
-- `frisch` (fresh) — first 30 % of the session, most stable segment
-- `müde` (fatigued) — last 25 %, technique drift visible
-- `bergauf` (uphill) — steepest available uphill (grade >4 %)
-- `bergab` (downhill) — steepest downhill (especially relevant for
-  achilles / trail)
-- `stabil` (stable) — most consistent segment of the entire session
-- `tempo` — fastest stable segment
-- `easy` — easiest segment
-
-**Decision by context:**
-- Achilles issues → `frisch,bergauf,bergab` (foot strike on different
-  terrain)
-- Technique drift check → `frisch,müde` (compare start vs end)
-- Trail focus → `frisch,bergauf,bergab`
-- Standard form-check → `frisch,stabil,müde`
-
-**Garmin data complements the video analysis:**
-Video shows quality (technique); Garmin shows quantity (cadence, GCT,
-VOS). Both are merged automatically when the activity ID is known.
+The Garmin section tokens for `--garmin-sections` (the script accepts only these German tokens: `frisch`, `müde`, `bergauf`, `bergab`, `stabil`, `tempo`, `easy`) and the decision by context belong to the head coach's analysis step, not to the film tip: `framework/docs/running-video-clips.md`.
 
 Camera placement helper: `python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/analyse_video.py --exercise
 "Running Sagittal" --angle-only`

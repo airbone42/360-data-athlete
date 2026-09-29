@@ -1369,6 +1369,8 @@ For running videos, additionally pull Garmin running dynamics for the time
 window and pass them as `--garmin-sections`. Three reasonable sections:
 `frisch,bergauf,müde` (the script accepts only its German tokens). Z2 runs after 20 min
 show no fatigue → use intervals or tempo runs for the fatigued section.
+All section tokens and the choice by context (Achilles, drift check, trail,
+standard): [docs/running-video-clips.md](docs/running-video-clips.md).
 
 ---
 
