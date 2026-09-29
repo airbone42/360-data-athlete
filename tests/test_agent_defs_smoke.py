@@ -5,6 +5,7 @@ import re
 from pathlib import Path
 
 import pytest
+import yaml
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 AGENTS_DIR = PLUGIN_ROOT / "agents"
@@ -14,26 +15,33 @@ README = PLUGIN_ROOT / "README.md"
 FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---", re.DOTALL)
 
 
-def _parse_frontmatter(text: str) -> dict[str, str]:
+def _parse_frontmatter(text: str) -> dict:
+    """Parse the frontmatter as YAML, as the harness does.
+
+    A line-wise ``key: value`` split accepts a description with an unquoted
+    ``: `` in it; YAML rejects it, and the harness then lists the agent with
+    a placeholder instead of its description.
+    """
     match = FRONTMATTER_RE.match(text)
     if not match:
         return {}
-    block = match.group(1)
-    out: dict[str, str] = {}
-    for line in block.splitlines():
-        if ":" in line and not line.startswith(" "):
-            key, _, value = line.partition(":")
-            out[key.strip()] = value.strip()
-    return out
+    data = yaml.safe_load(match.group(1))
+    return data if isinstance(data, dict) else {}
 
 
 @pytest.mark.parametrize("agent_path", sorted(AGENTS_DIR.glob("*.md")))
 def test_agent_has_valid_frontmatter(agent_path: Path):
     text = agent_path.read_text(encoding="utf-8")
-    fm = _parse_frontmatter(text)
+    try:
+        fm = _parse_frontmatter(text)
+    except yaml.YAMLError as exc:
+        pytest.fail(f"{agent_path.name}: frontmatter is not valid YAML ({exc})")
     assert fm, f"{agent_path.name}: missing or malformed frontmatter"
     assert "name" in fm, f"{agent_path.name}: frontmatter missing 'name'"
     assert "description" in fm, f"{agent_path.name}: frontmatter missing 'description'"
+    assert isinstance(fm["description"], str) and fm["description"].strip(), (
+        f"{agent_path.name}: frontmatter 'description' is empty"
+    )
     # name in frontmatter must match filename
     assert fm["name"] == agent_path.stem, (
         f"{agent_path.name}: frontmatter name '{fm['name']}' "
