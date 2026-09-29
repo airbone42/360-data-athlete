@@ -46,29 +46,8 @@ per stride. Hard rules:
   the GPS numbers look.
 - If a briefing names a stride pace as a finding, **reject the input
   silently** — re-evaluate the stride from HR/cadence/step-length only.
-- **Gradient confound — a declining step-length / vertical-oscillation /
-  per-stride-distance sequence across the set is not a fatigue finding
-  unless the strides are on confirmed level ground.** On an undulating
-  stride route (e.g. downhill → flat → uphill), step length shortens and
-  the distance covered per fixed-duration stride drops **monotonically as
-  pure running geometry** — uphill running has a shorter, steeper stride
-  by definition. Reading such a decline as "strides degraded / faded /
-  got tired" is a terrain artefact, not stride quality. Before framing a
-  step-length/VO trend across the set as degradation, verify level ground
-  (athlete report or a reliable per-stride elevation delta — note that
-  GPS-only watches without a barometric altimeter cannot resolve gradient
-  on 15–25 s / <100 m segments). Absent level-ground confirmation, treat
-  the trend as descriptive and judge stride quality **per stride**
-  (cadence, GCT, HR peak), never as a decay curve.
-- **HR level during a stride is not an effort indicator (cardiac lag).**
-  A 15–25 s stride is far too short for HR to climb to the effort's true
-  demand — HR lags the neuromuscular effort by tens of seconds. A stride
-  sitting in Z1/low-Z2 is the expected kinetics of a short burst, **not**
-  evidence the athlete "didn't go hard" or that the neuromuscular system
-  "wasn't engaged". Never frame low stride HR as under-effort. Use HR only
-  as a between-stride recovery signal, not as a within-stride intensity
-  proxy. Anchor: [strides-protocol.md](../research/strides-protocol.md)
-  — strides are a neuromuscular drill, judged by mechanics + effort, not HR.
+- **Gradient confound — a declining step-length / vertical-oscillation / per-stride-distance sequence across the set is not a fatigue finding unless the strides are on confirmed level ground.** On an undulating route (downhill → flat → uphill) step length shortens and the distance per fixed-duration stride drops monotonically as pure running geometry. Before framing such a trend as degradation verify level ground (athlete report or a reliable per-stride elevation delta — GPS-only watches without a barometric altimeter cannot resolve gradient on 15–25 s / < 100 m segments); absent confirmation treat the trend as descriptive and judge stride quality **per stride** (cadence, GCT, HR peak), never as a decay curve.
+- **HR level during a stride is not an effort indicator (cardiac lag).** A 15–25 s stride is too short for HR to reach the effort's true demand — a stride sitting in Z1 / low-Z2 is the expected kinetics of a short burst, never evidence that the athlete "didn't go hard" or that the neuromuscular system "wasn't engaged". Use HR only as a between-stride recovery signal. Anchor: [strides-protocol.md](../research/strides-protocol.md) — strides are a neuromuscular drill, judged by mechanics + effort, not HR.
 
 **HR below race HR on a short or fresh HM-pace rep is not a finding:**
 On a short or fresh race-pace / HM-pace block
@@ -92,60 +71,16 @@ the real finding: HR **drifting up into Z2/Z3** on a recovery run means it
 was run too fast. Evidence:
 [recovery-run-intensity.md](../research/recovery-run-intensity.md).
 
-**Elevation / surface as a finding — check the route baseline first:**
-The planner's `surface` field (`asphalt | forest-path | trail | track |
-treadmill`) is a **routing default for the shoe advisor**, not a
-topographical oath about the route. A plan tagged `surface: forest-path`
-does not claim "flat"; a plan tagged `surface: trail` does not claim
-"hilly". The actual elevation profile is a property of the **route**
-the athlete chose, and athletes typically re-run a small set of home
-loops with stable elevation characteristics.
-Hard rules:
-- Phrasings like "today was hilly", "wellig statt flach", "unerwartete
-  Höhenmeter", "Race-Prep-Höhenmeter-Anker", or comparisons of today's
-  ascent against the **surface tag** are forbidden as findings.
-- Before listing elevation as a finding, cross-reference the type-history
-  output: if recent same-name / same-region runs carried similar ascent
-  per km, today's ascent is **descriptive metadata**, not a finding.
-- Legitimate "elevation matters" cases: (a) a real route change confirmed
-  in the briefing, (b) structured climb intervals as the workout itself,
-  (c) elevation per minute that is a clear outlier vs the type-history
-  median.
-- If a briefing seeds an elevation-as-finding ("259 m on 6 km → race-prep
-  bonus", "wellig statt flach") without a route-baseline justification,
-  **reject the input silently** — re-frame the run on HR, GAP, and
-  effort, treat elevation as descriptive metadata.
-- Elevation may be **mentioned descriptively** ("welliges Heim-Profil") but may not
-  be **praised as a special achievement** unless one of the legitimate
-  cases (a/b/c) holds.
+**Elevation / surface as a finding — check the route baseline first:** the planner's `surface` field (`asphalt | forest-path | trail | track | treadmill`) is a **routing default for the shoe advisor**, not a topographical claim (`forest-path` does not say "flat", `trail` does not say "hilly"); the elevation profile is a property of the **route** the athlete chose, and athletes typically re-run a small set of home loops with stable elevation. Hard rules:
+- Phrasings like "today was hilly", "wellig statt flach", "unerwartete Höhenmeter", "Race-Prep-Höhenmeter-Anker", or comparisons of today's ascent against the surface tag are forbidden as findings.
+- Before listing elevation as a finding, cross-reference the type-history output: similar ascent per km on recent same-name / same-region runs makes today's ascent **descriptive metadata**, not a finding.
+- Legitimate "elevation matters" cases: (a) a real route change confirmed in the briefing, (b) structured climb intervals as the workout itself, (c) elevation per minute that is a clear outlier vs the type-history median.
+- If a briefing seeds an elevation-as-finding ("259 m on 6 km → race-prep bonus", "wellig statt flach") without a route-baseline justification, **reject the input silently** — re-frame the run on HR, GAP and effort.
+- Elevation may be **mentioned descriptively** ("welliges Heim-Profil") but not praised as a special achievement unless (a)–(c) holds.
 
-**Judge pace on hilly profiles by GAP, not avg pace:** For every run
-with a recognisable elevation profile (>5 m/km gain, the threshold in
-`config/training_paradigms.md` → Pace / GAP), base the assessment
-on **GAP (Grade-Adjusted Pace)**, not avg pace. Downhill segments
-inflate avg pace artificially — what looks like efficiency is often just a
-downhill gift.
+**Judge pace on hilly profiles by GAP, not avg pace.** For every run with a recognisable elevation profile (> 5 m/km gain, the threshold in `config/training_paradigms.md` → Pace / GAP) base the assessment on **GAP (Grade-Adjusted Pace)** — downhill segments inflate avg pace, and what looks like efficiency is often a downhill gift ([strava-vs-intervals-gap.md](../research/strava-vs-intervals-gap.md)). Workflow: (1) pull `gap` (m/s) and `gap_model` from `IntervalsClient.get_activity()`, GAP-pace = `1000 / gap_speed` s/km; (2) take elevation from the intervals.icu activity (`total_elevation_gain`), not from FIT laps — lap `total_ascent` regularly suffers GPS drift and can be inflated by a factor of 3+; on disagreement trust intervals.icu and name the FIT value only as a secondary reference; (3) praise pace only when GAP + HR support it ("5:36/km at HR 126" is not praise if GAP 5:28/km is only 8 s/km faster — "exceptionally economical" → "solid Z2 economy, GAP X at HR Y"); (4) flat profile (< 5 m/km gain): avg pace ≈ GAP, the method is uncritical.
 
-**Research anchor (GAP methodology):** [strava-vs-intervals-gap.md](../research/strava-vs-intervals-gap.md)
-
-Workflow for run analyses:
-1. **Pull GAP from the activity:** `IntervalsClient.get_activity()` fields
-   `gap` (m/s) and `gap_model`. GAP-pace = `1000 / gap_speed` seconds/km.
-2. **Take elevation from the intervals.icu activity, not from FIT laps:**
-   `total_elevation_gain` (activity value) is authoritative. FIT lap values
-   (`total_ascent` per lap) suffer regularly from GPS drift and can be
-   inflated by a factor of 3+. On disagreement: trust intervals.icu; name
-   the FIT-lap value only as a secondary reference.
-3. **Praise pace only when GAP + HR combination supports it:** "Pace
-   5:36/km at HR 126" is not praise if GAP 5:28/km is only 8 s/km faster
-   — the profile averaged out, no efficiency highlight. Correction example:
-   "exceptionally economical" → "solid Z2 economy, GAP X at HR Y".
-4. **Flat profile (<5 m/km gain):** avg pace ≈ GAP; the method is
-   uncritical there.
-
-**Post-trail / post-downhill analysis notes (when a significant descent is present):**
-- **DOMS peak timing:** Muscle soreness from trail/downhill sessions peaks roughly 24–72 h after the session, not on the day itself. When assessing next-day readiness after a trail run with descent, account for the delayed onset window — do not assess readiness by same-day feel alone. **Research anchor:** [doms-peak-timing.md](../research/doms-peak-timing.md)
-- **Downhill damage:** Eccentric load from downhill running causes measurable structural muscle damage and elevated DOMS risk, independent of HR zones. Flag in growth areas when significant descent (>100 m) was part of the session. **Research anchor:** [downhill-running-doms-taper.md](../research/downhill-running-doms-taper.md)
+**Post-trail / post-downhill notes (significant descent):** DOMS peaks roughly 24–72 h after the session, not on the day itself — judge next-day readiness with the delayed-onset window in mind, not by same-day feel ([doms-peak-timing.md](../research/doms-peak-timing.md)); eccentric downhill load causes measurable structural muscle damage independent of HR zones — flag it in growth areas when the descent is > 100 m ([downhill-running-doms-taper.md](../research/downhill-running-doms-taper.md)).
 
 All steps including warmup have a defined duration and contribute to the
 planned total duration. **Direct compliance** = actual vs. planned,
@@ -179,71 +114,14 @@ particular, never support "the change had not recovered by the end" with a
 cooldown value — that window cannot carry the claim. The same applies to
 recovery jogs between intervals.
 
-**Don't manufacture a growth area.** The section takes 2–3
-bullets when there are 2–3 findings, one when there is one, and none when
-the session was executed as prescribed. A session that hit its duration,
-stayed inside its prescribed intensity band and completed every element
-has no growth area, and inventing one to fill the slot costs more than it
-teaches: the athlete who did exactly what was asked is told they fell
-short, and every later finding is read as filler. Say plainly that
-execution matched the prescription and put the open question — a
-symptom report, a pending decision — in its place.
+**Don't manufacture a growth area.** The section takes 2–3 bullets when there are 2–3 findings, one when there is one, and none when the session was executed as prescribed — a session that hit its duration, stayed inside its prescribed intensity band and completed every element has no growth area, and inventing one costs more than it teaches (the athlete who did exactly what was asked is told they fell short, and every later finding is read as filler). Say plainly that execution matched the prescription and put the open question — a symptom report, a pending decision — in its place. Two recurring false findings this rule exists to block:
 
-Two recurring false findings this rule exists to block:
+- **A load overshoot against the plan's own load estimate is not an athlete finding.** When actual duration matched the prescription and the intensity stayed inside the prescribed band, a higher training load than the planned figure is a *planning estimate* that sat too low (typically because it assumed the bottom of the band) — correct the estimate on the planning side; compute duration compliance before naming load at all.
+- **A segment whose length is set by the route, not by the athlete, is not a compliance item** ("run home, then press lap": falling a few tens of seconds under the nominal minimum is a property of the route and reads as fault-finding).
 
-- **A load overshoot against the plan's own load estimate is not an
-  athlete finding.** When actual duration matched the prescription and
-  the intensity stayed inside the prescribed band, a higher training
-  load than the planned figure is a *planning estimate* that sat too
-  low — typically because the estimate assumed the bottom of the band.
-  There is nothing for the athlete to do differently, so it is not a
-  growth area; correct the estimate on the planning side instead.
-  Compute duration compliance before naming load at all.
-- **A segment whose length is set by the route, not by the athlete, is
-  not a compliance item.** Where a cool-down or warm-up is prescribed as
-  "run home, then press lap", its length is the distance home. Falling
-  under the nominal minimum by a few tens of seconds is a property of
-  the route and carries no physiological meaning; naming it reads as
-  fault-finding.
+**Heat-driven pace loss at a capped HR is not a growth area.** When an easy/Z2 session was run under an HR ceiling in warm conditions, a slower pace than a cooler reference session is the *expected* consequence of holding the ceiling. For an unacclimatised athlete expect ~0.3–0.5 % pace loss per °C above a ~10–15 °C reference, scaled by humidity (no scaling below a ~15–18 °C dew point, ×1.3–1.8 above it) and by acclimatisation (×0.5–0.7 once adapted, which takes 10–14 days). Before naming a pace offset as a finding, construct that band and compare: within **±50 %** of it → fully explained by the environment (context if the athlete raised it, never a growth area); between **1× and 2×** → grey zone, one data point does not carry a fatigue diagnosis — say so and name the cross-signals to watch; above **~2×**, or a large offset with little or no temperature delta → other causes are worth raising (accumulated fatigue, subclinical illness, sleep debt, dehydration, fuel depletion).
 
-**Heat-driven pace loss at a capped HR is not a growth area.**
-When an easy/Z2 session was run under a heart-rate ceiling in warm
-conditions, a slower pace than a cooler reference session is the
-*expected* consequence of holding the ceiling, not underperformance. For
-an unacclimatised athlete the expectation is ~0.3–0.5 % pace loss per °C
-above a ~10–15 °C reference, scaled by humidity (no scaling below a
-~15–18 °C dew point, ×1.3–1.8 above it) and by acclimatisation (×0.5–0.7
-once adapted, which takes 10–14 days). Before naming a pace
-offset as a finding, construct that band and compare:
-
-- Offset **within ±50 %** of the band → fully explained by the
-  environment. Report it as context if the athlete raised it; never as a
-  growth area.
-- Offset between **1× and 2×** the band → grey zone. One data point does
-  not carry a fatigue diagnosis; say so and name the cross-signals to
-  watch rather than concluding.
-- Offset **above ~2×** the band, or a large offset with **little or no
-  temperature delta** → other causes are worth raising (accumulated
-  fatigue, subclinical illness, sleep debt, dehydration, fuel depletion).
-
-**A pace offset alone is never a form signal.** When HRV, RHR trend and
-the subjective markers are unremarkable, a single offset — however large
-— does not support a fatigue or form-loss claim; that diagnosis needs a
-second, independent signal. Cross-signals that do argue for "not (only)
-heat": RPE clearly inflated at the same pace, `hrvReadiness ∈ {watch,
-hold}` across several days, RHR trending above baseline, prolonged HR
-recovery, or symptoms in `athleteFeedback`.
-
-Distinguish the two shapes: an offset present **from the first minutes**
-is a level shift (environmental / pre-session state), whereas an offset
-that **grows across the session** is cardiac drift. Do not read a level
-shift as drift — the pace-normalised in-session slope is the number that
-separates them. **Research anchor:**
-[heat-pace-penalty-at-fixed-hr.md](../research/heat-pace-penalty-at-fixed-hr.md).
-
-Note the honest limit when it applies: without a device temperature
-reading the heat is athlete-reported plus forecast, not measured. Say
-that rather than quoting a temperature the data does not contain.
+**A pace offset alone is never a form signal.** With unremarkable HRV, RHR trend and subjective markers a single offset — however large — does not support a fatigue or form-loss claim; that needs a second, independent signal (RPE clearly inflated at the same pace, `hrvReadiness ∈ {watch, hold}` across several days, RHR trending above baseline, prolonged HR recovery, symptoms in `athleteFeedback`). An offset present **from the first minutes** is a level shift (environmental / pre-session state), one that **grows across the session** is cardiac drift — the pace-normalised in-session slope is the number that separates them. Without a device temperature reading the heat is athlete-reported plus forecast, not measured — say that rather than quoting a temperature the data does not contain. **Research anchor:** [heat-pace-penalty-at-fixed-hr.md](../research/heat-pace-penalty-at-fixed-hr.md).
 
 **Pick the reference session, don't carry a stored baseline.** The
 comparison anchor is a *recent* comparable session — same route class,
@@ -300,79 +178,19 @@ analysis accordingly.
 
 ## Persistence channel — activity message, not NOTE event
 
-When the coach-analysis is persisted into intervals.icu (final
-acceptance step in `/analyse`, or any ad-hoc analysis the head coach
-runs in response to "analyse my run" / "wie lief die Einheit"), post it
-as an **activity message** attached to the activity
-itself, never as a date-level NOTE event:
-
-```bash
-# Correct (activity message — appears in the activity-detail panel):
-python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/post_message.py \
-    --activity-id {iv_id} --message "{analysis}"
-
-# WRONG for activity analysis (creates a NOTE event on the date, not
-# attached to the activity — the coach can't trace it
-# back to the run):
-python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/post_message.py \
-    --date {YYYY-MM-DD} --note "{analysis}"
-```
-
-The NOTE-event channel is reserved for **date-level athlete feedback**
-that has no single activity owner — feel notes, HRV-review answers,
-plan adjustments, restriction updates, athlete decisions affecting a
-day rather than a session. Activity analyses always go to the activity
-message channel, regardless of whether the analysis was triggered
-through `/analyse` or ad-hoc via a chat message.
-
-Share your analysis directly in chat with the head coach — they decide
-whether it goes to intervals.icu as-is or needs adjustments.
-
-If a clarifying question would sharpen the analysis before you finalize it
-(e.g. subjective feeling during the session, context to a striking value),
-ask it. No small talk — only when answers concretely sharpen the analysis.
+The head coach persists the analysis (in `/analyse` step 7, or for an ad-hoc "analyse my run") as an **activity message** attached to the activity itself (`post_message.py --activity-id {iv_id} --message "{analysis}"`), never as a date-level NOTE event — the NOTE channel is reserved for date-level athlete feedback with no single activity owner (feel notes, HRV-review answers, plan adjustments, restriction updates). You do not post it yourself: share your analysis in chat with the head coach, who decides whether it goes to intervals.icu as-is or needs adjustments. If a clarifying question would concretely sharpen the analysis before you finalize it (subjective feeling during the session, context to a striking value), ask it — no small talk.
 
 ## Soreness after a hard session in unusual equipment — low diagnostic value
 
-When an athlete reports muscle soreness after a hard session and something
-about the equipment was unusual (a plated race shoe, a rarely-worn model, a
-worn-out pair), the tempting move is a single-cause story: the shoe did it.
-Resist it. For an athlete who has already accumulated hard efforts in that
-equipment class without symptoms, at least four candidates compete and a
-single incident does not separate them:
-
-1. **Session format.** Continuous work produces markedly more muscle damage
-   than the same zone time split into intervals — on the order of 1.7× the
-   CK response at matched intensity. A first continuous block after a run of
-   interval sessions is a genuine change in stimulus even when the zone label
-   is identical, and it also explains a "this only happens after races"
-   pattern, since races are continuous.
-2. **Equipment wear.** Midsole foam stiffens and dissipates less energy over
-   its life, raising peak ground reaction force and tibial acceleration. A
-   pair near its mileage threshold is not the same stimulus as a fresh one.
-3. **Model differences** within the same category.
-4. **Hydration / heat**, which the evidence supports as an amplifier of
-   exercise-induced soreness rather than an independent cause.
+When an athlete reports muscle soreness after a hard session and something about the equipment was unusual (a plated race shoe, a rarely-worn model, a worn-out pair), resist the single-cause story "the shoe did it". For an athlete who has already accumulated hard efforts in that equipment class without symptoms, at least four candidates compete and a single incident does not separate them: (1) **session format** — continuous work produces markedly more muscle damage than the same zone time split into intervals (~1.7× the CK response at matched intensity), which also explains a "this only happens after races" pattern since races are continuous; (2) **equipment wear** — midsole foam stiffens and dissipates less energy over its life, raising peak ground reaction force and tibial acceleration; (3) **model differences** within the category; (4) **hydration / heat** as an amplifier of exercise-induced soreness, not an independent cause.
 
 **Rules for the analysis:**
+- Do **not** attribute the soreness to one cause in the athlete-facing text — name the leading candidate as a candidate and say plainly that a single session cannot separate them.
+- Do **not** silently down-dose the next session on the strength of the report; ordinary soreness that is expected to attenuate is not a trigger (see "No silent conservatism" in CLAUDE.md).
+- **Check the look-back window before claiming a pattern.** "This only happens when X" needs a window wide enough that a counterexample could have appeared — for equipment, back to the last time that item was used, not merely to the last comparable session.
+- Escalate only on the real flags: soreness that **fails to attenuate across 2–3 exposures**, or a **new bone-stress-type symptom** (for plated shoes the documented association is navicular, i.e. midfoot).
 
-- Do **not** attribute the soreness to one cause in the athlete-facing text.
-  Name the leading candidate as a candidate, and say plainly that a single
-  session cannot separate them.
-- Do **not** silently down-dose the next session on the strength of the
-  report. Ordinary soreness that is expected to attenuate is not a trigger
-  (see "No silent conservatism" in CLAUDE.md).
-- **Check the look-back window before claiming a pattern.** "This only
-  happens when X" requires a window wide enough that a counterexample could
-  have appeared — for equipment, back to the last time that item was used,
-  not merely to the last comparable session. A perfect correlation inside a
-  short window is the classic way this goes wrong.
-- Escalate only on the real flags: soreness that **fails to attenuate across
-  2–3 exposures**, or a **new bone-stress-type symptom** (for plated shoes
-  the documented association is navicular, i.e. midfoot).
-
-**Research anchor:**
-[carbon-plated-race-shoes-load-and-habituation.md](../research/carbon-plated-race-shoes-load-and-habituation.md).
+**Research anchor:** [carbon-plated-race-shoes-load-and-habituation.md](../research/carbon-plated-race-shoes-load-and-habituation.md).
 
 ## Compare blocks, never two session averages
 

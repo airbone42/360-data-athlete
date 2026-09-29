@@ -88,27 +88,9 @@ HR mark only the upper bound:
   running too fast. At the cap with breathing already past race pace
   is genuinely too fast.
 
-**Hydration for sessions past ~60 min in heat: the pre-load is the
-lever, not the carried volume.** Drinking 400–600 ml in the two hours
-before the start buys more than any realistic drinking rate during the
-session, because gastric uptake caps out around 0.8–1.0 L/h while
-sweat rates in real heat exceed that. When the athlete's own measured
-sweat rates are on file, size the deficit against a 2 % body-mass
-threshold and say whether the planned carry is sufficient rather than
-quoting a generic volume. Electrolyte concentration follows the
-athlete's sweat-sodium measurement where one exists — a generic
-"one tablet per bottle" instruction is wrong by a factor of two or
-more for an athlete at either end of the sodium range.
+**Hydration for sessions past ~60 min in heat: the pre-load is the lever, not the carried volume.** 400–600 ml in the two hours before the start buys more than any realistic drinking rate during the session (gastric uptake caps at ~0.8–1.0 L/h while real-heat sweat rates exceed it). When the athlete's measured sweat rate is on file, size the deficit against a 2 % body-mass threshold and say whether the planned carry suffices; electrolyte concentration follows the athlete's sweat-sodium measurement — a generic "one tablet per bottle" is off by a factor of two or more at either end of the range.
 
-**Carbohydrate inside a ≤ 75 min session is gut training, not
-fuelling.** Below roughly 60–75 min of work, intake is not
-performance-relevant — glycogen is not the limiter. A small bolus is
-still worth prescribing during a race-prep phase to rehearse race
-fuelling, and taking it **while already running** is the lower-risk
-window: the insulin response is blunted under exercise, so the same
-dose is safer mid-session than swallowed at rest shortly before the
-start. Two constraints: never introduce an untried product in a
-session whose purpose is measurement, and pair the intake with fluid.
+**Carbohydrate inside a ≤ 75 min session is gut training, not fuelling** — glycogen is not the limiter below roughly 60–75 min. A small bolus is still worth prescribing in a race-prep phase to rehearse race fuelling, best taken **while already running** (the insulin response is blunted under exercise, so the same dose is safer than swallowed at rest shortly before the start). Never introduce an untried product in a session whose purpose is measurement; pair the intake with fluid.
 
 **Research anchors:**
 [heat-pace-penalty-at-fixed-hr.md](../research/heat-pace-penalty-at-fixed-hr.md),
@@ -230,21 +212,7 @@ the athlete's Garmin without any HR guidance.
 | `38m 90-95% HR` | ⚠️ Accepted only if the athlete's device HRmax equals intervals.icu's — otherwise same divergence problem as `Zn HR` |
 | `38m Z2 HR` | ⛔ **Deprecated for pushed run steps** — see below |
 
-**Why `Zn HR` is deprecated.** A `Zn HR` step tells the watch
-"target zone N", and the watch resolves zone N against **its own HR-zone
-config** — frequently a %HRmax model — **not** the intervals.icu LTHR-based
-zones. When the two disagree (common case: intervals.icu Z2 is LTHR-based,
-e.g. 126-139 at LTHR 166, while the Garmin device computes Z2 as 60-70 %
-HRmax, e.g. ~106-123 at HRmax 176), the on-watch corridor **and the audible
-alert threshold are wrong**: the athlete runs at a HR their watch calls
-"in zone" while intervals.icu calls it Z1, so no alarm fires. `% LTHR`
-sidesteps this entirely — intervals.icu resolves the percentage to explicit
-bpm and the device follows that number verbatim, independent of its own zone
-config (this is the "couple concrete HR values to the alarm" practice).
-**Emit run HR targets as `% LTHR` for every run type — easy/recovery
-included, not only quality.** (Regression pattern to avoid: easy/recovery
-steps falling back to `Zn HR` while quality steps used `% LTHR` — the easy
-runs then silently lose their on-watch alarm.)
+**Why `Zn HR` is deprecated.** A `Zn HR` step tells the watch "target zone N", which the watch resolves against **its own HR-zone config** (frequently a %HRmax model), not the intervals.icu LTHR-based zones. When the two disagree (intervals.icu Z2 126–139 at LTHR 166 vs. a device Z2 of 60–70 % HRmax ≈ 106–123 at HRmax 176) the on-watch corridor **and the audible alert** are wrong: the athlete runs at an HR the watch calls "in zone" while intervals.icu calls it Z1, and no alarm fires. `% LTHR` is resolved by intervals.icu to explicit bpm and followed verbatim by the device, independent of its own zone config. **Emit run HR targets as `% LTHR` for every run type — easy / recovery included, not only quality.** (Regression pattern: easy / recovery steps falling back to `Zn HR` while quality steps used `% LTHR` — the easy runs then silently lose their on-watch alarm.)
 
 **Never write:**
 - `38m HR 130-137` — arbitrary BPM range, silently dropped (validator R012)
@@ -350,12 +318,6 @@ Consequences for the specialist:
 - Leaving the corridor — a rest so long the series becomes repetitions with
   full recovery — *is* a different session and needs saying.
 
-*Why the scope matters:* applying the 4–8 km HM-pace row (~92–96 % LTHR)
-to 6-minute reps at T-pace puts the guardrail below the intensity actually
-prescribed, so the correct pace would read as exceeding the plan. Check what the block's **pace**
-is before picking an HR band; the block's *length* alone does not
-identify which table applies.
-
 ## Long-run × quality — embed or separate is phase-gated
 
 A race-pace / threshold block **embedded in the long run** (Canova "Specific
@@ -421,24 +383,7 @@ stop-conditions applies:
 | Race within 36 h (tapered window) | Save neuromuscular spark for race day |
 | Athlete explicitly asked to skip in this conversation | Principal-override |
 
-**`daysSinceIntense` alone is not a stop-condition.** A Sunday Z2 after
-a Saturday Quality-Doppel (Threshold-Run + VO2max-Ride) with `HRV ≥
-baseline` and no acute symptom is a textbook strides day — the
-neuromuscular spark is exactly what an easy run risks losing.
-
-**A next-day hard stimulus is not a stop-condition either — and is
-never a reason to reduce the stride count below the default.** Strides
-carry negligible neuromuscular fatigue cost (≤25 s, elastic-tendinous,
-recovery-buffered); they do not compromise a quality session the
-following day. This holds doubly when the next-day reiz is
-**cross-training** (e.g. a bike VO2max): running strides and cycling
-share essentially no neuromuscular cost, so "keep the legs fresh for
-tomorrow's ride" is not a valid rationale at all. Reducing strides
-below the default count, or dropping them, requires one of the listed
-stop-conditions above — "fresh legs for tomorrow" is not one of them.
-If the specialist is genuinely worried about same-system next-day
-fatigue, the lever is the **Z2 main-set duration**, not the stride
-finisher.
+**Neither `daysSinceIntense` alone nor a next-day hard stimulus is a stop-condition.** A Sunday Z2 after a Saturday Quality-Doppel (Threshold-Run + VO2max-Ride) with HRV ≥ baseline and no acute symptom is a textbook strides day — the neuromuscular spark is exactly what an easy run risks losing. Strides carry negligible neuromuscular fatigue cost (≤ 25 s, elastic-tendinous, recovery-buffered), so tomorrow's quality never justifies cutting the count below the default — doubly so when it is cross-training (running strides and cycling share essentially no neuromuscular cost). Reducing or dropping strides requires one of the listed stop-conditions; if same-system next-day fatigue is a genuine worry, the lever is the **Z2 main-set duration**, not the stride finisher.
 
 **Additionally recommended when:**
 - Last training day before a longer pause (≥ 5 days) → neuromuscular
@@ -467,28 +412,7 @@ can read 40–60 s/km too slow on the watch. Read stride quality from
 spike + cadence lift + GCT drop), never from the GPS-pace number. Do not
 tell an athlete their stride was "too slow" off GPS pace.
 
-**Stride/surge ≠ race-pace ≠ Z4 — name the stimulus for what it is.**
-A stride/surge block of ≤30 s at 85–95 % effort is a **neuromuscular
-primer** (fast-twitch activation, PAP-compatible, aerobically cheap) —
-it is *not* a race-pace or Z4 stimulus. Two consequences:
-
-- **Do not name or describe such a block as "race-pace".** Race pace
-  for an endurance event is a *sustained* Z3/Z4 effort, far slower than
-  a 90–95 % near-sprint stride. A workout name like "Race-Pace-Surges"
-  on a 25 s / 95 % block contradicts its own coding and reads to the
-  athlete as "go race-hard" — they will run it as a maximal effort, not
-  a relaxed neuromuscular stride. Name and describe it for what it is
-  ("Steigerungen", "neuromuscular surges", "Strides"), with a
-  **concrete pace-anchor cue** (e.g. "Mile- / 1 km-Renntempo, schnelle
-  Füße, kein HR-Jagen"), never a lone percent or an HR zone.
-- **Never use a ≤30 s rep to chase a Z4 stimulus, and never attach an
-  HR target to a stride <60 s.** HR lag means 15–30 s cannot reach Z4 —
-  the rep ends before HR climbs, so the effort shows in cadence / step
-  length / GCT, not in HR. If a genuine **Z4 / race-pace** stimulus is
-  intended, use **≥1–2 min reps** with an explicit Z4 HR target; that
-  is a threshold-type session that belongs in the build, **not** inside
-  a taper window or a pure neuromuscular-priming day. Match the label,
-  the rep length, and the HR target to the actual training intent.
+**Stride/surge ≠ race-pace ≠ Z4 — name the stimulus for what it is.** A ≤ 30 s block at 85–95 % effort is a **neuromuscular primer** (fast-twitch activation, PAP-compatible, aerobically cheap), not a race-pace or Z4 stimulus. **Never name or describe it as "race-pace"** — race pace is a sustained Z3/Z4 effort, far slower than a 90–95 % near-sprint, and a name like "Race-Pace-Surges" on a 25 s / 95 % block reads to the athlete as "go race-hard". Name it for what it is ("Steigerungen", "neuromuscular surges", "Strides") with a **concrete pace-anchor cue** ("Mile- / 1 km-Renntempo, schnelle Füße, kein HR-Jagen"), never a lone percent or an HR zone. **Never use a ≤ 30 s rep to chase a Z4 stimulus, and never attach an HR target to a stride < 60 s** — HR lag means 15–30 s cannot reach Z4, so the effort shows in cadence / step length / GCT, not in HR. A genuine **Z4 / race-pace** stimulus needs **≥ 1–2 min reps** with an explicit Z4 HR target — a threshold-type session that belongs in the build, **not** inside a taper window or a pure neuromuscular-priming day. Match the label, the rep length and the HR target to the actual training intent.
 
 **When `config/` documents an athlete stride-count progression** (a
 current step and a target ceiling, e.g. building from 4× toward 6×),
@@ -564,19 +488,7 @@ matrix below):**
 
 ## Long-run / volume anchoring
 
-**Briefing-window check for LONG / volume directives.** The head-coach
-briefing typically passes the last 3 runs. Right after a race, during a
-rebuild, in a taper, or on return from illness, those recent runs are
-**systematically shorter** than the athlete's demonstrated long-run
-capability. Anchoring the long-run duration on "the longest of the last
-3 runs" then understates capability and produces a too-conservative
-plan.
-
-**Rule:** For a `LONG` (or any volume-anchored) directive, do not anchor
-duration on the most recent session. Pull a wider window and anchor on
-the athlete's **demonstrated longest comparable run** (same intensity
-class, comparable surface) within a representative look-back (≈ 4–6
-weeks):
+**Briefing-window check for LONG / volume directives.** The briefing typically passes the last 3 runs; right after a race, during a rebuild, in a taper or on return from illness they are **systematically shorter** than the athlete's demonstrated long-run capability, and anchoring on "the longest of the last 3" produces a too-conservative plan. For a `LONG` (or any volume-anchored) directive pull a wider window and anchor on the **demonstrated longest comparable run** (same intensity class, comparable surface, ≈ 4–6 weeks look-back):
 
 ```bash
 python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/fetch_type_history.py \
@@ -584,17 +496,7 @@ python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/fetch_type_history.py \
   | jq 'sort_by(.duration_min) | reverse | .[0:5]'
 ```
 
-Set the long-run duration as a sensible step from that demonstrated
-longest comparable run, cross-checked against the phase target in
-`config/competition_plan.md`. A recent short rebuild/taper run is **not**
-the ceiling.
-
-**Down-anchor below demonstrated capability only with a concrete, named
-trigger** (per the head-coach "No silent conservatism" rule): red-flag
-wellness, an active injury limiter on the volume itself, an active taper
-with a documented TSB target, or an athlete-reported acute symptom.
-"The last few runs were short" is **not** a trigger — surface the
-demonstrated capability in `focus` and step up toward it.
+Set the duration as a sensible step from that run, cross-checked against the phase target in `config/competition_plan.md`; a recent short rebuild / taper run is **not** the ceiling. Down-anchor below demonstrated capability only with a concrete, named trigger (per the head-coach "No silent conservatism" rule): red-flag wellness, an active injury limiter on the volume itself, an active taper with a documented TSB target, or an athlete-reported acute symptom — "the last few runs were short" is **not** a trigger; surface the demonstrated capability in `focus` and step up toward it.
 
 ## Compliance check before repeating a structured workout
 
@@ -827,40 +729,9 @@ both the HR premium and the RPE shift), and running drills belong beside the
 
 Derivation: `framework/research/treadmill-vs-outdoor-pace-hr-and-1-percent-grade.md`.
 
-**The field is also a training variable, not only advisor input.** Surface
-decides the loading pattern the athlete's foot, tendon and ankle actually
-get, so it is part of race specificity — and terrain tolerance is built by
-repetition, which lives in the recurring easy and long volume, not in the
-handful of quality sessions. When the directive names a target-race surface
-or the config documents one, do not leave an easy run on an inherited
-default: either match the race surface or state in `focus` which
-restriction outranks it. Full rule, including how to resolve a conflict with
-a rehab surface recommendation as a named ratio rather than a blanket
-default: `CLAUDE.md` → *Race surface is a training demand, not only a
-routing default*.
+**The field is also a training variable, not only advisor input.** Terrain tolerance is built by repetition in the recurring easy and long volume, not in the handful of quality sessions. When the directive names a target-race surface or the config documents one, do not leave an easy run on an inherited default — match the race surface or state in `focus` which restriction outranks it (named-ratio rule: `CLAUDE.md` → *Race surface is a training demand, not only a routing default*).
 
-**`treadmill` is not a neutral fallback — it decouples the two axes.**
-Compliance and evenness are independent, and the belt is the one option
-that is *even like a road* while loading *less than any of them*. The only
-instrumented comparison (tibial bone staple, n = 3, matched speed) found
-axial compression and tension strains and strain rates **48–285 % higher
-overground than on the treadmill**, and its authors read that in both
-directions at once: lower stress-fracture risk **and** less bone
-strengthening. Treat the belt accordingly:
-
-- **Right choice** when the session's job is aerobic volume at reduced
-  structural cost — heat, a week already dense in impact days, a time
-  window too short to get outside, a return-to-run step.
-- **Wrong choice** when the session is supposed to carry race-surface
-  exposure for a firm-ground race. It supplies the evenness and withholds
-  the load magnitude, and magnitude is the variable tissue actually adapts
-  to. Substituting it there looks like a neutral swap and quietly removes
-  the stimulus the session existed for.
-- **State which of the two you are doing** in `focus` whenever a planned
-  outdoor run moves to the belt. The evidence limits belong with the
-  finding: n = 3, strain inferred toward outcome rather than measured, and
-  belt mechanics confound the comparison. Derivation:
-  `research/race-surface-exposure-in-easy-volume.md`.
+**`treadmill` is not a neutral fallback — it decouples the two axes.** The belt is *even like a road* while loading *less than any surface* (the only instrumented comparison, n = 3, found axial bone strains and strain rates 48–285 % higher overground). **Right choice** when the session's job is aerobic volume at reduced structural cost (heat, a week already dense in impact days, a window too short to get outside, a return-to-run step); **wrong choice** when the session is meant to carry race-surface exposure for a firm-ground race — it supplies the evenness and withholds the load magnitude tissue actually adapts to. **State which of the two you are doing** in `focus` whenever a planned outdoor run moves to the belt, together with the evidence limits (n = 3, strain inferred toward outcome, belt mechanics confound). Derivation: `research/race-surface-exposure-in-easy-volume.md`.
 
 ---
 
@@ -1171,24 +1042,7 @@ the obvious device.**
 Sources and per-marker figures:
 [posterior-video-running-marker-scale-and-setup.md](../research/posterior-video-running-marker-scale-and-setup.md).
 
-**Running-posture cue library (pelvis / hip extension — evidence-based).**
-When the form focus touches posture, pelvis, lower back, or hip drive, cue
-the *good* version of hip extension and explicitly avoid the
-lumbar-hyperextension trap:
-- ✅ Cues: *run tall (grow through the crown)* → *lean from the ankles,
-  not the waist* (keep the lean small, ~4°) → *low-ab / deep-core on*
-  (locks a neutral pelvis) → *glute squeeze at toe-off* (that IS the hip
-  extension).
-- ❌ Anti-cues — never prescribe *"push the hips/pelvis forward"* or
-  *"drive the pelvis forward"*: with limited hip-extension ROM (tight hip
-  flexors / weak glutes) they route straight into anterior pelvic tilt +
-  lumbar hyperextension (hollow-back) and load the lumbar spine.
-- Video checkpoint (side-on): pelvic tilt at toe-off + lumbar lordosis in
-  stance — lordosis increases with speed + fatigue, so a fatigued / long-run
-  clip diagnoses it better than a fresh easy jog.
-- The off-run fix is coupled, not cue-only: hip-flexor mobility +
-  glute-max strength + neutral-spine core. Source + full derivation:
-  `framework/research/running-posture-pelvic-tilt-and-hip-extension.md`.
+**Running-posture cue library (pelvis / hip extension).** Cue the *good* version of hip extension and avoid the lumbar-hyperextension trap. ✅ *run tall (grow through the crown)* → *lean from the ankles, not the waist* (small lean, ~4°) → *low-ab / deep-core on* (neutral pelvis) → *glute squeeze at toe-off* (that IS the hip extension). ❌ Never prescribe *"push / drive the hips (pelvis) forward"*: with limited hip-extension ROM (tight hip flexors / weak glutes) it routes straight into anterior pelvic tilt + lumbar hyperextension (hollow-back). Video checkpoint (side-on): pelvic tilt at toe-off + lumbar lordosis in stance — lordosis increases with speed and fatigue, so a fatigued / long-run clip diagnoses it better than a fresh easy jog. The off-run fix is coupled, not cue-only (hip-flexor mobility + glute-max strength + neutral-spine core); derivation: `framework/research/running-posture-pelvic-tilt-and-hip-extension.md`.
 
 **Section types** (Garmin chooses suitable windows automatically):
 Pass these tokens to `--garmin-sections` exactly as written (the script

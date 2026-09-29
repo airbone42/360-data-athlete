@@ -110,35 +110,13 @@ WARNING, never blocking. Tests: `tests/test_validate_plan_r026.py`.*
 
 ### Contaminated slots: RPE is a log field, not the set terminator
 
-The table above assumes the reported RPE describes the exercise. It does
-not when the slot is **contaminated** — when another block in the same
-session has already loaded the same chain, so the number reports the
-accumulated state rather than the exercise's own demand.
+The table above assumes the reported RPE describes the exercise. It does not when the slot is **contaminated** — another block in the same session has already loaded the same chain, so the number reports the accumulated state rather than the exercise's own demand. In such a slot:
 
-In such a slot:
+- **Do not read the RPE as a progression trigger** in either direction (a high value does not deload, a low one does not progress): carry the documented anchor forward unchanged and say so in the description, so the post-session update does not overwrite the anchor with a contaminated value. A *passed* gate still counts (contamination inflates the number, so passing under it is a conservative lower bound); a *failed* gate does not.
+- **The set is terminated by a form criterion, not by the RPE ceiling** — the safety-relevant half of the rule: fatigue of a stabilising chain degrades the movement while the subjective rating stays plausible, and on an asymmetrically loaded exercise the degradation is exactly the pattern the exercise is meant to resist. Name the observable failure signature in the description (one-arm loaded carry: visible trunk lean, pelvic drop on the free side, rotation about the long axis, re-gripping) and make it the hard end of the set.
+- **RPE stays in the log** — still collected, just not the variable that moves the plan that day.
 
-- **Do not read the RPE as a progression trigger** in either direction.
-  A high value does not deload the exercise, and a low one does not
-  progress it. Carry the documented anchor forward unchanged and say so
-  in the description, so the post-session update does not quietly
-  overwrite the anchor with a contaminated value. A *passed* gate still
-  counts — the contamination inflates the number, so passing under it is
-  a conservative lower bound; a *failed* gate does not count.
-- **The set is terminated by a form criterion, not by the RPE ceiling.**
-  This is the safety-relevant half of the rule. Fatigue of a stabilising
-  chain reduces the spatial distribution of muscle activity and the
-  ability to adapt across repetitions, so the movement degrades while the
-  subjective rating stays plausible — and on an asymmetrically loaded
-  exercise the degradation is exactly the loading pattern the exercise is
-  meant to resist. Name the observable failure signature in the
-  description (for a one-arm loaded carry: visible trunk lean, pelvic
-  drop on the free side, rotation about the long axis, re-gripping) and
-  make it the hard end of the set.
-- **RPE stays in the log.** It is still collected — it is just not the
-  variable that moves the plan that day.
-
-Evidence and the ordering rule that avoids the situation in the first
-place: [../research/side-plank-prefatigue-vs-loaded-carry-same-day.md](../research/side-plank-prefatigue-vs-loaded-carry-same-day.md).
+Evidence and the ordering rule that avoids the situation in the first place: [../research/side-plank-prefatigue-vs-loaded-carry-same-day.md](../research/side-plank-prefatigue-vs-loaded-carry-same-day.md).
 
 ### Balance exercises: stability score S1–S5 (instead of RPE)
 
@@ -386,33 +364,11 @@ too easy, retired or replaced in its slot. Full rule: `CLAUDE.md` →
 
 ### …but terseness assumes the name identifies the movement
 
-`Name: sets×reps @ load | RPE | cue` is compact because the **name** carries
-the movement and the cue only corrects it. That holds for a standard,
-lookup-able exercise. It fails for anything the athlete cannot look up: a
-coach-invented drill, a context manipulation of a familiar pattern, a
-dual-task variant, a rehab progression named after its purpose rather than
-its shape.
+`Name: sets×reps @ load | RPE | cue` is compact because the **name** carries the movement and the cue only corrects it. That holds for a standard, lookup-able exercise; it fails for anything the athlete cannot look up (a coach-invented drill, a context manipulation of a familiar pattern, a dual-task variant, a rehab progression named after its purpose rather than its shape) — there the terse line lists the variables and omits the movement, and the athlete stops mid-session to ask, which costs far more attention than a long description would.
 
-There the terse line is not compact, it is **unusable** — it lists the
-variables and omits the movement. The athlete stops mid-session to ask what
-to do, which costs far more of the attention the rule was protecting than the
-long description ever would.
+**Rule:** before compressing an exercise to a parameter line, ask whether someone who has not done it before could execute it from the name. If not, the description carries the **how** — setup, what varies per rep, what the athlete actually does — as numbered steps, **every session, not only the first**. Still nothing about *why* (that stays in `focus`), and the character budget applies to reasoning that leaked in, never to instructions the movement genuinely requires.
 
-**Rule:** before compressing an exercise to a parameter line, ask whether
-someone who has not done it before could execute it from the name. If not,
-the description carries the **how** — setup, what varies per rep, what the
-athlete actually does — as numbered steps, **every session, not only the
-first**. Still nothing about *why*: the rationale stays in `focus`, and the
-character budget continues to apply to reasoning that leaked in, never to
-instructions the movement genuinely requires.
-
-**Symptom worth reacting to:** an exercise that comes back as a question. A
-drill whose execution has to be explained in chat was under-described in the
-workout — and the durable fix is the execution text in that exercise's entry
-in `config/exercise_progressions.md`, so the next session does not re-derive
-a one-liner from prose that lives somewhere else. An exercise that exists
-only as prose in a planning document has no entry to shorten, and that is
-usually the actual root cause.
+**Symptom worth reacting to:** an exercise that comes back as a question. The durable fix is the execution text in that exercise's entry in `config/exercise_progressions.md`, so the next session does not re-derive a one-liner from prose that lives elsewhere; an exercise that exists only as prose in a planning document has no entry to shorten, and that is usually the root cause.
 
 ---
 
@@ -503,10 +459,6 @@ exercises on top), enforce these rules:
    "Physio"-labeled session. A session titled "Pull + Physio" with
    only the daily rotator-cuff drill in its `exercises_seen` does not
    refresh the atomic block's cadence.
-5. **Why per-exercise last-seen matters:** a physio-labelled session that
-   contains only the new daily drill leaves the atomic block unrefreshed;
-   when in doubt, treat a new prescription as an additive layer and let the
-   per-exercise last-seen check trigger the atomic block's re-insertion.
 
 ---
 
@@ -617,37 +569,7 @@ The `structure[]` warm-up contains every component that a main-set description c
 
 ## Two legitimate justification sources — the planner estimate is not one
 
-In the `description` field (athlete-visible push text in
-intervals.icu), only two justification sources are allowed for
-volume / exercise decisions:
-
-**1. Sports-physiological:**
-- **RPE cap** (day before a pause, recovery day, post-intensity
-  caution)
-- **Volume cap** (tendon recovery, plyo volume limit, forearm load)
-- **Injury protection** (shoulder protective tension, achilles phase,
-  knee history)
-- **Recovery need** (double session, training density, recent Z4 load)
-- **Periodisation** (recovery week, pre-race taper, pre-pause caution)
-- **Adaptation logic** (no max sets on consecutive days, plyo not
-  after Z4)
-
-**2. Athlete-explicit time limit:**
-- Only when the athlete themselves named a time (chat: "only 45 min
-  today", "must be done by 18:00", "only 30 min").
-- The source must be marked in the planner directive
-  (`coaching_notes` or `time_constraint` field) explicitly as
-  "athlete stated … min".
-- Then the justification may reference time: "volume reduced to
-  athlete's 45 min — main stimulus prioritised".
-
-**`duration_range` is the planner's volume estimate — not a hard cap
-and not a valid justification source for athlete-visible text.** Exceed
-it (justify in `duration_note`) or shorten it (justify athletically).
-
-**Core principle:** Anything dropped is dropped for a sports-physiological
-reason OR an athlete-stated time limit — both must be explainable in the
-athlete-visible description.
+In the athlete-visible `description` (the push text in intervals.icu) only two sources may justify a volume / exercise decision: **(1) a sports-physiological reason** (RPE cap, volume cap, injury protection, recovery need, periodisation, adaptation logic) or **(2) an athlete-explicit time limit** ("only 45 min today", "must be done by 18:00") that the planner directive marks (`coaching_notes` or `time_constraint`) as "athlete stated … min" — only then may the justification reference time. `duration_range` is the planner's volume estimate: not a hard cap and never a justification for athlete-visible text — exceed it (justify in `duration_note`) or shorten it (justify athletically). Anything dropped is dropped for one of the two reasons, and both must be explainable in the athlete-visible description.
 
 ### Duration estimation — bilateral and isometric blocks
 
@@ -679,24 +601,7 @@ holds can easily land at 25–30 min in reality while looking like
   L-Sit ≥30 s)
 - For Side Plank position switches add **20 s side-switch** per set
 
-**Worked example — atomic block:**
-
-```
-WU:                                                          ~2 min
-Side Plank Abd 3×35s/side:   3 × 35s × 2  = 210s + rests  ≈ 5 min
-Side Plank Drehung 3×8/side: 3 × 8 × 3s × 2 = 144s + rests ≈ 5 min
-Stir-the-Pot 3×6/dir 3-0-3:  3 × 6 × 6s × 2 = 216s + rests ≈ 5 min
-McGill 3×10/side 8s Hold:    3 × 10 × 8s × 2 = 480s + rests ≈ 11 min
-CD:                                                          ~1 min
-                                                       TOTAL ≈ 29 min
-```
-
-A directive of `duration_min: 8` for this block is **wrong** —
-either (a) match reality bottom-up and override
-`duration_min` with a longer figure plus a one-line `duration_note`
-("bilateral × 4 exercises with 8 s holds — realistic 28–30 min"),
-or (b) push back to the planner via the orchestrator when the gap
-exceeds factor 1.5.
+**Rule of thumb:** a 4-exercise atomic block of bilateral holds (Side Plank Abd 3×35 s/side, Side Plank Drehung 3×8/side, Stir-the-Pot 3×6/dir 3-0-3, McGill 3×10/side 8 s hold) lands at ≈ 29 min including rests, not the "8 min" a directive may claim. Either (a) match reality bottom-up and override `duration_min` with the longer figure plus a one-line `duration_note` ("bilateral × 4 exercises with 8 s holds — realistic 28–30 min"), or (b) push back to the planner via the orchestrator when the gap exceeds factor 1.5.
 
 **Mechanical net (R018):** `validate_plan.py::check_duration_plausibility`
 re-derives this estimate from the pushed description (per-Seite/Richtung

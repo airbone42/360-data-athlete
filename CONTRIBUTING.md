@@ -111,6 +111,8 @@ past failed at least one of these:
 - Conventional Commits (`feat:`, `fix:`, `refactor:`, `docs:`, `chore:`)
   with a scope when it helps (`fix(planner): ...`)
 - `pytest tests/` before submitting; new files need new tests
+- Secrets: no hard-coded keys — `.env` resolves via `$COACH_HOME/.env` (fallback: the framework root for standalone runs); pydantic-settings loads it.
+- Before pushing: `bash scripts/ci_local.sh` mirrors `.github/workflows/test.yml` locally (plugin-manifest validation, advisory ruff, pytest on every locally installed matrix interpreter — missing legs are reported loudly, CI covers them); consumer wrappers can install it as a pre-push hook; `CI_LOCAL_STRICT=1` makes ruff blocking.
 
 ## Security
 

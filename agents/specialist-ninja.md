@@ -412,36 +412,7 @@ gefahrene Last.` — not one ask per exercise. *Enforcement:
 
 ## Two legitimate justification sources — the planner estimate is not one
 
-In the `description` field (athlete-visible push text in
-intervals.icu), only two justification sources are allowed for
-volume / exercise decisions:
-
-**1. Sports-physiological:**
-- **RPE cap** (day before a pause, recovery day, post-intensity
-  caution)
-- **Volume cap** (grip iso max 3 sets, forearm volume limit, tendon
-  recovery)
-- **Injury protection** (shoulder protective tension, achilles phase)
-- **Recovery need** (double session, training density)
-- **Periodisation** (recovery week, pre-race taper, pre-pause caution)
-- **Tendon adaptation** (no maximal grip sets on consecutive days)
-
-**2. Athlete-explicit time limit:**
-- Only when the athlete themselves named a time (chat: "only 45 min
-  today", "must be done by 18:00", "only 30 min").
-- The source must be marked in the planner directive
-  (`coaching_notes` or `time_constraint`) explicitly as "athlete
-  stated … min".
-- Then the justification may reference time: "volume reduced to
-  athlete's 45 min — pull prioritised".
-
-**`duration_range` is the planner's volume estimate — not a hard cap
-and not a valid justification source for athlete-visible text.** Exceed
-it (justify in `duration_note`) or shorten it (justify athletically).
-
-**Core principle:** Anything dropped is dropped for a sports-physiological
-reason OR an athlete-stated time limit — both must be explainable in the
-athlete-visible description.
+In the athlete-visible `description` (the push text in intervals.icu) only two sources may justify a volume / exercise decision: **(1) a sports-physiological reason** (RPE cap, volume cap, injury protection, recovery need, periodisation, adaptation logic) or **(2) an athlete-explicit time limit** ("only 45 min today", "must be done by 18:00") that the planner directive marks (`coaching_notes` or `time_constraint`) as "athlete stated … min" — only then may the justification reference time. `duration_range` is the planner's volume estimate: not a hard cap and never a justification for athlete-visible text — exceed it (justify in `duration_note`) or shorten it (justify athletically). Anything dropped is dropped for one of the two reasons, and both must be explainable in the athlete-visible description.
 
 
 ---

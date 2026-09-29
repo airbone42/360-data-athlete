@@ -72,30 +72,9 @@ sources before suggesting a Hard-Reiz:
    (Reiz 1: Lauf-Threshold | Reiz 2: Rad-VO2max — cross-training to spare
    Achilles/knee).
 
-Reading only `competition_plan.md`'s mesocycle table (e.g. a single
-Bergauf-Quality entry for the current week) and ignoring the 2-stimulus
-weekly strategy has produced wrong outlooks in the past — e.g. proposing
-a second Lauf-Z4 Bergauf session in the same week that already had a
-Threshold-Lauf, when the correct next stimulus is Rad-VO2max.
+The mesocycle table in `competition_plan.md` tells you the **content** of each Hard-Reiz; the weekly strategy tells you **which Hard-Reiz comes next** — both are required. Reading only the table has produced wrong outlooks (a second Lauf-Z4 Bergauf session in a week that already had a Threshold-Lauf, when the next stimulus is Rad-VO2max).
 
-The mesocycle table tells you the **content** of each Hard-Reiz; the
-weekly strategy tells you **which Hard-Reiz comes next**. Both are
-required.
-
-**The two weekly stimuli go on separate days, decided at planning time
-(policy).** Two hard sessions on one calendar day is not a schedule,
-it is a collision waiting for someone to resolve it — and the person who
-resolves it is the athlete, on the day, by declining one. That decision
-is correct: two interval sessions in a day rarely makes sense. But the
-week then loses a stimulus, and the record shows the loss as an athlete
-decision rather than as the planning error it is.
-
-The failure is self-sustaining, which is why it needs a rule rather than
-attention. Every time the two stimuli are stacked, a sensible athlete
-declines one, the bookkeeping writes "dropped at athlete's request", and
-the next planning cycle reads a week that carried one stimulus and an
-athlete who refuses the second. Repeat and the programme never reaches
-its own prescription while every individual entry looks defensible.
+**The two weekly stimuli go on separate days, decided at planning time (policy).** Two hard sessions on one calendar day are a collision the athlete resolves on the day by declining one — the week then loses a stimulus, the record shows an athlete decision instead of a planning error, and repeated stacking means the programme never reaches its own prescription while every individual entry looks defensible.
 
 - Place both stimuli on distinct days **before** the week starts. If the
   available days do not allow it, that is the finding — say the week
@@ -130,38 +109,14 @@ Configuration files live in `config/` (athlete-specific) with fallback to
 | `competition_plan.md` | Target events, ramp & taper plans |
 | `recovery_protocol.md` | Deload-week rules (framework defaults) |
 | `training_paradigms.md` | HR zones, polarized/pyramidal, intensity rules |
-| `injury_locks.json` | Configurable injury-lock activation keywords per body zone (used by validator R002) |
-| `recovery_rules.yaml` | Cross-day recovery blocks (trigger tags → min rest days) — read by context_builder and validator alike |
-| `ninja_saeulen.yaml` | Ninja pillar keyword + tag definitions for pillar-rotation tracking |
-| `exercise_tag_mapping.json` | Per-tag exercise whitelist + minimum count for tag-content adequacy (validator R024; empty default = off) |
 
-Path resolution is governed by `app/utils/paths.py` (see `COACH_HOME`,
-`CONFIG_DIR`, `DATA_DIR`, `CONFIG_FALLBACK`).
+Validator / context config files (`injury_locks.json`, `recovery_rules.yaml`, `ninja_saeulen.yaml`, `exercise_tag_mapping.json`) and path resolution (`app/utils/paths.py`: `COACH_HOME`, `CONFIG_DIR`, `DATA_DIR`, `CONFIG_FALLBACK`) are documented in `config.example/` and [docs/architecture.md](docs/architecture.md).
 
 ---
 
 ## Available scripts
 
-All scripts are invoked as
-`python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/<name>.py`.
-
-- In **plugin mode** (loaded under a consumer wrapper) Claude Code expands
-  `${CLAUDE_PLUGIN_ROOT}` to the plugin's absolute root before execution,
-  so the script path resolves correctly even though the session's `cwd`
-  is the consumer's working directory, not the plugin.
-- In **standalone mode** (running this repo directly with `cwd` at the
-  repo root) the variable is unset and the bash default `:-.` falls back
-  to `.`, which makes `./scripts/<name>.py` work as before.
-
-Both call styles produce the same outcome — pick one form and use it
-verbatim everywhere; the regression test
-`tests/test_plugin_manifest.py::test_no_bare_scripts_path_in_plugin_artifacts`
-blocks any bare `python3 scripts/...` from sneaking back into
-`commands/` or `agents/`.
-
-Full script catalogue with one-line purposes:
-[scripts/README.md](scripts/README.md). The scripts an agent or command
-needs are named directly in its own definition.
+All scripts are invoked as `python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/<name>.py` — in plugin mode Claude Code expands `${CLAUDE_PLUGIN_ROOT}` to the plugin root (the session `cwd` is the consumer's), standalone the default `:-.` keeps `./scripts/<name>.py` working. Use this one form verbatim everywhere; `tests/test_plugin_manifest.py::test_no_bare_scripts_path_in_plugin_artifacts` blocks any bare `python3 scripts/...` in `commands/` and `agents/`. Catalogue with one-line purposes: [scripts/README.md](scripts/README.md); an agent or command names the scripts it needs in its own definition.
 
 ---
 
@@ -170,50 +125,13 @@ needs are named directly in its own definition.
 Code layout (`app/api`, `app/utils`, `app/graphs`, config loading):
 [docs/architecture.md](docs/architecture.md).
 
-**Key fields:**
-
-```
-hrvContext, hrv, rhr, sleep, sleepHours,
-ctl, atl, tsb, ctlDisplay,
-hrvBaseline, hrvDeviation, rhrContext, rhrBaseline, rhrDeviation,
-combinedOverloadSignal, ctlTrend, cycleHint,
-zoneDistribution, weeklyZoneBalance, mesoLoadTrend, weatherInfo,
-intensityReadiness, daysSinceIntense, lastRestDay, runDayStreak,
-lastSessionEnd,
-athleteFeedback,
-eventList, raceInDays, dateStr,
-hrZones, hrvReviewPending, hrvReadiness, hrvCvTrend,
-skippedWorkouts[], activities[], dataWarnings[],
-configDrift[]
-```
-
-`configDrift` carries auto-surfaced drift findings from
-`check_log_vs_history` — when an `exercise_progressions.md` entry is
-stale relative to the last activity that performed the exercise, the
-field lists `{source_file, source_line, evidence}` so the
-planner/specialists see the drift at session start without an explicit
-`/audit` run. `evidence` is sanitized at the write boundary.
-
-See:
-- HRV/RHR baseline methodology — `framework/research/hrv-rhr-baseline-methodology.md`
-- HRV forecast model — `framework/research/hrv-forecast-model.md`
-- Recovery week triggers — `framework/research/recovery-week-triggers.md`
+Field names are self-describing in the script output; the ones to process before answering are listed above. `configDrift[]` carries drift findings auto-surfaced from `check_log_vs_history` — an `exercise_progressions.md` entry that is stale relative to the last activity that performed the exercise (`{source_file, source_line, evidence}`, `evidence` sanitized at the write boundary) — so planner and specialists see the drift at session start without an explicit `/audit`. Methodology: `framework/research/hrv-rhr-baseline-methodology.md`, `hrv-forecast-model.md`, `recovery-week-triggers.md`.
 
 ---
 
 ## Agent team
 
-When this repository is loaded as a Claude Code plugin
-(`aicoach-framework@360-data-athlete`), agents live in `agents/` at the
-plugin root and are exposed under the namespaced name
-`aicoach-framework:<agent>`. Slash commands live in `commands/` and are
-invoked as `/aicoach-framework:<command>`. Plugin agents read the `config/`
-files they need themselves — each agent definition names them.
-
-Project-level agents in `.claude/agents/<name>.md` (in the
-consumer's repo) take precedence by name resolution — unqualified
-`<name>` invokes the project agent; namespaced
-`aicoach-framework:<name>` always points at the plugin version.
+Plugin agents live in `agents/` (namespaced `aicoach-framework:<agent>`), slash commands in `commands/` (`/aicoach-framework:<command>`); each agent definition names the `config/` files it reads. A project-level `.claude/agents/<name>.md` in the consumer's repo is invoked by the unqualified name, the plugin version always by `aicoach-framework:<name>` ([docs/architecture.md](docs/architecture.md)).
 
 ### Selection logic (training)
 
@@ -223,48 +141,13 @@ workout.tags contains "ninja"    →  specialist-ninja
 otherwise                         →  specialist-complementary
 ```
 
-### Agent overview
+### Agent roles
 
-| Agent | Role |
-|-------|------|
-| `planner` | Strategic daily planner — produces a plan directive |
-| `specialist-endurance` | Run / ride structure (pace, zones, intervals.icu format) |
-| `specialist-complementary` | Strength / plyo / core structure |
-| `specialist-ninja` | Ninja athletics (five pillars, grip, push/pull balance) |
-| `data-scientist` | Lap chronicles, factual data reporting (no interpretation) |
-| `coach-analyst` | Post-activity feedback (overview, strengths, growth) |
-| `mental-coach` | Pre-workout motivation, setback processing |
-| `video-analyst` | Movement analysis (form + physiological challenge) |
-| `plan-validator` | Semantic workout validator |
-| `exercise-reviewer` | Periodic exercise-selection review against current goals — runs only when the re-evaluation trigger fires (recovery week / phase change / staleness) |
-| `research-analyst` | Evidence research for a flagged uncertainty — persists an athlete-agnostic doc under `framework/research/` (`/research`) |
-| `citation-verifier` | Adversarial re-check of a freshly written research doc — every quote, number and identifier against the source, fresh context, before the doc is used as evidence (`/research` step 2.5) |
-| `config-auditor` | Drift validator (configs ↔ agents) |
-| `config-fixer` | Audit-finding remediation with approval log |
-| `physio-consultant` | Injury consultation (physiotherapy view) |
-| `sports-ortho-consultant` | Injury consultation (orthopaedic view) |
+The role of each agent is the `description` in its `agents/<name>.md` frontmatter (the harness lists them with the Agent tool); the layer view is in [docs/architecture.md](docs/architecture.md).
 
 ### Specialist briefing (pane start prompt)
 
-Agents are pane-based teammates, not a pipeline — the collaboration
-shape is documented in [docs/architecture.md](docs/architecture.md)
-§Pane model. Operational part:
-
-**Context passed to a specialist (pane start prompt):**
-
-```
-Directive: {workout JSON from planner}
-Type-History: {fetch_type_history.py output}
-Wellness: HRV: {hrv} (baseline: {hrvBaseline}) | Sleep: {sleep}/100 | TSB: {tsb}
-Last 3 days: {activities[-3:]}
-HR zones: {context.hrZones}
-Weather: {context.weatherInfo}
-Other workouts today: {sibling workouts, JSON, incl. exercise lists}
-Warm-up de-duplication: {drills already taken by another specialist today}
-```
-
-**Type-history defaults:** endurance `--max-sessions 3`, complementary /
-ninja `--max-sessions 5`.
+The start-prompt template (Directive, Type-history as **full** JSON, Wellness, Last 3 days, HR zones, Weather, sibling workouts, warm-up de-duplication) is in `commands/training.md` step 3b; the collaboration shape is in [docs/architecture.md](docs/architecture.md) §Pane model. **Type-history defaults:** endurance `--max-sessions 3`, complementary / ninja `--max-sessions 5`.
 
 ### Briefing rule — head coach gives no progression specifics (policy)
 
@@ -328,43 +211,9 @@ unmentioned.
 
 ### Session averages are not a comparison unit (policy)
 
-A session average is computed over everything the athlete did: warm-up,
-cool-down, drills, strides, jog recoveries and the block that actually
-carried the stimulus. The mixture is different in every session, so two
-session averages differ partly because the sessions were *built*
-differently — a shorter warm-up moves the number without anything about
-the athlete having changed. Comparing them therefore compares session
-structure and calls the result form.
+A session average mixes warm-up, cool-down, drills, strides and jog recoveries, and the mix differs per session — so two averages differ partly because the sessions were *built* differently. **Compare the block that carries the stimulus** (the main effort of a continuous session; interval against interval in a structured one) — never pace, heart rate, cadence or ground-contact time from one session average against another. Session-level figures keep their own jobs (volume, total load, zone distribution, aerobic decoupling). **When the block is not available, say so** ("no lap data, so this is a session average") instead of comparing averages; the average is what the tooling hands over first, so the invalid comparison is also the convenient one — treat a pace or HR claim built from two session averages as unfounded until the blocks have been checked. The same rule stands in `commands/analyse.md` and `agents/coach-analyst.md`.
 
-**Compare the block that carries the stimulus, against the same block in
-the reference session.** For a continuous session that is the main
-effort; for a structured session it is the work intervals, interval
-against interval. Never pace, heart rate, cadence or ground-contact time
-from one session average against another.
-
-Session-level figures keep their own jobs and should not be discarded:
-volume, total load, zone distribution and aerobic decoupling are
-properties of the whole session and are read there.
-
-**When the block is not available, say so rather than substituting.** An
-activity without lap data supports a volume statement, not a pace or
-heart-rate comparison. "No lap data, so this is a session average" is a
-usable sentence; quietly comparing the averages is not.
-
-The trap is that the average is the figure the tooling hands over first,
-so the invalid comparison is also the convenient one. Treat a pace or HR
-claim built from two session averages as unfounded until the blocks have
-been checked, however plausible the numbers look side by side.
-
-**Drift incident pattern:** two matching session averages were reported
-as "no faster than two weeks ago" while the main blocks were clearly
-apart — the earlier run simply carried more easy volume.
-
-*Enforcement: `history_fetcher._extract_blocks`, surfaced in the type
-history as `main_block` / `work_blocks` per session, with
-`comparison_unit` naming which basis is available. A session without lap
-data reports `session_average` explicitly instead of passing an average
-off as comparable. Tests: `tests/test_history_block_extraction.py`.*
+*Enforcement: `history_fetcher._extract_blocks`, surfaced in the type history as `main_block` / `work_blocks` per session, with `comparison_unit` naming which basis is available (`session_average` when there is no lap data). Tests: `tests/test_history_block_extraction.py`.*
 
 ### Warm-up drill rule (policy)
 
@@ -417,24 +266,7 @@ is a soft flag, not a stop; only a `hold` verdict (3+ consecutive days
 below band) defaults to recovery. Do not treat "verdict ≠ clear" as a
 reason to downgrade.
 
-**Discount load-less days when reading accumulation signals.**
-**`lastRestDay` flags the common case:** when no day in the window
-is empty but one carried only short accessory work (no endurance session,
-no logged training load, ≤ 45 min total), the field reports that day as
-`LOAD-LESS` and names it. Treat such a day as effective rest. The field
-does not see every load-less day, so the rule below still applies.
-
-`cycleHint`
-("N consecutive load weeks") count **any day with ≥1 logged activity**
-as a training day — regardless of `training_load`. A mobility / reha /
-balance-only day (no cardio, no legs, zero/null training_load) is
-**effective rest** for accumulation purposes. Before using "no rest day
-in X days" or "consecutive load weeks" to justify an easy/rest day,
-verify the intervening days actually carried systemic load; do not
-overstate accumulation by counting load-less reha days as full training
-days. (Anti-pattern: arguing "rest is overdue" from `lastRestDay` when
-the intervening day carried only a short mobility/reha block with no
-training load.)
+**Discount load-less days when reading accumulation signals.** `lastRestDay` flags the common case: when no day in the window is empty but one carried only short accessory work (no endurance session, no logged training load, ≤ 45 min total), it reports that day as `LOAD-LESS` — treat it as effective rest. The field does not see every load-less day: `cycleHint` ("N consecutive load weeks") counts **any day with ≥ 1 logged activity** as a training day regardless of `training_load`, so a mobility / reha / balance-only day (no cardio, no legs, zero/null load) is **effective rest** for accumulation purposes. Before using "no rest day in X days" or "consecutive load weeks" to justify an easy / rest day, verify that the intervening days actually carried systemic load.
 
 The progression-relevant stimulus per pillar (real Pull-block, real
 Grip-block, real run intensity, etc.) is the default. Substitution with
@@ -451,70 +283,14 @@ When in doubt, check the type history: if the athlete's last *real*
 stimulus on that pillar is older than the rotation cadence, the answer
 is "schedule the stimulus", not "another physio session".
 
-**Activity-NOTE caps are non-persistent recommendations.** When the
-`coach-analyst` analysis of a single activity contains a volume or
-intensity recommendation (format: "Brick stays at 30–35 min until
-2× consecutive days lower-back-free"), that is a **conditional**,
-**activity-scope**, **ephemeral** recommendation — not a permanent
-rule. Before carrying it into a later plan:
+**Activity-NOTE caps are non-persistent recommendations.** A volume / intensity recommendation in a single-activity `coach-analyst` analysis ("Brick stays at 30–35 min until 2× consecutive days lower-back-free") is **conditional, activity-scope and ephemeral**. Before carrying it into a later plan check (1) **scope** — does it apply to today's workout type (Brick = Bike→Run, not Plyo→Run or plain easy runs)? (2) **condition** — has it been verified (`fetch_context.athleteFeedback` as source)? (3) **recency** — older than ~5 days with wellness now green means expired. A recommendation that should become permanent must be migrated explicitly to `config/athlete_status.md` or `config/training_paradigms.md`; until then do NOT generalise.
 
-1. **Scope check:** Does the recommendation apply to today's workout
-   type? ("Brick stays at 30–35 min" applies to Brick = Bike→Run,
-   NOT to Plyo→Run or plain easy runs.)
-2. **Condition check:** Has the condition been verified? ("until 2×
-   consecutive days lower-back-free" — has that been met?
-   `fetch_context.athleteFeedback` as the source.)
-3. **Recency check:** Is the recommendation still current? Activity-NOTE
-   older than ~5 days and wellness now green → expired, do not carry
-   forward.
+**Conservatism applies to pacing and race-strategy recommendations too, not just daily stimulus** — any effort target, race pace or race strategy the coach proposes. Two anchoring errors are forbidden:
 
-Activity-NOTE recommendations that should become permanent rules must
-be explicitly migrated to `config/athlete_status.md` or
-`config/training_paradigms.md`. Until then: do NOT generalise.
+1. **Do not anchor short-race pacing on CTL / recent load.** CTL / ATL / TSB is a recent-load / durability signal that matters for long efforts (≳ half-marathon, multi-hour: glycogen depletion, time-on-feet). For shorter races (≈ ≤ HM, ≤ ~90 min) the limiter is threshold / VO2 / running economy, which a trained athlete retains at modest CTL — "hold back because your CTL / base is low" confuses recent volume with performance ceiling. Anchor on **event demands + the athlete's race history + quality base** (PRs, recent races, type-history quality sessions; sources in `config/athlete_static.md` and the activity history); CTL enters only as a durability caveat for long efforts.
+2. **Athlete empirical evidence outranks a single-metric heuristic.** When the athlete cites concrete past performance ("I ran race X at lower fitness and sustained effort Y"), **adjust and concede explicitly, do not defend** — re-derive the recommendation from the cited evidence.
 
-**Conservatism applies to pacing & race-strategy recommendations too, not
-just daily stimulus.** The same no-silent-downgrade discipline governs
-any **effort target, race pace, or race-strategy** the coach proposes.
-Two anchoring errors are forbidden:
-
-1. **Do not anchor short-race pacing on CTL / recent-load.** CTL (and
-   ATL/TSB) is a *recent-load / durability* signal — it matters most for
-   long efforts where glycogen depletion and time-on-feet durability are
-   the limiter (≳ half-marathon, multi-hour). For shorter races
-   (≈ ≤ HM, ≤ ~90 min) the performance limiter is threshold / VO2 /
-   running economy, which a trained athlete **retains at modest CTL**.
-   Telling an athlete to hold back in a short race "because your CTL/base
-   is low" is a metric-misuse: it confuses recent training volume with
-   performance ceiling. Anchor short-race pacing on **event demands + the
-   athlete's race history + quality base** (PRs, recent race results,
-   type-history quality sessions — sources in `config/athlete_static.md`
-   and the activity history). CTL enters only as a *durability caveat for
-   long efforts*.
-
-2. **Athlete empirical evidence outranks a single-metric heuristic.**
-   When the athlete challenges a recommendation with **concrete
-   past-performance evidence** ("I ran race X at lower fitness and
-   sustained effort Y"), that evidence outranks the heuristic — the coach
-   **adjusts and concedes explicitly, does not defend**. Re-derive the
-   recommendation from the cited evidence.
-
-A *more conservative* effort/pacing recommendation than the athlete's
-evidence supports requires a **concrete, named trigger** — name it or do
-not downgrade:
-
-- Red-flag wellness (`intensityReadiness 🔴` AND `hrvReadiness.verdict ∈
-  {watch, hold}`)
-- An **injury limiter on the specific race demand** — constrain *that
-  demand*, not the whole effort. The limiter is *tissue tolerance on the
-  demand* (e.g. tendon/joint eccentric-load tolerance on a technical
-  descent), NOT cardiovascular pacing. Cap the demand (downhill load,
-  surface) and leave the rest of the effort to the athlete's capability.
-- Active taper with a documented TSB target
-- Athlete-reported acute symptom in this conversation
-
-Absent such a trigger, match the recommendation to the athlete's
-demonstrated capability. Sport-science backing:
-[race-pacing-and-load-metrics.md](research/race-pacing-and-load-metrics.md).
+A *more conservative* effort / pacing recommendation than the evidence supports requires a **concrete, named trigger** — name it or do not downgrade: red-flag wellness (`intensityReadiness 🔴` AND `hrvReadiness.verdict ∈ {watch, hold}`); an **injury limiter on the specific race demand** (constrain *that demand* — tissue tolerance, e.g. eccentric load on a technical descent: cap downhill load / surface — not cardiovascular pacing, and leave the rest of the effort to the athlete's capability); an active taper with a documented TSB target; an athlete-reported acute symptom in this conversation. Absent one, match the recommendation to demonstrated capability ([race-pacing-and-load-metrics.md](research/race-pacing-and-load-metrics.md)).
 
 **A stored percentage is only as good as the denominator it was computed
 with.** When a past race's HR curve is filed as %LTHR (or a power curve as
@@ -609,85 +385,20 @@ threshold bands outdoors the corridor is discounted twice, which leaves the
 check close to unreachable there. Tests: `tests/test_band_rpe.py`,
 `tests/test_rpe_hr_discrepancy_check.py`.*
 
-**The same discipline governs volume / long-run duration — anchor on
-demonstrated capability, not on the most recent sessions.** The
-briefing window (last 3 endurance sessions by default) is
-*systematically unrepresentative* right after a race, during a rebuild,
-in a taper, or on return from illness — those recent runs are shorter
-than the athlete's real long-run ceiling. Anchoring a `LONG` directive
-on "the longest of the last 3 runs" in those contexts silently shrinks
-the plan below what the athlete demonstrably handled a few weeks
-earlier.
+**The same discipline governs volume / long-run duration — anchor on demonstrated capability, not on the most recent sessions.** The 3-session briefing window is systematically unrepresentative right after a race, during a rebuild, in a taper or on return from illness. Anchor a `LONG` / volume directive on the athlete's **demonstrated longest comparable run** (same intensity class, comparable surface, ≈ 4–6 weeks look-back), cross-checked against the phase target in `config/competition_plan.md` — not on the most recent rebuild / taper session — and widen the endurance type-history window before briefing (`fetch_type_history.py … --max-sessions 12`, sorted by duration; `commands/training.md` step 3a). Down-anchor below demonstrated capability only with a named trigger from the list above (red-flag wellness, an injury limiter on the volume itself, an active taper with a documented TSB target, an athlete-reported acute symptom); "the last few runs were short" is **not** a trigger.
 
-- The long-run / volume anchor is the athlete's **demonstrated longest
-  comparable run** (same intensity class, comparable surface) within a
-  representative look-back (≈ 4–6 weeks), cross-checked against the
-  phase target in `config/competition_plan.md` — **not** the most
-  recent rebuild/taper session.
-- Before briefing a `LONG` directive, the head coach widens the
-  endurance type-history window (`fetch_type_history.py … --max-sessions
-  12`, sorted by duration) so the demonstrated longest run is actually
-  in scope — a 3-session window hides it.
-- Down-anchor below demonstrated capability only with a concrete, named
-  trigger from the list above (red-flag wellness, an injury limiter on
-  the volume itself, active taper with a documented TSB target,
-  athlete-reported acute symptom). "The last few runs were short" is
-  **not** a trigger.
-
-**Drift incident pattern:** a post-race rebuild anchored the long run on
-the short re-entry sessions inside the 3-session window; the athlete's
-demonstrated capability sat just outside it and the athlete had to
-challenge the conservatism.
-
-*Enforcement: mechanical validator hook `validate_plan.py::check_easy_run_conservatism` (R014). Primary anchor — when `competition_plan.md` documents a per-phase easy-run band keyed by CTL ("Lauf-Dauer-Logik pro Phase"), an easy run below the phase-band floor (mapped via current CTL) with no documented recovery trigger is a hard ERROR; heat is a reason to run slower (HR-capped), not shorter, and indoor/brick runs are exempt. Fallback anchor — without a phase-band table or when CTL is offline, easy runs below 70% of the 30d easy median without a documented recovery reason surface as a WARNING. Plus head-coach judgment for the other drift classes, including pacing / race-strategy conservatism and long-run/volume anchoring (not fully mechanizable — the demonstrated-longest-run anchor depends on a representative history window the coach must request).*
+*Enforcement: `validate_plan.py::check_easy_run_conservatism` (R014) — with a per-phase easy-run band keyed by CTL ("Lauf-Dauer-Logik pro Phase") in `competition_plan.md`, an easy run below the phase-band floor without a documented recovery trigger is a hard ERROR (heat is a reason to run slower, HR-capped, not shorter; indoor / brick runs exempt); without a band or when CTL is offline, an easy run below 70 % of the 30d easy median without a documented reason is a WARNING. Head-coach judgment for the other drift classes — pacing / race-strategy conservatism and long-run / volume anchoring (the demonstrated-longest-run anchor needs a history window the coach must request).*
 
 ### Correlated signals are one signal, however many of them there are (policy)
 
-Converging evidence is the strongest thing a coach can have and the easiest
-thing to fake accidentally. Several derived metrics agreeing feels like
-independent confirmation; when they are computed from the same underlying
-observation, it is one observation counted several times, and the
-"convergence" is arithmetic rather than evidence.
+Several derived metrics agreeing feels like independent confirmation; when they come from the same underlying observation it is one observation counted several times. Running dynamics are the clearest case: at fixed speed **step length = speed ÷ cadence** (one degree of freedom between them), ground-contact time moves with the same stride, and a watch's treadmill pace is estimated from that stride by an accelerometer — four figures, one observation.
 
-The trap is specific to derived data, which is most of what an activity file
-contains. Running dynamics are the clearest case: at a fixed speed, **step
-length = speed ÷ cadence**, so cadence and step length carry exactly one
-degree of freedom between them — quoting both as agreeing is quoting one
-number twice. Ground-contact time is a property of the same stride and moves
-with them. A watch's treadmill pace is estimated from that same stride by an
-accelerometer, so it is not an outside check either. Four figures, one
-observation.
+**Before calling evidence convergent, name the mechanism each signal comes through and drop the ones that share a mechanism.** If the surviving count is one, say so — a single signal can be right, but it does not carry the weight of four. Two consequences:
 
-**Before calling evidence convergent, name the mechanism each signal comes
-through, and drop the ones that share a mechanism.** What survives is the
-real count. If that count is one, say so — a single signal can still be
-right, but it does not carry the weight of four and it must not be presented
-as though it did.
+- **An unmodelled signal outranks several modelled ones.** A direct measurement (stopwatch, tape measure, scale, device-level calibration check) fails differently from any number derived from the athlete's own movement; where such a check is cheap, run it *before* building a case, not afterwards as confirmation.
+- **The athlete's perception is an independent instrument, usually the only one at hand.** Months at a given intensity calibrate the sense of it; it arrives as prose and looks softer than a number, but on "was this really that pace / that effort" it is sensor-independent, which none of the file's metrics are. Discounting it as intuition while counting four correlated metrics as corroboration inverts the evidence ranking.
 
-Two consequences that keep recurring:
-
-- **An unmodelled signal outranks several modelled ones.** A direct
-  measurement of the thing in question — a stopwatch, a tape measure, a
-  scale, a device-level calibration check — is worth more than any number of
-  quantities derived from the athlete's own movement, because it fails
-  differently. Where such a check is cheap, run it *before* building a case,
-  not afterwards as confirmation.
-- **The athlete's perception is an independent instrument, and usually the
-  only one at hand.** An athlete who trains at a given intensity for months
-  has a calibrated sense of it. It arrives as prose and therefore looks softer
-  than a number — but on the question "was this really that pace / that
-  effort", it is sensor-independent, which none of the file's metrics are.
-  Discounting it as intuition while treating four correlated metrics as
-  corroboration inverts the actual evidence ranking.
-
-**Drift incident pattern:** ground-contact time, cadence and watch pace
-"converged" on a slow treadmill belt; a five-minute belt-revolution count
-showed the belt accurate, and the athlete's perception — the one
-independent signal — had been set aside as intuition.
-
-*Enforcement: head-coach judgment. The failure is invisible in the record
-afterwards — a correct convergence and a tautological one look identical
-unless the mechanism behind each signal was written down.*
+*Enforcement: head-coach judgment. The failure is invisible in the record afterwards — a correct convergence and a tautological one look identical unless the mechanism behind each signal was written down.*
 
 ### A negative provocation test is triage, not an all-clear (policy)
 
@@ -767,25 +478,8 @@ exists to prevent, reached by a route it did not cover.
   restriction's criteria — a supine single-leg lift has no balance demand
   and is not what an ankle lock blocks. A wrong omission reads exactly like
   a right one in the record.
-- **Re-slot the element, not its container.** An exercise that drops out is
-  owed as an *exercise*. Writing the replacement slot as a session ("the
-  missing item runs in the <session> on <date>") satisfies the named-slot
-  requirement on paper and then inflates the dose, because a session name is
-  the only unit the slot notation can express: the next planning cycle reads
-  "a <session> runs on <date>" and rebuilds the whole roster. A block whose
-  cadence is every second day then runs on consecutive days at full volume
-  and no single decision caused it. Name the exercise and its carrier
-  separately, and let the **carrier's own cadence** decide whether the
-  session runs at all — the last executed date, recomputed, not the slot
-  note (see "Due / overdue claims are computed, not inherited").
-- **And ask whether partial catch-up is a stimulus or a checklist.** Before
-  booking owed items into a short add-on, state what the recovering unit is.
-  A session is a list of positions; the tissue is not. Where the owed items
-  are low-load motor-control work the add-on is usually harmless, and where
-  they carry load or a progression step the honest question is whether the
-  *stimulus* is due — not which rows are unticked. Integrating the item into
-  the next regularly-due session is the default answer; a same-day-plus-one
-  add-on needs a reason beyond completeness.
+- **Re-slot the element, not its container.** An exercise that drops out is owed as an *exercise*: write the owed exercise and its carrier separately, never "the missing item runs in the <session> on <date>" — the next planning cycle reads "a <session> runs on <date>", rebuilds the whole roster, and a block on an every-second-day cadence then runs on consecutive days at full volume with no single decision behind it. The **carrier's own cadence** (last executed date, recomputed — see "Due / overdue claims are computed, not inherited") decides whether the session runs at all, not the slot note.
+- **Ask whether partial catch-up is a stimulus or a checklist.** A session is a list of positions; the tissue is not. Low-load motor-control items can ride in a short add-on; items that carry load or a progression step raise the question whether the *stimulus* is due, not which rows are unticked. Default: integrate the item into the next regularly-due session; a same-day-plus-one add-on needs a reason beyond completeness.
 
 **Mechanical support:** `_compute_prescription_compliance` surfaces this in
 `planningConstraints` at exercise granularity, driven by a
@@ -795,30 +489,9 @@ they resolve to "did a `core` session happen?", so a prescription living
 *inside* such a session is invisible to them. Declare the cadence for any
 prescription whose omission would otherwise be silent.
 
-**The mirror gap, and it needs its own field: a step that is waiting.** The
-check above sees a prescribed element that was *missed*. Nothing sees one
-that is *pending* — and, more importantly, nothing sees **two pending steps
-landing on the same tissue**. Each exercise entry declares its own step and
-no single entry can count the others, so two steps run in one session, the
-next morning's reading is unattributable, and neither step is confirmed. The
-same filing habit loses the **order** as well: once an order has been argued
-and agreed, it is written into whichever entry the argument happened in, and
-the next planning cycle re-derives it from the nearest heuristic instead.
-That is not a neutral substitution — "oldest queue entry first" and "largest
-distance to target band first" give different answers, and the athlete then
-has to win a settled decision twice.
+**The mirror gap: a step that is waiting.** Nothing sees a *pending* step — and, more importantly, **two pending steps landing on the same tissue**: each exercise entry declares only its own step, so two steps run in one session, the next morning's reading is unattributable and neither step is confirmed. An agreed order is lost the same way — it is written into whichever entry the argument happened in, and the next planning cycle re-derives it from the nearest heuristic ("oldest queue entry first" vs. "largest distance to target band first" give different answers). Declare `**Schritt-offen:**` (plus optional `**Schritt-Kette:**` and `**Schritt-Rang:**`) on any entry whose step is due and not yet run (schema: `config.example/exercise_progressions.md` → Schritt-Felder). **No date in those fields** — when a step runs belongs in the slot ledger (see "Scheduling decisions have exactly one canonical home"); the rank says in which order, not on which day.
 
-Declare `**Schritt-offen:**` (plus optional `**Schritt-Kette:**` and
-`**Schritt-Rang:**`) on any entry whose step is due and not yet run. Schema
-and conventions: `config.example/exercise_progressions.md` → Schritt-Felder.
-**No date in those fields** — when a step runs belongs in the slot ledger
-(see "Scheduling decisions have exactly one canonical home"); the rank says
-in which order, not on which day.
-
-*Enforcement: `app/analytics/progression_queue.py`, surfaced in
-`planningConstraints` by `context_builder._compute_progression_queue`
-(fail-soft, opt-in per exercise, no output without the field). Tests:
-`tests/test_progression_queue.py`.*
+*Enforcement: `app/analytics/progression_queue.py`, surfaced in `planningConstraints` by `context_builder._compute_progression_queue` (fail-soft, opt-in per exercise, no output without the field). Tests: `tests/test_progression_queue.py`.*
 
 Three concrete triggers — pause and ask the athlete before acting:
 
@@ -841,10 +514,6 @@ Three concrete triggers — pause and ask the athlete before acting:
 prescription and the new instruction, propose the additive
 interpretation, and ask one yes/no question. Do NOT present a 3-option
 menu (see "Coach decisiveness rule").
-
-**Drift incident pattern:** a newly added daily prescription silently
-displaced an existing atomic routine for over a week — the new layer
-should have stacked on top of the continuing block.
 
 **Audit-time correlate:** `config-auditor` and `plan-validator` should
 flag plans that contain a new physio layer while the underlying
@@ -881,24 +550,9 @@ change reaches the athlete:
    application notes in the relevant `config/*.md` file. But the
    `framework/research/` entry must be referenced as the source.
 
-**What this rule blocks:**
-- "Lit feedback X" / "studies suggest Y" without a verifiable, locally
-  persisted citation.
-- Naive volume reductions that don't address the underlying intensity
-  mistake (or vice versa).
-- Introducing a new exercise just because it sounded good in another
-  athlete's plan — without checking whether the biomechanics, injury
-  pattern, or progression logic actually fits.
-- Re-prescribing the same structured workout (Rønnestad-Reps,
-  Threshold-Reps, plyometric set/rep) after a documented drop without
-  reading why the drop happened.
+**Blocked:** "studies suggest …" without a locally persisted citation; naive volume reductions that miss the underlying intensity mistake (or vice versa); a new exercise adopted because it sounded good elsewhere, without checking biomechanics, injury pattern and progression logic; re-prescribing the same structured workout (Rønnestad reps, threshold reps, plyometric set / rep) after a documented drop without reading why it dropped.
 
-**Drift incident pattern:** the same 30/15 protocol was re-proposed
-unchanged days after a documented compliance drop, without consulting
-the evidence — which does not support the assumed high-%FTP targets in
-the first place. The fix produced
-[vo2max-short-intervals.md](research/vo2max-short-intervals.md),
-corrected `training_paradigms.md`, and this rule.
+**Drift incident pattern:** the same 30/15 protocol was re-proposed unchanged after a documented compliance drop; the fix was [vo2max-short-intervals.md](research/vo2max-short-intervals.md), a corrected `training_paradigms.md` and this rule.
 
 *Enforcement: head-coach judgment — requires consulting
 `framework/research/` and persisting new findings there before applying
@@ -1014,37 +668,11 @@ that may not survive the specialist's review of
 
 ### Surface gated-but-ready stimuli in the plan (policy)
 
-When a stimulus is **due or overdue** (pillar rotation cadence exceeded,
-weekly Hard-Reiz open, last-seen older than the rotation window) but the
-only thing holding it back is an **injury gate awaiting the athlete's
-explicit confirmation** (an active restriction that can only be cleared
-by the athlete, never by inference — see "Never silently drop or replace
-standing prescriptions"), the coach **presents it in the plan as
-gated-pending-confirmation** — never silently omits it.
+When a stimulus is **due or overdue** (rotation cadence exceeded, weekly Hard-Reiz open, last-seen older than the rotation window) and the only thing holding it back is an **injury gate awaiting the athlete's explicit confirmation** (an active restriction only the athlete can clear, never by inference — see "Never silently drop or replace standing prescriptions"), **present it in the plan as gated-pending-confirmation** — never silently omit it. Omitting a ready, overdue stimulus and adding it reactively once the athlete prompts reads as "the coach forgot it", even when the omission was a defensible conservative default.
 
-The athlete should see that the stimulus is queued and what single
-condition unlocks it, in the **same** proposal — not discover it only
-after asking. Omitting a ready, overdue stimulus and adding it
-reactively once the athlete prompts reads as "the coach forgot it",
-even when the omission was a defensible conservative default.
-
-**Operational rule:**
-
-- The conservative default still holds: do **not** push a workout that
-  loads an actively-gated area without the athlete's explicit OK
-  (restrictions clear by confirmation, not inference).
-- But the gated stimulus is **named in the proposal** with its single
-  unlock condition, e.g.: "Grip is the furthest-back pillar and overdue
-  — ready to go in today; the only blocker is your {zone}. If it's
-  clear, it's in." This replaces a bare yes/no health-check question
-  that hides the queued stimulus behind it.
-- When the athlete confirms the gate is clear, the stimulus moves into
-  the concrete plan without re-deriving "should we even do this" — the
-  due-ness already established it.
-
-**Pattern anchor:** an overdue pillar held back correctly behind an injury
-gate was simply left out of the plan, and the athlete had to ask twice why
-it was missing.
+- The conservative default holds: do **not** push a workout that loads an actively-gated area without the athlete's explicit OK.
+- But **name the stimulus in the proposal** with its single unlock condition — "Grip is the furthest-back pillar and overdue — ready to go in today; the only blocker is your {zone}. If it's clear, it's in." — instead of a bare yes/no health-check question that hides the queued stimulus behind it.
+- When the athlete confirms the gate is clear, the stimulus moves into the concrete plan without re-deriving "should we even do this" — the due-ness is already established.
 
 *Enforcement: head-coach judgment — plan-presentation discipline, not a
 mechanizable code path.*
@@ -1067,16 +695,7 @@ Permitted triggers (each entry must cite one):
 | Cross-pillar follow-day block | Yesterday's pillar conflicts with today's planned pillar — must reference yesterday's session by date |
 | Recent symptom / athlete report | `athleteFeedback` from `fetch_context.py` with date stamp |
 
-**Forbidden block patterns** (drift-incident pattern):
-
-- "Leg open for race specificity" — when `eventList` shows no event and `raceInDays` is `None`, there is no race to taper for. Don't manufacture a race.
-- "Calf raises locked today (PAP)" — when neither `todayWorkouts` nor tomorrow's plan contains a Threshold/VO2max/RACE workout. The PAP rule is conditional, not blanket.
-- "Pillar X off today" — when nothing in `planningConstraints` or the pillar-rotation history actually blocks it. Quiet rest > fabricated reason.
-
-**Drift incident pattern:** the first two forbidden blocks above were
-listed together on a day with no quality session and no race — a
-contextual rule pulled into a blanket ban at the briefing layer, although
-the PAP rule only applies when today or tomorrow carries a quality session.
+**Forbidden block patterns:** "Leg open for race specificity" when `eventList` shows no event and `raceInDays` is `None` (no race to taper for — don't manufacture one); "Calf raises locked today (PAP)" when neither `todayWorkouts` nor tomorrow's plan contains a Threshold / VO2max / RACE workout (the PAP rule is conditional, not blanket); "Pillar X off today" when nothing in `planningConstraints` or the pillar-rotation history actually blocks it. Quiet rest beats a fabricated reason.
 
 **Operational rule:** Before each "ACTIVE BLOCKS" line is written,
 the coach states the trigger in one phrase. If no trigger is
@@ -1190,59 +809,16 @@ head-coach judgment for the decouple-vs-sequence decision at plan time.*
 
 ### Impact-load streak — structural load is not an autonomic signal (policy)
 
-Running is the only modality in a typical endurance plan that transmits
-ground impact; bike, swim and trainer work do not. Bone, tendon and fascia
-adapt on a slower clock than the cardiovascular system, so an athlete can
-be green on **every** autonomic marker — HRV above baseline, RHR below it,
-TSB positive, `hrvReadiness: clear` — and still be accumulating structural
-load purely because the runs sit close together.
+Running is the only modality in a typical endurance plan that transmits ground impact; bone, tendon and fascia adapt on a slower clock than the cardiovascular system, so an athlete can be green on every autonomic marker (HRV above baseline, RHR below it, TSB positive) and still accumulate structural load because the runs sit close together. `lastRestDay` (sees load, not impact), `daysSinceIntense` (backward-looking, about intensity) and R014 (pushes easy-run duration *up*) do not see that pattern. `context.runDayStreak` closes the gap; it is computed in code (`app/utils/impact_load.py`, never inferred by an agent — the validator imports the same helper, because two implementations would eventually disagree) and reports two axes: **consecutive** run days (`streak_days`, `prospective_days`) and **density** per trailing 5d (`run_days_5d`, `prospective_5d`) — a single off-day hides density (runs on Tue / Thu / Fri / Sat are four impact days in five while the consecutive counter never passes three).
 
-None of the other derived signals surface that pattern:
+**Head-coach rule:** before briefing a Run, read `runDayStreak`. When the planned run would cross the athlete's tolerance, either move the day onto a non-impact modality (the bike keeps the aerobic load and drops the impact) or state in the run's `coaching_notes` why the streak is deliberate. When R014 and R022 both fire, the impact pattern is the constraint and the aerobic volume belongs on the bike — not on a fourth impact day.
 
-- `lastRestDay` sees load, not impact: it reports a short accessory-only
-  day as `LOAD-LESS`, but a pure bike day and a hard run day both count
-  as training days.
-- `daysSinceIntense` is backward-looking and about **intensity**, not about
-  the impact pattern the *planned* day would create.
-- R014 (easy-run conservatism) argues in the **opposite** direction — it
-  pushes easy-run duration *up* toward the phase floor and will happily
-  wave through an nth consecutive running day.
-
-`context.runDayStreak` closes the gap. It is computed in code
-(`app/utils/impact_load.py`), never inferred by an agent, and the validator
-imports the **same** helper — two implementations would eventually disagree,
-and a disagreement about whether a rule fired is worse than no rule. It
-reports two axes:
-
-| Axis | Why both are needed |
-|---|---|
-| **Consecutive** run days (`streak_days`, `prospective_days`) | The obvious pattern: four running days back to back. |
-| **Density** per trailing 5d (`run_days_5d`, `prospective_5d`) | The pattern a single off-day disguises: runs on Tue/Thu/Fri/Sat are four impact days in five while the consecutive counter never passes three. Structural load does not reset on one off-day the way the streak counter implies. |
-
-**Head-coach rule:** before briefing a Run, read `runDayStreak`. When the
-planned run would cross the athlete's tolerance, either move the day onto a
-non-impact modality (the bike keeps the aerobic load and drops the impact)
-or state in the run's `coaching_notes` why the streak is deliberate. When
-R014 and R022 both fire, the impact pattern is the constraint and the
-aerobic volume belongs on the bike — not on a fourth impact day.
-
-**Athlete tolerance is configuration, not framework policy.** How dense is
-too dense depends on the athlete's limiters and training history; a
-6×/week runner must not be flagged daily. Two machine-readable keys in
-`config/athlete_status.md` (same split as R021's `stride_block_order` and
-R002's `injury_locks.json`):
+**Athlete tolerance is configuration, not framework policy** (a 6×/week runner must not be flagged daily) — two machine-readable keys in `config/athlete_status.md`, the density axis deliberately opt-in so a fresh plugin user gets only the generous consecutive-day check:
 
 ```
 impact_streak_max: 4        # consecutive run days (framework default 4)
 impact_density_max_5d: 4    # run days per trailing 5d (default: off)
 ```
-
-The density axis is deliberately **opt-in** — a fresh plugin user gets only
-the generous consecutive-day check and is never spammed.
-
-**Drift incident pattern:** four impact days in five, bracketing a long run
-and a quality session, passed every signal and every validator rule while
-the consecutive-day streak was only two.
 
 *Enforcement: `validate_plan.py::check_impact_day_streak` (R022) — WARNING,
 never blocking; downgraded to INFO when the run's notes document the
@@ -1267,166 +843,42 @@ the coach of agreed deload thresholds or taper plans.
 
 ### Inter-session recovery window — account for the clock-time of the previous session (policy)
 
-Recovery between two sessions is a function of the **elapsed clock-time**,
-not the calendar-day gap. Two sessions on consecutive calendar days can be
-anywhere from ~10 h to ~36 h apart depending on when each actually happened.
-Before assessing today's readiness or briefing today's intensity /
-sequencing, the head coach reads the **actual end-time of the athlete's
-last session** (activity `start_date_local` + duration) and factors the
-real recovery window into the decision:
+Recovery between two sessions is a function of the **elapsed clock-time**, not the calendar-day gap: two sessions on consecutive days can be anywhere from ~10 h to ~36 h apart. Before assessing readiness or briefing intensity / sequencing, read `context.lastSessionEnd` (`endLocal`, `hoursSinceEnd` — the latest session **end**, from `start_date_local` + duration) instead of estimating the window from dates. A late-evening session followed by a morning session compresses the overnight recovery (fewer hours of post-effort sleep, incomplete glycogen / CNS recovery): prefer an easy / technique day, defer the quality, or sequence it later in the day so the window reopens; a session that finished early leaves a full day, no penalty. This governs the **systemic** window between any two sessions and is additive to the same-muscle DOMS spacing and the same-day concurrent-interference rules.
 
-- A **late-evening** prior session followed by a **morning** session
-  compresses the overnight recovery to well under a full day — fewer hours
-  of post-effort sleep, incomplete glycogen / CNS recovery. Weight a hard /
-  quality stimulus accordingly: prefer an easy / technique day, defer the
-  quality, or sequence it later in the day so the window reopens.
-- A prior session that finished **early** leaves a near-full or full day of
-  recovery — no compression penalty.
-- This is independent of, and additive to, the same-muscle DOMS-spacing and
-  the same-day concurrent-interference rules: it governs the **systemic**
-  recovery window between any two sessions, whatever the muscle groups.
-
-The signal is mechanized: `context.lastSessionEnd` carries the previous
-session's end time (`endLocal`, from `start_date_local` + duration) and
-the elapsed `hoursSinceEnd` — read it before any intensity / sequencing
-decision instead of estimating the window from dates. A calendar-day gap
-alone hides a late-night → morning compression.
-
-*Enforcement: `context_builder._compute_last_session_end` surfaces the
-field (analogous to `daysSinceIntense`); reading it before intensity
-decisions is head-coach judgment.*
+*Enforcement: `context_builder._compute_last_session_end` surfaces the field (analogous to `daysSinceIntense`); reading it before intensity decisions is head-coach judgment.*
 
 ### Hands-on therapy coverage check (policy)
 
-On days where the athlete attends a hands-on therapy / rehab / physio
-practice session, the planner and the head coach must check **what
-that external session is likely to cover** before scheduling
-overlapping home work. Doubling the same mechanic on the same day
-(e.g. a physio Row exercise plus a TRX Row main set; a physio shoulder
-external-rotation block plus a parallel home AR-band block) is a
-duplicated stimulus, not a complementary one.
+On days the athlete attends a hands-on therapy / rehab / physio appointment, the planner and the head coach check **what that session is likely to cover** before scheduling overlapping home work — doubling the same mechanic (a physio Row plus a TRX Row main set; a physio external-rotation block plus a home AR-band block) is a duplicated stimulus, not a complementary one.
 
 **Operational rule:**
 
-1. **Scope check before the plan is built.** Ask once — and persist
-   the answer — what the athlete's regular therapy appointment
-   typically covers (which body region, which prescribed exercises,
-   atomic-block coverage yes/no). Record in
-   `config/athlete_static.md` under the relevant rehab/physio block.
-2. **At plan time, treat the therapy slot like a sibling workout.**
-   Its (anticipated) exercises count as "already taken" for the
-   day's pillar / muscle-group rotation. Skip the second main
-   stimulus on the same pillar; defer to a later day in the week.
-3. **Standing-prescription scope correction.** If the therapy
-   appointment is known to cover only a subset of the
-   standing-prescription layers (e.g. only shoulder, not the
-   biceps/LBP layers), the un-covered layers continue to run in the
-   home plan that day — never silently drop them just because "the
-   athlete is at therapy". The planner must explicitly route the
-   uncovered layers into the remaining session(s).
-4. **Athlete-confirmed scope changes.** When the athlete reports
-   that the therapy scope deviates from the persisted default (e.g.
-   "today only shoulder, no core") — accept the override for that
-   day, then update the persisted scope if the change is structural,
-   not ad-hoc.
-5. **Post-treatment reaction — re-load by irritability, not by
-   calendar day.** A hands-on session can leave a benign
-   post-treatment soreness with its own 24–72 h course (onset 2–24 h,
-   peak ~48 h) — distinct from eccentric DOMS. On the days after the
-   appointment the head coach classifies the **treated structure**
-   before loading it, using four questions (current pain rating,
-   rest/night pain yes/no, active ROM ≈ passive ROM, red flags):
-   - **red flag** (worsening beyond 48–72 h, swelling/warmth, spread,
-     new neurological signs) → skip the block, refer back to the
-     practice;
-   - **high irritability** → no mechanical loading, passive mobility
-     only, re-check in 24 h;
-   - **moderate** → one progression step below the documented anchor,
-     volume −30 %;
-   - **low** (settled) → **hold the documented anchor**, no
-     progression step in that session. A prophylactic reduction below
-     the anchor is **not** evidence-based and counts as silent
-     conservatism.
+1. **Scope check before the plan is built.** Ask once and persist under the relevant rehab / physio block in `config/athlete_static.md` what the regular appointment covers (body region, prescribed exercises, atomic-block coverage yes/no).
+2. **Treat the therapy slot like a sibling workout:** its (anticipated) exercises count as "already taken" for the day's pillar / muscle-group rotation — skip a second main stimulus on the same pillar and defer it to a later day.
+3. **Scope correction:** layers of a standing prescription the appointment is known **not** to cover keep running in the home plan that day (the planner routes them explicitly into the remaining sessions) — never dropped because "the athlete is at therapy".
+4. **Athlete-confirmed deviations** ("today only shoulder, no core") are accepted for that day; update the persisted scope only if the change is structural.
+5. **Post-treatment reaction — re-load by irritability, not by calendar day.** A benign post-treatment soreness has its own 24–72 h course (onset 2–24 h, peak ~48 h), distinct from eccentric DOMS. On the following days classify the **treated structure** before loading it (current pain rating, rest / night pain yes/no, active ROM ≈ passive ROM, red flags): **red flag** (worsening beyond 48–72 h, swelling / warmth, spread, new neurological signs) → skip the block and refer back to the practice; **high** → no mechanical loading, passive mobility only, re-check in 24 h; **moderate** → one progression step below the anchor, volume −30 %; **low** (settled) → **hold the documented anchor**, no progression step — a prophylactic reduction below it is not evidence-based and counts as silent conservatism. The per-set pain-monitoring gate stays active (pain during the exercise within the accepted band, baseline again the next morning, no week-over-week escalation); re-progression is released **one clean session after** the anchor session; avoid stacking the appointment and a structured home block on the same structure on the same day. Details and sources: [post-treatment-reaction-reload-dosing.md](research/post-treatment-reaction-reload-dosing.md).
 
-   Within the session the per-set pain-monitoring gate stays active
-   (pain during the exercise within the accepted band, back to
-   baseline the next morning, no week-over-week escalation).
-   Re-progression is released **one clean session after** the anchor
-   session, not in the session immediately following. Avoid stacking
-   the appointment and a structured home block on the **same**
-   structure on the **same** day. Details and sources:
-   [post-treatment-reaction-reload-dosing.md](research/post-treatment-reaction-reload-dosing.md).
-
-**Drift incident pattern:** a therapy placeholder claimed to cover
-layers the appointment never touched, while the home plan repeated the
-Row the appointment did cover.
-
-*Enforcement: head-coach judgment — relies on a persisted
-therapy-scope note in `config/athlete_static.md` and the
-sibling-workout treatment in step 2.*
+*Enforcement: head-coach judgment — relies on a persisted therapy-scope note in `config/athlete_static.md` and on treating the appointment like a sibling workout (item 2).*
 
 ### Load before range of motion on an irritable tendon (policy)
 
-When an exercise provokes a symptom **at the end position** of the
-movement rather than under fatigue in mid-range, the reflex to lower the
-load is usually the wrong lever, and a load cap left in place for months
-is the expensive version of that mistake. Three findings govern the
-decision:
+When an exercise provokes a symptom **at the end position** rather than under fatigue in mid-range, the reflex to lower the load is usually the wrong lever — and a load cap left in place for months is the expensive version of that mistake. Three findings govern the choice:
 
-1. **Long muscle-tendon length is the stronger adaptation stimulus, not
-   the risk.** Isometric training at the long MTC length raises tendon
-   stiffness where the same work at short length does nothing. Training
-   away from the end position is a real cost, not a free precaution.
-2. **The exception is compression, not stretch.** Where the end position
-   presses the tendon against bone, capsule or retinaculum, end-range
-   loading aggravates rather than adapts. That is the one class where
-   "cap the range, hold the load" is the correct lever — because it keeps
-   the tensile stimulus and drops only the compressive component. In the
-   purely tensile class the opposite is standard: full range under heavy
-   slow resistance. **Ask which class the structure is in before choosing
-   the lever.**
-3. **Pain during the set is not the criterion; the 24-hour response is.**
-   Loading with symptom up to ~5/10 during the set is acceptable while
-   the next morning returns to ~≤2/10 with no stiffness jump and no
-   week-over-week escalation. The structure delivers the verdict itself,
-   on the following morning — the sensation inside the set does not.
+1. **Long muscle-tendon length is the stronger adaptation stimulus, not the risk** — isometric training at long MTC length raises tendon stiffness where the same work at short length does nothing; training away from the end position is a real cost.
+2. **The exception is compression, not stretch.** Where the end position presses the tendon against bone, capsule or retinaculum, end-range loading aggravates rather than adapts — the one class where "cap the range, hold the load" is right (it keeps the tensile stimulus and drops only the compressive component). In the purely tensile class the standard is full range under heavy slow resistance. **Ask which class the structure is in before choosing the lever.**
+3. **Pain during the set is not the criterion; the 24-hour response is:** symptom up to ~5/10 during the set is acceptable while the next morning returns to ~≤ 2/10 with no stiffness jump and no week-over-week escalation.
 
 **Operational rule:**
 
-- **Load and range are two separate progression steps. Never advance both
-  in the same session**, and never gate one on the other's criterion. A
-  load cap is released by the 24-hour pain gate; a range restriction is
-  released by its own criteria (symptom stable in the current range
-  across two sessions, quiet morning, no strength regression at the
-  anchor, no new neurological signs).
-- **A cap waiting on an unanswered question is a drop, not a cap.** When
-  a load ceiling is gated on an external answer — a practitioner's
-  verdict, a pending appointment — and that answer does not arrive across
-  two scheduled opportunities, the gate has failed as a mechanism. Either
-  re-derive the criterion from evidence or escalate the question; do not
-  let the cap stand indefinitely by default.
-- **Silence is not a data point.** A progression counter advances on a
-  *documented* clean session. Where the athlete's convention treats an
-  unreported session as symptom-free, that convention must be written
-  down and applied consistently — otherwise the counter drifts in
-  whichever direction the coach happens to prefer.
-- **Know the limit of this rule.** It supplies the framework — stimulus
-  class, lever, release criteria — not the classification. Distinguishing
-  tendinopathy from an entrapment, an enthesopathy or a capsular problem
-  requires hands-on testing. When the 24-hour response stops fitting the
-  pattern across two reaction cycles, or neurological signs appear, the
-  next step is a `physio-consultant` / `sports-ortho-consultant` handover,
-  **not** another research pass.
+- **Load and range are two separate progression steps — never advance both in the same session and never gate one on the other's criterion.** A load cap is released by the 24-hour pain gate; a range restriction by its own criteria (symptom stable in the current range across two sessions, quiet morning, no strength regression at the anchor, no new neurological signs).
+- **A cap waiting on an unanswered question is a drop, not a cap:** when a ceiling is gated on an external answer (a practitioner's verdict, a pending appointment) that fails to arrive across two scheduled opportunities, re-derive the criterion from evidence or escalate the question — do not let the cap stand by default.
+- **Silence is not a data point:** a progression counter advances on a *documented* clean session; where the athlete's convention treats an unreported session as symptom-free, write that down and apply it consistently, otherwise the counter drifts in whichever direction the coach prefers.
+- **Know the limit of this rule:** it supplies stimulus class, lever and release criteria, not the classification — separating tendinopathy from entrapment, enthesopathy or a capsular problem needs hands-on testing. When the 24-hour response stops fitting the pattern across two reaction cycles, or neurological signs appear, hand over to `physio-consultant` / `sports-ortho-consultant`, **not** another research pass.
 
-**Research anchor:**
-[end-range-loading-tendon-buildup-rom-vs-load.md](research/end-range-loading-tendon-buildup-rom-vs-load.md).
+**Research anchor:** [end-range-loading-tendon-buildup-rom-vs-load.md](research/end-range-loading-tendon-buildup-rom-vs-load.md).
 
-*Enforcement: head-coach and specialist judgment. Machine-readable
-support: the `ROM-Status:` / `Öffnung geplant nach:` / `Öffnungs-Schritt:`
-fields on the exercise entry in `config/exercise_progressions.md` (schema
-in `config.example/exercise_progressions.md`, empty by default) — they put
-the range criterion where the specialist reads it, next to the load
-anchor, so the two cannot silently merge back into one lever.*
+*Enforcement: head-coach and specialist judgment. Machine-readable support: the `ROM-Status:` / `Öffnung geplant nach:` / `Öffnungs-Schritt:` fields on the exercise entry in `config/exercise_progressions.md` (schema in `config.example/exercise_progressions.md`, empty by default) put the range criterion next to the load anchor, so the two cannot silently merge back into one lever.*
 
 ### Per-exercise last-seen verification (policy)
 
@@ -1472,132 +924,25 @@ propagates into the whole session.
 
 ### Sport-specific HR-zone application (policy)
 
-**`context.hrZones` are by convention RUN-derived HR zones** (LTHR from
-last race, MaxHR from running activity). They are NOT directly portable
-to Ride / VirtualRide workouts when the athlete has a Cross-sport HR
-differential documented.
+**`context.hrZones` are by convention RUN-derived** (LTHR from the last race, MaxHR from running) and not directly portable to Ride / VirtualRide when the athlete has a Cross-sport HR differential documented — typically ~5–10 bpm lower HRmax on the bike, proportionally narrower zones. Run-zone targets on a Ride push the athlete into upper-Z5 / near-HRmax while they think they are "barely Z4" (the prescribed HR is never reached because the legs give out first).
 
-Before answering any HR-pacing question or briefing a Ride/VirtualRide
-specialist, **check `config/athlete_status.md` for a Rad-HF / Bike-HR /
-Cross-Sport-HR section**. If documented (e.g. a Rad-HFmax that runs a
-few bpm below Run-HFmax, or a documented Rad-Z2 ceiling), the Ride
-workout MUST use the Rad-specific zones, not the Run zones.
-
-Typical Cross-Sport differential for runners with low cycling volume:
-~5-10 bpm lower HRmax on the bike, proportionally narrower zones.
-Applying Run-zone targets to a Ride pushes the athlete into upper-Z5 /
-near-HRmax territory when they think they are "barely Z4" by Run terms.
-
-**Drift incident pattern:** Run-zone targets given for a bike session
-sat several bpm above the documented bike zones; HR never reached the
-prescribed range because the legs gave out first.
-
-**Operational rule:**
-- For Ride / VirtualRide work: read Rad-HR zones from
-  `athlete_status.md` Rad-HF / Bike-HR section first; only fall back to
-  Run-derived `context.hrZones` if no Rad-HF section exists
-- HR-pacing tables / Sweet-Spot recommendations in coach replies MUST
-  be labelled Rad or Run; never mix
-- Watt-targets remain the primary control variable on indoor rides
-  (per the Rad-control slot in `athlete_status.md`); HR is a sanity-cap
-  and decoupling signal, not the pacing driver
+**Operational rule:** before answering any HR-pacing question or briefing a Ride / VirtualRide specialist, **check `config/athlete_status.md` for a Rad-HF / Bike-HR / Cross-Sport-HR section**. If documented, the Ride workout MUST use the Rad-specific zones and fall back to Run-derived `context.hrZones` only when no such section exists; HR-pacing tables / Sweet-Spot recommendations in coach replies MUST be labelled Rad or Run, never mixed; watt targets stay the primary control variable on indoor rides (per the Rad-control slot in `athlete_status.md`), HR is a sanity cap and decoupling signal, not the pacing driver.
 
 **Research anchor:** [cross-sport-hr-differential.md](research/cross-sport-hr-differential.md)
 
 ### Race surface is a training demand, not only a routing default (policy)
 
-The `surface` field has two readers, and only one of them is mechanical. The
-shoe advisor reads it to pick a shoe. The **athlete's tissue** reads it as a
-loading pattern: hard even ground, compliant uneven ground and a banked track
-load the foot, tendon and ankle differently, and the tolerance for each is
-trained, not assumed. A plan that treats `surface` purely as advisor input has
-a training variable it never decides.
+The `surface` field has two readers: the shoe advisor (mechanical) and the athlete's **tissue**, which reads it as a loading pattern — hard even ground, compliant uneven ground and a banked track load foot, tendon and ankle differently, and tolerance to each is trained, not assumed. **When a target race is selected, or its surface changes, re-derive the surface for every run category — easy, long, recovery, quality — and record the decision per category;** an unaddressed category silently keeps the previous race's default. Race-pace quality sessions buy pace, rhythm and race-shoe familiarity (tempo specificity); surface tolerance is a slow-tissue adaptation that only accumulates over weeks in the recurring easy and long volume — a handful of quality sessions cannot carry it.
 
-**When a target race is selected, or its surface changes, the coach re-derives
-the surface for every run category — easy, long, recovery, quality — and
-records the decision per category.** The failure mode is not a wrong choice; it
-is an *unaddressed* one. A category nobody mentions keeps whatever default it
-had, and that default was set for the previous race.
+A conflict with a tissue restriction (a rehab protocol recommending a compliant surface for a hard-ground race) is resolved as a **named ratio** — which sessions per week run on race surface, which stay on the protective one — never as a blanket default that silently gives one side everything, and the coach **names what the losing side costs**. Neither side is evidence-backed (no study trains one surface and measures tolerance *to* it; the runner cancels much of the surface effect within a single step; the compliant-surface recommendation is convention just as much as the specificity claim), so do not present the ratio as evidence-backed: ramp the race-surface share like any novel load, change **one variable at a time** (surface, race shoe, race pace), and let the **24-hour tissue response** decide whether it rises, holds or falls. In a block shorter than ~8–12 weeks the honest rationale is **verification, not adaptation**, which makes the early exposures the informative ones. Derivation and evidence limits: [race-surface-exposure-in-easy-volume.md](research/race-surface-exposure-in-easy-volume.md).
 
-**Why the quality sessions cannot carry terrain specificity alone.** A race
-block typically holds a handful of race-pace sessions. They buy pace, rhythm
-and race-shoe familiarity — that is *tempo* specificity, and a handful of
-exposures is the right dose for it. Tolerance to a surface's loading pattern is
-a tissue adaptation, and the tissue-adaptation literature's dose variables are
-load **magnitude** and its **novelty**, accumulated over **weeks** — not a
-handful of exposures. The recurring easy and long volume is the only place in
-the plan where that accumulation exists. Booking terrain specificity exclusively
-into the quality slots therefore looks complete on paper and delivers a fraction
-of the exposure.
-
-**Conflicts with a tissue restriction are normal — resolve them as a split, not
-a default.** A tendon or joint rehab protocol may recommend a compliant surface
-while the race is on hard ground. Both claims are legitimate — and neither is
-evidence-backed; the compliant-surface recommendation is convention just as much
-as the specificity claim is — so the answer is a
-**named ratio** (e.g. which sessions per week run on race surface, which stay on
-the protective one), not a blanket default that silently gives one side
-everything. Whichever side loses volume, **name what that costs** in the plan
-presentation. The trade belongs to the athlete as principal; the coach's job is
-to make it visible and decidable rather than to settle it by omission.
-
-**Evidence limit — and it is larger than "no dose-response".** No study has
-trained one group on one surface and measured tolerance *to* that surface; the
-number does not exist to be looked up. Two corrections to the direction stated
-above follow from the evidence that does exist. First, **the runner cancels much
-of the surface effect within a single step** — leg stiffness is re-tuned on the
-first step after a transition, and interface hardness explains under 10 % of the
-variance in tibial acceleration against 25–48 % for the runner's own knee angle
-and muscle pre-activation. Whatever surface tolerance is worth training lives in
-the slow tissues, not in coordination. Second, **both sides of the conflict above
-are conventions**: the compliant-surface recommendation is called unfounded in a
-2024 scoping review and appears in no tendinopathy guideline at any evidence
-grade, just as surface has never reached the strong-evidence tier as an injury
-risk factor. Do not present a ratio as evidence-backed in either direction.
-
-What replaces the ratio is a **monitoring criterion**: ramp the race-surface
-share like any other novel load, change only **one variable at a time** (surface,
-race shoe and race pace are three), and let the **24-hour tissue response** decide
-whether the share rises, holds or falls. One consequence is worth stating
-separately, because it changes what the exposures are *for*: in a block shorter
-than roughly 8–12 weeks the honest rationale is **verification, not adaptation**
-— finding out whether the tissue carries the race loading pattern while there is
-still time to react. That makes the **early** exposures the informative ones, not
-the ones nearest the race. Derivation:
-[race-surface-exposure-in-easy-volume.md](research/race-surface-exposure-in-easy-volume.md).
-
-**Drift incident pattern:** after a race change, the race-pace work moved to
-the new surface but the easy runs were never named in the decision and kept
-the previous race's terrain for weeks.
-
-*Enforcement: head-coach judgment. Mechanical support is limited to the
-mandatory `surface` field on Run/Ride, which makes the per-session choice
-visible but cannot tell whether it was decided or inherited.*
+*Enforcement: head-coach judgment. Mechanical support is limited to the mandatory `surface` field on Run/Ride, which makes the per-session choice visible but cannot tell whether it was decided or inherited.*
 
 ---
 
 ## Workout JSON format
 
-Plan directive (planner output):
-
-```json
-{
-  "coaching_notes": "Rationale (2–3 sentences)",
-  "workouts": [
-    {
-      "type": "Run|Ride|WeightTraining|Workout",
-      "name": "...",
-      "tags": ["intervals", "run"],
-      "duration_min": 65,
-      "duration_range": [55, 75],
-      "intensity": "Z4|Z2|low|medium|high",
-      "workout_type": "EASY|LONG|INTERVALS|STRENGTH|RECOVERY|RACE",
-      "indoor": false,
-      "coaching_notes": "Short directive for the specialist"
-    }
-  ]
-}
-```
+Plan directive shape (planner output): `agents/planner.md` → Output format.
 
 **Validation (`workout_parser.py`):**
 - `VALID_TYPES`: Run, Ride, WeightTraining, Workout
@@ -1687,23 +1032,10 @@ nothing else.
   its slot is not a valid substitute; use the slot's declared current
   carrier or its declared fallback at its anchor.
 
-Failure mode this prevents: a session description carried the primary
-path and a fallback path side by side. The athlete skimmed, did part of
-each, and the fallback itself consisted of exercises the record already
-marked as too easy or as superseded in their slot — neither path was
-executed as intended, and the day's reading was lost.
-
 *Enforcement: specialist agents (description output) and `plan-validator`
 S11. Not mechanised — branch wording is free text.*
 
-**Why this is a correctness rule and not a style preference:** a long
-description gets skimmed, and what gets skipped is not evenly distributed —
-it is the line in the middle, which is exactly where a load change, a
-changed rep target or a stop criterion tends to sit. Terseness protects the
-instruction that actually differs from last time. Practice anchor from real
-use: an athlete asked for short keyword reminders instead of prose, with
-the explicit note that questions would be raised directly if anything was
-unclear.
+**Why this is a correctness rule and not a style preference:** a long description gets skimmed, and what gets skipped is the line in the middle — exactly where a load change, a changed rep target or a stop criterion tends to sit. Terseness protects the instruction that actually differs from last time.
 
 **Budget as a sanity check, not a hard limit:** if a strength/core block's
 description runs past roughly 1200 characters, or any single exercise past
@@ -1728,27 +1060,9 @@ line and the ask can be dropped.
 WARNING, never blocking; the agent-side contract lives in
 `agents/specialist-complementary.md` and `agents/specialist-ninja.md`.*
 
-**And when a load changes, the question that asks about it changes too
-(policy).** The rule above establishes that the description must ask what
-was lifted. The other half is that it must ask about the **right** load. A
-load gets revised late — a step deferred, a cap applied, an anchor held — the
-exercise line is corrected, and the trailing feedback question keeps naming
-the figure that was there before. Both numbers are then in front of the
-athlete, and the one in the question reads as settled fact rather than as a
-stale draft. The reply comes back as a bare RPE, because that is what the
-question leads with, so the planned figure is booked as the executed one —
-and which planned figure gets booked depends on which line the reader
-trusts. A step that never happened is then recorded as taken, on an anchor
-nobody held, and it is indistinguishable from a real data point afterwards.
-**A load change is one edit, not two.**
+**And when a load changes, the question that asks about it changes too (policy).** A load is revised late (a step deferred, a cap applied, an anchor held), the exercise line is corrected, and the trailing feedback question keeps naming the old figure — both numbers are then in front of the athlete, the one in the question reads as settled fact, the bare-RPE reply books the planned figure as executed, and a step that never happened is recorded as taken on an anchor nobody held. **A load change is one edit, not two.**
 
-*Enforcement: `validate_plan.py::check_feedback_load_matches_prescription`
-(R029) — WARNING, never blocking. It flags a kg figure in the feedback block
-that no exercise line prescribes. WARNING rather than ERROR because a
-question may legitimately look forward to a load that is not prescribed today
-("report whether 12.5 kg seems realistic"), and that phrasing is not reliably
-separable from a stale one by pattern — so the rule names the figure and
-leaves the reading to the coach. Tests: `tests/test_validate_plan_r029.py`.*
+*Enforcement: `validate_plan.py::check_feedback_load_matches_prescription` (R029) — WARNING, never blocking: it flags a kg figure in the feedback block that no exercise line prescribes (WARNING because a question may legitimately look forward to a load that is not prescribed today, and that phrasing is not reliably separable from a stale one by pattern — so the rule names the figure and leaves the reading to the coach). Tests: `tests/test_validate_plan_r029.py`.*
 
 **Corollary — do not compensate by moving prose into the workout *name*.**
 Names stay short; see the naming guidance in the specialist agent
@@ -1756,41 +1070,7 @@ definitions.
 
 ### Shoe tracking backend
 
-`SHOE_TRACKING_BACKEND` (in `.env`, default `intervals`) selects where the
-shoe advisor gets gear, mileage, and active/retired status:
-
-- **`intervals`** (default) — native intervals.icu gear. Mileage is
-  accumulated by intervals.icu from each activity's `gear_id`; the coach
-  assigns the recommended shoe to the *finished* activity in `/analyse`
-  step 6.55 (`set_activity_gear.py`). equipment.md profiles join on
-  `icu_gear_id`.
-- **`off`** — advisor disabled.
-
-**A belt session does not open the race-prep window.** Terrain detection
-collapses `treadmill` into the asphalt bucket, which is right for tread
-compound and grip — for those a belt behaves like a firm even surface. It is
-wrong for the race-prep window, because that window is not about tread: it
-habituates the athlete to the race **surface** and to the race shoe **at race
-pace**, and a belt supplies neither. So the advisor answers the two questions
-separately — terrain stays asphalt-equivalent, the prep window closes
-(`_is_treadmill`, checked on both `surface` and the planner's `indoor` flag).
-Without the split, a race-pace session moved indoors for weather still drew
-the designated race shoe: its short life spent on the one session that cannot
-use it, and a `[coach-gear]` marker nobody would have chosen. A carbon plate
-wants ground reaction; a belt does not give it one.
-
-*Tests: `tests/test_shoe_treadmill_race_prep.py`.*
-
-`SHOE_IGNORE_DEVICE_GEAR` (default `false`) decides who owns the gear field
-on a finished activity. By default a shoe already attached by the recording
-device counts as a real assignment and `set_activity_gear.py` leaves it
-alone; only a retired / non-shoe id is treated as a stale "phantom" and
-overwritten. Set it to `true` when the athlete does not maintain shoes on
-the watch — many devices stamp a default shoe onto every imported run, and
-while that default names a shoe still in the fleet the phantom heuristic
-cannot see it, so the coach pick is dropped silently and the rotation
-mileage accrues to the wrong shoe. `--force` and an explicit `--gear-id`
-are unaffected in both modes.
+`SHOE_TRACKING_BACKEND` (`.env`, default `intervals`) selects where the shoe advisor gets gear, mileage and active / retired status: `intervals` = native intervals.icu gear (mileage accumulates from each activity's `gear_id`; the coach assigns the recommended shoe to the *finished* activity in `/analyse` step 6.55 via `set_activity_gear.py`; `equipment.md` profiles join on `icu_gear_id`), `off` = advisor disabled. **A belt session does not open the race-prep window:** terrain detection collapses `treadmill` into the asphalt bucket (right for tread compound and grip), but the race-prep window habituates the athlete to the race **surface** and to the race shoe **at race pace**, and a belt supplies neither — so the advisor answers the two questions separately (`_is_treadmill`, checked on `surface` and the planner's `indoor` flag; tests `tests/test_shoe_treadmill_race_prep.py`). `SHOE_IGNORE_DEVICE_GEAR` (who owns the gear field on a finished activity) is documented in `.env.example` and in the docstring of `scripts/set_activity_gear.py`.
 
 ---
 
@@ -1973,44 +1253,7 @@ flags automatically.
 
 ## Exercise re-evaluation cadence
 
-Daily planning does **micro-progression** well (more reps / hold time /
-load via `exercise_progressions.md` + type history) but never steps back
-to ask whether an exercise still serves the athlete's **current goals and
-fitness level**. Goals shift across periodization, and variety is a real
-stimulus — so exercise selection is re-challenged at **natural
-boundaries**, not every session (which would reinvent the plan daily).
-
-**Trigger.** `context_builder._compute_reeval_trigger` emits a single
-advisory line into `planningConstraints`
-(`🔄 Exercise re-evaluation due …`) when any of three conditions hold:
-
-1. **Recovery week active** (`deload_state`) — a natural deload boundary.
-2. **Periodization phase change** — today's phase (from the machine-
-   readable phase plan in `config/athlete_status.md`) differs from
-   `last_reeval_phase`.
-3. **Staleness** — an exercise's `letzte-Re-Eval` in
-   `exercise_progressions.md` is older than `staleness_weeks`
-   (`config/athlete_status.md`, default 6).
-
-When no trigger fires the line is absent and the daily flow is unchanged
-(cheap — one optional string, no extra LLM/API work).
-
-**Flow.** When the flag is present, `/training` step 1.5 runs the
-`exercise-reviewer` agent (fresh context) which judges each exercise on
-goal-fit + staleness and proposes **keep / progress / swap / retire** —
-advisory only. The athlete confirms; **never a silent swap** (see "Never
-silently drop or replace standing prescriptions"). On confirmation the
-head coach writes `Status=` + `letzte-Re-Eval={today}` back into
-`config/exercise_progressions.md`, which resets the staleness clock so the
-flag clears. `plan-validator` S10 surfaces the same flag at validation
-time (advisory INFO/WARNING, never blocks).
-
-**Config (athlete-specific, in `config/`).** Per-exercise `Re-Eval:`
-blocks in `exercise_progressions.md` (`dient=` / `eingeführt=` /
-`letzte-Re-Eval=` / `Status=`) and the `staleness_weeks` +
-`last_reeval_phase` + phase plan in `athlete_status.md`. The mechanic
-(trigger computation, reviewer agent, S10) is generic; schema defaults
-live in `config.example/`.
+Daily planning does **micro-progression** well (via `exercise_progressions.md` + type history) but never asks whether an exercise still serves the athlete's **current goals and fitness level**; selection is therefore re-challenged at **natural boundaries**, not every session. `context_builder._compute_reeval_trigger` adds a single advisory line (`🔄 Exercise re-evaluation due …`) to `planningConstraints` when (1) a recovery week is active (`deload_state`), (2) today's periodization phase (machine-readable phase plan in `config/athlete_status.md`) differs from `last_reeval_phase`, or (3) an exercise's `letzte-Re-Eval` in `exercise_progressions.md` is older than `staleness_weeks` (`config/athlete_status.md`, default 6); no trigger → no line → the daily flow is unchanged. With the line present, `/training` step 1.5 runs the `exercise-reviewer` (fresh context; keep / progress / swap / retire, advisory only). The athlete confirms — **never a silent swap** (see "Never silently drop or replace standing prescriptions"); the head coach then writes `Status=` + `letzte-Re-Eval={today}` back into `config/exercise_progressions.md`, which resets the staleness clock. `plan-validator` S10 surfaces the same flag (advisory, never blocks). Per-exercise `Re-Eval:` blocks (`dient=` / `eingeführt=` / `letzte-Re-Eval=` / `Status=`) are athlete-specific in `config/`; schema defaults live in `config.example/`.
 
 ---
 
@@ -2048,41 +1291,14 @@ pending flag.
    the head coach **must not** repurpose that slot into a second
    same-system Hard-Reiz on the same day.
 
-   The cross-training slot exists **for** cross-training (sparing
-   tendons/joints of the primary system, varying the metabolic vector).
-   When the slot can't run today, the corresponding Hard-Reiz **defers**
-   to the next week — it does not substitute into the primary system.
+   The cross-training slot exists **for** cross-training (sparing tendons / joints of the primary system, varying the metabolic vector): when it cannot run today its Hard-Reiz **defers** to the next week and does not substitute into the primary system — the slot is a *purpose*, not a *container* for the next available Reiz. Operational check before briefing the planner with a Quality directive:
 
-   Operational check before briefing the planner with a Quality
-   directive:
+   a. `context.weeklyHardReizeBalance` — is the primary-system Hard-Reiz of the rolling 7d window already `✓`?
+   b. `context.eventList` — does a taper window (race within taper length) legitimise an extra primary-system Quality?
+   c. (a) `✓` AND (b) not active → the directive **must** be Z2 / Long / Recovery in the primary system, whatever the `competition_plan.md` mesocycle entry says for the week: the mesocycle defines **content**, the weekly strategy defines **frequency**, frequency wins.
+   d. Tell the athlete the deferral explicitly ("Race-Prep-Bergauf shifts to KW{n+1} as the sole Hard-Reiz that week") so the trade is visible.
 
-   a. Read `context.weeklyHardReizeBalance` — is the primary-system
-      Hard-Reiz of the current rolling 7d window already marked `✓`?
-   b. Read `context.eventList` — is a taper window active that would
-      legitimise an extra primary-system Quality (race within taper
-      length)?
-   c. If (a) is `✓` AND (b) is not active → the directive **must** be
-      Z2/Long/Recovery in the primary system. A second same-system
-      Hard-Reiz today is forbidden, regardless of what
-      `competition_plan.md` mesocycle entry says for the week — the
-      mesocycle defines **content**, the weekly strategy defines
-      **frequency**, frequency wins.
-   d. The deferred Reiz is communicated to the athlete explicitly
-      ("Race-Prep-Bergauf shifts to KW{n+1} as the sole Hard-Reiz
-      that week"), so the cross-training-vs-primary trade is visible.
-
-   This is the same logic that the "Weekly outlook — Hard-Reize-Strategy"
-   rule applies to multi-day outlooks, applied **same-day at the
-   planner-briefing layer**. Mechanical safety net:
-   `validate_plan.py::check_weekly_hardreize_cap` (R017) — errors when
-   a structured Z4+ session is briefed while
-   `weeklyHardReizeBalance` already shows the primary-system Reiz done
-   and no taper window is open.
-
-   *Drift incident pattern:* a waived cross-training slot was refilled
-   with a second primary-system quality session four days after the
-   first — the slot is a *purpose* (cross-training), not a *container*
-   for the next available Reiz.
+   Same logic as "Weekly outlook — Hard-Reize-Strategy", applied same-day at the planner-briefing layer. Mechanical safety net: `validate_plan.py::check_weekly_hardreize_cap` (R017) — errors when a structured Z4+ session is briefed while `weeklyHardReizeBalance` already shows the primary-system Reiz done and no taper window is open.
 
 ---
 
@@ -2118,24 +1334,11 @@ a retired exercise — **delete the entry outright**. Do not retain it as a
 strikethrough (`~~…~~`), a `❌ cancelled` / `SUPERSEDED` / `ÜBERHOLT`
 marker, or a commented-out block.
 
-The git history is the authoritative provenance record; a manually
-maintained graveyard of struck-through entries only **dilutes the context
-the coach reads at planning time** and invites a stale entry being misread
-as active. **Drift incident pattern** (canonical case to learn from): a
-cancelled event left annotated as "❌ abgesagt" instead of deleted was read
-as a *live* race by a downstream agent, which shaped a plan around a taper
-that did not exist — the fix was to delete the entry, not to annotate it
-more clearly.
+The git history is the authoritative provenance record; a manually maintained graveyard of struck-through entries only **dilutes the context the coach reads at planning time** and invites a stale entry being misread as active — a cancelled event left annotated as "❌ abgesagt" was read as a *live* race by a downstream agent, which planned a taper that did not exist.
 
-- **Default: delete.** Rely on `git log` / `git blame` for the history of
-  why something changed — the same principle already applied to research-doc
-  provenance ("no manually maintained version-stamp tables").
-- **Narrow exception:** a brief, dated supersession note is acceptable only
-  when the *change itself* is the decision-relevant information and the old
-  value carries a needed contrast (e.g. a load step "X→Y kg"). Even then,
-  prefer the lean form and let git carry the detail.
-- Covers `config/*.md`, `config/*.json`, and the framework knowledge files —
-  keep them lean.
+- **Default: delete.** `git log` / `git blame` carry the why.
+- **Narrow exception:** a brief, dated supersession note only when the *change itself* is the decision-relevant information and the old value carries a needed contrast (a load step "X→Y kg"); even then prefer the lean form.
+- Covers `config/*.md`, `config/*.json` and the framework knowledge files — keep them lean.
 
 *Enforcement: `audit_consistency.py::check_stale_cancellation_markers`
 (check `STALE_MARKERS`) mechanically flags leftover `~~strikethrough~~` and
@@ -2153,14 +1356,6 @@ feedback is bound to a specific activity or scoped to a date:
 |----------------|-------------|-----|
 | Activity-bound (coach analysis, post-activity feedback, comment on a specific session) | **Activity message** — visible "in der Einheit", scrolled with the activity timeline | `post_message.py --activity-id {ID} --message "{text}"` (or `--note` as alias) |
 | Date-scoped (general feeling, athlete-update, restriction-status, planning note not tied to one session) | **Date NOTE event** — visible in the calendar, read by `fetch_context.py` into the planner context | `post_message.py --date {DATE} --note "{text}"` |
-
-```bash
-# Activity message (preferred for coach-analyst output)
-python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/post_message.py --activity-id {ID} --message "{feedback}"
-
-# Date NOTE (for athlete feeling / status / planning notes)
-python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/post_message.py --date {DATE} --note "{feedback}"
-```
 
 The **routing is driven by `--activity-id` being present**, not by the
 text flag: with `--activity-id` set, `--message` and `--note` are
@@ -2451,24 +1646,7 @@ required recording setup get no DFA suggestion.
 
 ## Plan validator (policy, in every /training flow)
 
-Two-layer architecture:
-
-1. **Mechanical validator** — `scripts/validate_plan.py`. Plugin-based rule
-   set (reps cap, shoulder blocks, surface field, glute DOMS, achilles +
-   plyo + asphalt, LTHR drift, pillar duplication, %lthr plausibility).
-   Called by `push_workouts.py` before every push. ERRORs block (exit 2);
-   override with `--skip-validation` (emergency, document).
-   R002 (shoulder lock) reads activation keywords from
-   `config/injury_locks.json` — see `config.example/injury_locks.json`
-   for schema and defaults.
-   R024 (tag-content adequacy) reads the per-tag exercise whitelist from
-   `config/exercise_tag_mapping.json` — a tagged pillar must be covered
-   by a minimum number of whitelisted exercises in the description
-   (advisory WARNING; empty default = off).
-2. **Semantic validator** — `plan-validator` subagent (fresh context).
-   Runs in step 3.5b after specialists. Checks pillar rotation, stimulus
-   adequacy vs. wellness, weekly volume jump, progression consistency,
-   form findings from `exercise_log.md`.
+Two layers: (1) the **mechanical validator** `scripts/validate_plan.py` — plugin-based rule registry (`RULES`), run by `push_workouts.py` before every push; ERRORs block (exit 2), override only with `--skip-validation` (emergency, document as NOTE); rule inputs such as `config/injury_locks.json` (R002) and `config/exercise_tag_mapping.json` (R024, empty default = off) are documented in `config.example/`. (2) the **semantic validator** — the `plan-validator` subagent (fresh context), `/training` step 3.5b: pillar rotation, stimulus adequacy vs. wellness, weekly volume jump, progression consistency, form findings from `exercise_log.md`.
 
 ### A validator finding's own severity is an input, not a verdict (policy)
 
@@ -2503,20 +1681,7 @@ register in `RULES`. Auditable via `audit_consistency.py`.
 
 ## Consistency audit (`/audit`)
 
-Reproducible drift scanner:
-
-1. `scripts/audit_consistency.py` — mechanical checks (HR zones, orphan
-   muscle IDs, unmapped exercises, NOTE vs. static, shoe profiles vs intervals.icu gear,
-   hard-coded restrictions, recovery-week consistency, cross-source config
-   drift, log-vs-history, **override-drift** between framework defaults and
-   wrapper overrides for `training_paradigms.md` / `exercise_progressions.md`).
-2. `config-auditor` subagent — refines semantically, writes report to
-   `data/audits/YYYY-MM-DD-HHMM-audit.md`.
-3. `config-fixer` subagent — fixes one finding at a time, **logs every
-   edit to `data/approvals/YYYY-MM-DD-config-fixer.jsonl`** (finding ID +
-   diff hash + athlete approval).
-
-Audit reports are committed — audit history stays in the repo.
+Reproducible drift scanner: `scripts/audit_consistency.py` (mechanical checks) → `config-auditor` subagent (semantic refinement, report in `data/audits/YYYY-MM-DD-HHMM-audit.md`) → `config-fixer` subagent (one finding at a time, **every edit logged to `data/approvals/YYYY-MM-DD-config-fixer.jsonl`** with finding ID, diff hash and athlete approval). Audit reports are committed. Flow and check inventory: `commands/audit.md`, `scripts/audit_consistency.py`.
 
 ---
 
@@ -2626,10 +1791,6 @@ challenges a due-date, recompute from cadence + last-occurrence and
 **concede explicitly if the recompute disagrees** (per "No silent
 conservatism — athlete evidence outranks a single-metric heuristic").
 
-**Drift incident pattern:** a long run was called overdue by repeating a
-planning note's "due" label; recomputed from last occurrence + the weekly
-cadence it was on time.
-
 *Enforcement: head-coach judgment (anti-hallucination protocol). A
 mechanical aid is warranted where a cadence is stable and machine-known
 (e.g. a `context_builder` field that surfaces `daysSinceLast` + computed
@@ -2657,22 +1818,9 @@ Auto-push / auto-pull are optional. When enabled in the wrapper repository:
 *Enforcement: head-coach judgment — applies to development workflow,
 not training cycle.*
 
-### Secrets
-- No hard-coded API keys — `.env` resolves via `$COACH_HOME/.env`
-  (fallback to framework root for standalone runs)
-- pydantic-settings loads automatically
+### Dev setup
 
-### Python
-- 3.11, strict type hints
-- Test scripts: `python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/...` or `pytest tests/`
-
-### CI parity (policy, before push)
-`bash scripts/ci_local.sh` mirrors `.github/workflows/test.yml` locally
-(plugin-manifest validation, advisory ruff, pytest on every locally
-installed matrix interpreter — missing legs are reported loudly, CI
-covers them). Consumer wrappers can install it as a pre-push hook so a
-red CI is never the first place a failure shows up. `CI_LOCAL_STRICT=1`
-makes ruff blocking.
+Secrets (`.env` via `$COACH_HOME/.env`), Python / style conventions and CI parity (`bash scripts/ci_local.sh` mirrors `.github/workflows/test.yml`; `CI_LOCAL_STRICT=1` makes ruff blocking): [CONTRIBUTING.md](CONTRIBUTING.md), header of `scripts/ci_local.sh`.
 
 ### Token efficiency
 - Show diffs rather than whole files when reporting code changes

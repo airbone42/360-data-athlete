@@ -152,6 +152,7 @@ Other workouts today:
     Exercises: {exercise.name} {sets}×{reps/duration} {weight_kg}kg; …
   {not-yet-started workouts: only name + duration_min + intensity, no
   structure}
+Warm-up de-duplication: {drills already taken by another specialist today}
 ```
 
 The specialist reads `config/` files itself (incl.
