@@ -454,8 +454,9 @@ It surfaces `question` + `uncertainty` to the athlete and asks **one**
 yes/no question (consistent with the "Coach decisiveness rule" — never a
 menu):
 
-- **Yes** → run `/research` (launches the `research-analyst` subagent, which
-  consults `framework/research/` first, then web sources, persists an
+- **Yes** → run `/research` (a `research-collector` subagent gathers the
+  sources into a dossier, then the `research-analyst` subagent weighs them —
+  `framework/research/` first, then web sources — persists an
   athlete-agnostic document, and reports TL;DR + sources + derivation +
   proposed downstream edits).
 - **No** → apply the flag's `fallback`, communicated transparently ("no

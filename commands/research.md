@@ -27,21 +27,44 @@ Collect:
   Background only — it must not be transcribed into the persisted document.
 - **date** — `$(date +%Y-%m-%d)`.
 
-### Step 2: Launch research-analyst as subagent (fresh context)
+### Step 2: Collect the sources (research-collector, fresh context)
 
-Launch the `aicoach-framework:research-analyst` agent **as a subagent (Task
-tool)** — never inside the active coach pane — to guarantee fresh context.
-Pass `question`, `context`, and `date`. The agent:
+Launch the `aicoach-framework:research-collector` agent **as a subagent (Task
+tool)** — never inside the active coach pane. Pass `question`, optional
+sub-questions, `date`, and the dossier path
+`cache/research_dossiers/<date>-<topic-slug>.md` (project root, gitignored).
+Do **not** pass `context`: search terms come from the question, and the
+collector has no use for athlete specifics.
 
-1. Checks `framework/research/` first; reuses an existing doc if it covers the
-   question (no duplicate).
-2. Otherwise researches via `WebSearch` / `WebFetch` (primary literature
-   first).
+The collector checks `framework/research/` first, then searches and fetches
+the literature (disconfirming evidence included) and writes a dossier of
+verbatim quotes, numbers, identifiers, design and access level. It draws no
+conclusions.
+
+**Why two agents.** Searching and extracting is volume work that a faster
+model does reliably; weighing conflicting evidence into an operative rule is
+the step that decides whether the document is right. Splitting them puts the
+reasoning budget where the judgment is, and keeps the crawl's page dumps out
+of the analyst's context.
+
+### Step 2a: Draw the conclusion (research-analyst, fresh context)
+
+Launch the `aicoach-framework:research-analyst` agent **as a separate
+subagent**. Pass `question`, `context`, `date` and the dossier path. The
+agent:
+
+1. Decides on reuse from the dossier's library check — an existing doc that
+   covers the question is reused, not duplicated.
+2. Otherwise weighs the dossier's evidence, resolves conflicts, and closes
+   decisive gaps with targeted follow-up only (no second crawl).
 3. Persists `framework/research/<topic-slug>.md` to the schema in
    `framework/research/README.md`, athlete-agnostic (no dated incident
    anchors, no athlete data points).
 4. Updates the index table in `framework/research/README.md`.
 5. Returns TL;DR + key sources + derivation + proposed downstream edits.
+
+When the collector reports a covering library document, still run the
+analyst — the reuse decision and the caveat check are judgment, not lookup.
 
 ### Step 2.5: Verify the citations (MANDATORY — before the athlete sees anything)
 
@@ -133,6 +156,9 @@ the original question.
 
 ## Notes
 
+- The dossier in `cache/research_dossiers/` is a working file, not a record:
+  it is gitignored and never cited. Everything that matters ends up in the
+  research document.
 - `/research` is **agent- and web-search-based** — it invokes no Python
   scripts. (If a script call ever becomes necessary, use the
   `"${CLAUDE_PLUGIN_ROOT:-.}"/scripts/…` form — bare `python3 scripts/…` is
