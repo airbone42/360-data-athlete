@@ -41,6 +41,7 @@ class ContextDict(BaseModel):
     run_day_streak: Any = Field(None, alias="runDayStreak")
     last_session_end: Any = Field(None, alias="lastSessionEnd")
     athlete_feedback: Any = Field(None, alias="athleteFeedback")
+    daily_digest: Any = Field(None, alias="dailyDigest")
     event_list: Any = Field(None, alias="eventList")
     race_in_days: Any = Field(None, alias="raceInDays")
     date_str: Any = Field(None, alias="dateStr")

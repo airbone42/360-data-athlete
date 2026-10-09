@@ -54,6 +54,13 @@ class Settings(BaseSettings):
     # OpenRouter `X-Title` header — surfaces on the API account dashboard.
     # Override per wrapper to label requests with the consumer's app name.
     openrouter_x_title: str = "aicoach-framework"
+    # Daily digest: a day-NOTE section (see app/utils/note_upsert.py) that
+    # carries an end-of-day summary of the coach conversation. `athleteFeedback`
+    # truncates every NOTE to 200 chars, so the section is stripped there and
+    # surfaced untruncated as `dailyDigest` for the last N days instead.
+    # The wrapper decides who writes it and under which heading.
+    daily_digest_section: str = "Daily digest"
+    daily_digest_days: int = 3
 
     model_config = {"env_file": _env_file(), "extra": "ignore"}
 

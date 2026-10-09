@@ -337,6 +337,7 @@ def build_context(state: AthleteContextState) -> dict:
     notes = state.get("notes") or []
     hrv_review_pending = _find_pending_hrv_review(hrv_readiness, notes, today)
     athlete_feedback = _format_notes(notes)
+    daily_digest = _format_daily_digest(notes, today)
 
     sleep_trend = _compute_sleep_trend(wellness_history, today)
     rhr_trend, rhr_trend_delta = _compute_rhr_trend(wellness_history, today)
@@ -480,6 +481,7 @@ def build_context(state: AthleteContextState) -> dict:
         "runDayStreak": run_day_streak,
         "lastSessionEnd": last_session_end,
         "athleteFeedback": athlete_feedback,
+        "dailyDigest": daily_digest,
         "eventList": event_list,
         "raceInDays": race_in_days,
         "planningConstraints": planning_constraints,
@@ -1000,7 +1002,9 @@ def _format_notes(notes: list[dict]) -> str:
         # also routinely written back by the coach itself) → escape both before
         # they flow into the planner prompt as athleteFeedback.
         name = escape_for_prompt(note.get("name", ""), max_len=120)
-        desc_raw = note.get("description", "") or ""
+        desc_raw = _strip_digest_section(
+            note.get("description", "") or "", note.get("name", "") or ""
+        )
         try:
             note_date = date.fromisoformat(d)
             desc_raw = _resolve_relative_dates(desc_raw, note_date)
@@ -1010,6 +1014,64 @@ def _format_notes(notes: list[dict]) -> str:
         desc = f" | {desc_clean}" if desc_clean else ""
         lines.append(f"{d} | {name}{desc}")
     return "\n".join(lines) if lines else "No athlete feedback"
+
+
+def _is_digest_heading(heading: str) -> bool:
+    return heading.strip().casefold() == settings.daily_digest_section.strip().casefold()
+
+
+def _strip_digest_section(description: str, fallback_name: str) -> str:
+    """Drop the daily-digest block from a day-NOTE description.
+
+    The digest is surfaced untruncated via `dailyDigest`; leaving it in
+    `athleteFeedback` would spend that field's 200-char budget on the
+    first lines of the digest instead of the athlete's own notes.
+    """
+    from app.utils.note_upsert import split_sections
+
+    sections = split_sections(description, fallback_name)
+    if not any(_is_digest_heading(h) for h, _ in sections):
+        return description
+    kept = [(h, b) for h, b in sections if not _is_digest_heading(h)]
+    return "\n\n".join(f"## {h}\n{b}" for h, b in kept)
+
+
+_DIGEST_MAX_CHARS = 6000
+
+
+def _format_daily_digest(notes: list[dict], today: date) -> str:
+    """Untruncated daily-digest sections of the last `daily_digest_days` days.
+
+    Oldest first, today included (an evening re-fetch sees the day's own
+    digest). Each digest is sanitised like any NOTE content but capped at
+    `_DIGEST_MAX_CHARS` instead of the 200-char feedback budget.
+    """
+    from app.utils.note_upsert import split_sections
+    from app.utils.sanitize import escape_for_prompt
+
+    days = max(int(settings.daily_digest_days or 0), 0)
+    if days == 0:
+        return "No daily digest"
+    oldest = today - timedelta(days=days)
+    by_date: dict[str, str] = {}
+    for note in notes:
+        if note.get("category") != "NOTE":
+            continue
+        d = (note.get("start_date_local") or "")[:10]
+        try:
+            note_date = date.fromisoformat(d)
+        except ValueError:
+            continue
+        if not (oldest <= note_date <= today):
+            continue
+        for heading, body in split_sections(
+            note.get("description") or "", note.get("name") or ""
+        ):
+            if _is_digest_heading(heading) and body.strip():
+                by_date[d] = escape_for_prompt(body.strip(), max_len=_DIGEST_MAX_CHARS)
+    if not by_date:
+        return "No daily digest"
+    return "\n\n".join(f"{d}:\n{by_date[d]}" for d in sorted(by_date))
 
 
 # Aliases for local use (canonical source: app.analytics.recovery)

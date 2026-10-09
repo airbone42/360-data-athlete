@@ -40,6 +40,7 @@ REQUIRED_CONTEXT_KEYS = {
     "daysSinceIntense",
     "lastRestDay",
     "athleteFeedback",
+    "dailyDigest",
     "eventList",
     "raceInDays",
     "dateStr",

@@ -53,6 +53,7 @@ pure symptom/feeling messages:
 | `runDayStreak` | Impact-load pattern: consecutive running days, run days per trailing 5d/7d, and whether a long run or quality session sits inside. Running is the only impact modality — `lastRestDay` and `daysSinceIntense` cannot see this (see rule below) |
 | `planningConstraints` | Active blocks (legs, plyo, recovery week, pause) |
 | `athleteFeedback`, `eventList` | Latest athlete notes — context violation if ignored |
+| `dailyDigest` | End-of-day summaries of the last days' conversation (decisions, corrections, open items, texts already sent), untruncated — read before answering so the next day builds on them instead of repeating or contradicting them. Written by the wrapper into a day-NOTE section (`DAILY_DIGEST_SECTION`, default `Daily digest`) |
 | `hrvReviewPending` | Daily review obligation |
 | `weeklyHardReizeBalance` | Rolling-7d audit of the 2-Hard-Reize-Strategy — required for any multi-day / next-day / weekly outlook (see rule below) (Strategie: framework/research/cross-training-vo2max-transfer.md) |
 

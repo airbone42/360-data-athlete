@@ -83,6 +83,8 @@ Launch the `planner` agent in a pane as a teammate. Hand it:
 - The date
 - **`athleteFeedback`** from the context (always, even if "no feedback" —
   the planner must see the athlete's latest notes)
+- **`dailyDigest`** — end-of-day summaries of the last days (decisions,
+  deferred slots, corrections the athlete made)
 - **`activities[-3:]`** — the 3 most recent activities (array is
   oldest-first, not `[:3]`!)
 - **`weeklyZoneBalance`** — zone distribution over the last 7 days (for
