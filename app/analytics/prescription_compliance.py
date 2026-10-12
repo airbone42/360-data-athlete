@@ -135,10 +135,26 @@ def parse_prescriptions(progressions_md: str) -> list[dict]:
 
 def _load_executions(today: date, lookback_days: int) -> dict[str, date]:
     """Map normalised exercise name → most recent execution date."""
+    return _load_logged_names(today, lookback_days)[0]
+
+
+def _load_logged_names(
+    today: date, lookback_days: int
+) -> tuple[dict[str, date], dict[str, date]]:
+    """Return (exercise names, session names) → most recent execution date.
+
+    Session names are kept apart because some prescriptions are whole blocks
+    (a mobility routine, a physio protocol): the block runs as its own
+    session, its parts are logged under their own names, and the block name
+    never appears as an exercise. Without the session index such a block reads
+    as "never executed" while it ran every other day — a false alarm that
+    pushes the block into days where other sessions already cover it.
+    """
     muscles_dir = Path(DATA_DIR) / "muscles"
     seen: dict[str, date] = {}
+    sessions_seen: dict[str, date] = {}
     if not muscles_dir.is_dir():
-        return seen
+        return seen, sessions_seen
     cutoff = today - timedelta(days=lookback_days)
     for path in sorted(muscles_dir.glob("*.json")):
         stem = path.stem
@@ -153,6 +169,9 @@ def _load_executions(today: date, lookback_days: int) -> dict[str, date]:
         except (OSError, json.JSONDecodeError):
             continue
         for session in payload.get("sessions") or []:
+            wname = _normalise(str(session.get("workout_name") or ""))
+            if wname and (wname not in sessions_seen or sessions_seen[wname] < day):
+                sessions_seen[wname] = day
             for ex in session.get("exercises") or []:
                 # Index the coach-written name ONLY, never the mapping key.
                 # Mapping keys deliberately collapse variants for muscle-load
@@ -168,7 +187,25 @@ def _load_executions(today: date, lookback_days: int) -> dict[str, date]:
                     continue
                 if norm not in seen or seen[norm] < day:
                     seen[norm] = day
-    return seen
+    return seen, sessions_seen
+
+
+def _match_session(name: str, sessions: dict[str, date]) -> date | None:
+    """Latest session whose name *starts with* the prescribed block name.
+
+    Prefix, not containment: "Schulter-Mobilisation + Atemübungen
+    (Urlaubsfassung)" is that block, while a session that merely mentions an
+    exercise somewhere in its title is not proof the exercise ran.
+    """
+    target = _normalise(name)
+    if not target:
+        return None
+    best: date | None = None
+    for logged, day in sessions.items():
+        if logged == target or logged.startswith(target + " "):
+            if best is None or day > best:
+                best = day
+    return best
 
 
 def _match_execution(name: str, executions: dict[str, date]) -> date | None:
@@ -199,11 +236,19 @@ def compute_prescription_compliance(
     prescriptions = parse_prescriptions(progressions_md)
     if not prescriptions:
         return []
-    executions = _load_executions(today, lookback_days)
+    executions, sessions = _load_logged_names(today, lookback_days)
 
     findings: list[dict] = []
     for p in prescriptions:
-        last = _match_execution(p["name"], executions)
+        candidates = [
+            d
+            for d in (
+                _match_execution(p["name"], executions),
+                _match_session(p["name"], sessions),
+            )
+            if d is not None
+        ]
+        last = max(candidates) if candidates else None
         if last is None:
             findings.append(
                 {

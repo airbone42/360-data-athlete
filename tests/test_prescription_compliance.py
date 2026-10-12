@@ -122,3 +122,52 @@ def test_no_declaration_means_no_tracking(tmp_path, monkeypatch):
 
 def test_format_findings_is_none_when_clean():
     assert pc.format_findings([]) is None
+
+
+BLOCK_MD = (
+    "### Schulter-Mobilisation + Atemübungen — Physio-Protokoll\n"
+    "- **Soll-Frequenz:** alle 2 Tage\n"
+)
+
+
+def _write_session(tmp_path, day: str, workout_name: str, names: list[str]) -> None:
+    muscles = tmp_path / "muscles"
+    muscles.mkdir(exist_ok=True)
+    payload = {
+        "date": day,
+        "sessions": [
+            {
+                "workout_name": workout_name,
+                "exercises": [{"name": n, "mapping_key": "x"} for n in names],
+            }
+        ],
+    }
+    (muscles / f"{day}.json").write_text(json.dumps(payload), encoding="utf-8")
+
+
+def test_block_prescription_counts_its_own_session(tmp_path, monkeypatch):
+    """A block-level prescription is executed when its session ran.
+
+    The block's parts are logged under their own names; the block name only
+    ever appears as the session name. Reading exercises alone reported a
+    block run every other day as "never executed".
+    """
+    monkeypatch.setattr(pc, "DATA_DIR", tmp_path)
+    _write_session(
+        tmp_path,
+        "2026-10-09",
+        "Schulter-Mobilisation + Atemübungen (Urlaubsfassung)",
+        ["open book seitenlage"],
+    )
+
+    assert pc.compute_prescription_compliance(BLOCK_MD, date(2026, 10, 10)) == []
+
+
+def test_session_name_needs_prefix_not_mention(tmp_path, monkeypatch):
+    """A session that only mentions the exercise in its title does not count."""
+    monkeypatch.setattr(pc, "DATA_DIR", tmp_path)
+    _write_session(tmp_path, "2026-07-30", "Bein-Tag mit Single-Leg Hip Thrust", [])
+
+    findings = pc.compute_prescription_compliance(MD, date(2026, 7, 31))
+    assert len(findings) == 1
+    assert findings[0]["status"] == "never"
