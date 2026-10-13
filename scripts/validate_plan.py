@@ -260,6 +260,24 @@ def _description(w: dict) -> str:
     return (w.get("description") or w.get("intervals_icu") or "").strip()
 
 
+# intervals_icu step helpers (shared by R012 and R031).
+_LAP_PRESS_RE = re.compile(r"\bpress\s+lap\b", re.IGNORECASE)
+_STEP_DURATION_MIN_RE = re.compile(r"\b(\d+)m\b", re.IGNORECASE)
+_STEP_DURATION_SEC_RE = re.compile(r"\b(\d+)s\b", re.IGNORECASE)
+
+
+def _step_duration_seconds(text: str) -> int:
+    """Duration of an intervals_icu step in seconds (`8m`, `90s`, `1m30s`); 0 if none."""
+    secs = 0
+    m = _STEP_DURATION_MIN_RE.search(text)
+    if m:
+        secs += int(m.group(1)) * 60
+    s = _STEP_DURATION_SEC_RE.search(text)
+    if s:
+        secs += int(s.group(1))
+    return secs
+
+
 # ─────────────────────────── Rules ───────────────────────────
 
 def check_reps_ceiling(workouts: list[dict], ctx: Context) -> list[Finding]:
@@ -990,21 +1008,8 @@ def check_intervals_step_targets(workouts: list[dict], ctx: Context) -> list[Fin
         r"\b\d+(?:-\d+)?\s*bpm\b|\bHR\s*\d{2,3}\s*[-–]\s*\d{2,3}\b",
         re.IGNORECASE,
     )
-    LAP_PRESS_RE = re.compile(r"\bpress\s+lap\b", re.IGNORECASE)
+    LAP_PRESS_RE = _LAP_PRESS_RE
     LOOP_HEADER_RE = re.compile(r"\b\d+x\b", re.IGNORECASE)
-    # Duration parsers
-    DURATION_MIN_RE = re.compile(r"\b(\d+)m\b", re.IGNORECASE)
-    DURATION_SEC_RE = re.compile(r"\b(\d+)s\b", re.IGNORECASE)
-
-    def _step_duration_seconds(text: str) -> int:
-        secs = 0
-        m = DURATION_MIN_RE.search(text)
-        if m:
-            secs += int(m.group(1)) * 60
-        s = DURATION_SEC_RE.search(text)
-        if s:
-            secs += int(s.group(1))
-        return secs
 
     findings = []
     for w in workouts:
@@ -3104,6 +3109,118 @@ def check_cue_target_leak(workouts: list[dict], ctx: Context) -> list[Finding]:
     return findings
 
 
+_R031_DOSING_RE = re.compile(r"treadmill_dosing[:\*\s=`]*(hr|pace)\b", re.IGNORECASE)
+_R031_PACE_TARGET_RE = re.compile(
+    r"(?:\d+:\d{2}(?:\s*-\s*\d+:\d{2})?\s*/\s*(?:km|mi)"  # 5:05/km, 5:00-5:10/km
+    r"|\d+(?:-\d+)?\s*%"                                   # 78-82% Pace
+    r"|\bZ\d(?:-Z\d)?)"                                     # Z2 Pace
+    r"\s*Pace\b",
+    re.IGNORECASE,
+)
+_R031_WARMUP_RE = re.compile(r"^(?:warm-?\s?up|aufw[äa]rm|einlauf|aktivierung|activation)", re.IGNORECASE)
+_R031_COOLDOWN_RE = re.compile(r"^(?:cool-?\s?down|abw[äa]rm|auslauf)", re.IGNORECASE)
+_R031_REPEAT_HDR_RE = re.compile(r"\b\d+x\s*$", re.IGNORECASE)
+_R031_STRIDE_RE = re.compile(r"stride|steigerung|surge", re.IGNORECASE)
+_R031_DRILL_RE = re.compile(
+    r"\bdrill|\b[abc]-?skip|anfersen|butt\s*kick|high\s*knee|kniehub|"
+    r"leg\s*swing|beinpendel|hip\s*flexor|lauf-?abc|carioca|mobili",
+    re.IGNORECASE,
+)
+_R031_RECOVERY_RE = re.compile(
+    r"\b(?:easy|jog|trab\w*|recovery|float|pause|rest|erholung|locker)\b", re.IGNORECASE
+)
+_R031_DISTANCE_RE = re.compile(r"\b\d+(?:[.,]\d+)?\s*km\b(?!\s*/)", re.IGNORECASE)
+_R031_CUE_SEP_RE = re.compile(r"\s[—–]\s")
+
+
+def check_treadmill_pace_dosing(workouts: list[dict], ctx: Context) -> list[Finding]:
+    """R031 — treadmill main steps carry a PACE target when the athlete opts in.
+
+    Opt-in via the machine-readable key in ``config/athlete_status.md``
+    (same file and parse style as ``stride_block_order`` / ``impact_streak_max``,
+    because that is the config file loaded into the validator Context)::
+
+        treadmill_dosing: pace      # default: hr (rule silent)
+
+    Framework default (key absent or ``hr``): a belt session is dosed by HR,
+    because an unverified belt speed is not a trustworthy target. An athlete
+    whose belt speed has been verified (e.g. an under-load test) can switch to
+    ``pace``: the belt is then dosed at the outdoor target pace and HR is only a
+    yielding guard. Without a mechanical gate the endurance specialist falls
+    back to the generic HR-dosed belt steps, against the configured preference.
+
+    Checked: every Run on a treadmill (``surface: treadmill`` or ``indoor``,
+    shared ``_is_treadmill`` helper). Main work steps — >= 60 s or a km
+    distance, outside warm-up / cool-down / stride blocks, not drills, not
+    press-lap steps, not recovery jogs inside a repeat block — must carry a
+    pace target in the step syntax (``5:05/km Pace``, ``78-82% Pace``,
+    ``Z2 Pace``). HR-only or target-less main steps → ERROR.
+    """
+    m = _R031_DOSING_RE.search(ctx.athlete_status or "")
+    if not m or m.group(1).lower() != "pace":
+        return []
+
+    from app.graphs.shoe_advisor import _is_treadmill
+
+    findings: list[Finding] = []
+    for w in workouts:
+        if (w.get("type") or "") not in ("Run", "VirtualRun"):
+            continue
+        if not _is_treadmill(w):
+            continue
+        section = "main"
+        for raw in (w.get("intervals_icu") or "").split("\n"):
+            line = raw.strip()
+            if not line:
+                continue
+            if not line.startswith("-"):
+                if _R031_WARMUP_RE.match(line):
+                    section = "warmup"
+                elif _R031_COOLDOWN_RE.match(line):
+                    section = "cooldown"
+                elif _R031_REPEAT_HDR_RE.search(line):
+                    section = "strides" if _R031_STRIDE_RE.search(line) else "repeat"
+                else:
+                    section = "main"
+                continue
+            if section in ("warmup", "cooldown", "strides"):
+                continue
+            content = line.lstrip("-").strip()
+            step = _R031_CUE_SEP_RE.split(content, maxsplit=1)[0]
+            if _LAP_PRESS_RE.search(step):
+                continue
+            if (
+                _R031_WARMUP_RE.match(step)
+                or _R031_COOLDOWN_RE.match(step)
+                or _R031_STRIDE_RE.search(step)
+                or _R031_DRILL_RE.search(step)
+            ):
+                continue
+            if section == "repeat" and _R031_RECOVERY_RE.search(step):
+                continue
+            if _step_duration_seconds(step) < 60 and not _R031_DISTANCE_RE.search(step):
+                continue
+            if _R031_PACE_TARGET_RE.search(step):
+                continue
+            findings.append(Finding(
+                rule_id="R031",
+                severity=SEVERITY_ERROR,
+                workout=_workout_name(w),
+                message=(
+                    f"Treadmill main step `{step[:80]}` has no pace target — "
+                    f"config sets treadmill_dosing: pace, so belt sessions are "
+                    f"dosed by pace, not by HR."
+                ),
+                suggestion=(
+                    "Give the step the outdoor target pace (`m:ss/km Pace`, no "
+                    "uplift for the missing air resistance, grade per the "
+                    "specialist's treadmill rule) and keep HR only as a yielding "
+                    "guard in the cue (~+5-8 bpm indoors; breathing binds)."
+                ),
+            ))
+    return findings
+
+
 RULES: list[tuple[str, Callable[[list[dict], Context], list[Finding]]]] = [
     ("R001", check_reps_ceiling),
     ("R002", check_injury_locks_shoulder),
@@ -3135,6 +3252,7 @@ RULES: list[tuple[str, Callable[[list[dict], Context], list[Finding]]]] = [
     ("R028", check_repeat_session_within_cadence),
     ("R029", check_feedback_load_matches_prescription),
     ("R030", check_cue_target_leak),
+    ("R031", check_treadmill_pace_dosing),
 ]
 
 

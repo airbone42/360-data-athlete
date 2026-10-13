@@ -113,3 +113,30 @@ Two behaviours follow automatically from a value below 7:
 Counting uses planned events, not completed ones: the scheduler's job is not
 to double-book the calendar. Execution gaps are a separate question and are
 already covered by the `balance` due-warnings in the planning context.
+
+## Treadmill dosing (machine-readable)
+
+- **treadmill_dosing:** hr
+
+How belt sessions are dosed. Values: `hr` (default) or `pace`.
+
+- `hr` — the framework default. A belt's displayed speed is not trusted
+  (calibration error of a few percent is common and rarely checked), so belt
+  steps are dosed by HR like any other run, and validator rule R031 stays
+  silent.
+- `pace` — set this **only after the belt speed has been verified**, for
+  example with an under-load test (belt length × revolutions per minute while
+  running, at several speeds). Belt sessions are then dosed by pace: the main
+  steps carry the **outdoor target pace** (no speed uplift for the missing air
+  resistance, grade per the treadmill rule in `athlete_preferences.md`), and
+  HR is only a **yielding cap** (~+5–8 bpm indoors, practitioner consensus);
+  the binding in-session criterion is breathing. Validator R031 then blocks a
+  push whose treadmill main steps carry only an HR target or none.
+
+Verifying the belt does not make the watch's own treadmill pace usable — that
+figure is estimated from the stride and stays out of any pace analysis. What
+counts is the speed set on the verified belt.
+
+The key lives here rather than in `athlete_preferences.md` because this is
+the file the plan validator loads, like the other machine-readable switches
+(`stride_block_order`, `impact_streak_max`).

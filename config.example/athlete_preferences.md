@@ -76,6 +76,12 @@ same displayed number. A treadmill session can still serve as an **RPE
 reading at a controlled speed** — but compared against a treadmill baseline,
 never against the outdoor one.
 
+**Verified belt → pace dosing (opt-in).** Once the belt speed has been
+verified under load, switch `treadmill_dosing` to `pace` in
+`athlete_status.md`: belt main steps are then dosed at the outdoor target
+pace and HR becomes a yielding cap (validator R031 enforces it). The watch's
+own treadmill pace remains unusable either way.
+
 Derivation, sources and the evidence-vs-convention split:
 `framework/research/treadmill-vs-outdoor-pace-hr-and-1-percent-grade.md`.
 
