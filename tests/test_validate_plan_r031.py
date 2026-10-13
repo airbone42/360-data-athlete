@@ -1,8 +1,10 @@
-"""Tests for validate_plan.py R031 — treadmill main steps dosed by pace (opt-in).
+"""Tests for validate_plan.py R031 — treadmill main steps dosed by belt speed (opt-in).
 
 `treadmill_dosing: pace` in athlete_status.md switches belt sessions from HR
-dosing to pace dosing; main steps without a pace target are then blocked.
-Absent key or `hr` → rule silent.
+dosing to pace dosing. Canonical: a km/h belt speed on the step line and no
+watch target; a `m:ss/km Pace` target stays accepted. HR-target main steps and
+main steps without belt speed or pace target are blocked. Absent key or
+`hr` → rule silent.
 """
 from __future__ import annotations
 
@@ -16,6 +18,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from scripts.validate_plan import (  # type: ignore  # noqa: E402
     RULES,
     Context,
+    check_intervals_step_targets,
     check_treadmill_pace_dosing,
 )
 
@@ -93,3 +96,34 @@ def test_r031_ignores_drills_and_strides_without_target():
 def test_r031_pace_in_cue_does_not_count():
     icu = "Main\n- Z2 30m 76-83% LTHR — belt at 5:05/km Pace"
     assert len(check_treadmill_pace_dosing([_w(icu)], PACE_CTX)) == 1
+
+
+def test_r031_accepts_belt_kmh_in_cue_without_watch_target():
+    icu = "Main\n- Steady 29m — belt 11,8 km/h fixed; HR guard 139, breathing binds"
+    assert check_treadmill_pace_dosing([_w(icu)], PACE_CTX) == []
+    icu_dot = "Main\n- Steady 29m 11.8km/h — fixed"
+    assert check_treadmill_pace_dosing([_w(icu_dot)], PACE_CTX) == []
+
+
+def test_r031_errors_on_hr_target_even_with_belt_kmh():
+    icu = "Main\n- Steady 29m 76-83% LTHR — belt 11,8 km/h fixed"
+    f = check_treadmill_pace_dosing([_w(icu)], PACE_CTX)
+    assert len(f) == 1 and f[0].severity == "ERROR"
+    assert "HR target" in f[0].message
+
+
+def test_r031_errors_on_zone_hr_target():
+    icu = "Main\n- Steady 29m Z2 HR — belt 11,8 km/h"
+    assert len(check_treadmill_pace_dosing([_w(icu)], PACE_CTX)) == 1
+
+
+def test_r031_belt_without_unit_is_not_enough():
+    icu = "Main\n- Steady 29m — belt 11,8 fixed"
+    assert len(check_treadmill_pace_dosing([_w(icu)], PACE_CTX)) == 1
+
+
+def test_r012_no_missing_target_warning_for_belt_kmh_step():
+    icu = "Main\n- Steady 29m — belt 11,8 km/h fixed"
+    assert check_intervals_step_targets([_w(icu)], PACE_CTX) == []
+    # outdoor: a km/h figure is no anchor, the R012 warning stays
+    assert len(check_intervals_step_targets([_w(icu, surface="asphalt")], PACE_CTX)) == 1

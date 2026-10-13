@@ -78,9 +78,10 @@ never against the outdoor one.
 
 **Verified belt → pace dosing (opt-in).** Once the belt speed has been
 verified under load, switch `treadmill_dosing` to `pace` in
-`athlete_status.md`: belt main steps are then dosed at the outdoor target
-pace and HR becomes a yielding cap (validator R031 enforces it). The watch's
-own treadmill pace remains unusable either way.
+`athlete_status.md`: belt main steps then state the belt speed (km/h) at the
+outdoor target pace without a watch target, and HR becomes a yielding cap in
+the cue (validator R031 enforces it). The watch's own treadmill pace remains
+unusable either way.
 
 Derivation, sources and the evidence-vs-convention split:
 `framework/research/treadmill-vs-outdoor-pace-hr-and-1-percent-grade.md`.

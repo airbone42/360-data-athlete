@@ -126,12 +126,15 @@ How belt sessions are dosed. Values: `hr` (default) or `pace`.
   silent.
 - `pace` — set this **only after the belt speed has been verified**, for
   example with an under-load test (belt length × revolutions per minute while
-  running, at several speeds). Belt sessions are then dosed by pace: the main
-  steps carry the **outdoor target pace** (no speed uplift for the missing air
-  resistance, grade per the treadmill rule in `athlete_preferences.md`), and
-  HR is only a **yielding cap** (~+5–8 bpm indoors, practitioner consensus);
-  the binding in-session criterion is breathing. Validator R031 then blocks a
-  push whose treadmill main steps carry only an HR target or none.
+  running, at several speeds). Belt sessions are then dosed by the belt: the
+  main steps state the **belt speed in km/h at the outdoor target pace** (no
+  speed uplift for the missing air resistance, grade per the treadmill rule in
+  `athlete_preferences.md`) and carry **no watch target** — a pace target
+  would make the watch alarm against its own treadmill pace estimate, an HR
+  target would dose by HR. HR is only a **yielding cap** in the cue (~+5–8 bpm
+  indoors, practitioner consensus); the binding in-session criterion is
+  breathing. Validator R031 then blocks a push whose treadmill main steps carry
+  an HR target, or neither a km/h belt speed nor a pace target.
 
 Verifying the belt does not make the watch's own treadmill pace usable — that
 figure is estimated from the stride and stays out of any pace analysis. What

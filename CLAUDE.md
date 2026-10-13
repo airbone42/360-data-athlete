@@ -795,10 +795,12 @@ propagates into the whole session.
   energy cost all arrive inside the same displayed pace. Anchor:
   [treadmill-vs-outdoor-pace-hr-and-1-percent-grade.md](research/treadmill-vs-outdoor-pace-hr-and-1-percent-grade.md).
   Exception by configuration: with `treadmill_dosing: pace` in
-  `config/athlete_status.md` (belt speed verified), belt main steps are dosed
-  at the outdoor target pace and HR is only a yielding cap —
-  `validate_plan.py::check_treadmill_pace_dosing` (R031, ERROR) blocks
-  HR-only belt main steps; tests `tests/test_validate_plan_r031.py`.
+  `config/athlete_status.md` (belt speed verified), belt main steps state the
+  belt speed in km/h at the outdoor target pace with no watch target (a pace
+  target alarms against the watch's treadmill estimate) and HR is only a
+  yielding cap in the cue — `validate_plan.py::check_treadmill_pace_dosing`
+  (R031, ERROR) blocks HR-target belt main steps and steps with neither km/h
+  nor pace; tests `tests/test_validate_plan_r031.py`.
 
 ### Sport-specific HR-zone application (policy)
 

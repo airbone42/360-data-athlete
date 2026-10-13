@@ -1170,9 +1170,14 @@ def check_intervals_step_targets(workouts: list[dict], ctx: Context) -> list[Fin
                 ))
             else:
                 # Run/other: drills (< 3 min) without target are OK,
-                # longer main-set steps without target → WARNING
+                # longer main-set steps without target → WARNING. A treadmill
+                # step dosed by an explicit belt speed (`11.8 km/h`) is
+                # deliberately target-less (R031: no watch alarm against the
+                # stride-derived treadmill pace) — not a missing anchor.
                 dur_s = _step_duration_seconds(content)
-                if dur_s >= 180:
+                if dur_s >= 180 and not (
+                    _R031_BELT_KMH_RE.search(content) and _is_belt_run(w)
+                ):
                     findings.append(Finding(
                         rule_id="R012",
                         severity=SEVERITY_WARNING,
@@ -3131,10 +3136,20 @@ _R031_RECOVERY_RE = re.compile(
 )
 _R031_DISTANCE_RE = re.compile(r"\b\d+(?:[.,]\d+)?\s*km\b(?!\s*/)", re.IGNORECASE)
 _R031_CUE_SEP_RE = re.compile(r"\s[—–]\s")
+_R031_BELT_KMH_RE = re.compile(r"\b\d{1,2}(?:[.,]\d+)?\s*km/h\b", re.IGNORECASE)
+_R031_HR_TARGET_RE = re.compile(
+    r"\d+(?:-\d+)?\s*%\s*(?:LTHR|HR)\b|\bZ\d(?:-Z\d)?\s+HR\b", re.IGNORECASE
+)
+
+
+def _is_belt_run(w: dict) -> bool:
+    """Run/VirtualRun on a treadmill (shared shoe-advisor definition)."""
+    from app.graphs.shoe_advisor import _is_treadmill
+    return (w.get("type") or "") in ("Run", "VirtualRun") and _is_treadmill(w)
 
 
 def check_treadmill_pace_dosing(workouts: list[dict], ctx: Context) -> list[Finding]:
-    """R031 — treadmill main steps carry a PACE target when the athlete opts in.
+    """R031 — treadmill main steps are dosed by belt speed when the athlete opts in.
 
     Opt-in via the machine-readable key in ``config/athlete_status.md``
     (same file and parse style as ``stride_block_order`` / ``impact_streak_max``,
@@ -3152,21 +3167,27 @@ def check_treadmill_pace_dosing(workouts: list[dict], ctx: Context) -> list[Find
     Checked: every Run on a treadmill (``surface: treadmill`` or ``indoor``,
     shared ``_is_treadmill`` helper). Main work steps — >= 60 s or a km
     distance, outside warm-up / cool-down / stride blocks, not drills, not
-    press-lap steps, not recovery jogs inside a repeat block — must carry a
-    pace target in the step syntax (``5:05/km Pace``, ``78-82% Pace``,
-    ``Z2 Pace``). HR-only or target-less main steps → ERROR.
+    press-lap steps, not recovery jogs inside a repeat block — must be dosed by
+    pace. Canonical form: an explicit **belt speed in km/h** anywhere on the
+    step line, cue included (``- Steady 29m — belt 11.8 km/h fixed; …``), with
+    **no** watch target. A watch pace target (``5:05/km Pace``) is still
+    accepted for backward compatibility, but it makes the watch alarm against
+    its own treadmill pace estimate, which is stride-derived and unreliable on
+    a belt — the belt setting is the control, not a watch target.
+
+    ERROR when a main step
+    - carries an HR target in the step syntax (``% LTHR``, ``% HR``, ``Zn HR``)
+      — regardless of any km/h figure: the watch then steers by HR, which is
+      HR dosing; HR belongs in the cue as a yielding cap, not as the target;
+    - carries neither a km/h belt speed nor a pace target.
     """
     m = _R031_DOSING_RE.search(ctx.athlete_status or "")
     if not m or m.group(1).lower() != "pace":
         return []
 
-    from app.graphs.shoe_advisor import _is_treadmill
-
     findings: list[Finding] = []
     for w in workouts:
-        if (w.get("type") or "") not in ("Run", "VirtualRun"):
-            continue
-        if not _is_treadmill(w):
+        if not _is_belt_run(w):
             continue
         section = "main"
         for raw in (w.get("intervals_icu") or "").split("\n"):
@@ -3200,22 +3221,35 @@ def check_treadmill_pace_dosing(workouts: list[dict], ctx: Context) -> list[Find
                 continue
             if _step_duration_seconds(step) < 60 and not _R031_DISTANCE_RE.search(step):
                 continue
-            if _R031_PACE_TARGET_RE.search(step):
+            hr_target = _R031_HR_TARGET_RE.search(step)
+            if not hr_target and (
+                _R031_BELT_KMH_RE.search(content) or _R031_PACE_TARGET_RE.search(step)
+            ):
                 continue
+            if hr_target:
+                problem = (
+                    f"carries the HR target `{hr_target.group(0)}` — that doses "
+                    f"the belt by HR"
+                )
+            else:
+                problem = "has neither a belt speed (km/h) nor a pace target"
             findings.append(Finding(
                 rule_id="R031",
                 severity=SEVERITY_ERROR,
                 workout=_workout_name(w),
                 message=(
-                    f"Treadmill main step `{step[:80]}` has no pace target — "
-                    f"config sets treadmill_dosing: pace, so belt sessions are "
-                    f"dosed by pace, not by HR."
+                    f"Treadmill main step `{step[:80]}` {problem}; config sets "
+                    f"treadmill_dosing: pace, so belt sessions are dosed by the "
+                    f"belt speed."
                 ),
                 suggestion=(
-                    "Give the step the outdoor target pace (`m:ss/km Pace`, no "
-                    "uplift for the missing air resistance, grade per the "
-                    "specialist's treadmill rule) and keep HR only as a yielding "
-                    "guard in the cue (~+5-8 bpm indoors; breathing binds)."
+                    "Drop the watch target and put the belt speed at the outdoor "
+                    "target pace into the step (`- Steady 29m — belt 11.8 km/h "
+                    "fixed; …`; no uplift for the missing air resistance, grade "
+                    "per the specialist's treadmill rule). HR stays only in the "
+                    "cue as a yielding cap (~+5-8 bpm indoors; breathing binds). "
+                    "No bare `Zn` label either — intervals.icu reads it as a "
+                    "power zone (R012)."
                 ),
             ))
     return findings

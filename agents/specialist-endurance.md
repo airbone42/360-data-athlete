@@ -592,16 +592,22 @@ and getting them wrong is the common failure:**
    let a belt session be the reading point for a pace anchor — state in
    `focus` that the anchor gets re-checked outdoors. It *can* serve as an RPE
    reading at a controlled speed, compared against a treadmill baseline.
-4. **Verified belt: dose by pace (opt-in).** When `config/athlete_status.md`
-   sets `treadmill_dosing: pace`, the belt speed has been verified and the
-   belt main steps carry a **pace target at the outdoor target pace**
-   (`- Z2 30m 5:05/km Pace — …`), no speed uplift, grade per point 1. HR goes
-   only into the cue as a yielding guard (+5–8 bpm, breathing binds), never
-   as the step target. Validator R031 blocks the push otherwise. This does
-   not contradict point 3: dosing by the speed *set* on a verified belt is
-   not using the belt *reading* as a pace anchor — the watch's own treadmill
-   pace stays unusable for any analysis. Default (`hr` or key absent): dose
-   by HR as above.
+4. **Verified belt: dose by belt speed (opt-in).** When
+   `config/athlete_status.md` sets `treadmill_dosing: pace`, the belt speed
+   has been verified and the belt is the control. Write each belt main step
+   with the **belt speed in km/h at the outdoor target pace** and **no watch
+   target**: `- Steady 30m — belt 11.8 km/h fixed; breathing heavier or HR
+   above <cap> → belt −0.3`. No speed uplift, grade per point 1. Why no
+   target: a `m:ss/km Pace` target makes the watch alarm against its own
+   stride-derived treadmill pace (unreliable on a belt), and an HR target
+   would dose by HR — HR goes only into the cue as a yielding cap (+5–8 bpm,
+   breathing binds). Do not use a bare `Zn` as the step label either
+   (intervals.icu reads it as a power zone, R012). Validator R031 blocks HR
+   targets and steps with neither km/h nor pace; a pace target is still
+   accepted but not preferred. This does not contradict point 3: dosing by
+   the speed *set* on a verified belt is not using the watch's treadmill
+   pace as an anchor — that figure stays unusable for any analysis. Default
+   (`hr` or key absent): dose by HR as above.
 
 Plus the practical two: a fan from minute zero (the cheapest lever against
 both the HR premium and the RPE shift), and running drills belong beside the
