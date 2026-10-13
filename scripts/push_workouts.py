@@ -469,15 +469,21 @@ def _shift_before_earliest(events: list[dict], today_events: list[dict]) -> None
     Both the main push and the balance push start their own numbering at
     06:00, so without this the two land on the same minute and the ordering
     that matters — balance on fresh legs, before the endurance session — is
-    left to chance. Mutates `events` in place; a no-op when the day is empty
-    or the computed slot would fall before 05:00.
+    left to chance. Mutates `events` in place; a no-op when the day has no
+    WORKOUT event or the computed slot would fall before 05:00. Day NOTEs sit
+    at 00:00 and are ignored — counting one moved the unit to 23:33 of the
+    previous day.
     """
     from datetime import datetime as _dt
     from datetime import timedelta as _td
 
     if not events or not today_events:
         return
-    starts = [e.get("start_date_local") for e in today_events if e.get("start_date_local")]
+    starts = [
+        e.get("start_date_local")
+        for e in today_events
+        if e.get("start_date_local") and (e.get("category") or "WORKOUT") == "WORKOUT"
+    ]
     if not starts:
         return
     try:
@@ -488,7 +494,7 @@ def _shift_before_earliest(events: list[dict], today_events: list[dict]) -> None
     duration = events[0].get("moving_time") or 0
     duration_min = int(duration / 60) if duration else 12
     slot = earliest - _td(minutes=duration_min + 15)
-    if slot.hour < 5:
+    if slot.date() != earliest.date() or slot.hour < 5:
         return
     events[0]["start_date_local"] = slot.strftime("%Y-%m-%dT%H:%M:%S")
 
