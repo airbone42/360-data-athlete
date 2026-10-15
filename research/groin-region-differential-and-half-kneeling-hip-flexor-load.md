@@ -563,6 +563,17 @@ Knochen melden sich als lokalisierter, mechanisch reproduzierbarer Schmerz;
 Nerven melden sich mit **Kribbeln, Taubheit, brennendem Charakter und
 einem Ausstrahlungsmuster entlang eines Versorgungsgebiets**.
 
+> ⚠️ **Nachtrag 2026-10-15 — Symptomqualität ist beim Obturatorius-Entrapment
+> des Athleten nicht die entscheidende Trennlinie.** Fehlende
+> Parästhesie schliesst es nicht aus (Brukner & Khan via Tipton 2008:
+> „numbness is very rarely reported"), und der ESSKA-EHPA-ESMA-Konsens hält
+> zur überlappenden Schmerzlokalisation der Leistenentitäten fest: „The nature
+> of the pain does not help to differentiate between the entities." (bezieht
+> sich auf die Leistenentitäten, nicht direkt auf die Nerv-Frage). Konsistenter beschrieben ist die Adduktionsschwäche nach
+> Belastung. Vertiefung, Referral-Quellen bis zum Knie (inkl.
+> Schenkelhals-Stress, L3–L4) und Eskalationsschwelle:
+> [obturator-neuropathy-vs-referred-medial-thigh-pain.md](obturator-neuropathy-vs-referred-medial-thigh-pain.md).
+
 **N. obturatorius** — die einzige nervale Ursache mit einer belastbaren
 Athletenserie. Bradshaw et al. 1997 (*Am J Sports Med*, 32 Fälle),
 verbatim:
@@ -750,13 +761,14 @@ Muster:
 | Signatur | Was sie nahelegt | Beleg / Herleitung |
 |---|---|---|
 | **Reproduzierbar in einer definierten Position**, unabhängig von der vorangegangenen Trainingsmenge, sofort und wiederholbar auslösbar | Mechanische Struktur mit Positionsabhängigkeit: Enthese unter Zug, Kapsel/Labrum unter Kompression, Nerv unter Positions-Kompression | Doha-Provokationslogik: alle definierten Entitäten sind über **Provokationstests** definiert, nicht über Belastungsanamnese (Weir 2015) |
-| **Erst ab einer Expositionsdosis im Dauerlauf**, Latenz zum Symptom, Beschwerdefreiheit in Ruhe und bei Testung | Belastungsinduzierte Ursache: Knochenstressreaktion, oder — hier besonders relevant — **Obturatorius-Neuropathie** | Bradshaw 1997: „**exercise-induced** medial thigh pain"; die Serie beschreibt explizit die postexertionelle Untersuchung („Examination **postexercise** revealed adductor weakness and medial thigh paraesthesia") |
+| **Erst ab einer Expositionsdosis im Dauerlauf**, Latenz zum Symptom, Beschwerdefreiheit in Ruhe und bei Testung | Belastungsinduzierte Ursache: Knochenstressreaktion, oder — hier besonders relevant — **Obturatorius-Neuropathie** | Bradshaw 1997 (32-Fälle-Serie, *AJSM*): „**exercise-induced** medial thigh pain"; die postexertionelle Untersuchung („Examination **postexercise** revealed adductor weakness and medial thigh paraesthesia") stammt aus dem **Einzelfallbericht** Bradshaw & McCrory 1997 (*Clin J Sport Med*, n = 1, PMID 9262891), **nicht** aus der Serie |
 | **Beides**: positionsreproduzierbar **und** dosisabhängig verschlimmert | Der Normalfall bei Sehnen-/Enthesenbeschwerde | Sehnen-Reha-Standard; siehe [24h-symptom-check-as-load-progression-gate.md](24h-symptom-check-as-load-progression-gate.md) |
 
 **Die praktisch schärfste Konsequenz — und sie ist ein Test-Design, kein
 Befund:** Wenn ein Symptom in Ruhe nicht reproduzierbar ist, ist eine
-Untersuchung **in Ruhe** wertlos. Die Obturatorius-Serie hat genau deshalb
-**nach** der Belastung untersucht. Für den Coach heisst das: ein negativer
+Untersuchung **in Ruhe** wertlos. Im Obturatorius-Einzelfallbericht (n = 1)
+zeigte sich der Befund erst **nach** der Belastung; ob die 32-Fälle-Serie
+ebenso untersuchte, ist mangels Volltext nicht prüfbar. Für den Coach heisst das: ein negativer
 Testblock (Abschnitt 3), der am Ruhetag gefahren wurde, ist bei einer
 belastungsabhängigen Signatur **nicht informativ** — er muss unmittelbar
 nach einem Lauf wiederholt werden, der das Symptom sonst auslöst.
@@ -835,7 +847,7 @@ Entscheidungsregel. Es ordnet nur, was die Abschnitte 1–5 belegen.
 | 1 | **Iliopsoas-bezogen** | Läufer = repetitive Hüftflexion; Position reproduziert Symptom auch ohne Abduktion; Widerstands-Hüftflexion im Sitzen positiv | Palpation am Adduktor-longus-Ursprung positiv | teilweise |
 | 2 | **Adduktoren-bezogen** | Palpation Adduktor-longus-Ursprung positiv (94 %-Marker); Squeeze positiv; Symptom steigt mit Abduktion des hinteren Beins | Population passt schlecht (kein Richtungswechsel/Sprung/Schuss); Squeeze in allen drei Winkeln negativ | **ja** |
 | 3 | **Pubis-bezogen / Symphyse** | Palpation mittig an der Symphyse **[gemessen: Doha-Definition]**; dass die aktive posteriore Beckenkippung es über eine abdominale Zugkomponente reproduziert, ist **[hergeleitet — nicht gemessen]** und daher nur ein Zusatz-, kein tragendes Zeichen | Palpation streng lateral am Adduktoransatz, Symphysenmitte frei | **ja** |
-| 4 | **Nerval — N. obturatorius** | Belastungsinduziert; Symptom **wandert distal** den medialen Oberschenkel hinunter; Kribbeln/Taubheit; Adduktorenschwäche nach Belastung | Symptom rein positionsgebunden und ohne neurologische Qualität | **ja** (Symptomqualität) |
+| 4 | **Nerval — N. obturatorius** | Belastungsinduziert; Symptom **wandert distal** den medialen Oberschenkel hinunter; Kribbeln/Taubheit; Adduktorenschwäche nach Belastung | Symptom rein positionsgebunden (fehlende Parästhesie spricht nur **schwach** dagegen, siehe [obturator-neuropathy-vs-referred-medial-thigh-pain.md](obturator-neuropathy-vs-referred-medial-thigh-pain.md)) | **teilweise** (Ausbreitung, Schwäche nach Belastung; Bestätigung nur klinisch) |
 | 5 | **Hüftgelenk / FAI-Syndrom** | Tiefer, schwer lokalisierbarer Leistenschmerz; positive FADIR-Selbstprovokation | **Negative** FADIR-Provokation (der Test ist als Ausschluss nützlicher denn als Nachweis) | bedingt |
 | 6 | **Inguinal-bezogen** | Valsalva/Husten verstärkt; Bauchmuskel-Widerstand verstärkt; Adduktorentests negativ | Kein Valsalva-Effekt; kein Leistenkanal-Druckschmerz | teilweise |
 | 7 | **Ramus-Stressfraktur / Knochenstress** | Rein belastungsabhängig; Punktschmerz am Knochen; alle Weichteiltests negativ | Symptom sofort in Ruhe reproduzierbar durch eine Position | **ja** (Palpation) |
