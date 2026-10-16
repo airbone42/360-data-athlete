@@ -4655,5 +4655,79 @@
     "eccentric_dominant": false,
     "tendon_dominant": true,
     "lever_factor": 1.0
+  },
+  "adductor_squeeze_isometric": {
+    "aliases": [
+      "isometrischer adduktoren-squeeze",
+      "adduktoren-squeeze",
+      "adduktoren squeeze",
+      "isometrischer adduktoren-squeeze (45°)",
+      "isometrischer adduktoren-squeeze (0°)",
+      "adductor squeeze",
+      "isometric adductor squeeze",
+      "hip adduction squeeze"
+    ],
+    "primary": [
+      {
+        "muscle": "adductor_longus",
+        "intensity": 1.0
+      },
+      {
+        "muscle": "adductor_magnus",
+        "intensity": 0.8
+      },
+      {
+        "muscle": "gracilis",
+        "intensity": 0.8
+      }
+    ],
+    "secondary": [
+      {
+        "muscle": "transversus_abdominis",
+        "intensity": 0.3
+      }
+    ],
+    "stabilizer": [],
+    "load_mode": "isometric",
+    "reference_hold_s": 45
+  },
+  "hip_flexor_isometric_hold": {
+    "aliases": [
+      "isometrisches hüftbeuger-halten im stand gegen die wand",
+      "hüftbeuger-halten im stand an der wand",
+      "hüftbeuger-halten",
+      "isometrisches hüftbeuger-halten",
+      "standing hip flexor isometric",
+      "hip flexor isometric hold",
+      "wall hip flexor hold"
+    ],
+    "primary": [
+      {
+        "muscle": "iliopsoas",
+        "intensity": 1.0
+      },
+      {
+        "muscle": "rectus_femoris",
+        "intensity": 0.6
+      }
+    ],
+    "secondary": [
+      {
+        "muscle": "adductor_longus",
+        "intensity": 0.3
+      },
+      {
+        "muscle": "gluteus_medius",
+        "intensity": 0.3
+      }
+    ],
+    "stabilizer": [
+      {
+        "muscle": "transversus_abdominis",
+        "intensity": 0.15
+      }
+    ],
+    "load_mode": "isometric",
+    "reference_hold_s": 30
   }
 }
