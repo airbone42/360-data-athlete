@@ -994,7 +994,10 @@ re-fetch the unit** (`fetch_type_history.py` — descriptions carry the
 `-> Feedback:` annotations — or `fetch_activity.py`) and ask the athlete
 only for what is still missing. Asking for values the athlete already
 logged in the unit is a context violation — same class as ignoring
-`athleteFeedback` from `fetch_context.py`.
+`athleteFeedback` from `fetch_context.py`. The same holds for **whether
+a planned unit was done at all**: before asking, fetch the day's
+activities (a completed activity carries `paired_event_id` of the planned
+event) and ask only about units that have no matching activity.
 
 **Balance rotation (policy, after main workout push):** a balance unit runs as a third, separate workout. `push_workouts.py` enforces this in code — after each successful main push it auto-pushes the rotation unless a `balance`-tagged event for the date already exists or the athlete's weekly cadence (`balance_sessions_per_week` in `config/athlete_status.md`, framework default 7) is already met; single source of truth, no workflow step in `/training`. The unit is placed before the day's earliest session (balance work belongs on fresh legs), 10–12 min, pool `config/balance_pool.json`; opt out with `--no-auto-balance` only when explicitly justified (surgical recovery day, athlete-requested skip). Cadence and rotation stepping, manual invocation / preview, the `--travel` fallbacks and the `--leg-conflict` mechanics: [docs/balance-rotation.md](docs/balance-rotation.md).
 
