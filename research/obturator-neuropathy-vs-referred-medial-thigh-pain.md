@@ -385,6 +385,10 @@ Ein Merkmal, das **für sich allein** zwischen Nerv und muskuloskelettaler
 Ursache entscheidet, liefert das Raster nicht. Zuverlässig zeigt es nur,
 **welche Merkmale aus dem Selbstmanagement herausführen**.
 
+Zum Schmerzverlauf innerhalb eines Laufs (Warm-up-Nachlassen, Tempo-Abhängigkeit) als Merkmal:
+[warm-up-and-pace-dependence-medial-thigh-pain-differential.md](warm-up-and-pace-dependence-medial-thigh-pain-differential.md)
+(schwache Evidenz, kein Ausschluss; ändert die Schwellen in §5.3 nicht).
+
 ---
 
 ### 4. Selbst- und Nachbelastungstests — was sie tragen und was nicht

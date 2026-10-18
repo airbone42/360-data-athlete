@@ -764,6 +764,9 @@ Muster:
 | **Erst ab einer Expositionsdosis im Dauerlauf**, Latenz zum Symptom, Beschwerdefreiheit in Ruhe und bei Testung | Belastungsinduzierte Ursache: Knochenstressreaktion, oder — hier besonders relevant — **Obturatorius-Neuropathie** | Bradshaw 1997 (32-Fälle-Serie, *AJSM*): „**exercise-induced** medial thigh pain"; die postexertionelle Untersuchung („Examination **postexercise** revealed adductor weakness and medial thigh paraesthesia") stammt aus dem **Einzelfallbericht** Bradshaw & McCrory 1997 (*Clin J Sport Med*, n = 1, PMID 9262891), **nicht** aus der Serie |
 | **Beides**: positionsreproduzierbar **und** dosisabhängig verschlimmert | Der Normalfall bei Sehnen-/Enthesenbeschwerde | Sehnen-Reha-Standard; siehe [24h-symptom-check-as-load-progression-gate.md](24h-symptom-check-as-load-progression-gate.md) |
 
+Verlauf **innerhalb** eines Laufs (Warm-up-Nachlassen, Tempo-Abhängigkeit)
+als zusätzliche Signatur: [warm-up-and-pace-dependence-medial-thigh-pain-differential.md](warm-up-and-pace-dependence-medial-thigh-pain-differential.md).
+
 **Die praktisch schärfste Konsequenz — und sie ist ein Test-Design, kein
 Befund:** Wenn ein Symptom in Ruhe nicht reproduzierbar ist, ist eine
 Untersuchung **in Ruhe** wertlos. Im Obturatorius-Einzelfallbericht (n = 1)
