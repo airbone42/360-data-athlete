@@ -41,6 +41,7 @@ REQUIRED_CONTEXT_KEYS = {
     "lastRestDay",
     "athleteFeedback",
     "dailyDigest",
+    "upcomingAppointments",
     "eventList",
     "raceInDays",
     "dateStr",

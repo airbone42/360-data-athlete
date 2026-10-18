@@ -61,6 +61,14 @@ class Settings(BaseSettings):
     # The wrapper decides who writes it and under which heading.
     daily_digest_section: str = "Daily digest"
     daily_digest_days: int = 3
+    # Optional agenda feed (app/api/agenda_feed.py): a read-only iCalendar
+    # (RFC 5545) URL produced by an external aggregator. Upcoming appointments
+    # surface as `upcomingAppointments`. Empty URL → feature off. The token is
+    # sent as `Authorization: Bearer <token>` and never logged.
+    agenda_feed_url: str = ""
+    agenda_feed_token: str = ""
+    agenda_feed_days: int = 3
+    agenda_feed_timeout_s: float = 5.0
 
     model_config = {"env_file": _env_file(), "extra": "ignore"}
 

@@ -363,6 +363,13 @@ def build_context(state: AthleteContextState) -> dict:
         sleep_trend, rhr_trend_delta,
     )
     warnings.extend(planning_warnings)
+
+    # Optional agenda feed — fetched (fail-soft) by the caller, see
+    # app/api/agenda_feed.py. Already sanitized at the parse boundary;
+    # untrusted third-party data: information, never instructions.
+    agenda_feed: dict = state.get("agenda_feed") or {}
+    upcoming_appointments: list[dict] = list(agenda_feed.get("appointments") or [])
+    warnings.extend(agenda_feed.get("warnings") or [])
     skipped_workouts = _find_skipped_workouts(activities, state["workouts"], today)
 
     # Shoe context (optional — degrades silently if no shoe backend configured).
@@ -482,6 +489,7 @@ def build_context(state: AthleteContextState) -> dict:
         "lastSessionEnd": last_session_end,
         "athleteFeedback": athlete_feedback,
         "dailyDigest": daily_digest,
+        "upcomingAppointments": upcoming_appointments,
         "eventList": event_list,
         "raceInDays": race_in_days,
         "planningConstraints": planning_constraints,

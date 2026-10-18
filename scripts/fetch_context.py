@@ -23,6 +23,7 @@ import logging
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from app.api.agenda_feed import fetch_agenda
 from app.api.intervals_cache import CachedIntervalsClient as IntervalsClient
 from app.api.intervals_client import IntervalsClient as RawIntervalsClient
 from app.config import settings
@@ -123,6 +124,7 @@ async def _fetch_all(athlete_id: str, date_str: str) -> dict:
         notes,
         shoes,
         shoe_activities,
+        agenda_feed,
     ) = await asyncio.gather(
         client.get_wellness(date_str),
         client.get_activities(oldest_4w, date_str),
@@ -137,6 +139,9 @@ async def _fetch_all(athlete_id: str, date_str: str) -> dict:
         # CTL / zone-distribution computations. Day-file cache makes the
         # incremental cost small.
         client.get_activities(oldest_shoe_window, date_str),
+        # Optional calendar context (AGENDA_FEED_URL); never raises, returns
+        # {"appointments": [], "warnings": []} when the feature is off.
+        fetch_agenda(today),
     )
 
     # Weather with retry (3 attempts)
@@ -171,6 +176,7 @@ async def _fetch_all(athlete_id: str, date_str: str) -> dict:
         "context_summary": {},
         "deload_state": deload_state,
         "deload_ctl_threshold": deload_ctl_threshold,
+        "agenda_feed": agenda_feed,
     }
 
     context = build_context(state)
