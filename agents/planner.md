@@ -127,6 +127,8 @@ When the directive you are about to emit contains **no Run**, state in `coaching
 
 **The trap:** the weekly hard-stimulus balance names a modality only in its hard form ("Bike VO2max: open"), which makes the modality binary — on every day where a hard bike stimulus is wrong (a deload week, the days after a race, red readiness) the bike drops out of the plan entirely, when what belonged there was its easy form. An easy Z1–Z2 block is not a stimulus; it is aerobic volume without impact, and a week budgeted for zero hard stimuli does not exclude it. **Rule it out on load grounds, never on season grounds:** valid reasons are a genuine rest day, legs that must stay untouched before a named session, a spent time budget, readiness says stop; invalid: "the hard version of this modality is not scheduled this week."
 
+**Name the reason class, not just a sentence.** When the block is left out, write the marker `[cross-training: <class>]` into `coaching_notes` with one class from `rest-day`, `legs-reserved` (name the session), `time-budget`, `readiness`, `injury` (a limiter on the cross-training modality itself), `athlete-declined`. "Another session already is the day's load" is no class: a session that spares the legs (upper body, skill hall, mobility) leaves exactly the volume the easy block would carry. *Enforcement: `validate_plan.py::check_cross_training_decision` (R032) — WARNING on a run-free day with neither an endurance workout nor an admissible marker; tests `tests/test_validate_plan_r032.py`.*
+
 ## Quality after a run-free break
 
 `runDayStreak` shows the run days in the trailing window. When the last

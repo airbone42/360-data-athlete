@@ -3255,6 +3255,72 @@ def check_treadmill_pace_dosing(workouts: list[dict], ctx: Context) -> list[Find
     return findings
 
 
+# R032 — run-free day: the easy cross-training decision is explicit and admissible
+_R032_ENDURANCE_TYPES = {
+    "Run", "VirtualRun", "TrailRun", "Ride", "VirtualRide", "GravelRide",
+    "MountainBikeRide", "EBikeRide", "Swim", "OpenWaterSwim", "Rowing",
+    "VirtualRow", "Elliptical", "NordicSki", "InlineSkate",
+}
+R032_REASON_CLASSES = (
+    "rest-day",          # a genuine rest day is due
+    "legs-reserved",     # legs must stay untouched before a named session
+    "time-budget",       # the athlete's time window is spent
+    "readiness",         # readiness says stop (red flag)
+    "injury",            # an injury limiter on the cross-training modality itself
+    "athlete-declined",  # the athlete declined the block
+)
+_R032_MARKER_RE = re.compile(r"\[cross-training:\s*([a-z-]+)", re.IGNORECASE)
+
+
+def check_cross_training_decision(workouts: list[dict], ctx: Context) -> list[Finding]:
+    """R032 — a run-free day names WHY it carries no easy aerobic block.
+
+    The planner contract (`agents/planner.md` → "Run-free day") requires an
+    explicit decision on an easy, impact-free cross-training block whenever
+    a day carries no run. Free text cannot tell a load reason from a
+    convenient one: "the other session is the day's load" reads like a load
+    argument, passes a semantic review as INFO, and silently removes the
+    athlete's impact-free volume. Observed: a gym-hall day shipped without
+    the bike on exactly that sentence; the athlete had to ask why.
+
+    Rule: a non-empty plan without any endurance workout must carry a
+    marker `[cross-training: <class>]` in a workout's `focus`,
+    `coaching_notes` or `description`, with `<class>` from
+    `R032_REASON_CLASSES`. Missing marker or an unknown class → WARNING.
+    An empty plan is a rest day and is not checked.
+    """
+    if not workouts:
+        return []
+    if any((w.get("type") or "") in _R032_ENDURANCE_TYPES for w in workouts):
+        return []
+    classes = []
+    for w in workouts:
+        for key in ("focus", "coaching_notes", "description"):
+            classes += [m.lower() for m in _R032_MARKER_RE.findall(w.get(key) or "")]
+    valid = ", ".join(R032_REASON_CLASSES)
+    if not classes:
+        return [Finding(
+            rule_id="R032",
+            severity="WARNING",
+            workout="(day)",
+            message="Run-free day without an easy cross-training block and without "
+                    "an explicit, classified reason for leaving it out.",
+            suggestion="Add an easy impact-free aerobic block, or state the reason as "
+                       f"`[cross-training: <class>]` with one of: {valid}. "
+                       "'Another session is the day's load' is not a class.",
+        )]
+    bad = [c for c in classes if c not in R032_REASON_CLASSES]
+    if bad and len(bad) == len(classes):
+        return [Finding(
+            rule_id="R032",
+            severity="WARNING",
+            workout="(day)",
+            message=f"Cross-training marker with non-admissible reason class: {', '.join(bad)}.",
+            suggestion=f"Use one of: {valid} — or plan the easy block.",
+        )]
+    return []
+
+
 RULES: list[tuple[str, Callable[[list[dict], Context], list[Finding]]]] = [
     ("R001", check_reps_ceiling),
     ("R002", check_injury_locks_shoulder),
@@ -3287,6 +3353,7 @@ RULES: list[tuple[str, Callable[[list[dict], Context], list[Finding]]]] = [
     ("R029", check_feedback_load_matches_prescription),
     ("R030", check_cue_target_leak),
     ("R031", check_treadmill_pace_dosing),
+    ("R032", check_cross_training_decision),
 ]
 
 

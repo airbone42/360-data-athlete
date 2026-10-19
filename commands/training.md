@@ -78,6 +78,8 @@ boundaries — recovery week, periodization phase change, or staleness).
 
 ### Step 2: Launch planner as teammate
 
+**Never skipped — not even on a "small" day.** A day that looks pre-decided (a gym-hall slot, a single fixed appointment, one block from the slot ledger) still goes through the planner: the day-level decisions the planner owns — easy cross-training on a run-free day, deferred prescriptions, balance — are exactly the ones a head coach drafting the day by hand drops. Observed: a hall day drafted without the planner lost its easy bike block on a non-admissible reason (R032 now flags it).
+
 Launch the `planner` agent in a pane as a teammate. Hand it:
 - The full `fetch_context.py` output (all relevant fields)
 - The date
