@@ -143,3 +143,39 @@ counts is the speed set on the verified belt.
 The key lives here rather than in `athlete_preferences.md` because this is
 the file the plan validator loads, like the other machine-readable switches
 (`stride_block_order`, `impact_streak_max`).
+
+## Load progression (machine-readable, opt-in)
+
+Single-session spike check (R033), quality-run density (R034) and calendar
+deload (R035; context field `deloadDue`). One shared implementation in
+`app/utils/load_progression.py`. **Defaults are off**, except the spike
+warning, which can only ever be a WARNING.
+
+```
+session_spike_warn_pct: 10          # convention (study bin edge); WARNING only, empty = off
+quality_runs_max_7d:                # athlete decision; empty = off
+quality_min_spacing_h: 48           # practitioner convention; applies with quality_runs_max_7d
+long_run_quality_mode: block        # working assumption: block | all | none
+quality_density_severity: warning   # warning | error (athlete decision)
+deload_every_n_weeks:               # athlete decision; empty = off (3 = deload after 3 build weeks)
+deload_reduction_pct: 30            # convention: week volume <= 70 % of the previous 3-week mean
+deload_severity: warning            # warning | error (athlete decision)
+```
+
+Status of each key, in the order evidence -> convention -> decision:
+
+- `session_spike_warn_pct` — **convention** taken from the bin edge of one
+  prospective running cohort (all overuse injuries, no groin statement);
+  its authors suggest a cut-off below 10 %. A run under the threshold is
+  not thereby cleared. Never an ERROR.
+- `quality_runs_max_7d`, `quality_min_spacing_h`, `long_run_quality_mode`
+  — **athlete decision**; no prevention evidence for or against. What counts
+  as a quality run: `training_paradigms.md` -> "Quality run". `error` is
+  legitimate because the athlete chose it, not because a study demands it.
+- `deload_every_n_weeks`, `deload_reduction_pct` — **athlete decision**;
+  3:1 and the 30 % reduction are working assumptions without injury
+  evidence. A week that reaches the mark for any reason (illness, travel)
+  counts as the deload. Volume = run minutes per Monday-Sunday week.
+
+Weekly ratios (ACWR, week-to-week percent) are deliberately not
+implemented. Anchor: `research/load-management-groin-overuse-runners.md`.

@@ -33,6 +33,19 @@ from app.api.intervals_client import IntervalsClient
 from app.config import settings
 from app.utils.activity_helpers import activity_date
 from app.utils.impact_load import LONG_RUN_MIN_MINUTES, compute_run_day_streak
+from app.utils.load_progression import (
+    HARD_SIGNATURE_RE,
+    compute_deload_due,
+    is_quality_run,
+    is_race,
+    longest_run_30d,
+    parse_load_rules,
+    quality_density,
+    recovery_block_active,
+    session_spike,
+    step_duration_seconds as _step_duration_seconds,
+)
+from app.utils.recovery_week import parse_recovery_week
 
 
 SEVERITY_ERROR = "ERROR"
@@ -73,6 +86,10 @@ class Context:
     # starts fully locked.
     injury_lock_allows: dict[str, list[str]] = field(default_factory=dict)
     weekly_hard_reize_balance: str = ""
+    # Longer run history (~10 weeks) for R035's calendar-deload walk; only
+    # fetched when `deload_every_n_weeks` is configured. Falls back to
+    # recent_activities when empty.
+    load_history_activities: list[dict] = field(default_factory=list)
     # Days until the next race (RACE_A/B/C on the calendar), None when none is
     # scheduled within the lookahead or the fetch failed. Used by R025 to keep
     # a sauna out of the pre-race dehydration window.
@@ -262,20 +279,6 @@ def _description(w: dict) -> str:
 
 # intervals_icu step helpers (shared by R012 and R031).
 _LAP_PRESS_RE = re.compile(r"\bpress\s+lap\b", re.IGNORECASE)
-_STEP_DURATION_MIN_RE = re.compile(r"\b(\d+)m\b", re.IGNORECASE)
-_STEP_DURATION_SEC_RE = re.compile(r"\b(\d+)s\b", re.IGNORECASE)
-
-
-def _step_duration_seconds(text: str) -> int:
-    """Duration of an intervals_icu step in seconds (`8m`, `90s`, `1m30s`); 0 if none."""
-    secs = 0
-    m = _STEP_DURATION_MIN_RE.search(text)
-    if m:
-        secs += int(m.group(1)) * 60
-    s = _STEP_DURATION_SEC_RE.search(text)
-    if s:
-        secs += int(s.group(1))
-    return secs
 
 
 # ─────────────────────────── Rules ───────────────────────────
@@ -1976,10 +1979,7 @@ def check_weekly_hardreize_cap(workouts: list[dict], ctx: Context) -> list[Findi
     if taper_re.search(ctx.athlete_status or "") or taper_re.search(ctx.training_paradigms or ""):
         return findings
 
-    HARD_SIG_RE = re.compile(
-        r"\bZ4\s*HR\b|\bZ5\s*HR\b|(?<!\d)(?:9[5-9]|1\d\d)\s*%\s*LTHR\b",
-        re.IGNORECASE,
-    )
+    HARD_SIG_RE = HARD_SIGNATURE_RE  # shared with the quality-run definition (R034)
 
     for w in workouts:
         w_type = (w.get("type") or "")
@@ -3321,6 +3321,187 @@ def check_cross_training_decision(workouts: list[dict], ctx: Context) -> list[Fi
     return []
 
 
+# ─────────────── R033 / R034 / R035 — load progression ───────────────
+# Evidence status and parameters: research/load-management-groin-overuse-runners.md.
+# R033 is the only rule with a (cohort) evidence base and never blocks.
+# R034 / R035 are athlete decisions, opt-in via config/athlete_status.md;
+# their parameters are working assumptions, and ERROR is legitimate only
+# because the athlete chose it (`*_severity: error`).
+
+_RUN_TYPES = {"Run", "VirtualRun", "TrailRun"}
+_R033_ACK_RE = re.compile(r"\[spike(?:-ok)?:\s*\S[^\]]*\]", re.IGNORECASE)
+
+
+def _planned_runs(workouts: list[dict], ctx: Context) -> list[dict]:
+    """Planned runs, stamped with the plan date (planned JSON carries none)."""
+    return [
+        {**w, "date": ctx.target_date}
+        for w in workouts
+        if (w.get("type") or "") in _RUN_TYPES
+    ]
+
+
+def check_session_spike_vs_30d_longest(workouts: list[dict], ctx: Context) -> list[Finding]:
+    """R033 — a single run above 1.10x the longest run of the last 30 days.
+
+    The unit is the single session, not the week. Convention taken from the
+    bin edge of a prospective running cohort (all overuse injuries, no groin
+    statement; authors suggest a cut-off *below* 10 %), so: WARNING at most,
+    never ERROR, and a run under the threshold is not thereby cleared.
+    INFO when the plan documents the step as `[spike-ok: <reason>]`, for a
+    race, and when there was no run in 30 days (no baseline). Distance is
+    used when plan and history both carry it, otherwise duration (a proxy,
+    said so in the message). Switch: `session_spike_warn_pct` (default 10;
+    empty = off). Wochen-Ratios are deliberately not checked.
+    """
+    rules = parse_load_rules(ctx.athlete_status)
+    pct = rules["session_spike_warn_pct"]
+    if pct is None:
+        return []
+    runs = _planned_runs(workouts, ctx)
+    if not runs:
+        return []
+    try:
+        today = date.fromisoformat(ctx.target_date)
+    except (TypeError, ValueError):
+        return []
+    ref = longest_run_30d(ctx.recent_activities or [], today)
+    findings: list[Finding] = []
+    for w in runs:
+        name = _workout_name(w)
+        if ref is None:
+            findings.append(Finding(
+                rule_id="R033", severity=SEVERITY_INFO, workout=name,
+                message="No run in the last 30 days — no baseline for the "
+                        "single-session check (re-entry: step by symptom response, "
+                        "not by percentage).",
+            ))
+            continue
+        spike = session_spike(w, ref, pct)
+        if spike is None:
+            continue
+        notes = f"{w.get('coaching_notes') or ''} {w.get('description') or ''}"
+        if is_race(w):
+            sev, tail = SEVERITY_INFO, " Race — informational."
+        elif _R033_ACK_RE.search(notes):
+            sev, tail = SEVERITY_INFO, " Step documented in the plan."
+        else:
+            sev, tail = SEVERITY_WARNING, ""
+        findings.append(Finding(
+            rule_id="R033", severity=sev, workout=name,
+            message=(
+                f"Run is {spike['ratio']:.2f}x the longest run of the last 30 days "
+                f"({spike['value']:.0f} vs {spike['reference']:.0f}, "
+                f"{spike['measure']}; reference {spike['reference_date']}), "
+                f"band {spike['band']}.{tail}"
+            ),
+            suggestion=(
+                f"Threshold {pct:g} % is a convention (cohort bin edge, all overuse "
+                "injuries, no groin statement; the authors suggest staying below "
+                "10 %) — a run under it is not thereby cleared. Shorten toward the "
+                "30-day maximum, or document the step in the run's coaching_notes "
+                "as `[spike-ok: <reason>]`."
+            ),
+        ))
+    return findings
+
+
+def check_quality_run_density(workouts: list[dict], ctx: Context) -> list[Finding]:
+    """R034 — quality-run density: max per rolling 7 days and minimum spacing.
+
+    Athlete decision (opt-in: fires only with `quality_runs_max_7d` in
+    `config/athlete_status.md`); the parameters are working assumptions with
+    no prevention evidence either way. Quality run = threshold class and
+    harder, race, and a long run embedding >= 15 min race-pace / threshold
+    work (`long_run_quality_mode`: block | all | none) — one definition
+    shared with the deload gate (`app/utils/load_progression.py`,
+    `training_paradigms.md` -> Quality run). Severity from
+    `quality_density_severity` (warning | error).
+    """
+    rules = parse_load_rules(ctx.athlete_status)
+    max7 = rules["quality_runs_max_7d"]
+    if not max7:
+        return []
+    mode = rules["long_run_quality_mode"]
+    planned_q = [w for w in _planned_runs(workouts, ctx) if is_quality_run(w, mode)]
+    if not planned_q:
+        return []
+    try:
+        today = date.fromisoformat(ctx.target_date)
+    except (TypeError, ValueError):
+        return []
+    result = quality_density(
+        planned_q, ctx.recent_activities or [], today,
+        max_7d=max7, min_spacing_h=rules["quality_min_spacing_h"], long_run_mode=mode,
+    )
+    if not result["violations"]:
+        return []
+    sev = SEVERITY_ERROR if rules["quality_density_severity"] == "error" else SEVERITY_WARNING
+    return [Finding(
+        rule_id="R034", severity=sev, workout=_workout_name(planned_q[0]),
+        message="Quality-run density: " + "; ".join(result["violations"]) + ".",
+        suggestion=(
+            f"Athlete rule: at most {max7} quality runs per rolling 7 days, at "
+            f"least {rules['quality_min_spacing_h']:g} h apart (a decision, not an "
+            "evidence-based threshold). Make today an easy/Z2 run or a "
+            "non-impact session and defer the quality run to a named slot."
+        ),
+    )]
+
+
+def check_deload_due(workouts: list[dict], ctx: Context) -> list[Finding]:
+    """R035 — a calendar deload is due, but a quality run / long run is planned.
+
+    Athlete decision (opt-in via `deload_every_n_weeks`); 3:1 rhythm and the
+    reduction (`deload_reduction_pct`, default 30) are working assumptions.
+    Uses the same `compute_deload_due` as the context field `deloadDue`.
+    Silent when a recovery-week block is active (the week is already
+    declared). A quality run or any long run in the due week without that
+    block fires with `deload_severity` (warning | error).
+    """
+    rules = parse_load_rules(ctx.athlete_status)
+    every = rules["deload_every_n_weeks"]
+    if not every:
+        return []
+    try:
+        today = date.fromisoformat(ctx.target_date)
+    except (TypeError, ValueError):
+        return []
+    heavy = [
+        w for w in _planned_runs(workouts, ctx)
+        if is_quality_run(w, "all")
+    ]
+    if not heavy:
+        return []
+    activities = ctx.load_history_activities or ctx.recent_activities or []
+    state = parse_recovery_week(ctx.athlete_status)
+    due = compute_deload_due(
+        activities, today,
+        every_n_weeks=every,
+        reduction_pct=rules["deload_reduction_pct"],
+        deload_state=state,
+        history_start=today - timedelta(days=70 if ctx.load_history_activities else 28),
+    )
+    if not due["due"] or recovery_block_active(state, today):
+        return []
+    sev = SEVERITY_ERROR if rules["deload_severity"] == "error" else SEVERITY_WARNING
+    return [Finding(
+        rule_id="R035", severity=sev, workout=_workout_name(heavy[0]),
+        message=(
+            f"Calendar deload due: {due['weeks_since_last_reduction']} build weeks in a "
+            f"row (athlete rhythm: a deload after {every}); this week has no "
+            f"recovery-week block but plans a quality run / long run."
+        ),
+        suggestion=(
+            f"Set the recovery-week block in athlete_status.md and hold the week's "
+            f"run volume at <= {due['reduction_threshold_pct']} % of the previous "
+            "3-week mean (convention, no injury evidence), or replace this run by "
+            "an easy/Z2 session. A week that reaches that mark for any reason "
+            "(illness, travel) also counts as the deload."
+        ),
+    )]
+
+
 RULES: list[tuple[str, Callable[[list[dict], Context], list[Finding]]]] = [
     ("R001", check_reps_ceiling),
     ("R002", check_injury_locks_shoulder),
@@ -3354,6 +3535,9 @@ RULES: list[tuple[str, Callable[[list[dict], Context], list[Finding]]]] = [
     ("R030", check_cue_target_leak),
     ("R031", check_treadmill_pace_dosing),
     ("R032", check_cross_training_decision),
+    ("R033", check_session_spike_vs_30d_longest),
+    ("R034", check_quality_run_density),
+    ("R035", check_deload_due),
 ]
 
 
@@ -3401,6 +3585,11 @@ async def _fetch_recent_activities(target_date: str, days_back: int = 30) -> lis
             "name": a.get("name"),
             "duration_min": int((a.get("moving_time") or 0) / 60),
             "training_load": a.get("icu_training_load"),
+            # R033/R034/R035 (load progression): distance, clock time, tags.
+            "start_date_local": a.get("start_date_local"),
+            "distance_km": (a.get("distance") or 0) / 1000 or None,
+            "tags": a.get("tags") or [],
+            "workout_type": a.get("workout_type"),
             # R028 reads the executed exercise list out of this. Capped at the
             # same 5000 chars the specialist history fetcher uses — a strength
             # description regularly runs 2-4 KB and a shorter cap would silently
@@ -3553,6 +3742,14 @@ def load_context(target_date: str, fetch_remote: bool = True) -> Context:
         except Exception as exc:  # noqa: BLE001
             ctx.recent_activities = []
             _degraded("recent-activities", "R014 (easy-run conservatism)", exc)
+        if parse_load_rules(ctx.athlete_status)["deload_every_n_weeks"]:
+            try:
+                ctx.load_history_activities = asyncio.run(
+                    _fetch_recent_activities(target_date, days_back=75)
+                )
+            except Exception as exc:  # noqa: BLE001
+                ctx.load_history_activities = []
+                _degraded("load-history activities", "R035 (calendar deload)", exc)
         try:
             ctx.ctl = asyncio.run(_fetch_ctl(target_date))
         except Exception as exc:  # noqa: BLE001

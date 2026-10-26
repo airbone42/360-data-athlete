@@ -210,6 +210,14 @@ high-risk window for the next one. Two planning consequences:
 Decide WHAT is trained — a workout specialist will produce the detailed
 structure afterwards.
 
+## Long run distance and quality count
+
+Never plan a long run above 110 % of the athlete's longest run of the last
+30 days without a documented reason (`[spike-ok: <reason>]` in
+`coaching_notes`; validator R033). A long run with an embedded race-pace /
+threshold block counts as a quality run for the density rule
+(`quality_runs_max_7d`, R034) — definition in `training_paradigms.md`.
+
 ## Output format
 Return the plan directive as one JSON object with the shape below, and
 present it in chat as described at the end of this file. Omit the

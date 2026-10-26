@@ -73,6 +73,11 @@ You return:
   - +20–30 % after 7–10 days of pause = OK
   - +50 % at <7 days = WARNING
   - +100 % after >21 days = WARNING (too large for re-entry)
+  - These thresholds are an **unsourced convention**, not evidence. For
+    running the evidence-based unit is the single session, checked
+    mechanically by R033 (run vs. longest run of the last 30 days; do not
+    duplicate it here). Week-to-week ratios and ACWR are **not** an injury
+    argument (`research/load-management-groin-overuse-runners.md`).
 - Weekly CTL ramp plausibility (below the athlete's `deload_ctl_threshold`
   CTL is a rebuild phase — skip the ramp check)
 

@@ -72,3 +72,32 @@ A day with fewer than two readable markers cannot be judged and ends the streak 
 Rationale: Meeusen et al. 2013 consensus statement — "no single reliable diagnostic marker for OTS exists — diagnosis requires the convergence of multiple indicators over time." Single-marker red is acute, multi-marker red over 3+ days is non-functional-overreaching risk.
 
 **Implemented** in `app/analytics/hrv.py::_compute_combined_overload_signal` and surfaced as `combinedOverloadSignal`. The bpm step and the TSB cut are operating conventions, not literature values; only the bpm step is configurable.
+
+## Calendar deload (opt-in, athlete decision)
+
+A fixed rhythm on top of the signal-based triggers above (they stay as
+they are). Enabled by `deload_every_n_weeks` in `config/athlete_status.md`
+(keys: `deload_every_n_weeks`, `deload_reduction_pct`, `deload_severity`).
+
+- **Due** after `deload_every_n_weeks` consecutive build weeks. A completed
+  Monday-Sunday week is a *reduction week* when its run minutes are at most
+  `100 - deload_reduction_pct` % of the mean of the three weeks before it,
+  **for any reason** (illness and travel weeks count); the counter then
+  restarts. Surfaced as `deloadDue` in the context and as a line in
+  `planningConstraints`.
+- **Gate:** validator R035 flags a planned quality run or any long run in a
+  due week that has no recovery-week block set (severity from
+  `deload_severity`).
+- **Working assumptions, not evidence:** the 3:1 rhythm and the 30 % cut
+  have no injury-prevention evidence for runners (neither for nor against);
+  they are the athlete's decision. Source and limits:
+  `research/load-management-groin-overuse-runners.md` (F5).
+
+**Open contradiction with "Rules during a recovery week" above.** That
+section says *Running: strictly Z1 / Z2*, i.e. intensity is dropped as
+well. Taper data (volume down, intensity held) favour holding intensity for
+*performance*; for *injury prevention* there is no evidence for either
+variant. Until the athlete picks one, the calendar deload only gates on
+volume (the reduction mark) and the recovery-week block keeps the strict
+Z1/Z2 rule above; a reduced single quality dose in a deload week is a
+decision to make explicitly, not a silent default.

@@ -247,6 +247,13 @@ long-run format. Gate the decision on the periodization phase:
 
 Evidence + derivation: `framework/research/long-run-quality-embedding-vs-separation.md`.
 
+## Long run size and quality count
+
+Keep the long run at or below 110 % of the longest run of the last 30 days
+unless `coaching_notes` carries `[spike-ok: <reason>]` (R033, warning only).
+A long run with an embedded race-pace / threshold block (>= 15 min) counts
+as a quality run for the density rule (R034); a pure Z2 long run does not.
+
 ## DFA-α1 zone validation — only with the prerequisites in place
 
 Suggest a DFA-α1 zone validation only if the athlete records RR data (chest

@@ -431,6 +431,23 @@ CTL jump > 15 %.
 
 **Research anchor:** [DFA-α1 — VT estimation from HRV, Rogers / Doerr protocol](../research/dfa-alpha1-vt-estimation.md)
 
+## Quality run — one definition
+
+Rules that count "quality runs" (R017 weekly Hard-Reiz cap, R034 quality
+density, R035 deload gate, `impact_load._is_quality` for the streak) use the
+same notion, implemented once in `app/utils/load_progression.py::is_quality_run`:
+
+- a run with structured work in the **threshold class or harder** (`intervals`
+  tag, Z4/Z5 HR or >= 95 % LTHR steps);
+- a **race** or time trial;
+- a **long run with an embedded race-pace / threshold block** of at least
+  15 minutes cumulative (working assumption, no source). A pure Z2 long run
+  is not a quality run; it still goes through the single-session check (R033).
+
+`long_run_quality_mode` in `athlete_status.md` (`block` default, `all`, `none`)
+sets how long runs count in the density rule. Minimum spacing between two
+quality runs: 48 h (practitioner convention, `quality_min_spacing_h`).
+
 ## Cross-training periodisation — 2 hard stimuli per week with bike decoupling
 
 **When to apply:** as soon as CTL ≥ 20 and the athlete tolerates one

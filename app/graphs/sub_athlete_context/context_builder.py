@@ -29,6 +29,7 @@ from app.utils.alerts import notify_error
 from app.utils.date_windows import cutoff_iso
 from app.utils.hr_zones import extract_run_hr_bounds, format_hr_zones
 from app.utils.impact_load import compute_run_day_streak
+from app.utils.load_progression import compute_deload_due, parse_load_rules
 from app.analytics.consistency import (
     compute_consistency_streak,
     parse_consistency_thresholds,
@@ -302,6 +303,15 @@ def build_context(state: AthleteContextState) -> dict:
     # helper, so the planner and the validator cannot disagree about it.
     run_day_streak = compute_run_day_streak(activities, today)
 
+    # Calendar deload (opt-in, athlete decision): `deloadDue` is computed in
+    # app/utils/load_progression.py, the same helper validator rule R035
+    # reads. None when `deload_every_n_weeks` is not configured.
+    deload_due = _compute_deload_due_field(
+        state.get("shoe_activities") or activities,
+        today,
+        state.get("deload_state") or {},
+    )
+
     # Inter-session recovery window — recovery is a function of elapsed
     # clock-time, not calendar-day gap: a late-evening session before a
     # morning session compresses the overnight window to well under a full
@@ -351,6 +361,8 @@ def build_context(state: AthleteContextState) -> dict:
         events, activities_with_workout, today, deload_state,
         warnings_out=planning_warnings,
     )
+    if deload_due and deload_due.get("due"):
+        planning_constraints = _append_deload_due_line(planning_constraints, deload_due)
 
     date_str = today.strftime("%A, %d. %B %Y")
 
@@ -486,6 +498,7 @@ def build_context(state: AthleteContextState) -> dict:
         "daysSinceIntense": days_since_intense,
         "lastRestDay": last_rest_day,
         "runDayStreak": run_day_streak,
+        "deloadDue": deload_due,
         "lastSessionEnd": last_session_end,
         "athleteFeedback": athlete_feedback,
         "dailyDigest": daily_digest,
@@ -1243,6 +1256,49 @@ _CROSS_TRAINING_TYPES: set[str] = {
 # Config files already warned about as missing — warn once per process, not
 # on every context build.
 _missing_config_warned: set[str] = set()
+
+
+def _compute_deload_due_field(
+    activities: list[dict], today: date, deload_state: dict
+) -> dict | None:
+    """``deloadDue`` for the context, or None when the rule is not configured.
+
+    Reads ``deload_every_n_weeks`` / ``deload_reduction_pct`` from
+    ``athlete_status.md`` (athlete decision, opt-in). The walk runs on the
+    long activity window (90 d); ``history_start`` marks where it ends.
+    """
+    rules = parse_load_rules(_read_optional_config("athlete_status.md"))
+    every = rules["deload_every_n_weeks"]
+    if not every:
+        return None
+    return compute_deload_due(
+        activities,
+        today,
+        every_n_weeks=every,
+        reduction_pct=rules["deload_reduction_pct"],
+        deload_state=deload_state,
+        history_start=today - timedelta(days=90),
+    )
+
+
+def _append_deload_due_line(constraints: str, deload_due: dict) -> str:
+    """Add the calendar-deload line to the planningConstraints text."""
+    if deload_due.get("recovery_week_active"):
+        line = (
+            f"Calendar deload due ({deload_due['weeks_since_last_reduction']} build "
+            f"weeks in a row) — covered by the active recovery-week block."
+        )
+    else:
+        line = (
+            f"⚠️ CALENDAR DELOAD DUE: {deload_due['weeks_since_last_reduction']} build "
+            f"weeks in a row (rhythm {deload_due['every_n_weeks']}:1, athlete decision). "
+            f"This week's run volume should stay ≤ {deload_due['reduction_threshold_pct']} % "
+            f"of the previous 3-week mean; no quality run / long run without a "
+            f"recovery-week block (validator R035)."
+        )
+    if not constraints or constraints.strip() in ("", "No restrictions"):
+        return line
+    return f"{constraints}\n{line}"
 
 
 def _read_optional_config(filename: str) -> str | None:

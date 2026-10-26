@@ -698,6 +698,12 @@ impact_density_max_5d: 4    # run days per trailing 5d (default: off)
 never blocking; downgraded to INFO when the run's notes document the
 rationale. Tests: `tests/test_impact_day_streak.py`.*
 
+### Load progression — the single session is the unit, weekly ratios are not (policy)
+
+Injury-related load control for running checks the **single run against the longest run of the last 30 days** (WARNING above 1.10x; the 10 % is a convention from one cohort's bin edge, the authors suggest staying below it, and a run under the threshold is not thereby cleared). **No ACWR threshold and no week-to-week percent rule as an injury argument** — in the large running cohorts they showed no consistent positive association — neither in agent rationales nor in validator texts. Quality-run density and a calendar deload are **athlete configuration** (principal decisions, opt-in keys in `config/athlete_status.md`, parameters are working assumptions without prevention evidence; `error` severity is legitimate because the athlete chose it, not because a study demands it). A quality run is defined once (`training_paradigms.md` -> "Quality run"). Anchor: [load-management-groin-overuse-runners.md](research/load-management-groin-overuse-runners.md).
+
+*Enforcement: `validate_plan.py` R033 `check_session_spike_vs_30d_longest` (WARNING, never blocking), R034 `check_quality_run_density` and R035 `check_deload_due` (severity configurable, off without the keys); shared logic and the `deloadDue` context field in `app/utils/load_progression.py`. Tests: `tests/test_load_progression.py`.*
+
 ### Planner systematic-input rule (policy)
 
 Before the planner is briefed, the coach verifies the context carries
