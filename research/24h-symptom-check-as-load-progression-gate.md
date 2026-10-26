@@ -296,6 +296,14 @@ sie **nicht als Evidenz zu zitieren** und keine Freigabe damit zu begründen
 („die Steigerung ist unter 10 %, also sicher" ist durch Buist 2008 direkt
 widerlegt).
 
+**Ergänzung 2026-10-26:** Der einzige positive Läuferbefund zur Progression
+betrifft nicht die Woche, sondern den **Einzellauf**: Läufe mehr als 10 % über
+dem längsten Lauf der letzten 30 Tage gehen mit erhöhter Rate an
+Überlastungsverletzungen einher (Kohorte, Frandsen 2025). Das rehabilitiert die
+Wochen-%-Regeln nicht, sondern wechselt die Bezugseinheit. Einordnung, Grenzen
+und Übertragbarkeit auf Wiedereinstiege:
+[load-management-groin-overuse-runners.md](load-management-groin-overuse-runners.md).
+
 ---
 
 ### F5 — Distanz zuerst oder Intensität zuerst?

@@ -83,6 +83,8 @@ Our framework currently has this TSB signal only as a single-day check (`TSB < -
 
 > "In a typical four-week block, the first three weeks progressively overload your body, while the fourth week focuses on recovery. This represents a 3:1 ratio of training to recovery." (TrainerRoad / TrainingPeaks consensus)
 
+**Addendum 2026-10-26:** the 3:1 rhythm and the 30–40 % volume reduction are practitioner conventions; no study in runners tests a scheduled deload against injury outcomes. Evidence status and proposed parameters (spacing, reduction grade, counting rule): [load-management-groin-overuse-runners.md](load-management-groin-overuse-runners.md) F5.
+
 **Source:** Issurin VB (2008). "Block periodization versus traditional training theory: a review." Journal of Sports Medicine and Physical Fitness. Plus systematic review: [PMC 6802561](https://pmc.ncbi.nlm.nih.gov/articles/PMC6802561/)
 
 **Transfer to our 3-gate logic:**
