@@ -3502,6 +3502,62 @@ def check_deload_due(workouts: list[dict], ctx: Context) -> list[Finding]:
     )]
 
 
+def check_ride_easy_watt_floor(workouts: list[dict], ctx: Context) -> list[Finding]:
+    """R036 — easy/Z2 ride main steps below the athlete's configured watt floor.
+
+    Opt-in via ``ride_z2_floor_w`` in ``config/athlete_status.md`` (the
+    athlete's lowest Z2 step in watts; absent/empty = rule off). The step
+    levels (lower / mid / upper) are chosen by the endurance specialist from
+    a documented list, but a watt figure that drifted into the briefing
+    (an earlier session's number, a planner remark) can pull the prescription
+    under the floor without any decision behind it. Checks the ``Main``
+    section only — warm-up and cool-down legitimately sit below the floor —
+    and only on rides without the ``intervals`` tag. Severity from
+    ``ride_z2_floor_severity`` (warning | error, default error: the floor is
+    an athlete decision).
+    """
+    text = ctx.athlete_status or ""
+    m = re.search(r"^\s*ride_z2_floor_w:\s*(\d+)", text, re.MULTILINE)
+    if not m:
+        return []
+    floor = int(m.group(1))
+    sm = re.search(r"^\s*ride_z2_floor_severity:\s*(warning|error)", text, re.MULTILINE)
+    sev = SEVERITY_WARNING if sm and sm.group(1) == "warning" else SEVERITY_ERROR
+    findings: list[Finding] = []
+    for w in workouts:
+        if w.get("type") not in ("Ride", "VirtualRide"):
+            continue
+        if "intervals" in (w.get("tags") or []):
+            continue
+        in_main = False
+        low: list[int] = []
+        for line in (w.get("intervals_icu") or "").splitlines():
+            head = line.strip().lower()
+            if head in ("main", "main set"):
+                in_main = True
+                continue
+            if head in ("warmup", "warm-up", "cooldown", "cool-down") or head.startswith("cooldown") or head.startswith("cool-down"):
+                in_main = False
+                continue
+            if in_main and line.lstrip().startswith("-"):
+                for watt in re.findall(r"(\d{2,3})\s*W\b", line):
+                    if int(watt) < floor:
+                        low.append(int(watt))
+        if low:
+            findings.append(Finding(
+                rule_id="R036", severity=sev, workout=_workout_name(w),
+                message=(
+                    f"Easy ride main step(s) at {min(low)} W, below the configured "
+                    f"Z2 floor of {floor} W (ride_z2_floor_w)."
+                ),
+                suggestion=(
+                    f"Lowest Z2 step is {floor} W — take the level from the "
+                    "athlete's Z2-band list, not from an earlier session's watts."
+                ),
+            ))
+    return findings
+
+
 RULES: list[tuple[str, Callable[[list[dict], Context], list[Finding]]]] = [
     ("R001", check_reps_ceiling),
     ("R002", check_injury_locks_shoulder),
@@ -3538,6 +3594,7 @@ RULES: list[tuple[str, Callable[[list[dict], Context], list[Finding]]]] = [
     ("R033", check_session_spike_vs_30d_longest),
     ("R034", check_quality_run_density),
     ("R035", check_deload_due),
+    ("R036", check_ride_easy_watt_floor),
 ]
 
 
