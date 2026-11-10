@@ -98,6 +98,8 @@ def test_gap_after_stale_watermark_is_closed(client) -> None:
 
     c, stub = client(acts)
     c._cache.set_coverage_through("activities", stale.isoformat())
+    # Daily revalidation already ran — this test is about the gap watermark.
+    c._cache.mark_revalidated("activities", oldest)
     c._cache.save_index()
 
     result = asyncio.run(c.get_activities(oldest, TODAY.isoformat()))

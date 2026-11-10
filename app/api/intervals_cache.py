@@ -13,6 +13,15 @@ Structure:
 The 48-hour rule:
     Data older than 2 days is served from cache.
     Data from the last 48h (and all future events) is always re-fetched from API.
+
+Revalidation (activities):
+    Cold activity day-files are re-checked against the API at most once per
+    ``REVALIDATE_HOURS`` (one list call over the requested range): changed
+    activities are rewritten, deleted ones dropped. Streams and activity
+    details carry the activity's change marker (``analyzed`` /
+    ``icu_sync_date``) and are re-fetched when intervals.icu reports a newer
+    one — before, an activity edited or re-synced after 48 h stayed stale
+    forever.
 """
 
 from __future__ import annotations
@@ -32,6 +41,22 @@ from app.utils.alerts import notify_error
 from app.utils.date_windows import cutoff_iso
 
 logger = logging.getLogger(__name__)
+
+
+REVALIDATE_HOURS = 24
+
+
+def _activity_version(activity: dict | None) -> str:
+    """Change marker of an activity's recorded data, ``""`` when unknown.
+
+    intervals.icu sets ``analyzed`` on every (re-)analysis and
+    ``icu_sync_date`` on every (re-)sync from the device or platform; streams,
+    laps and the detail object only change with one of them.
+    """
+    if not isinstance(activity, dict):
+        return ""
+    parts = [str(activity.get(k) or "") for k in ("analyzed", "icu_sync_date")]
+    return "|".join(parts) if any(parts) else ""
 
 
 def _is_day_cache_stale(subdir: str, day: str) -> bool:
@@ -91,6 +116,7 @@ def _activity_index_entry(activity: dict) -> dict:
         "distance": activity.get("distance"),
         "icu_training_load": activity.get("icu_training_load"),
         "workout_type": activity.get("workout_type"),
+        "version": _activity_version(activity),
         "has_streams": (Path(_CACHE_ROOT) / "streams" / f"{act_id}.json").exists(),
         "has_messages": (Path(_CACHE_ROOT) / "messages" / f"{act_id}.json").exists(),
     }
@@ -179,6 +205,46 @@ class IntervalsFileCache:
         coverage = idx.setdefault("_coverage", {})
         if day > (coverage.get(subdir) or ""):
             coverage[subdir] = day
+
+    # --- Revalidation watermark ---------------------------------------------
+
+    def revalidation_due(
+        self, subdir: str, oldest: str, hours: float = REVALIDATE_HOURS
+    ) -> bool:
+        """True when [oldest, …] was not checked against the API in ``hours``."""
+        mark = (self.load_index().get("_revalidated") or {}).get(subdir)
+        if not isinstance(mark, dict) or not mark.get("at"):
+            return True
+        if oldest < (mark.get("from") or ""):
+            return True  # wider range than the last check covered
+        try:
+            age = datetime.now() - datetime.fromisoformat(mark["at"])
+        except ValueError:
+            return True
+        return age >= timedelta(hours=hours)
+
+    def mark_revalidated(self, subdir: str, oldest: str) -> None:
+        self.load_index().setdefault("_revalidated", {})[subdir] = {
+            "at": datetime.now().isoformat(timespec="seconds"),
+            "from": oldest,
+        }
+
+    def activity_version(self, act_id: str) -> str:
+        for entry in self.load_index().get("activities", []):
+            if entry.get("id") == str(act_id):
+                return entry.get("version") or ""
+        return ""
+
+    def note_activity_version(self, act_id: str, version: str) -> None:
+        """Record a newer change marker seen on a single-activity fetch."""
+        if not version:
+            return
+        for entry in self.load_index().get("activities", []):
+            if entry.get("id") == str(act_id):
+                if entry.get("version") != version:
+                    entry["version"] = version
+                    self.save_index()
+                return
 
     def save_index(self) -> None:
         if self._index is None:
@@ -415,6 +481,9 @@ class IntervalsFileCache:
             p.unlink(missing_ok=True)
             return None
 
+    def delete_day(self, subdir: str, day: str) -> None:
+        (self._root / subdir / f"{day}.json").unlink(missing_ok=True)
+
     def write_day(self, subdir: str, day: str, data: list[dict]) -> None:
         try:
             self._dir(subdir)
@@ -563,10 +632,15 @@ class CachedIntervalsClient:
     async def get_activities(self, oldest: str, newest: str) -> list[dict]:
         boundary = _fresh_boundary()
         hot_start = self._fetch_start("activities", oldest, boundary)
+        # Cold day-files are re-checked once per REVALIDATE_HOURS: an activity
+        # renamed, re-tagged, re-analysed or deleted after the 48 h window was
+        # otherwise served from its first snapshot forever.
+        if hot_start > oldest and self._cache.revalidation_due("activities", oldest):
+            hot_start = oldest
         cold_end = min(hot_start, newest)
 
         cached: list[dict] = []
-        if oldest <= cold_end:
+        if oldest <= cold_end and hot_start > oldest:
             cached = self._load_cached_range("activities", oldest, cold_end)
 
         fresh: list[dict] = []
@@ -574,8 +648,18 @@ class CachedIntervalsClient:
             try:
                 fresh = await self._client.get_activities(hot_start, newest)
                 self._save_day_grouped("activities", fresh)
+                # A fetched day without activities has none (deleted upstream):
+                # drop its stale file instead of serving it from the cold path.
+                fetched_days = {activity_date(a) for a in fresh}
+                for day in self._cache.cached_dates_in_range(
+                    "activities", hot_start, min(newest, _today())
+                ):
+                    if day not in fetched_days:
+                        self._cache.delete_day("activities", day)
                 self._cache.update_index_activities(fresh)
                 self._cache.set_coverage_through("activities", min(newest, _today()))
+                if hot_start <= oldest:
+                    self._cache.mark_revalidated("activities", oldest)
                 self._cache.save_index()
             except Exception as e:
                 logger.warning("cache: activities API failed, using cache only: %s", e)
@@ -738,10 +822,14 @@ class CachedIntervalsClient:
         cached = self._cache.read_by_id("activity_detail", activity_id)
         if cached and isinstance(cached, dict):
             act_date = activity_date(cached)
-            if act_date < _fresh_boundary():
+            known = self._cache.activity_version(activity_id)
+            if act_date < _fresh_boundary() and (
+                not known or _activity_version(cached) == known
+            ):
                 return cached
         try:
             data = await self._client.get_activity(activity_id)
+            self._cache.note_activity_version(activity_id, _activity_version(data))
             act_date = activity_date(data)
             if act_date and act_date < _fresh_boundary():
                 self._cache.write_by_id("activity_detail", activity_id, data)
@@ -784,7 +872,7 @@ class CachedIntervalsClient:
             logger.warning("cache: messages API failed for %s: %s", activity_id, e)
             return []
 
-    # --- Streams (permanent cache) ------------------------------------------
+    # --- Streams (cached per activity version) -------------------------------
 
     async def get_streams(
         self,
@@ -802,11 +890,21 @@ class CachedIntervalsClient:
                 for t in (cached.get("_meta_requested_types") or "").split(",")
                 if t.strip()
             }
-            if requested <= covered:
-                return {k: v for k, v in cached.items() if k != "_meta_requested_types"}
+            # ... and only while the activity is unchanged: a re-analysis or
+            # re-sync (new change marker in the index) replaces the streams.
+            known = self._cache.activity_version(activity_id)
+            same_version = not known or cached.get("_meta_version") == known
+            if requested <= covered and same_version:
+                return {k: v for k, v in cached.items() if not k.startswith("_meta_")}
         data = await self._client.get_streams(activity_id, types)
         self._cache.write_by_id(
-            "streams", activity_id, {**data, "_meta_requested_types": types}
+            "streams",
+            activity_id,
+            {
+                **data,
+                "_meta_requested_types": types,
+                "_meta_version": self._cache.activity_version(activity_id),
+            },
         )
         return data
 
