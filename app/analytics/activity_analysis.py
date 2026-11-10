@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.utils.hr_zones import ZONE_NAMES, format_hr_zones, sport_hr_settings
+from app.utils.hr_zones import format_hr_zones, sport_hr_settings, zone_name
 from app.utils.windowing import build_sub_laps, lap_boundaries
 
 RUN_TYPES = {"Run", "VirtualRun", "TrailRun"}
@@ -97,12 +97,15 @@ def zones_for(athlete_settings: dict | None, activity_type: str | None) -> dict 
         "lthr": s["lthr"],
         "max_hr": s["max_hr"],
         "bounds": s["bounds"],
-        "line": format_hr_zones(s["bounds"]),
+        "names": s.get("names"),
+        "line": format_hr_zones(s["bounds"], s.get("names")),
     }
     return out
 
 
-def hr_zone_times(streams: dict, bounds: list[int]) -> list[dict]:
+def hr_zone_times(
+    streams: dict, bounds: list[int], names: list[str] | None = None
+) -> list[dict]:
     """Minutes per HR zone; a 0 bound is reported as ``not set``, never merged."""
     time = streams.get("time") or []
     hr = streams.get("heartrate") or []
@@ -125,7 +128,7 @@ def hr_zone_times(streams: dict, bounds: list[int]) -> list[dict]:
     out: list[dict] = []
     prev = 0
     for z, upper in enumerate(bounds):
-        name = ZONE_NAMES[z] if z < len(ZONE_NAMES) else f"Zone {z + 1}"
+        name = zone_name(z, names)
         if not upper:
             out.append({"zone": f"Z{z + 1} ({name})", "range": "not set in intervals.icu"})
             continue
@@ -330,7 +333,7 @@ def summarize_activity(
             "line": zones["line"],
         })
         if streams.get("heartrate"):
-            result["hr_zone_times"] = hr_zone_times(streams, zones["bounds"])
+            result["hr_zone_times"] = hr_zone_times(streams, zones["bounds"], zones.get("names"))
     else:
         notes.append("no HR zones in intervals.icu sport settings — zone times omitted")
 

@@ -26,18 +26,27 @@ def _as_int(value) -> int | None:
         return None
 
 
-def format_hr_zones(bounds: list[int | None]) -> str:
+def zone_name(i: int, names: list[str] | None = None) -> str:
+    """Name of zone ``i`` (0-based): intervals.icu's own name when given."""
+    if names and i < len(names) and str(names[i]).strip():
+        return str(names[i]).strip()
+    return ZONE_NAMES[i] if i < len(ZONE_NAMES) else f"Zone {i+1}"
+
+
+def format_hr_zones(bounds: list[int | None], names: list[str] | None = None) -> str:
     """Format HR zones where each bound is the upper limit of that zone.
 
     A bound of 0 / None is shown as ``not set`` instead of being dropped: a
-    silently missing zone shifts every later zone name by one.
+    silently missing zone shifts every later zone name by one. ``names`` are
+    the sport's ``hr_zone_names`` from intervals.icu (a 7-zone ride model does
+    not fit the 5 default names).
     """
     if len(bounds) < 1:
         return HR_ZONES_UNAVAILABLE
     parts = []
     prev: int | None = None
     for i, raw in enumerate(bounds):
-        name = ZONE_NAMES[i] if i < len(ZONE_NAMES) else f"Zone {i+1}"
+        name = zone_name(i, names)
         upper = _as_int(raw)
         if not upper:
             parts.append(f"Z{i+1} ({name}): not set in intervals.icu")
@@ -49,7 +58,7 @@ def format_hr_zones(bounds: list[int | None]) -> str:
 
 
 def sport_hr_settings(athlete_settings: dict | None, sport: str) -> dict | None:
-    """``{"lthr", "max_hr", "bounds"}`` for one sport, or None.
+    """``{"lthr", "max_hr", "bounds", "names"}`` for one sport, or None.
 
     ``sport`` is an intervals.icu activity type ("Run", "VirtualRide", …) or a
     key of ``HR_ZONE_SPORTS``. ``bounds`` keeps 0 entries (see format_hr_zones);
@@ -62,10 +71,12 @@ def sport_hr_settings(athlete_settings: dict | None, sport: str) -> dict | None:
         bounds = [_as_int(z) or 0 for z in (entry.get("hr_zones") or [])]
         while bounds and bounds[-1] == 0:
             bounds.pop()
+        names = [str(n) for n in (entry.get("hr_zone_names") or [])]
         return {
             "lthr": _as_int(entry.get("lthr")),
             "max_hr": _as_int(entry.get("max_hr")),
             "bounds": bounds,
+            "names": names if len(names) >= len(bounds) else None,
         }
     return None
 
@@ -81,7 +92,9 @@ def format_sport_hr_zones(athlete_settings: dict | None) -> str:
             f"LTHR {s['lthr']} bpm" if s["lthr"] else "LTHR not set",
             f"HRmax {s['max_hr']} bpm" if s["max_hr"] else "HRmax not set",
         ]
-        lines.append(f"{label} ({', '.join(meta)}): {format_hr_zones(s['bounds'])}")
+        lines.append(
+            f"{label} ({', '.join(meta)}): {format_hr_zones(s['bounds'], s['names'])}"
+        )
     return "\n".join(lines) if lines else HR_ZONES_UNAVAILABLE
 
 

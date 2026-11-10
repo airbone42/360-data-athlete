@@ -90,3 +90,19 @@ def test_summarize_activity_without_hr_has_no_hr_keys() -> None:
     out = _summarize_activity({"start_date_local": "2026-11-09T08:00:00", "type": "Workout",
                                "average_heartrate": None})
     assert "avg_hr" not in out and "max_hr" not in out
+
+
+def test_intervals_zone_names_are_used_for_a_seven_zone_ride() -> None:
+    """Real shape (2026-11-10): a 7-zone ride profile; the 5 default names
+    labelled 154-157 bpm as "VO2max" and the rest as "Zone 6/7"."""
+    names = ["Recovery", "Aerobic", "Tempo", "SubThreshold", "SuperThreshold",
+             "Aerobic Capacity", "Anaerobic"]
+    ride = {"types": ["Ride", "VirtualRide"], "lthr": 146, "max_hr": 170,
+            "hr_zones": [123, 137, 143, 153, 157, 162, 170], "hr_zone_names": names}
+    text = format_sport_hr_zones({"sportSettings": [RUN, ride]})
+    ride_line = text.splitlines()[1]
+    assert "Z5 (SuperThreshold): 154–157 bpm" in ride_line
+    assert "Z7 (Anaerobic): 163–170 bpm" in ride_line
+    assert "Zone 6" not in ride_line
+    # Run without names keeps the defaults.
+    assert "Z2 (Endurance)" in text.splitlines()[0]
