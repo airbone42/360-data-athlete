@@ -17,7 +17,9 @@ from app.analytics.recovery import (
     NINJA_PILLAR_KEYWORDS,
     NINJA_TAG_TO_PILLAR,
     RECOVERY_RULES,
+    RECOVERY_SPACING_HEADER,
     _extract_rpe_from_line,
+    active_recovery_spacings,
     canonicalise_tags,
 )
 from app.config import settings
@@ -1763,42 +1765,20 @@ def _compute_reeval_trigger(today: date, deload_state: dict | None = None) -> st
 
 
 def _compute_recovery_blocks(activities: list[dict], today: date) -> list[str]:
-    """Derive active recovery restrictions from recent activity tags.
+    """Running recovery-spacing rules from recent activity tags, one line each.
 
-    `canonicalise_tags()` is applied so legacy "beine"-tagged sessions also
-    satisfy the canonical "legs" trigger (bilingual compat during the
-    beine → legs migration).
+    Wording comes from ``app.analytics.recovery``: these are planning rules,
+    not injuries, and are grouped under ``RECOVERY_SPACING_HEADER`` by
+    ``_compute_planning_constraints`` — separate from real restrictions.
     """
-    blocks: list[str] = []
-    for trigger_tags, min_days, label in _RECOVERY_RULES:
-        # Find most recent activity that has ALL trigger tags
-        for a in reversed(activities):
-            act_tags = canonicalise_tags(a.get("tags"))
-            if not all(t in act_tags for t in trigger_tags):
-                # Also check single-tag rules
-                if len(trigger_tags) > 1:
-                    continue
-            if len(trigger_tags) == 1 and trigger_tags[0] not in act_tags:
-                continue
-            d_str = activity_date(a)
-            try:
-                act_date = date.fromisoformat(d_str)
-            except (ValueError, TypeError):
-                continue
-            days_ago = (today - act_date).days
-            if days_ago == 0:
-                # Done today — block starts tomorrow
-                unblocked = (act_date + timedelta(days=min_days)).isoformat()
-                blocks.append(
-                    f"⛔ {label} until {unblocked} (last session today, {min_days}d rule)"
-                )
-            elif days_ago < min_days:
-                unblocked = (act_date + timedelta(days=min_days)).isoformat()
-                blocks.append(
-                    f"⛔ {label} until {unblocked} (last session {days_ago}d ago, {min_days}d rule)"
-                )
-            break  # only check most recent matching activity
-    return blocks
+    lines: list[str] = []
+    for sp in active_recovery_spacings(activities, today, _RECOVERY_RULES):
+        last = "today" if sp["days_ago"] == 0 else f"{sp['days_ago']}d ago"
+        lines.append(
+            f"  ⏳ {sp['label']}: next {'+'.join(sp['trigger_tags'])} session from "
+            f"{sp['free_from'].isoformat()} (last one {last}, {sp['min_days']}d rule)"
+        )
+    return lines
 
 
 def _compute_filmtipp_status(today: date) -> str:
@@ -1999,12 +1979,12 @@ def _compute_muscle_overlap_blocks(activities: list[dict], today: date) -> list[
             def _add(hard_applicable: bool, soft_applicable: bool) -> None:
                 if hard_applicable:
                     blocks.append(
-                        f"⛔ {label}: hard block until {hard_end.isoformat()} "
+                        f"  ⏳ {label}: next session from {hard_end.isoformat()} "
                         f"({rpe_str}, {hard_days}d rule)"
                     )
                 if soft_applicable and soft_days > 0:
                     blocks.append(
-                        f"ℹ️  {label}: light load (RPE≤5) OK from {hard_end.isoformat()} "
+                        f"  ℹ️  {label}: light dose only (RPE≤5) from {hard_end.isoformat()} "
                         f"until {soft_end.isoformat()}"
                     )
 
@@ -2014,7 +1994,7 @@ def _compute_muscle_overlap_blocks(activities: list[dict], today: date) -> list[
                 _add(True, days_ago < hard_days + soft_days)
             elif soft_days > 0 and days_ago < hard_days + soft_days:
                 blocks.append(
-                    f"ℹ️  {label}: light load only (RPE≤5) until {soft_end.isoformat()} "
+                    f"  ℹ️  {label}: light dose only (RPE≤5) until {soft_end.isoformat()} "
                     f"({days_ago}d ago — {rpe_str})"
                 )
 
@@ -2239,11 +2219,15 @@ def _compute_planning_constraints(
             line += f" — first day after: {first_after}"
         constraints.append(line)
 
-    recovery_blocks = _compute_recovery_blocks(activities, today)
-    constraints.extend(recovery_blocks)
-
-    muscle_overlap_blocks = _compute_muscle_overlap_blocks(activities, today)
-    constraints.extend(muscle_overlap_blocks)
+    # Recovery spacing (tag rules + exercise-keyword rules) as ONE group with
+    # its own header: planning rules, not injury locks. Printed like a lock
+    # ("⛔ … blocked (forearm-flexor interference)") they were read as a
+    # diagnosis and reached the athlete as an injury he never had.
+    spacing = _compute_recovery_blocks(activities, today)
+    spacing.extend(_compute_muscle_overlap_blocks(activities, today))
+    if spacing:
+        constraints.append(RECOVERY_SPACING_HEADER)
+        constraints.extend(spacing)
 
     prev_day = _compute_previous_day_exercises(activities, today)
     if prev_day:

@@ -182,8 +182,9 @@ After all specialist outputs — explicit checklist:
   complementary warmup minimal, move drills to the run warmup.
 - Muscle group from `planningConstraints → yesterday's sessions` heavily
   loaded again today? → load check, replace with accessory or drop
-- Wrist/grip: `planningConstraints` shows `⛔ wrist flexor/extensor` when
-  relevant — specialists that ignored this get targeted feedback in the
+- Wrist/grip: `planningConstraints` shows `⏳ Wrist-curl spacing` /
+  `⏳ Grip-hold spacing` / `⏳ Grip recovery` in the recovery-spacing group
+  when relevant (planning rules, not injuries) — specialists that ignored this get targeted feedback in the
   pane
 
 Add `structure` + `intervals_icu` (if present) to the respective

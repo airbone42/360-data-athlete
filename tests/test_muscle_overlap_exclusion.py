@@ -25,7 +25,7 @@ from app.graphs.sub_athlete_context import context_builder as cb
 _TODAY = date(2025, 3, 10)
 _YESTERDAY = "2025-03-09"
 
-_GRIP_LABEL = "Grip support"
+_GRIP_LABEL = "Grip-hold spacing"
 
 
 def _act(description: str, d: str = _YESTERDAY) -> dict:

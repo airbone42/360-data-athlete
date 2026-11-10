@@ -1,6 +1,7 @@
 """Recovery rules and ninja-pillar definitions — canonical source for validator + context_builder."""
 from __future__ import annotations
 import re
+from datetime import date, timedelta
 
 # Bilingual leg-tag compat: the framework is migrating from the German tag
 # "beine" to the English "legs". During the transition both forms are treated
@@ -49,6 +50,64 @@ def _load_recovery_rules() -> list[tuple[list[str], int, str]]:
 
 RECOVERY_RULES: list[tuple[list[str], int, str]] = _load_recovery_rules()
 
+# Recovery spacing is a planning rule, not a finding about the athlete's body.
+# The context used to print these as "⛔ … blocked (forearm-flexor
+# interference)", and a model reading that turned it into an injury the
+# athlete never had. Every consumer (context_builder, pre_push_validator)
+# renders through the wording below, so the two cannot drift apart again.
+RECOVERY_SPACING_HEADER = (
+    "⏳ Recovery spacing — planning rules, not injuries (nothing is hurt; "
+    "they only keep sessions of the same kind apart — never present them "
+    "to the athlete as an injury or a tissue problem):"
+)
+
+
+def _spacing_date(a: dict) -> str:
+    """Activity date from either a raw intervals.icu activity or a context summary."""
+    return str(a.get("date") or a.get("start_date_local") or a.get("start_date") or "")[:10]
+
+
+def active_recovery_spacings(
+    activities: list[dict],
+    today: date,
+    rules: list[tuple[list[str], int, str]] | None = None,
+) -> list[dict]:
+    """Recovery-spacing rules that are still running on ``today``.
+
+    One entry per rule whose most recent triggering activity (carrying ALL
+    trigger tags, legacy ``beine`` matched via ``canonicalise_tags``) lies
+    fewer than ``min_rest_days`` days back. ``free_from`` is the first day a
+    session of the same kind may run again. Shared by the planning context
+    and the pre-push validator so both apply exactly the same rule set.
+    """
+    out: list[dict] = []
+    for trigger_tags, min_days, label in (RECOVERY_RULES if rules is None else rules):
+        trigger = set(trigger_tags)
+        latest: date | None = None
+        for a in activities:
+            if not trigger <= set(canonicalise_tags(a.get("tags"))):
+                continue
+            try:
+                d = date.fromisoformat(_spacing_date(a))
+            except ValueError:
+                continue
+            if d <= today and (latest is None or d > latest):
+                latest = d
+        if latest is None:
+            continue
+        days_ago = (today - latest).days
+        if days_ago >= min_days:
+            continue
+        out.append({
+            "label": label,
+            "trigger_tags": list(trigger_tags),
+            "min_days": min_days,
+            "last_date": latest,
+            "days_ago": days_ago,
+            "free_from": latest + timedelta(days=min_days),
+        })
+    return out
+
 # Keyword-based overlap rules — checked against activity description text, not tags.
 # rpe_tiers: dict keyed "low"/"mid"/"high" → (max_rpe_inclusive, hard_days, soft_days)
 # hard_days: days where target RPE ≥6 of same group is blocked
@@ -58,7 +117,7 @@ MUSCLE_OVERLAP_RULES: list[dict] = [
     {
         "id": "wrist_flexors",
         "keywords": ["wrist curl", "reverse wrist curl"],
-        "label": "Wrist flexor/extensor",
+        "label": "Wrist-curl spacing",
         "rpe_tiers": {
             "low": (5, 0, 0),   # RPE ≤5: no block (24h recovery sufficient)
             "mid": (7, 1, 0),   # RPE 6–7: 1-day hard block
@@ -69,7 +128,7 @@ MUSCLE_OVERLAP_RULES: list[dict] = [
     {
         "id": "grip_support",
         "keywords": ["farmer hold", "farmer's hold", "dead hold", "towel grip", "dead hang"],
-        "label": "Grip support (forearm tendons)",
+        "label": "Grip-hold spacing",
         "rpe_tiers": {
             "low": (5, 0, 0),
             "mid": (7, 1, 1),   # tendons recover more slowly → extra soft day
@@ -80,7 +139,7 @@ MUSCLE_OVERLAP_RULES: list[dict] = [
     {
         "id": "plyometrics",
         "keywords": ["box jump", "plyo push", "lunge jump", "clap push", "depth jump", "broad jump", "squat jump"],
-        "label": "Plyometrics (CNS + tendons)",
+        "label": "Plyo-exercise spacing",
         "rpe_tiers": {
             "low": (5, 1, 0),   # even light plyo needs 1 CNS recovery day (masters athlete)
             "mid": (7, 2, 1),

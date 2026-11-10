@@ -23,18 +23,11 @@ from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.analytics.recovery import RECOVERY_RULES
+from app.analytics.recovery import RECOVERY_RULES, active_recovery_spacings, canonicalise_tags
 from app.utils.alerts import alert_on_failure
 from app.utils.logging import configure
 
 logger = configure(__name__)
-
-
-def _days_since(activity_date_str: str, today: date) -> int:
-    try:
-        return (today - date.fromisoformat(activity_date_str)).days
-    except (ValueError, TypeError):
-        return 999
 
 
 def check_recovery_rules(
@@ -42,28 +35,23 @@ def check_recovery_rules(
     recent_activities: list[dict],
     today: date,
 ) -> list[str]:
-    """Return list of violations from recovery rules."""
+    """Planned workouts that break a running recovery-spacing rule.
+
+    Same rule set and matching as the planning context
+    (``active_recovery_spacings``, legacy ``beine`` included). The message
+    names a planning rule, not an injury.
+    """
     violations: list[str] = []
-
-    for trigger_tags, min_days, label in RECOVERY_RULES:
-        trigger_set = set(trigger_tags)
-        # Find the most recent activity that triggered this rule
-        for activity in sorted(recent_activities, key=lambda a: a.get("date", ""), reverse=True):
-            act_tags = set(str(t).lower() for t in (activity.get("tags") or []))
-            if trigger_set <= act_tags:
-                days = _days_since(activity.get("date", ""), today)
-                if days < min_days:
-                    # Check if any planned workout uses the blocked tags
-                    for w in planned_workouts:
-                        w_tags = set(str(t).lower() for t in (w.get("tags") or []))
-                        if trigger_set <= w_tags:
-                            violations.append(
-                                f"⛔ {label}: '{w.get('name')}' — "
-                                f"letzte Session mit {trigger_tags} vor {days}d "
-                                f"(Minimum: {min_days}d)"
-                            )
-                break
-
+    for sp in active_recovery_spacings(recent_activities, today, RECOVERY_RULES):
+        trigger_set = set(sp["trigger_tags"])
+        for w in planned_workouts:
+            if trigger_set <= set(canonicalise_tags(w.get("tags"))):
+                violations.append(
+                    f"⛔ Recovery spacing (planning rule, not an injury) — {sp['label']}: "
+                    f"'{w.get('name')}' — last {'+'.join(sp['trigger_tags'])} session "
+                    f"{sp['days_ago']}d ago, minimum {sp['min_days']}d "
+                    f"(free from {sp['free_from'].isoformat()})"
+                )
     return violations
 
 

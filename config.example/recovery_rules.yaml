@@ -2,30 +2,34 @@
 # (context_builder AND validate_plan import the same loaded constant, so the
 # planner and the validator cannot disagree about a block).
 #
-# Each rule: an activity carrying ALL trigger_tags blocks the same stimulus
-# for min_rest_days afterwards. Tags use the canonical English form ("legs");
+# Each rule: an activity carrying ALL trigger_tags keeps the next session of
+# the same kind at least min_rest_days away. These are planning rules, not
+# injury locks: the context prints them under "⏳ Recovery spacing — planning
+# rules, not injuries", separate from real restrictions. Keep labels free of
+# anatomy ("Grip recovery", not "forearm-flexor interference") — a model
+# reads a tissue name next to a block as a diagnosis. Tags use the canonical English form ("legs");
 # legacy "beine"-tagged activities still match via canonicalise_tags().
 # Athlete-specific overrides: copy this file to the consumer's config/ and
 # edit there — the framework copy stays generic.
 rules:
   - trigger_tags: [plyo]
     min_rest_days: 3
-    label: Plyo blocked
+    label: Plyo recovery
   - trigger_tags: [legs]
     min_rest_days: 2
-    label: Legs/strength blocked
+    label: Leg-strength recovery
   - trigger_tags: [intervals]
     min_rest_days: 2
-    label: Legs/Plyo blocked (post-interval)
+    label: Leg/plyo recovery after intervals
   - trigger_tags: [ninja, upperbody]
     min_rest_days: 1
-    label: Ninja upper body blocked
+    label: Ninja upper-body recovery
   - trigger_tags: [ninja, core]
     min_rest_days: 2
-    label: Ninja core blocked (L-sit CNS recovery)
-  # Grip → Pull-next-day is the physiological lock (forearm flexor → scapular
-  # stabilisation during rowing). The tag system doesn't distinguish Pull from
-  # Push — both carry `upperbody`, so Push is conservatively blocked too.
+    label: Ninja core recovery
+  # Grip work and a pull session the next day draw on the same grip; the tag
+  # system doesn't distinguish Pull from Push, so the rule spaces the next
+  # ninja+grip session as a whole.
   - trigger_tags: [ninja, grip]
     min_rest_days: 2
-    label: Ninja upper body blocked after Grip (forearm-flexor interference)
+    label: Grip recovery
