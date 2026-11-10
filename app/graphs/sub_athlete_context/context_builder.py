@@ -29,7 +29,7 @@ from app.schemas.context import ContextDict
 from app.utils.activity_helpers import activity_date
 from app.utils.alerts import notify_error
 from app.utils.date_windows import cutoff_iso
-from app.utils.hr_zones import extract_run_hr_bounds, format_hr_zones
+from app.utils.hr_zones import HR_ZONES_UNAVAILABLE, format_sport_hr_zones
 from app.utils.impact_load import compute_run_day_streak
 from app.utils.load_progression import compute_deload_due, parse_load_rules
 from app.analytics.consistency import (
@@ -369,8 +369,7 @@ def build_context(state: AthleteContextState) -> dict:
     date_str = today.strftime("%A, %d. %B %Y")
 
     athlete_settings = state.get("athlete_settings") or {}
-    hr_bounds = extract_run_hr_bounds(athlete_settings)
-    hr_zones_text = format_hr_zones(hr_bounds)
+    hr_zones_text = format_sport_hr_zones(athlete_settings)
     weather_warning = state.get("weather_warning", False)
     warnings = _collect_warnings(
         hrv, rhr, sleep_score, ctl, atl, hr_zones_text, athlete_settings, weather_warning,
@@ -559,6 +558,13 @@ def _summarize_activity(a: dict, include_notes: bool = True) -> dict:
         "training_load": a.get("icu_training_load"),
         "duration_min": round(a.get("moving_time", 0) / 60) or None,
     }
+    # Measured HR, so "how was the HR yesterday" is read, not estimated.
+    # Session values (warm-up and cool-down included) — the block that
+    # carries the stimulus comes from fetch_type_history / analyse_activity.
+    for key, src in (("avg_hr", "average_heartrate"), ("max_hr", "max_heartrate")):
+        val = a.get(src)
+        if isinstance(val, (int, float)) and val > 0:
+            result[key] = round(val)
     if include_notes and a.get("event_description"):
         result["coaching_notes"] = escape_for_prompt(a["event_description"], max_len=500)
     return result
@@ -2351,8 +2357,13 @@ def _collect_warnings(
         warnings.append("Sleep score missing")
     if ctl is None or atl is None:
         warnings.append("CTL/ATL not available — fitness state unknown, TSB cannot be computed")
-    if hr_zones_text == "HR-Zonen nicht verfügbar" or hr_zones_text == "HR zones not available":
+    if hr_zones_text == HR_ZONES_UNAVAILABLE:
         warnings.append("HR zones not available — dynamic zone target missing from the context")
+    elif "not set" in hr_zones_text:
+        warnings.append(
+            "HR zones incomplete in intervals.icu (a zone, LTHR or HRmax is 0/unset) — "
+            "see hrZones; fix the sport settings instead of estimating the value"
+        )
     if weather_warning:
         warnings.append("Weather data not available — weather context missing from plan")
     if "⚠️" in sleep_trend:

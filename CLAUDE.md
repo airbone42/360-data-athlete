@@ -788,7 +788,7 @@ from memory, never write LTHR or zone bounds from recall: a specialist
 builds every target on the zones it is handed, so one recalled value
 propagates into the whole session.
 
-- Copy the HR-zone block verbatim from `context.hrZones`
+- Copy the HR-zone line of the session's sport verbatim from `context.hrZones`
 - LTHR value from the current-LTHR slot in `config/athlete_status.md`,
   never heuristic
 - Easy/recovery runs: HR ceiling must stay below Z3 — validator rule R010
@@ -811,7 +811,7 @@ propagates into the whole session.
 
 ### Sport-specific HR-zone application (policy)
 
-**`context.hrZones` are by convention RUN-derived** (LTHR from the last race, MaxHR from running) and not directly portable to Ride / VirtualRide when the athlete has a Cross-sport HR differential documented — typically ~5–10 bpm lower HRmax on the bike, proportionally narrower zones. Run-zone targets on a Ride push the athlete into upper-Z5 / near-HRmax while they think they are "barely Z4" (the prescribed HR is never reached because the legs give out first).
+**`context.hrZones` carries one labelled line per sport** from the intervals.icu sportSettings — `Run (LTHR …, HRmax …): Z1 …` and a `Ride (…)` line when a ride profile exists; a zone or threshold that is 0 there reads `not set` (plus a `dataWarnings` entry), never estimated. Without a Ride line the zones are Run-derived and not directly portable to Ride / VirtualRide when the athlete has a Cross-sport HR differential documented — typically ~5–10 bpm lower HRmax on the bike, proportionally narrower zones. Run-zone targets on a Ride push the athlete into upper-Z5 / near-HRmax while they think they are "barely Z4" (the prescribed HR is never reached because the legs give out first).
 
 **Operational rule:** before answering any HR-pacing question or briefing a Ride / VirtualRide specialist, **check `config/athlete_status.md` for a Rad-HF / Bike-HR / Cross-Sport-HR section**. If documented, the Ride workout MUST use the Rad-specific zones and fall back to Run-derived `context.hrZones` only when no such section exists; HR-pacing tables / Sweet-Spot recommendations in coach replies MUST be labelled Rad or Run, never mixed; watt targets stay the primary control variable on indoor rides (per the Rad-control slot in `athlete_status.md`), HR is a sanity cap and decoupling signal, not the pacing driver.
 
