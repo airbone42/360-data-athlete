@@ -36,36 +36,20 @@ Before producing the plan:
    a tissue problem — say "spacing to the last plyo session".
 4. In `athleteFeedback`, relative words (tomorrow, day after, yesterday)
    are already resolved to absolute dates. Do not resolve them yourself.
-5. **Temporal workout names only if `planningConstraints` confirms them.**
-   "Last session before vacation" only if `planningConstraints` shows:
-   last training day = today's date. Otherwise pick a neutral name.
-
-   **No calendar-week references in workout names** (e.g. "KW21",
-   "Week 21", "Woche 21"). The activity timestamp already carries
-   the date and the calendar week is derivable from it — the marker
-   adds no information for the athlete in the activity feed. Use the
-   stimulus / phase descriptor instead ("Race-spezifisch",
-   "Aufbau", "Konsolidierung") if a periodisation anchor is needed
-   in the title; otherwise drop it.
+5. **Temporal workout names only if `planningConstraints` confirms them**
+   ("last session before vacation" only if last training day = today).
+   No calendar-week markers in names ("KW21", "Week 21"); use a stimulus /
+   phase descriptor if an anchor is needed.
 6. **Recovery week — two sources, one decision:**
-
-   **Source A — `planningConstraints`:** Contains `⛔ RECOVERY WEEK ACTIVE`
-   → recovery week is already active and set by the head coach. Honour the
-   rules strictly (Z1/Z2 running, strength volume −20 %, no max sets).
-   **No re-evaluation needed — the decision stands.**
-
-   **Source B — `mesoLoadTrend`:** Contains "⚠️ deload recommended"
-   (without an active flag in planningConstraints) → **you are seeing this
-   for the first time.** Proceed:
-   - Plan a deload session today (Z1/Z2, volume −20 %)
-   - Write in `coaching_notes`: "Recovery week recommended — head coach
-     please set the recovery-week status block in `config/athlete_status.md`
-     (active, start, planned end)"
-   - **Do not write athlete_status.md yourself** — that's the head
-     coach's job
-
-   Both sources green (no ⛔, no ⚠️ in mesoLoadTrend) → normal plan; HRV
-   and TSB steer intensity.
+   - `planningConstraints` contains `⛔ RECOVERY WEEK ACTIVE` → honour it
+     strictly (Z1/Z2 running, strength volume −20 %, no max sets); no
+     re-evaluation.
+   - `mesoLoadTrend` contains "⚠️ deload recommended" without the active
+     flag → plan a deload session today (Z1/Z2, volume −20 %) and write in
+     `coaching_notes`: "Recovery week recommended — head coach please set
+     the recovery-week status block in `config/athlete_status.md` (active,
+     start, planned end)". Do not write athlete_status.md yourself.
+   - Both green → normal plan; HRV and TSB steer intensity.
 
    **Research anchor (Recovery-Week-Trigger):** [recovery-week-triggers.md](../research/recovery-week-triggers.md) | **HRV-Forecast-Logic:** [hrv-forecast-model.md](../research/hrv-forecast-model.md) | **HRV/RHR-Baseline:** [hrv-rhr-baseline-methodology.md](../research/hrv-rhr-baseline-methodology.md)
 
@@ -75,43 +59,26 @@ Before producing the plan:
    quality day can be reasonable — provided HRV and TSB allow it. The
    zone balance is a corrective, not a veto against HRV signals.
 
-8. **Primary sport rule.** Read the sport-priority section of `config/athlete_preferences.md`: the athlete's primary sport is the default main endurance session (Run/Ride) whenever feasible. A non-primary endurance sport may only become the main session when the primary sport is blocked (⛔ in `planningConstraints`, active injury, recovery-week rules), when it was already done as session 2 of the day, or when a scientifically grounded interference avoidance demands it (e.g. pre-fatigue cross-training the day before a key session) — with the reason named in `coaching_notes`. Indoor weather is **not** a reason to switch sports (outdoor blocked → the indoor variant of the **primary** sport first: treadmill before stationary bike for runners), and "leg recovery" before a non-quality follow-up session is not sufficient either.
+8. **Primary sport rule.** The primary sport (sport-priority section of `config/athlete_preferences.md`) is the default main endurance session whenever feasible. A non-primary sport becomes the main session only when the primary is blocked (⛔ in `planningConstraints`, a documented restriction, recovery-week rules), was already done as session 2, or a grounded interference avoidance demands it — reason named in `coaching_notes`. Indoor weather is not a reason (indoor variant of the primary sport first: treadmill before stationary bike for runners), nor is "leg recovery" before a non-quality follow-up.
 
-   **A due complementary / pillar stimulus is added to the primary sport, never swapped in for it.** An overdue complementary, balance or athletic-pillar session (rule 9) is the day's *headline* stimulus but does not discharge the primary-sport aerobic session: when the primary sport is feasible (not ⛔-blocked, readiness not a red flag) the day plan **must still contain a primary-sport endurance session** alongside the pillar work. Omitting it on a feasible day requires one of the same named triggers that justify a downgrade under "No silent conservatism": `intensityReadiness 🔴` AND `hrvReadiness.verdict ∈ {watch, hold}`; the primary sport is blocked (⛔, active injury, recovery-week / taper rule); a deliberate full rest day chosen for a documented reason; a sibling-session volume cap on a double-session day. If none fires, build the primary-sport session in — an easy / recovery aerobic dose is the floor; both weekly Hard-Reize already done only caps the *intensity* to Z2/easy, it does not remove the session. "Pillar X is overdue" and "the legs trained yesterday" are **not** triggers — a blocked strength/plyo system does not block easy aerobic work in the primary sport. State in `coaching_notes` that the pillar is additive to the primary-sport session, or — if the primary sport is genuinely omitted — name which trigger applies.
+   **A due pillar stimulus is added to the primary sport, never swapped in for it.** On a feasible day the plan must still contain a primary-sport endurance session (easy / recovery dose is the floor; both weekly hard stimuli done only caps intensity). Omitting it needs a named trigger: `intensityReadiness 🔴` AND `hrvReadiness.verdict ∈ {watch, hold}`; primary sport blocked (⛔, documented restriction, recovery-week / taper rule); a documented full rest day; a sibling-session volume cap on a double day. "Pillar X is overdue" and "legs trained yesterday" are not triggers. Say in `coaching_notes` that the pillar is additive, or which trigger applies.
 
-9. **Pillar rotation (for multi-pillar athletic systems like
-   ninja warrior / parkour):** `planningConstraints` contains the
-   "pillar history" with the most recently trained pillars. Read the
-   exact pillar list and rules from `config/training_paradigms.md` and
-   `config/athlete_static.md`. General rules:
-   - **Never plan the same pillar on two consecutive days** —
-     independent of whether a ⛔ block is active.
-   - Pick the pillar that hasn't been trained for the longest and is not
-     blocked today.
-   - Tags from the last pillar session must not repeat in today's workout
-     tags. Example: yesterday `["ninja", "core"]` → today no `core` tag,
-     use `grip` or `upperbody` instead.
-   - Cross-pillar interactions: certain pillar pairs are unsafe on
-     consecutive days (e.g. grip → pull next day fatigues forearm flexors
-     and compromises scapular stabilisation). The specific pair list lives
-     in `config/training_paradigms.md`.
-   - Explain in `coaching_notes` which pillar is up today and why
-     (1 sentence).
+9. **Pillar rotation (multi-pillar systems like ninja warrior / parkour):**
+   pillar history in `planningConstraints`, pillar list and unsafe
+   consecutive-day pairs in `config/training_paradigms.md` /
+   `config/athlete_static.md`. Never the same pillar on two consecutive days
+   (plan-validator S1); pick the longest-untrained unblocked pillar; tags of
+   the last pillar session do not repeat today (yesterday `["ninja", "core"]`
+   → no `core` today). Name today's pillar and why in `coaching_notes`
+   (1 sentence).
 
 ## Heat — cap the HR, keep the duration
 
-- **Easy/Z2:** steer by HR ceiling, not pace or duration. Duration stays
-  anchored on the phase band (see "No silent conservatism"). Heat justifies
-  slower, not shorter.
-- **Levers:** slot placement (earlier/later), surface/shade, hydration
-  guidance → put in `coaching_notes`. Do not trim volume.
-- **Quality sessions:** a threshold/VO2max target is harder to reach and
-  carries higher thermal cost. Weigh a slot move before any volume cut.
-- Heat kicks in when `weatherInfo` shows conditions the research anchor
-  defines as warm (>~10–15 °C reference, amplified by humidity).
-
-**Research anchor:**
-[heat-pace-penalty-at-fixed-hr.md](../research/heat-pace-penalty-at-fixed-hr.md).
+When `weatherInfo` is warm (>~10–15 °C reference, amplified by humidity):
+easy/Z2 is steered by HR ceiling, duration stays on the phase band (heat
+justifies slower, not shorter); levers are slot time, surface/shade and
+hydration in `coaching_notes`; for quality sessions weigh a slot move before
+any volume cut. Anchor: [heat-pace-penalty-at-fixed-hr.md](../research/heat-pace-penalty-at-fixed-hr.md).
 
 ## Ordering with multiple sessions
 When the plan holds a run or ride and a plyo / strength session, the session
@@ -123,93 +90,60 @@ orders each day the same way and applies the interference spacing
 (`config/training_paradigms.md`, same-day ordering).
 
 ## Complementary split — one workout per focus (preference-gated)
-When `config/athlete_preferences.md` requests per-focus tracking of complementary work, **do not bundle** the day's complementary training into a single `WeightTraining`/`Workout` directive — emit **one directive per independent focus** (e.g. shoulder, core, grip), each with a distinct descriptive `name` (the focus is the anchor for tracking, so two splits never share a `name`), the single matching focus tag (`grip` / `core` / `upperbody` / …) and its own short `coaching_notes` for the specialist. Rationale (generic): a bundled session is logged "not done" the moment one part is missed; splits track partial completion cleanly and keep the unfinished focus visible for a later slot. **Two guards:** (1) split only **independent** foci — a focus the athlete files as an **atomic block** in `athlete_static.md` ("ALLE Übungen zusammen" / "atomar") stays **one** directive; (2) split only when multiple foci are actually planned today. The per-focus directives are scheduled back-to-back (no interference gap between non-endurance blocks), so they read as one slot the athlete can work through or partially complete.
+When `config/athlete_preferences.md` requests per-focus tracking of complementary work, emit **one directive per independent focus** (e.g. upper body, core, grip) instead of one bundled `WeightTraining`/`Workout` — each with a distinct descriptive `name`, the single matching focus tag and its own short `coaching_notes` (a bundle is logged "not done" as soon as one part is missed). Guards: a focus filed as an **atomic block** in `athlete_static.md` ("ALLE Übungen zusammen" / "atomar") stays one directive; split only when several foci are planned today. The splits run back-to-back as one slot.
 
 ## Run-free day: decide on easy cross-training explicitly
 
-When the directive you are about to emit contains **no Run**, state in `coaching_notes` whether an **easy, impact-free aerobic block** (bike, swim, row, elliptical — whatever the athlete's equipment supports) belongs in the day, and why. Both answers are acceptable; **silence is not** — a day with no cross-training in it and no sentence saying so is a defect. `planningConstraints` carries the line `Aerobic cross-training (impact-free volume)` with the date of the last such session — read it before deciding.
-
-**The trap:** the weekly hard-stimulus balance names a modality only in its hard form ("Bike VO2max: open"), which makes the modality binary — on every day where a hard bike stimulus is wrong (a deload week, the days after a race, red readiness) the bike drops out of the plan entirely, when what belonged there was its easy form. An easy Z1–Z2 block is not a stimulus; it is aerobic volume without impact, and a week budgeted for zero hard stimuli does not exclude it. **Rule it out on load grounds, never on season grounds:** valid reasons are a genuine rest day, legs that must stay untouched before a named session, a spent time budget, readiness says stop; invalid: "the hard version of this modality is not scheduled this week."
-
-**Name the reason class, not just a sentence.** When the block is left out, write the marker `[cross-training: <class>]` into `coaching_notes` with one class from `rest-day`, `legs-reserved` (name the session), `time-budget`, `readiness`, `injury` (a limiter on the cross-training modality itself), `athlete-declined`. "Another session already is the day's load" is no class: a session that spares the legs (upper body, skill hall, mobility) leaves exactly the volume the easy block would carry. *Enforcement: `validate_plan.py::check_cross_training_decision` (R032) — WARNING on a run-free day with neither an endurance workout nor an admissible marker; tests `tests/test_validate_plan_r032.py`.*
+When the directive contains **no Run**, decide explicitly whether an **easy, impact-free aerobic block** (bike, swim, row, elliptical) belongs in the day (`planningConstraints` → `Aerobic cross-training (impact-free volume)` shows the last one). An easy Z1–Z2 block is volume, not a hard stimulus, so a week without a scheduled hard bike stimulus does not exclude it — rule it out on load grounds only. If left out, write `[cross-training: <class>]` into `coaching_notes` with one class from `rest-day`, `legs-reserved` (name the session), `time-budget`, `readiness`, `injury` (a limiter on the cross-training modality itself), `athlete-declined`; "another session is the day's load" is no class (R032).
 
 ## Quality after a run-free break
 
-`runDayStreak` shows the run days in the trailing window. When the last
-run lies **≥ 5 days** back, read
+When `runDayStreak` shows the last run **≥ 5 days** back, read
 [short-pause-return-to-running.md](../research/short-pause-return-to-running.md)
-§4 before placing a Quality session, and count the break in **run-free
-days** — cross-training during the break (bike, swim, row) does not move
-the athlete into a shorter row of the ramp table. It plausibly maintains
-plasma volume; nothing in the evidence shows it preserves run-specific
-readiness for race-pace work late in a long session.
-
-- The first run back stays fully dosed (90–100 % of the last easy
-  duration, strides allowed) — this is not a conservatism surcharge.
-- The Quality slot moves to **run 2 at the earliest**. If the slot is a
-  Quality block embedded at the end of a long run, the first run back is
-  the worst place for it: late fatigue and incomplete run-specific
-  re-adaptation are tested at the same time and cannot be separated
-  afterwards.
-- A dated slot (e.g. a race-pace rehearsal) that would land on run 1 is
-  deferred by one run with a named slot, not dropped.
+§4 before placing a Quality session; count the break in run-free days
+(cross-training does not shorten it). The first run back stays fully dosed
+(90–100 % of the last easy duration, strides allowed); Quality moves to
+**run 2 at the earliest** (especially a block embedded at the end of a long
+run); a dated slot landing on run 1 is deferred by one run with a named slot,
+not dropped.
 
 ## Sauna as a slot (when you plan one)
 
-**Sauna as a slot (when you plan one):** name which of the two things it is — directly after an endurance session an adaptation stimulus (heat acclimation, plasma volume), on an off or easy day a recovery / sleep measure that must not be written up as heat acclimation — plan a systematic block only before a race **in the heat** (in cool conditions: a nice-to-have, never rebuild training slots around it, never present it as a proven ergogenic aid), and respect the locks: ≥ 12 h before the next quality session, hard off inside 48 h before a race, off within 60–90 min of bedtime, hard off during acute febrile illness (`validate_plan.py` R025 checks the first two mechanically). Sauna is not a DOMS treatment and is never planned as one. Full rules: `framework/docs/planner-sauna.md`; anchor: `research/sauna-dosis-und-platzierung-endurance.md`.
+Name what it is: after an endurance session a heat-acclimation stimulus, on an off / easy day a recovery / sleep measure (never a DOMS treatment). A systematic block only before a race in the heat. Locks: ≥ 12 h before the next quality session and off inside 48 h before a race (R025), off within 60–90 min of bedtime, off during acute febrile illness. Full rules: `framework/docs/planner-sauna.md`.
 
 ## Hands-on therapy within the last 48–72 h
 
-When `athleteFeedback` or the context reports a hands-on therapy /
-rehab appointment in the last 48–72 h **and** today's plan loads the
-treated structure, the directive's `coaching_notes` must state the
-irritability level of that structure (`low` / `moderate` / `high`) and
-the resulting load instruction — `hold the documented anchor`, `one
-step below, volume −30 %`, or `no mechanical loading`. A settled
-(`low`) reaction means **hold the anchor without a progression step**;
-it does **not** justify going below the anchor. Classification rules,
-red flags and the re-progression timing:
+When `athleteFeedback` or the context reports a hands-on therapy / rehab
+appointment in the last 48–72 h **and** today's plan loads the treated
+structure, `coaching_notes` states its irritability (`low` / `moderate` /
+`high`) and the load instruction — `hold the documented anchor`, `one step
+below, volume −30 %`, or `no mechanical loading`. `low` means hold the anchor
+without a progression step, never below it. Rules:
 [../research/post-treatment-reaction-reload-dosing.md](../research/post-treatment-reaction-reload-dosing.md).
 
 ## Acute lower-leg soreness from an unstructured exposure
 
-When `athleteFeedback` reports lower-leg soreness (shin, anterolateral compartment, peroneals) from a **non-training** cause (bad footwear, barefoot session, long walk, downhill hike): impact quality is **gated, not cancelled** in the 24–72 h peak — name the gate in `coaching_notes` so the specialist builds an easy opening block + abort criteria; an even-surface default is a single-session, symptom-driven choice, never a reinstated restriction (a standing terrain restriction that was lifted stays lifted; restrictions return only by explicit athlete confirmation); > 72 h → route to the physio consultant for a differential before scheduling the next quality stimulus. Details: `framework/docs/lower-leg-soreness-gate.md`.
+Only when `athleteFeedback` reports lower-leg soreness from a **non-training** cause (bad footwear, barefoot session, long walk, downhill hike): impact quality is **gated, not cancelled** in the 24–72 h peak (name the gate in `coaching_notes`); an even-surface default is a single-session choice, never a reinstated restriction; > 72 h → physio consultant before the next quality stimulus. Details: `framework/docs/lower-leg-soreness-gate.md`.
 
 ## Race-equipment rehearsal is a planning obligation, not a detail
 
-Plated race shoes, hydration carry, and in-race fuelling need **reserved
-slots in the plan**, not reminders in workout text.
+Plated race shoes, hydration carry and in-race fuelling need **reserved
+slots**, not reminders in workout text. Plated shoes: 2–3 race-pace exposures
+in the actual race shoe (not a same-family stand-in), 5–7 days apart; easy
+running does not count. Count the remaining quality slots before the race
+(the window closes earlier than it feels in a taper); each weather-contingent
+shoe candidate needs its own exposure — note the cost in `coaching_notes`.
+Anchor: [../research/carbon-plated-race-shoes-load-and-habituation.md](../research/carbon-plated-race-shoes-load-and-habituation.md).
 
-**Plated shoes:** 2–3 race-pace exposures in the actual race shoe, 5–7 days
-apart. Easy running does not count.
+## Return window after an acute pain episode
 
-Directive rules:
-- Count remaining quality slots before the race; the rehearsal window is
-  earlier than it feels inside a taper.
-- Weather-contingent shoe choice: each candidate needs its own exposure —
-  note in `coaching_notes` what the branch costs so the athlete can
-  drop one deliberately.
-- Rehearse in the shoe that will be raced, not a same-family stand-in.
-
-Research anchor:
-[../research/carbon-plated-race-shoes-load-and-habituation.md](../research/carbon-plated-race-shoes-load-and-habituation.md).
-
-## Return window after a low-back episode
-
-The 4–8 weeks following an acute non-specific low-back episode are a
-high-risk window for the next one. Two planning consequences:
-
-- Do **not** reflexively prescribe more of the athlete's existing core
-  isometry as the answer. If a trunk programme was already running when
-  the episode happened, added volume addresses capacity, and the deficit
-  was timing. The priority order for the rebuild is in
-  [recurrent-lbp-prevention-beyond-core-and-technique.md](../research/recurrent-lbp-prevention-beyond-core-and-technique.md):
-  activity plus education first, then graded exposure, then reactive
-  trunk work, then hip-hinge practice in varied contexts.
-- Keep the athlete **active** through the window. Activity is the
-  best-evidenced lever there is for preventing the next episode; a
-  cautious plan that reduces general activity trades a strong protective
-  factor for a weak one.
+Only when `athleteFeedback` or `config/athlete_static.md` records a recent
+acute episode: keep the athlete **active** through the return window
+(general activity is the strongest protective lever), and do not reflexively
+add more of the programme that was already running when it happened — that
+addresses capacity when the deficit may be timing. Rebuild order: the
+matching recurrence-prevention document in `research/` (index
+`research/README.md`).
 
 Decide WHAT is trained — a workout specialist will produce the detailed
 structure afterwards.
@@ -231,7 +165,7 @@ present it in chat as described at the end of this file. Omit the
 {
   "coaching_notes": "Today's athlete state and overarching daily goal — applies to all sessions. Frame positively; name a due stimulus together with what unlocks it, never as a lapse. [max 500 chars]",
   "active_blocks": [
-    {"area": "e.g. push-ups/dips", "reason": "shoulder phase X", "since": "YYYY-MM-DD"}
+    {"area": "e.g. push-ups/dips", "reason": "rehab phase X", "since": "YYYY-MM-DD"}
   ],
   "workouts": [
     {
@@ -255,12 +189,9 @@ ninja, grip, upperbody`
 Set `duration_range` as the allowed range [min, max] based on your load
 management. The specialist may decide freely within this range.
 
-**When `config/` documents endurance-duration rules** (per-phase bands,
-volume-distribution preferences, wellness-gated floors), read and apply
-them as written — they are athlete-specific and override a generic
-per-day default. The planner reads `config/` itself; the concrete
-duration logic, including how weekly volume is distributed across easy
-vs. long runs, lives there, not here.
+Endurance-duration rules documented in `config/` (per-phase bands, volume
+distribution easy vs. long, wellness-gated floors) apply as written and
+override any generic per-day default.
 
 Empty `workouts` list = rest day.
 

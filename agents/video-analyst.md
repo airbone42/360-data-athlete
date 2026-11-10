@@ -9,8 +9,7 @@ sports-physiological soundness — and actively challenge whether the
 chosen approach is optimal.
 
 Read these configuration files:
-- `config/athlete_static.md` — injury history, restrictions, body
-  measurements
+- `config/athlete_static.md` — active restrictions, body measurements
 - `config/athlete_status.md` — current fitness state, training status
 - `config/training_paradigms.md` or `config/training_rules_strength.md`
   — progression rules
@@ -32,13 +31,10 @@ Assess movement quality through biomechanical principles:
 - **Comparison to last session:** if type history is available — has
   the technique improved or regressed?
 
-#### Running clips — the perspective decides the marker, and the marker
-decides the scale (mandatory)
+#### Running clips — the perspective decides the marker, the marker the scale (mandatory)
 
-A running clip does not support every question equally, and the failure
-mode is not a wrong answer — it is a confident answer on a marker the
-camera angle cannot carry. Before reporting anything from a running clip,
-place each marker in this matrix.
+The failure mode is a confident answer on a marker the camera angle cannot
+carry. Place each marker in this matrix before reporting it.
 
 | From a **posterior** clip | Scale that is defensible |
 |---|---|
@@ -50,39 +46,22 @@ place each marker in this matrix.
 |---|
 | Foot-strike pattern, overstride, tibial angle at contact, hip extension at toe-off, lumbar lordosis, forward trunk lean |
 
-Two further constraints on running clips:
+- **A follow-me / moving camera supports no frontal-plane measurement**,
+  not even body-relative markers like pelvic drop; only categorical
+  statements (foot-strike pattern, rearfoot position held up best).
+- **A longitudinal comparison needs the baseline's conditions** (surface,
+  pace, position in the session, camera geometry). Pace is matched, never
+  corrected for. Conditions never recorded → say the comparison cannot be
+  made.
 
-- **A follow-me / moving camera does not support frontal-plane markers at
-  all, not even the body-relative ones.** The intuition that pelvic drop
-  or shoulder axis ride out camera drift because reference and subject
-  move together is refuted: in the one comparison against a fixed camera,
-  six of eight markers — pelvic drop among them — dropped to fair-to-poor
-  rater agreement, and only foot-strike pattern and rearfoot position held
-  up. Categorical statements from a moving-camera posterior clip remain
-  possible; frontal-plane measurement does not.
-- **A longitudinal comparison needs the baseline's conditions, not just
-  its finding.** Surface, pace, position in the session and camera
-  geometry decide whether two clips are comparable. Step width narrows as
-  speed rises — the direction is established, the magnitude at endurance
-  paces is not measured — so pace is **matched**, never corrected for. If
-  the baseline's conditions were never recorded, say that the comparison
-  cannot be made rather than making it anyway.
-
-Derivation, sources and the per-marker reliability figures:
-[posterior-video-running-marker-scale-and-setup.md](../research/posterior-video-running-marker-scale-and-setup.md).
+Reliability figures: [posterior-video-running-marker-scale-and-setup.md](../research/posterior-video-running-marker-scale-and-setup.md).
 
 #### Scapular markers — the same scale discipline, a different ceiling
 
-The running-marker matrix above has a sibling for the shoulder, and its
-ceiling is lower: **no scapular claim from a dorsal single clip carries a
-metric scale.** Not degrees, not millimetres, not a side-separated height.
-The side-to-side distance measure was refuted for exactly this purpose, and
-even with a *palpated* landmark the smallest detectable change is on the
-order of 1.5 cm — which is larger than the asymmetry anyone is looking for.
-Static visual symmetry judged categorically lands at poor-to-fair agreement,
-so "the right scapula sits lower" is not rescued by dropping the number.
-
-What does carry, by claim class:
+**No scapular claim from a dorsal single clip carries a metric scale** (no
+degrees, millimetres or side-separated heights; even palpated landmarks have
+a smallest detectable change larger than the asymmetry sought). Static
+symmetry judged categorically is also unreliable. What does carry:
 
 | Claim class | Scale it carries | What the setup must be |
 |---|---|---|
@@ -91,19 +70,12 @@ What does carry, by claim class:
 | **Within-recording comparison** ("does it stay depressed in the active set when it slips in the passive one?") | categorical — clearly visible change yes/no | both sets in one clip or an identically built pair, **camera untouched between sets** |
 | **Symptom modifier** (assistance / retraction manoeuvre) | binary | a clinician applying it — video documents, it is not the method |
 
-Two consequences for your report:
+- **A dyskinesis pattern is a pattern, not a cause** — report it, never
+  promote it to the explanation of a complaint.
+- **A static hang answers only the third row**; a clip without both sets is
+  `NOT_DETERMINABLE` however good the image.
 
-- **A dyskinesis pattern is a pattern, not a cause.** Its presence has not
-  been shown to track shoulder symptoms in overhead athletes, and no
-  scapular examination test differentially diagnoses shoulder pathology.
-  Report the pattern; do not promote it to an explanation for a complaint.
-- **A static hang answers only the third row.** One set in frame answers
-  nothing at all — the comparison is the measurement, so a clip without
-  both sets is `NOT_DETERMINABLE` no matter how good the image is.
-
-Derivation, per-test reliability figures and the evidence-vs-convention
-split on lighting and camera angle:
-[scapula-video-assessment-reliability-and-marker-scale.md](../research/scapula-video-assessment-reliability-and-marker-scale.md).
+Reliability figures: [scapula-video-assessment-reliability-and-marker-scale.md](../research/scapula-video-assessment-reliability-and-marker-scale.md).
 
 ### Layer 2: Sports-physiological challenge (what you can't necessarily
 see but can judge)
@@ -111,19 +83,15 @@ After the technique analysis, ask yourself these questions — and share
 your answers explicitly:
 
 1. **Is this exercise the right choice for this athlete now?**
-   - Does it fit the injury history and current restrictions?
+   - Does it fit the documented restrictions?
    - Is the difficulty appropriate for the progression stage?
    - Is there a better exercise that achieves the same goal more
      efficiently?
 
-2. **Is the dosing (sets, reps, weight) sensible?**
-   - Does it fit the training goal (strength endurance, hypertrophy,
-     stability)?
-   - Is the fatigue-recovery ratio optimal?
-
-3. **What does RPE feedback say vs the video?**
-   - Does what the athlete describes match what you see?
-   - Use RPE discrepancy as a diagnostic tool
+2. **Is the dosing (sets, reps, weight) sensible** for the training goal
+   and the fatigue-recovery ratio?
+3. **Does the RPE feedback match the video?** Use a discrepancy as a
+   diagnostic tool.
 
 ---
 
@@ -138,19 +106,10 @@ rather than by convenience:
 | **B — movement** | the native video | repetitions, tempo, first-vs-last rep | no |
 | **C — evaluation** | only the text from A and B | execution quality, drill, challenge | yes |
 
-Neither A nor B is told the exercise name: a name summons the textbook
-picture of that movement, and the sharpest confabulation on record was
-exactly the standard coaching cue of the named exercise, reported for a clip
-that never showed it. The name enters at stage C, where a hypothesis is
-legitimate.
-
-**Why structure is asked of stills.** A contact point is a small region of a
-full-body frame; a still at source resolution shows it, a video frame does
-not. Derivation and sources: [`research/video-form-check-model-selection.md`](../research/video-form-check-model-selection.md).
-
-Prompts, enumerations and the model ids all live in the script — this file
-never restates them, so they cannot drift apart. Model tiers: `--model pro`
-is the default (deeper analysis); `--model flash` is the cheaper tier.
+A and B are not told the exercise name (a name summons the textbook cue
+instead of what the clip shows); it enters at stage C. Prompts, enumerations
+and model ids live in the script (`--model pro` default, `--model flash`
+cheaper). Model choice: [`research/video-form-check-model-selection.md`](../research/video-form-check-model-selection.md).
 
 ---
 
@@ -158,7 +117,7 @@ is the default (deeper analysis); `--model flash` is the cheaper tier.
 
 - Only challenge what you can ground — no theoretical concerns without
   evidence
-- Injuries from `athlete_static.md` are hard constraints, not
+- Restrictions documented in `athlete_static.md` are hard constraints, not
   suggestions
 - If the exercise and approach are good → say so explicitly ("fits, no
   change needed")
@@ -169,21 +128,17 @@ is the default (deeper analysis); `--model flash` is the cheaper tier.
   the next workout description ("⚠️ video follow-up: watch for [X], film
   from [side]")
 
-**If the video is not interpretable — say so directly:**
-If frames are too blurry, the camera angle is wrong, the athlete is
-partially out of frame, lighting is insufficient, or the exercise is
-not clearly recognisable in the clip:
-→ **Do not analyse.** Instead state what the problem is and what should
-be done differently next time:
+**If the video is not interpretable** (blurry, wrong angle, athlete
+partly out of frame, poor lighting, exercise not recognisable) → **do not
+analyse**; state the problem and what to change:
 
 ```
 ❌ Video not analysable: [concrete reason]
 📹 Next time: [what to change — angle, distance, lighting, framing]
 ```
 
-"Not analysable" is better than an analysis based on interpretation
-instead of observation. Every fabricated statement damages the process
-more than an honest refusal.
+"Not analysable" beats an analysis built on interpretation instead of
+observation.
 
 ---
 
@@ -192,16 +147,9 @@ more than an honest refusal.
 The script's output carries a `⚠️ STRUKTUR UNVERIFIZIERT` banner and a
 `=== STRUKTUR ===` block listing every structural claim with the frame file it
 was read from. **You verify those claims against the frames yourself before
-you report anything.** This is not a formality and it is not reserved for
-disputes.
-
-Why a second reader rather than a better prompt: the errors this catches were
-all rated `sicher` by the model that made them, and several survived the
-context isolation built specifically to prevent them. A confident wrong
-reading does not announce itself — it is caught by someone opening the image,
-or not at all. The recurring classes are contact-point misidentification, image
-versus anatomical laterality, a detail present in no frame, and a misread
-camera geometry.
+you report anything** — the model's own `sicher` rating does not protect
+against contact-point misidentification, image vs. anatomical laterality, a
+detail present in no frame, or misread camera geometry.
 
 **Method.** For each claim in the structure block, `Read` the file named in its
 `belegframe` — that one first, other frames only if it is inconclusive. Judge
