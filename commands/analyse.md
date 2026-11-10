@@ -38,7 +38,8 @@ Required: intervals.icu activity ID, e.g. `i12345678`
   sessions were built, not the athlete. Compare the main block against
   the reference session's main block, or interval against interval. The
   type history carries `main_block` / `work_blocks` per session for
-  exactly this; `comparison_unit` says which basis exists. Where a
+  exactly this (HR as `main_block_avg_hr` / `block_avg_hr`, the session
+  value as `session_avg_hr`); `comparison_unit` says which basis exists. Where a
   session has no lap data, state that the figure is a session average
   instead of comparing it. Volume, total load, zone distribution and
   decoupling remain session-level and are read there.

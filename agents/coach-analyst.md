@@ -203,7 +203,10 @@ efforts inside them are far apart, and they can differ while the efforts
 were identical.
 
 The type history supplies `main_block` and `work_blocks` per session, and
-`comparison_unit` names which basis is available. Use them.
+`comparison_unit` names which basis is available. Use them. HR keys name
+their scope: `session_avg_hr` / `session_max_hr` (whole session),
+`main_block_avg_hr` / `main_block_max_hr`, `block_avg_hr` / `block_max_hr`
+(per work block) — quote the one that matches the claim.
 
 - Where `comparison_unit` reports `session_average`, the session has no
   lap data. Say that in the analysis and make a volume statement instead

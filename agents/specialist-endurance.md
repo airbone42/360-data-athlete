@@ -445,6 +445,7 @@ The fields to inspect once the matching session is in hand:
 | `interval_summary` | intervals.icu activity | e.g. "19x 28s 388w" — actual completed reps × duration × avg-watts |
 | direct compliance | computed by you: actual vs. planned (time / reps / watts) from `interval_summary` + lap data vs. the planned workout | The precomputed intervals.icu `compliance` property is never cited and never used as a gate |
 | `decoupling` | intervals.icu activity | Aerobic-decoupling % over the session (>10 % = over-pacing or volume-overshoot) |
+| `session_avg_hr` / `main_block.main_block_avg_hr` / `work_blocks[].block_avg_hr` | type history | HR of the whole session vs. the main block vs. each work block (matching `*_max_hr`) — compare block with block, e.g. `jq '.[] \| {date, hr: .main_block.main_block_avg_hr}'` |
 
 **Decision matrix:**
 

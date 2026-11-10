@@ -40,7 +40,7 @@ def test_main_block_is_the_long_continuous_effort_not_the_session():
     assert main is not None
     assert main["duration_min"] == 33.0
     assert main["avg_pace_min_km"] == "4:49/km"
-    assert main["average_heartrate"] == 131
+    assert main["main_block_avg_hr"] == 131
     # Strides (20 s) and jog recoveries (90 s) are below the work floor.
     assert all(b["duration_min"] >= 3.0 for b in work)
 
@@ -103,7 +103,7 @@ def test_slim_activity_marks_the_comparison_unit():
     assert slim["comparison_unit"] == "main_block"
     assert slim["main_block"]["avg_pace_min_km"] == "4:49/km"
     # The session average survives — volume and drift are session properties.
-    assert slim["average_heartrate"] == 127
+    assert slim["session_avg_hr"] == 127
 
 
 def test_slim_activity_says_so_when_only_the_session_average_is_available():
@@ -128,3 +128,39 @@ def test_complementary_sessions_carry_no_block_fields():
     )
     assert "main_block" not in slim
     assert "comparison_unit" not in slim
+
+
+def test_hr_field_names_are_unique_per_level():
+    """Coach audit 2026-11-08: `average_heartrate` meant the session on one
+    level and the main block on the next — two values under one name."""
+    activity = {
+        "start_date_local": "2026-09-18T11:48:51",
+        "name": "Intervals",
+        "moving_time": 3654,
+        "type": "Run",
+        "average_heartrate": 139,
+        "max_heartrate": 171,
+        "pace": 3.2,
+        "icu_intervals": [
+            {**_lap(481, 1475, 119), "max_heartrate": 130},
+            {**_lap(1200, 4000, 158), "max_heartrate": 169},
+            {**_lap(600, 1800, 150), "max_heartrate": 162},
+        ],
+    }
+    slim = _slim_activity(activity, is_endurance=True)
+    assert slim["session_avg_hr"] == 139
+    assert slim["session_max_hr"] == 171
+    assert slim["main_block"]["main_block_avg_hr"] == 158
+    assert slim["main_block"]["main_block_max_hr"] == 169
+    assert {b["block_avg_hr"] for b in slim["work_blocks"]} == {119, 158, 150}
+
+    def keys(obj):
+        if isinstance(obj, dict):
+            for k, v in obj.items():
+                yield k
+                yield from keys(v)
+        elif isinstance(obj, list):
+            for v in obj:
+                yield from keys(v)
+
+    assert "average_heartrate" not in set(keys(slim))

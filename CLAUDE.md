@@ -173,7 +173,7 @@ When briefing `coach-analyst` on a run, never list any of these as a growth area
 
 A session average mixes warm-up, cool-down, drills, strides and jog recoveries, and the mix differs per session — so two averages differ partly because the sessions were *built* differently. **Compare the block that carries the stimulus** (the main effort of a continuous session; interval against interval in a structured one) — never pace, heart rate, cadence or ground-contact time from one session average against another. Session-level figures keep their own jobs (volume, total load, zone distribution, aerobic decoupling). **When the block is not available, say so** ("no lap data, so this is a session average") instead of comparing averages; the average is what the tooling hands over first, so the invalid comparison is also the convenient one — treat a pace or HR claim built from two session averages as unfounded until the blocks have been checked. The same rule stands in `commands/analyse.md` and `agents/coach-analyst.md`.
 
-*Enforcement: `history_fetcher._extract_blocks`, surfaced in the type history as `main_block` / `work_blocks` per session, with `comparison_unit` naming which basis is available (`session_average` when there is no lap data). Tests: `tests/test_history_block_extraction.py`.*
+*Enforcement: `history_fetcher._extract_blocks`, surfaced in the type history as `main_block` / `work_blocks` per session (HR keys name their scope: `session_avg_hr`, `main_block_avg_hr`, `block_avg_hr`, each with a `*_max_hr`), with `comparison_unit` naming which basis is available (`session_average` when there is no lap data). Tests: `tests/test_history_block_extraction.py`.*
 
 ### Warm-up drill rule (policy)
 

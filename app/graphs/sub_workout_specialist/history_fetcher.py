@@ -166,8 +166,13 @@ _MAIN_BLOCK_MIN_S = 300  # below this a lap is a warm-up, a drill or a stride
 _WORK_BLOCK_MIN_S = 180  # an interval worth comparing on its own
 
 
-def _block_stats(lap: dict) -> dict | None:
-    """Duration / distance / pace / HR of one lap, or None when unusable."""
+def _block_stats(lap: dict, hr_prefix: str = "block") -> dict | None:
+    """Duration / distance / pace / HR of one lap, or None when unusable.
+
+    HR keys carry their scope (``main_block_avg_hr`` vs ``block_avg_hr`` vs
+    the session-level ``session_avg_hr``): the same name on two levels with
+    different values was read as one number (coach audit 2026-11-08).
+    """
     duration = lap.get("moving_time") or lap.get("elapsed_time")
     distance = lap.get("distance")
     if not duration or not distance:
@@ -176,7 +181,8 @@ def _block_stats(lap: dict) -> dict | None:
         "duration_min": round(duration / 60, 1),
         "distance_km": round(distance / 1000, 2),
         "avg_pace_min_km": _pace_min_km(distance / duration),
-        "average_heartrate": lap.get("average_heartrate"),
+        f"{hr_prefix}_avg_hr": lap.get("average_heartrate"),
+        f"{hr_prefix}_max_hr": lap.get("max_heartrate"),
     }
 
 
@@ -205,7 +211,7 @@ def _extract_blocks(intervals: list[dict] | None) -> tuple[dict | None, list[dic
     longest = max(
         work, key=lambda lap: lap.get("moving_time") or lap.get("elapsed_time") or 0
     )
-    main = _block_stats(longest)
+    main = _block_stats(longest, hr_prefix="main_block")
     if main and (longest.get("moving_time") or longest.get("elapsed_time") or 0) < _MAIN_BLOCK_MIN_S:
         main = None
     return main, blocks
@@ -215,7 +221,8 @@ def _slim_activity(activity: dict, *, is_endurance: bool = False) -> dict:
     """Reduce a full activity to the fields specialists actually need.
 
     Base (all types): date, name, duration_min, description, tags, primary_zone.
-    Endurance extra: average_heartrate, decoupling, avg_pace_min_km.
+    Endurance extra: session_avg_hr, session_max_hr, decoupling, avg_pace_min_km,
+    main_block (main_block_avg_hr …), work_blocks (block_avg_hr …).
     Messages (endurance only) are preserved if already attached.
 
     `description` and `messages` flow directly into the specialist briefing.
@@ -248,7 +255,8 @@ def _slim_activity(activity: dict, *, is_endurance: bool = False) -> dict:
         "exercises_seen": _extract_exercises_seen(description_raw),
     }
     if is_endurance:
-        slim["average_heartrate"] = activity.get("average_heartrate")
+        slim["session_avg_hr"] = activity.get("average_heartrate")
+        slim["session_max_hr"] = activity.get("max_heartrate")
         slim["decoupling"] = activity.get("decoupling")
         slim["avg_pace_min_km"] = _pace_min_km(activity.get("pace"))
         # Session averages stay in the payload because volume and drift are
