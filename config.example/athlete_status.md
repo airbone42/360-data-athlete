@@ -141,6 +141,7 @@ deload_reduction_pct: 30            # convention: week volume <= 70 % of the pre
 deload_severity: warning            # warning | error (athlete decision)
 ride_z2_floor_w:                    # athlete's lowest Z2 step in watts; R036 flags easy-ride main steps below it; empty = off
 ride_z2_floor_severity: error       # warning | error (athlete decision)
+description_max_chars: 1200         # R037 reading budget for non-endurance descriptions (WARNING); 0 = off
 ```
 
 Status of each key, in the order evidence -> convention -> decision:

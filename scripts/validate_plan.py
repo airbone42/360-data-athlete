@@ -3558,6 +3558,58 @@ def check_ride_easy_watt_floor(workouts: list[dict], ctx: Context) -> list[Findi
     return findings
 
 
+_DESC_BUDGET_DEFAULT = 1200
+_DESC_LINE_BUDGET = 220
+
+
+def check_description_budget(workouts: list[dict], ctx: Context) -> list[Finding]:
+    """R037 — non-endurance description longer than its reading budget.
+
+    The description is read mid-session, on a phone or watch, and gets
+    skimmed; the line that differs from last time (a new load, a stop
+    criterion) is what a skim drops. Rationale belongs in ``focus``. Past
+    the budget the rationale has leaked in (framework/CLAUDE.md → "Workout
+    descriptions are execution aids"). Budget from ``description_max_chars``
+    in ``config/athlete_status.md`` (default 1200, ``0`` = off); single lines
+    over ~220 characters are named in the finding. WARNING, never blocking:
+    a first exposure of a new exercise may legitimately need the space.
+    Endurance sessions are skipped — their text is the ``intervals_icu``
+    step list, governed by R011–R031.
+    """
+    m = re.search(r"^\s*description_max_chars:\s*(\d+)", ctx.athlete_status or "", re.MULTILINE)
+    budget = int(m.group(1)) if m else _DESC_BUDGET_DEFAULT
+    if budget <= 0:
+        return []
+    findings: list[Finding] = []
+    for w in workouts:
+        if (w.get("type") or "") in ("Run", "Ride", "VirtualRun", "VirtualRide"):
+            continue
+        desc = w.get("description") or ""
+        long_lines = [ln.strip() for ln in desc.splitlines() if len(ln.strip()) > _DESC_LINE_BUDGET]
+        if len(desc) <= budget and not long_lines:
+            continue
+        parts = []
+        if len(desc) > budget:
+            parts.append(f"{len(desc)} characters (budget {budget})")
+        if long_lines:
+            parts.append(
+                f"{len(long_lines)} line(s) over {_DESC_LINE_BUDGET} characters, "
+                f"first: '{long_lines[0][:60]}…'"
+            )
+        findings.append(Finding(
+            rule_id="R037",
+            severity=SEVERITY_WARNING,
+            workout=_workout_name(w),
+            message="Description over its reading budget: " + "; ".join(parts) + ".",
+            suggestion=(
+                "One line per known exercise (dose | RPE or target | stop), gate and "
+                "warm-up one line each, step-by-step only for today's new exercise; "
+                "move rationale, history and exclusions into focus or the chat."
+            ),
+        ))
+    return findings
+
+
 RULES: list[tuple[str, Callable[[list[dict], Context], list[Finding]]]] = [
     ("R001", check_reps_ceiling),
     ("R002", check_injury_locks_shoulder),
@@ -3595,6 +3647,7 @@ RULES: list[tuple[str, Callable[[list[dict], Context], list[Finding]]]] = [
     ("R034", check_quality_run_density),
     ("R035", check_deload_due),
     ("R036", check_ride_easy_watt_floor),
+    ("R037", check_description_budget),
 ]
 
 
