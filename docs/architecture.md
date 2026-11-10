@@ -64,11 +64,10 @@ this plugin — copy its contents into a private repo and customise
 │    head coach — CLAUDE.md driver, terminal/Telegram session        │
 │    planner — strategic daily planner                              │
 │    specialist-endurance / -complementary / -ninja                 │
-│    coach-analyst / data-scientist                                 │
-│    mental-coach / video-analyst                                   │
+│    coach-analyst / video-analyst                                  │
 │    plan-validator (semantic)                                      │
-│    config-auditor / config-fixer                                  │
-│    physio-consultant / sports-ortho-consultant                    │
+│    physio-consultant                                              │
+│    research-collector / research-analyst                          │
 ├──────────────────────────────────────────────────────────────────┤
 │  Domain logic (app/)                                              │
 │    api/         — intervals.icu / Garmin clients                  │
@@ -80,9 +79,8 @@ this plugin — copy its contents into a private repo and customise
 ├──────────────────────────────────────────────────────────────────┤
 │  Scripts (scripts/*.py)                                           │
 │    fetch_context, fetch_type_history, push_workouts,              │
-│    delete_workouts, post_message, log_muscle_load,                │
-│    muscle_overview, validate_plan, audit_consistency,             │
-│    analyse_video, ...                                             │
+│    delete_workouts, post_message, analyse_activity,               │
+│    validate_plan, audit_consistency, analyse_video, ...           │
 ├──────────────────────────────────────────────────────────────────┤
 │  External services                                                │
 │    intervals.icu (source of truth for activities + NOTEs + gear)  │
@@ -255,5 +253,4 @@ but it creates drift risk when one rule evolves.
 `training_paradigms.md` or `exercise_progressions.md`) and
 `check_prompt_drift` (canonical phrases that must read identically in
 every agent that carries them). New drift checks follow the same pattern
-— add `check_<name>(...)`, register it in `CHECK_MAP`, and the
-`config-auditor` will pick it up.
+— add `check_<name>(...)` and register it in `CHECK_MAP`.

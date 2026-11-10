@@ -1,0 +1,874 @@
+{
+  "_meta": {
+    "description": "Exercise aliases: maps the names written in workout descriptions to one canonical key per exercise, so scripts/sync_description_drift.py can find the matching entry in exercise_progressions.md. Each entry lists its aliases; `_type: no_log` marks lines that are recognised but never synced (stretches, priming, cool-downs). Match logic: app/analytics/exercise_parser.match_to_mapping_key.",
+    "created": "2026-11-10 (aliases taken over from the retired exercise_muscle_mapping.json)"
+  },
+  "wrist_curl": {
+    "aliases": [
+      "wrist curl",
+      "wrist curls",
+      "handgelenk flexion",
+      "handgelenk-flexion"
+    ]
+  },
+  "reverse_wrist_curl": {
+    "aliases": [
+      "reverse wrist curl",
+      "reverse wrist curls",
+      "handgelenk extension",
+      "handgelenk-extension"
+    ]
+  },
+  "kurzhantel_curl": {
+    "aliases": [
+      "kurzhantel curl",
+      "kurzhantel-curl",
+      "dumbbell curl",
+      "bizeps curl",
+      "biceps curl"
+    ]
+  },
+  "hammer_curl": {
+    "aliases": [
+      "hammer curl",
+      "hammer-curl",
+      "hammercurl"
+    ]
+  },
+  "reverse_curl": {
+    "aliases": [
+      "reverse curl",
+      "reverse-curl",
+      "umgekehrter curl",
+      "pronated curl"
+    ]
+  },
+  "gripmaster": {
+    "aliases": [
+      "gripmaster",
+      "grip master",
+      "fingertrainer",
+      "grip trainer",
+      "gripmaster fingers"
+    ]
+  },
+  "farmer_hold_kb": {
+    "aliases": [
+      "farmer hold",
+      "farmer's hold",
+      "farmer hold kb",
+      "einarmiger farmer hold",
+      "kb farmer hold",
+      "farmer's walk"
+    ]
+  },
+  "towel_farmers_hold": {
+    "aliases": [
+      "towel farmer hold",
+      "towel farmer's hold",
+      "towel farmer hold kb",
+      "towel farmers hold",
+      "handtuch farmer hold"
+    ]
+  },
+  "kb_horn_pinch": {
+    "aliases": [
+      "kb horn pinch",
+      "horn pinch",
+      "kugelhantel pinch",
+      "pinch grip",
+      "towel wrap-and-pinch",
+      "towel wrap and pinch",
+      "towel wrap-and-pinch (kb-horn)",
+      "towel pinch",
+      "pinch grip plates"
+    ]
+  },
+  "finger_extensor_band": {
+    "aliases": [
+      "finger-extensoren band",
+      "finger extensoren band",
+      "finger extensor band",
+      "fingerstrecker band",
+      "finger extension band"
+    ]
+  },
+  "dead_hang": {
+    "aliases": [
+      "dead hang",
+      "passiver hang",
+      "passive hang",
+      "chin up hang"
+    ]
+  },
+  "l_sit_tuck_hold": {
+    "aliases": [
+      "l-sit tuck hold",
+      "l-sit tuck",
+      "l sit tuck hold",
+      "l sit tuck",
+      "l-sit parallettes tuck hold"
+    ]
+  },
+  "l_sit_parallettes": {
+    "aliases": [
+      "l-sit parallettes",
+      "l-sit",
+      "l sit parallettes",
+      "l-sit stangen"
+    ]
+  },
+  "hollow_rock": {
+    "aliases": [
+      "hollow rock",
+      "hollow rocks"
+    ]
+  },
+  "hollow_hold": {
+    "aliases": [
+      "hollow hold",
+      "hollow body hold",
+      "hollow body"
+    ]
+  },
+  "dead_bug": {
+    "aliases": [
+      "dead bug",
+      "dead bug kb",
+      "dead bug kurzhantel",
+      "dead bug contralateral",
+      "dead bug contralateral kb"
+    ]
+  },
+  "pallof_press": {
+    "aliases": [
+      "pallof press",
+      "pallof-press",
+      "kabelrotation",
+      "anti-rotation press",
+      "pallof press band"
+    ]
+  },
+  "pallof_hold": {
+    "aliases": [
+      "pallof hold",
+      "pallof-hold",
+      "pallof hold isometrisch",
+      "anti-rotation hold",
+      "pallof hold band"
+    ]
+  },
+  "stir_the_pot": {
+    "aliases": [
+      "stir the pot",
+      "stir-the-pot",
+      "swiss ball stir",
+      "pot"
+    ]
+  },
+  "plank": {
+    "aliases": [
+      "plank",
+      "unterarmstütz",
+      "forearm plank",
+      "trx plank"
+    ]
+  },
+  "side_plank": {
+    "aliases": [
+      "side plank",
+      "seitstütz",
+      "lateral plank",
+      "side plank mit drehung nach unten",
+      "side plank t-reach"
+    ]
+  },
+  "trx_row": {
+    "aliases": [
+      "trx row",
+      "trx-row",
+      "suspension row",
+      "trx rudern"
+    ]
+  },
+  "supinated_row": {
+    "aliases": [
+      "supinated row",
+      "untergriff rudern",
+      "kurzhantel row supiniert"
+    ]
+  },
+  "kurzhantel_row": {
+    "aliases": [
+      "kurzhantel row",
+      "kurzhantel-row",
+      "dumbbell row",
+      "einarmiges rudern"
+    ]
+  },
+  "lat_zug": {
+    "aliases": [
+      "lat-zug",
+      "lat zug",
+      "lat pulldown",
+      "latzug",
+      "cable pulldown"
+    ]
+  },
+  "kb_overhead_press": {
+    "aliases": [
+      "kb overhead press",
+      "kettlebell overhead press",
+      "schulterdrücken kb",
+      "overhead press"
+    ]
+  },
+  "diagonal_pull": {
+    "aliases": [
+      "diagonalzüge",
+      "diagonal pull",
+      "diagonal zug",
+      "physio diagonal",
+      "schulterrotation diag"
+    ]
+  },
+  "push_up": {
+    "aliases": [
+      "push-up",
+      "push up",
+      "pushup",
+      "liegestütz",
+      "kneeling push",
+      "kniende liegestütz"
+    ]
+  },
+  "dip": {
+    "aliases": [
+      "dip",
+      "dips",
+      "trizeps dip",
+      "parallel bar dip"
+    ]
+  },
+  "goblet_squat": {
+    "aliases": [
+      "goblet squat",
+      "goblet-squat",
+      "kelchkniebeuge",
+      "kb squat"
+    ]
+  },
+  "bulgarian_split_squat": {
+    "aliases": [
+      "bulgarian split squat",
+      "bulgarian",
+      "bss",
+      "split squat",
+      "rear foot elevated split"
+    ]
+  },
+  "step_up": {
+    "aliases": [
+      "step-up",
+      "step up",
+      "stepup",
+      "step-ups",
+      "kb step-up",
+      "goblet step-up",
+      "box step-up",
+      "aufsteiger"
+    ]
+  },
+  "single_leg_rdl": {
+    "aliases": [
+      "single leg rdl",
+      "single-leg rdl",
+      "sl-rdl",
+      "einbeiniges kreuzheben",
+      "single leg deadlift"
+    ]
+  },
+  "hip_thrust": {
+    "aliases": [
+      "hip thrust",
+      "hüftheben",
+      "glute bridge",
+      "glute bridge weighted"
+    ]
+  },
+  "clamshell": {
+    "aliases": [
+      "clamshell",
+      "clam shell",
+      "band clamshell",
+      "muschel",
+      "hüft-außenrotation seitlage"
+    ]
+  },
+  "calf_raise": {
+    "aliases": [
+      "calf raise",
+      "calf raises",
+      "wadenheben",
+      "waden-heben"
+    ]
+  },
+  "box_jump": {
+    "aliases": [
+      "box jump",
+      "box-jump",
+      "kastensprung",
+      "plyo jump"
+    ]
+  },
+  "planche_lean": {
+    "aliases": [
+      "planche lean",
+      "vorhalte",
+      "planche-lean"
+    ]
+  },
+  "achilles_exzentrik": {
+    "aliases": [
+      "achilles exzentrik",
+      "achilles reha",
+      "exzentrisches wadenheben",
+      "heel drop",
+      "alfredson"
+    ]
+  },
+  "physio_band_er": {
+    "aliases": [
+      "physio band",
+      "physio außenrotation",
+      "schulter außenrotation",
+      "band außenrotation",
+      "er band",
+      "external rotation band",
+      "er band stand"
+    ]
+  },
+  "dead_bug_straight_leg": {
+    "aliases": [
+      "dead bug straight-leg",
+      "dead bug straight leg",
+      "dead bug straight leg mit kb",
+      "dead bug kb",
+      "leg"
+    ]
+  },
+  "bird_dog": {
+    "aliases": [
+      "bird dog",
+      "bird-dog",
+      "bird dog (2s halten)"
+    ]
+  },
+  "kneeling_push_up": {
+    "aliases": [
+      "kneeling push-up",
+      "kneeling push-ups",
+      "kneeling push up",
+      "kneeling pushup",
+      "ups"
+    ]
+  },
+  "pogo_jumps": {
+    "aliases": [
+      "pogo jumps",
+      "pogo jumps beidbeinig",
+      "pogo jump",
+      "pogo",
+      "mini-pogos",
+      "mini pogos",
+      "mini-pogo",
+      "mini pogo",
+      "mini-pogos beidbeinig",
+      "mini pogos beidbeinig",
+      "pogo-hops",
+      "pogo hops",
+      "pogo-hops beidbeinig",
+      "pogo hops beidbeinig"
+    ]
+  },
+  "knie_zur_wand_dorsalflexion": {
+    "aliases": [
+      "knie-zur-wand dorsalflexion",
+      "knie zur wand dorsalflexion",
+      "knie-zur-wand",
+      "wand dorsalflexion",
+      "wand",
+      "dorsalflexion",
+      "dorsiflexions-mobilisation (knie-zu-wand)",
+      "dorsiflexions-mobilisation",
+      "knie-zu-wand"
+    ]
+  },
+  "squat_hold": {
+    "aliases": [
+      "kniebeuge-mobilisation tief (squat hold)",
+      "squat hold",
+      "deep squat hold",
+      "kniebeuge-mobilisation tief"
+    ]
+  },
+  "thoracic_rotation_seitenlage": {
+    "aliases": [
+      "thoracic rotation in seitenlage",
+      "thoracic rotation",
+      "brustwirbelsäulen-rotation",
+      "t-spine rotation",
+      "thoraxrotation in seitenlage",
+      "thoraxrotation seitenlage",
+      "thoraxrotation"
+    ]
+  },
+  "face_pulls": {
+    "aliases": [
+      "face pulls",
+      "face pull",
+      "face pulls (band)",
+      "gesichtszug"
+    ]
+  },
+  "balance_board_sl": {
+    "aliases": [
+      "balance board — einbeinig",
+      "balance board einbeinig",
+      "balance board sl",
+      "einbeinig balance board",
+      "single leg balance board",
+      "balance board single leg",
+      "balance board single-leg + catch (wasserflasche gegen wand)",
+      "balance board single-leg + catch",
+      "balance board einbeinig + fang",
+      "balance board einbeinig + catch",
+      "balance board single-leg"
+    ]
+  },
+  "kniender_ausfallschritt_huftbeuger": {
+    "aliases": [
+      "kniender ausfallschritt hüftbeuger",
+      "kniender ausfallschritt huftbeuger",
+      "kniender hüftbeuger-stretch",
+      "hip flexor lunge",
+      "kneeling hip flexor stretch",
+      "couch stretch kneeling"
+    ]
+  },
+  "figure_4_piriformis": {
+    "aliases": [
+      "figure-4 piriformis",
+      "figure 4 piriformis",
+      "figure-4",
+      "figure-4 piriformis —",
+      "piriformis stretch",
+      "piriformis-stretch",
+      "vierer-dehnung",
+      "supine figure 4"
+    ]
+  },
+  "a_skips": {
+    "aliases": [
+      "a-skips",
+      "a skips",
+      "a-skip",
+      "a skip",
+      "skipping a",
+      "running drill a-skip"
+    ]
+  },
+  "einbeinstand_augen_zu": {
+    "aliases": [
+      "einbeinstand augen zu",
+      "einbeinstand augen geschlossen",
+      "single leg stance eyes closed",
+      "blind balance",
+      "einbeinstand blind"
+    ]
+  },
+  "y_balance_reach": {
+    "aliases": [
+      "y-balance reach",
+      "y balance reach",
+      "y-balance",
+      "y balance",
+      "star excursion balance",
+      "sebt"
+    ]
+  },
+  "tandem_stand_gaze_stab": {
+    "aliases": [
+      "tandem-stand + kopfrotation (gaze-stabilization)",
+      "tandem-stand + kopfrotation (gaze-stabilization) auf schaumstoff/yogamatte",
+      "tandem-stand + kopfrotation auf schaumstoff",
+      "tandem-stand kopfrotation",
+      "tandem stand gaze stabilization",
+      "tandem stand kopfrotation",
+      "stabilization) auf schaumstoff/yogamatte",
+      "auf schaumstoff/yogamatte",
+      "gaze stabilization",
+      "tandem stand",
+      "tandemstand auf gefalteter matte + kopfrotation, letzte 10s augen zu",
+      "tandemstand auf gefalteter matte + kopfrotation",
+      "tandemstand auf schaumstoff + kopfrotation",
+      "tandemstand matte kopfrotation"
+    ]
+  },
+  "scapular_depression_lift_seated": {
+    "aliases": [
+      "scapular depression lift",
+      "scapular depression lift sitzend",
+      "skapula-depression mit armhebung",
+      "skapula-depression mit aktiver armhebung",
+      "skapula depression armhebung",
+      "lower trap activation lift",
+      "scaption with scapular setting"
+    ]
+  },
+  "scapula_aktivierung_bandzug": {
+    "aliases": [
+      "scapula-aktivierung bandzug",
+      "scapula aktivierung bandzug",
+      "scapula-aktivierung",
+      "scapula aktivierung",
+      "schulterblatt-aktivierung",
+      "schulterblatt aktivierung",
+      "scapular activation band"
+    ]
+  },
+  "side_shuffle": {
+    "aliases": [
+      "side-shuffle",
+      "side shuffle",
+      "lateral shuffle",
+      "seitschritt-shuffle"
+    ]
+  },
+  "carioca": {
+    "aliases": [
+      "carioca",
+      "karaoke drill",
+      "grapevine drill"
+    ]
+  },
+  "wand_slide": {
+    "aliases": [
+      "wand-slide",
+      "wand slide",
+      "wand-slides",
+      "wand slides",
+      "wall slide",
+      "wall slides",
+      "wand-slides (schulterblätter aktiv nach unten-hinten)"
+    ]
+  },
+  "body_squat": {
+    "aliases": [
+      "body-squat",
+      "body squat",
+      "body-squat langsam",
+      "bodyweight squat",
+      "bw squat",
+      "luftkniebeuge"
+    ]
+  },
+  "hip_hinge": {
+    "aliases": [
+      "hip-hinge",
+      "hip hinge",
+      "hip-hinge ohne last",
+      "hip-hinge bewegungsmuster",
+      "hinge pattern",
+      "hinge-drill"
+    ]
+  },
+  "mcgill_curl_up": {
+    "aliases": [
+      "mcgill curl-up",
+      "mcgill curl up",
+      "mcgill curl-up (hände unter rücken)",
+      "mcgill curlup",
+      "mc gill curl-up"
+    ]
+  },
+  "suitcase_hold": {
+    "aliases": [
+      "suitcase hold",
+      "suitcase hold kb",
+      "suitcase-hold",
+      "suitcase carry hold",
+      "suitcase hold (aufbausatz)",
+      "suitcase-aufbausatz kettlebell",
+      "suitcase-aufbausatz",
+      "suitcase aufbausatz kettlebell",
+      "suitcase hold langhantel",
+      "langhantel-suitcase"
+    ]
+  },
+  "banded_pull_apart": {
+    "aliases": [
+      "banded pull-apart",
+      "banded pull apart",
+      "band pull-apart",
+      "band pull apart",
+      "pull-apart band",
+      "scapular pull-apart"
+    ]
+  },
+  "toe_heel_raise_bilateral": {
+    "aliases": [
+      "zehen-/fersenstand beidbeinig",
+      "zehen-/fersenstand",
+      "zehen- und fersenstand",
+      "zehenstand/fersenstand",
+      "toe and heel raise",
+      "toe heel raise bilateral",
+      "zehenstand fersenstand beidbeinig"
+    ]
+  },
+  "balance_board_bilateral": {
+    "aliases": [
+      "balance board beidbeinig + wand-rebound-fang mit aufsetzer",
+      "balance board beidbeinig + wand-rebound-fang",
+      "balance board beidbeinig + fang",
+      "balance board beidbeinig",
+      "bilateral balance board",
+      "balance board both feet"
+    ]
+  },
+  "tandem_stand_perturbation": {
+    "aliases": [
+      "tandemstand fester boden + wand-rebound-fang",
+      "tandemstand fester boden + fang",
+      "tandem stance perturbation on firm ground",
+      "tandem stance catch perturbation"
+    ]
+  },
+  "band_er_90_90": {
+    "aliases": [
+      "90/90 bow & arrow",
+      "bow & arrow",
+      "bow and arrow",
+      "90/90 bow and arrow",
+      "90/90 external rotation band",
+      "band er 90/90"
+    ]
+  },
+  "w_raise": {
+    "aliases": [
+      "w-raise",
+      "w raise",
+      "w-raises",
+      "w raises",
+      "prone w-raise",
+      "w-raise band"
+    ]
+  },
+  "scapular_pullup": {
+    "aliases": [
+      "scapular pullups",
+      "scapular pullup",
+      "scapular pull-ups",
+      "scapular pull-up",
+      "scapula pullups",
+      "scap pullups"
+    ]
+  },
+  "trx_back_press": {
+    "aliases": [
+      "trx rücken-hochdrücken",
+      "trx ruecken-hochdruecken",
+      "trx rücken hochdrücken",
+      "trx back press",
+      "trx scapular press-back"
+    ]
+  },
+  "step_down": {
+    "aliases": [
+      "step-down",
+      "step down",
+      "step-downs",
+      "step downs",
+      "lateral step-down",
+      "lateraler step-down",
+      "forward step-down"
+    ]
+  },
+  "side_lying_hip_abduction": {
+    "aliases": [
+      "side-lying hip abduction",
+      "side lying hip abduction",
+      "gewichtete side-lying hip abduction",
+      "seitliche hüftabduktion",
+      "seitliche hueftabduktion",
+      "hip abduction seitlage"
+    ]
+  },
+  "single_leg_hip_thrust": {
+    "aliases": [
+      "single-leg hip thrust",
+      "single leg hip thrust",
+      "sl hip thrust",
+      "einbeiniger hip thrust",
+      "single-leg glute bridge"
+    ]
+  },
+  "cross_body_stretch": {
+    "aliases": [
+      "cross-body",
+      "cross body",
+      "cross-body stretch",
+      "cross body stretch",
+      "cross-body dehnung"
+    ],
+    "_type": "no_log"
+  },
+  "hip_flexor_reset": {
+    "aliases": [
+      "gekoppelter hueftbeuger-reset",
+      "gekoppelter hüftbeuger-reset",
+      "hueftbeuger-reset",
+      "hüftbeuger-reset",
+      "hueftbeuger-reset + glute-squeeze",
+      "hüftbeuger-reset + glute-squeeze",
+      "hip flexor reset"
+    ],
+    "_type": "no_log"
+  },
+  "ir_mobi_hand_behind_back": {
+    "aliases": [
+      "hand-hinter-ruecken aktive ir-mobi",
+      "hand-hinter-rücken aktive ir-mobi",
+      "hand hinter rücken ir-mobi",
+      "aktive ir-mobi",
+      "active ir mobility hand behind back"
+    ],
+    "_type": "no_log"
+  },
+  "cooldown_shakeout": {
+    "aliases": [
+      "füße locker ausschütteln, waden",
+      "füße locker ausschütteln",
+      "fuesse locker ausschuetteln",
+      "füße ausschütteln",
+      "waden ausstreichen"
+    ],
+    "_type": "no_log"
+  },
+  "internal_rotation_band": {
+    "aliases": [
+      "internal rotation band (theraband)",
+      "internal rotation band",
+      "ir band",
+      "band innenrotation",
+      "schulter innenrotation",
+      "internal rotation theraband"
+    ]
+  },
+  "bws_extension_roll": {
+    "aliases": [
+      "bws-extension über die rolle (gegenrichtung)",
+      "bws-extension über die rolle",
+      "bws extension rolle",
+      "bws-extension",
+      "thoracic extension foam roller"
+    ],
+    "_type": "no_log"
+  },
+  "balance_function_check": {
+    "aliases": [
+      "einbeinstand fester boden — funktions-check, rechts zuerst",
+      "einbeinstand funktions-check",
+      "einbeinstand fester boden funktions-check",
+      "funktions-check einbeinstand",
+      "single-leg stand function check"
+    ],
+    "_type": "no_log"
+  },
+  "back_squat": {
+    "aliases": [
+      "back squat",
+      "lh back squat",
+      "langhantel back squat",
+      "barbell back squat",
+      "langhantel-kniebeuge",
+      "langhantel kniebeuge"
+    ]
+  },
+  "squat_jump": {
+    "aliases": [
+      "squat jump",
+      "squat jump beidbeinig",
+      "squat jumps",
+      "jump squat",
+      "jump squats",
+      "countermovement jump"
+    ]
+  },
+  "pelvic_tilt_quadruped": {
+    "aliases": [
+      "vierfüßler becken-kippungen (kleine range)",
+      "vierfüßler becken-kippungen",
+      "vierfuessler becken-kippungen",
+      "becken-kippungen",
+      "quadruped pelvic tilt",
+      "cat-cow klein"
+    ],
+    "_type": "no_log"
+  },
+  "scapular_depression_band": {
+    "aliases": [
+      "scapular depression band (rechts)",
+      "scapular depression band",
+      "scapular depression",
+      "skapula-depression band",
+      "schulterblatt-depression band"
+    ]
+  },
+  "band_row": {
+    "aliases": [
+      "row (gummiband)",
+      "row gummiband",
+      "band row",
+      "banded row",
+      "gummiband-row",
+      "gummiband rudern",
+      "theraband row"
+    ]
+  },
+  "bouldering": {
+    "aliases": [
+      "bouldern",
+      "bouldering",
+      "klettern",
+      "climbing",
+      "boulder",
+      "toprope",
+      "sportklettern"
+    ]
+  },
+  "adductor_squeeze_isometric": {
+    "aliases": [
+      "isometrischer adduktoren-squeeze",
+      "adduktoren-squeeze",
+      "adduktoren squeeze",
+      "isometrischer adduktoren-squeeze (45°)",
+      "isometrischer adduktoren-squeeze (0°)",
+      "adductor squeeze",
+      "isometric adductor squeeze",
+      "hip adduction squeeze"
+    ]
+  },
+  "hip_flexor_isometric_hold": {
+    "aliases": [
+      "isometrisches hüftbeuger-halten im stand gegen die wand",
+      "hüftbeuger-halten im stand an der wand",
+      "hüftbeuger-halten",
+      "isometrisches hüftbeuger-halten",
+      "standing hip flexor isometric",
+      "hip flexor isometric hold",
+      "wall hip flexor hold"
+    ]
+  }
+}

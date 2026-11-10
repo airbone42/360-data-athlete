@@ -324,8 +324,6 @@ too easy, retired or replaced in its slot. Full rule: `CLAUDE.md` →
 
 **Communicate explicitly:** in `focus`, name which exercise is new (from research or rotation) and why it fits now.
 
-**Re-evaluation flag takes precedence.** When the briefing carries `🔄 Exercise re-evaluation due` (or confirmed `exercise-reviewer` outcomes), use those keep/progress/swap/retire decisions — do not improvise a separate rotation. Absent the flag, the per-session rotation rule applies.
-
 ---
 
 ## Cadence-rule enforcement

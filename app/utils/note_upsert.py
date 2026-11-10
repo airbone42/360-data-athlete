@@ -4,7 +4,7 @@ Repeated NOTE writes used to stack a new NOTE event per write; the
 calendar filled with parallel notes for the same day and older ones had
 to be deleted by hand. The day NOTE is now a single event whose
 description is organised in ``## <Section>`` blocks (one per feedback
-category — e.g. HRV-Review, Mental-Coach, Athleten-Feedback):
+category — e.g. HRV-Review, DFA-Analyse, Athleten-Feedback):
 
 - writing a section that already exists **replaces** that block,
 - a new section is **appended**,

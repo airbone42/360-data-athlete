@@ -414,7 +414,6 @@ def main() -> None:
                 travel=args.travel, leg_conflict=args.leg_conflict,
             )
         _warn_on_warmup_overlap(args.date)
-        _warn_on_mental_coach_triggers(workouts, args.date)
 
 
 def _read_config(path: str) -> str:
@@ -620,44 +619,6 @@ def _warn_on_warmup_overlap(target_date: str) -> None:
         logger.warning("   → Coach should clean up warmup or remove one block.")
     except Exception as exc:  # noqa: BLE001
         logger.debug("Warm-up overlap check skipped: %s", exc)
-
-
-def _warn_on_mental_coach_triggers(workouts: list, target_date: str) -> None:
-    """Post-push sanity check: surfaces mechanically detectable mental-coach triggers.
-
-    Triggers (per framework/CLAUDE.md "Mental-coach triggers"):
-    - workout_type == "LONG" or duration_min > 90 on a Run
-    - workout_type == "RACE"
-
-    Fail-soft — if check fails, it does not block the push. The head
-    coach (Claude) reads this WARNING and decides to start mental-coach
-    as a pane teammate. The other triggers (bad session, setback note,
-    HRV drop, motivation signal) are not derivable from push-workouts
-    data and stay head-coach judgment.
-    """
-    try:
-        triggers = []
-        for w in workouts:
-            wo_type = w.get("type") if isinstance(w, dict) else getattr(w, "type", None)
-            wo_subtype = w.get("workout_type") if isinstance(w, dict) else getattr(w, "workout_type", None)
-            duration = w.get("duration_min") if isinstance(w, dict) else getattr(w, "duration_min", None)
-            name = w.get("name") if isinstance(w, dict) else getattr(w, "name", "(unnamed)")
-            if wo_subtype == "RACE":
-                triggers.append(("RACE", name, "Race day — pre-race mental setup"))
-                continue
-            if wo_subtype == "LONG" and wo_type in ("Run", "Ride"):
-                triggers.append(("LONG", name, f"Long effort {duration or '?'} min"))
-                continue
-            if wo_type == "Run" and isinstance(duration, (int, float)) and duration > 90:
-                triggers.append(("LONG", name, f"Run > 90 min ({duration} min)"))
-        if not triggers:
-            return
-        logger.warning("🧠 MENTAL-COACH-TRIGGER for %s — %d hit(s):", target_date, len(triggers))
-        for kind, name, reason in triggers:
-            logger.warning("   • [%s] %s — %s", kind, name, reason)
-        logger.warning("   → Head coach: start mental-coach in its own pane (context: workout, HRV, TSB, weather).")
-    except Exception as exc:  # noqa: BLE001
-        logger.debug("Mental-coach trigger check skipped: %s", exc)
 
 
 if __name__ == "__main__":

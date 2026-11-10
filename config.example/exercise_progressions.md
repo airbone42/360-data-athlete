@@ -56,9 +56,9 @@ Erkannte Formate: `täglich`, `alle N Tage`, `Nx/Woche`, `wöchentlich`.
 Alles nach einem Gedankenstrich ist Prosa und wird ignoriert.
 
 `app/analytics/prescription_compliance.py` vergleicht diese Deklarationen
-gegen die tatsächlich ausgeführten Übungen aus `data/muscles/*.json` (dem
-Muskel-Log, das ohne Zusatzaufwand ohnehin entsteht) und meldet Rückstand
-in `planningConstraints`. Ad hoc:
+gegen die tatsächlich ausgeführten Übungen (Sessionname und die aus der
+Beschreibung der Kraft-Aktivität gelesenen Übungen, ohne Zusatzaufwand) und
+meldet Rückstand in `planningConstraints`. Ad hoc:
 
 ```bash
 python3 scripts/check_prescription_compliance.py [--date YYYY-MM-DD] [--json]
@@ -188,33 +188,24 @@ Mechanik: `app/analytics/progression_queue.py`, eingeblendet in
 
 ---
 
-## Re-Eval-Feld (WHY-Persistenz für die Re-Evaluations-Kadenz)
+## Re-Eval-Feld (WHY-Persistenz)
 
-Damit die Übungsauswahl nicht „blind" Session für Session übernommen,
-sondern an natürlichen Grenzen (Erholungswoche, Phasenwechsel, Staleness)
-gegen die aktuellen Ziele **gechallengt** wird, kann jede aktive Übung im
-**Wrapper** (`config/exercise_progressions.md`) eine maschinenlesbare
-Re-Eval-Zeile tragen:
+Jede aktive Übung kann im **Wrapper** (`config/exercise_progressions.md`)
+festhalten, wozu sie im Plan steht:
 
 ```
 - **Re-Eval:** dient=<Ziel/Phase> | eingeführt=YYYY-MM-DD | letzte-Re-Eval=YYYY-MM-DD | Status=keep
 ```
 
-- `dient=` — welchem Ziel / welcher Phase (`competition_plan.md`) die Übung dient.
-- `eingeführt=` — wann die Übung in die Rotation kam.
-- `letzte-Re-Eval=` — wann zuletzt bewusst hinterfragt. **Steuert Trigger C**
-  (`context_builder._parse_stale_exercises`): liegt das Datum weiter zurück
-  als `athlete_status.md → staleness_weeks`, flaggt der Coach die Übung
-  in `planningConstraints`, und der `/training`-Flow startet den
-  `exercise-reviewer`-Agenten.
-- `Status=` ∈ `keep | progress | swap | retire | pending`. `retire` nimmt
-  die Übung aus der Staleness-Prüfung (nicht mehr in Rotation).
+- `dient=` — welchem Ziel / welcher Phase (`competition_plan.md`) die Übung
+  dient. `plan-validator` S10 warnt, wenn diese Phase vorbei ist.
+- `eingeführt=`, `letzte-Re-Eval=`, `Status=` (`keep | progress | swap |
+  retire | pending`) — Dokumentation der letzten bewussten Entscheidung.
+  Kein Code wertet sie aus; einen automatischen Re-Evaluations-Trigger gibt
+  es nicht mehr (2026-11).
 
-Die konkreten Re-Eval-Zeilen sind **athleten-spezifisch** und gehören in
-den Wrapper, nicht in diese Framework-Defaults. Phasen-Plan und
-`staleness_weeks` werden in `athlete_status.md` gepflegt (siehe dort die
-Re-Eval-Trigger-Sektion). Nach einer bestätigten Re-Evaluation `Status=`
-und `letzte-Re-Eval=<heute>` zurückschreiben (Staleness-Reset).
+Die konkreten Zeilen sind **athleten-spezifisch** und gehören in den
+Wrapper, nicht in diese Framework-Defaults.
 
 ---
 

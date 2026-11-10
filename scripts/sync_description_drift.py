@@ -380,7 +380,7 @@ def compute_drifts(
     parsed_exercises, _unmapped_raw = parse_description(description)
     aggregated = _aggregate_per_exercise(parsed_exercises, mapping)
 
-    # Map of unmapped names (parsed but not in exercise_muscle_mapping.json)
+    # Names without an alias entry (parsed but not in exercise_aliases.json)
     unmapped_names: list[str] = []
     for pe in parsed_exercises:
         if not pe.name:
@@ -461,7 +461,7 @@ def _apply_drifts(text: str, drifts: list[Drift]) -> str:
 
 
 def _load_mapping() -> dict:
-    with open(resolve_config("exercise_muscle_mapping.json")) as f:
+    with open(resolve_config("exercise_aliases.json")) as f:
         data = json.load(f)
     data.pop("_meta", None)
     return data

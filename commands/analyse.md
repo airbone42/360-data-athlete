@@ -103,8 +103,7 @@ python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/fetch_context.py --date {activity_dat
 ### Step 3: Manual sessions
 
 **Guard:** `data_source == "none"` (manually logged session without a
-recording) → skip step 5. Coach-analyst works directly from the
-description (step 6).
+recording) → coach-analyst works from the description alone (step 6).
 
 ### Step 4: (folded into step 1)
 
@@ -112,15 +111,6 @@ FIT download, parsing and sub-lap windows run inside
 `analyse_activity.py`. Flags for special cases: `--no-fit` (force the
 streams path), `--fit-path <file>` (a FIT the athlete supplied),
 `--no-surface` (skip the surface lookup).
-
-### Step 5: Lap chronicle (data-scientist)
-
-Launch the `data-scientist` agent in a pane. Pass:
-- The `analyse_activity.py` output from step 1 (laps, sub-laps, zone times)
-- HR zones: the `hr_zones` block of that output (the activity's sport)
-
-The data scientist produces a factual chronicle per lap (HR-zone
-transitions, running dynamics, surface). No interpretation.
 
 ### Step 6: Coaching analysis (coach-analyst)
 
@@ -133,21 +123,14 @@ transitions, running dynamics, surface). No interpretation.
 `agents/coach-analyst.md` rejects these inputs silently if they appear in a briefing, but the head coach removes the risk at the source by not listing them. All three rules apply to every run analysis.
 
 Launch the `coach-analyst` agent in a pane. Pass:
-- Lap chronicle from the data scientist
-- Activity data (planned workout, actual values from step 1)
-- HR zones: the `hr_zones` block of the step-1 output
+- The `analyse_activity.py` output from step 1 as is (activity header,
+  laps with sub-laps, `hr_zones` + `hr_zone_times`, decoupling, planned
+  workout, wellness) — coach-analyst reads the per-lap facts from it
+  directly; there is no separate chronicle step
 - Athlete context (wellness_brief, recent_training)
 
 Structure: **Session overview** | **Strengths** | **Growth areas**.
 Short enough to read in one sitting on a phone.
-
-### Step 6.5: Log muscle load (silent)
-
-```bash
-python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/log_muscle_load.py --activity-id {ID} --silent
-```
-
-Errors swallowed silently — this step does not block the analysis.
 
 ### Step 6.55: Assign shoe gear (intervals.icu backend only)
 

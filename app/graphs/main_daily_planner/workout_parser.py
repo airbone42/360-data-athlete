@@ -68,8 +68,8 @@ VALID_TYPES = sports.VALID_TYPES
 REQUIRED_FIELDS = ["type", "name", "duration_min", "workout_type"]
 # Canonical workout_type enum — documented identically in CLAUDE.md and
 # agents/planner.md. RACE is part of the
-# enum because downstream consumers gate on it (mental-coach pre-race
-# trigger in push_workouts.py, race-shoe unlock in shoe_advisor.py).
+# enum because downstream consumers gate on it (race-shoe unlock in
+# shoe_advisor.py).
 # Validation is soft: unknown values only log a warning (historic data
 # and ad-hoc plans may carry legacy values like "WORKOUT").
 VALID_WORKOUT_TYPES: set[str] = {

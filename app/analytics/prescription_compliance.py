@@ -15,9 +15,10 @@ actually executed:
   `**Soll-Frequenz:**` line (`täglich`, `alle 2 Tage`, `2x/Woche`, …). Only
   entries that declare one are tracked; everything else is ignored, so the
   check stays opt-in per exercise.
-- **Execution** — the muscle logs under `data/muscles/*.json` record the
-  exercises actually parsed out of each completed session. That is a real
-  execution log and needs no extra bookkeeping from the athlete.
+- **Execution** — the completed activities themselves: the session name, and
+  for strength sessions the exercises `exercise_parser` reads out of the
+  activity description. That is a real execution log and needs no extra
+  bookkeeping from the athlete.
 
 The output is advisory. It never blocks a plan; it makes a silent omission
 loud enough to be a decision.
@@ -25,14 +26,16 @@ loud enough to be a decision.
 
 from __future__ import annotations
 
-import json
 import math
 import re
 import unicodedata
 from datetime import date, timedelta
-from pathlib import Path
 
-from app.utils.paths import DATA_DIR
+from app.utils.activity_helpers import activity_date
+
+# Activity types whose description lists exercises. Run / ride descriptions
+# are prose and intervals, parsing them would only add noise names.
+STRENGTH_ACTIVITY_TYPES = frozenset({"WeightTraining", "Workout"})
 
 # `### Exercise name` or `#### Exercise name` — the heading a prescription
 # block hangs under. Level is not meaningful here, only the title.
@@ -133,60 +136,50 @@ def parse_prescriptions(progressions_md: str) -> list[dict]:
     return out
 
 
-def _load_executions(today: date, lookback_days: int) -> dict[str, date]:
-    """Map normalised exercise name → most recent execution date."""
-    return _load_logged_names(today, lookback_days)[0]
+def _remember(index: dict[str, date], name: str, day: date) -> None:
+    if name and (name not in index or index[name] < day):
+        index[name] = day
 
 
 def _load_logged_names(
-    today: date, lookback_days: int
+    activities: list[dict], today: date, lookback_days: int
 ) -> tuple[dict[str, date], dict[str, date]]:
     """Return (exercise names, session names) → most recent execution date.
 
     Session names are kept apart because some prescriptions are whole blocks
     (a mobility routine, a physio protocol): the block runs as its own
-    session, its parts are logged under their own names, and the block name
+    session, its parts are listed under their own names, and the block name
     never appears as an exercise. Without the session index such a block reads
     as "never executed" while it ran every other day — a false alarm that
     pushes the block into days where other sessions already cover it.
+
+    Only the coach-written exercise name is indexed. An alias table that
+    collapses variants (a single-leg glute bridge and a single-leg hip thrust
+    under one key) would mark a never-executed prescription as satisfied,
+    which is the one failure this checker must not have.
     """
-    muscles_dir = Path(DATA_DIR) / "muscles"
+    from app.analytics.exercise_parser import parse_description
+
     seen: dict[str, date] = {}
     sessions_seen: dict[str, date] = {}
-    if not muscles_dir.is_dir():
-        return seen, sessions_seen
     cutoff = today - timedelta(days=lookback_days)
-    for path in sorted(muscles_dir.glob("*.json")):
-        stem = path.stem
+    for activity in activities:
         try:
-            day = date.fromisoformat(stem)
+            day = date.fromisoformat(activity_date(activity))
         except ValueError:
-            continue  # _e1rm_state.json and friends
+            continue
         if day < cutoff or day > today:
             continue
-        try:
-            payload = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
+        _remember(sessions_seen, _normalise(str(activity.get("name") or "")), day)
+        if activity.get("type") not in STRENGTH_ACTIVITY_TYPES:
             continue
-        for session in payload.get("sessions") or []:
-            wname = _normalise(str(session.get("workout_name") or ""))
-            if wname and (wname not in sessions_seen or sessions_seen[wname] < day):
-                sessions_seen[wname] = day
-            for ex in session.get("exercises") or []:
-                # Index the coach-written name ONLY, never the mapping key.
-                # Mapping keys deliberately collapse variants for muscle-load
-                # purposes — a single-leg glute bridge and a single-leg hip
-                # thrust share `hip_thrust`. Treating that as identity marks a
-                # never-executed prescription as satisfied, which is the one
-                # failure this checker must not have.
-                name = ex.get("name")
-                if not name:
-                    continue
-                norm = _normalise(str(name))
-                if not norm:
-                    continue
-                if norm not in seen or seen[norm] < day:
-                    seen[norm] = day
+        parsed, _unparsed = parse_description(str(activity.get("description") or ""))
+        for ex in parsed:
+            norm = _normalise(ex.name or "")
+            # One- and two-letter fragments would "contain" half the
+            # prescriptions in the substring match below.
+            if len(norm) >= 3:
+                _remember(seen, norm, day)
     return seen, sessions_seen
 
 
@@ -230,13 +223,18 @@ def _match_execution(name: str, executions: dict[str, date]) -> date | None:
 def compute_prescription_compliance(
     progressions_md: str,
     today: date,
+    activities: list[dict],
     lookback_days: int = 60,
 ) -> list[dict]:
-    """Return one finding per prescription that is overdue or never executed."""
+    """Return one finding per prescription that is overdue or never executed.
+
+    ``activities`` are intervals.icu activity dicts (``start_date_local``,
+    ``name``, ``type``, ``description``) covering at least ``lookback_days``.
+    """
     prescriptions = parse_prescriptions(progressions_md)
     if not prescriptions:
         return []
-    executions, sessions = _load_logged_names(today, lookback_days)
+    executions, sessions = _load_logged_names(activities, today, lookback_days)
 
     findings: list[dict] = []
     for p in prescriptions:
@@ -281,7 +279,7 @@ def format_findings(findings: list[dict], lookback_days: int = 60) -> str | None
     if not findings:
         return None
     lines = [
-        "Prescription compliance (per exercise, from the muscle logs — "
+        "Prescription compliance (per exercise, from the activity descriptions — "
         "these are NOT covered by the tag-level due-warnings above):"
     ]
     for f in findings:

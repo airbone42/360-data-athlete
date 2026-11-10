@@ -1355,7 +1355,12 @@ def _achilles_plyo_locked() -> bool:
     return bool(_re.search(r"Achillessehne.*Phase\s*[12]\s*aktiv", content, _re.IGNORECASE))
 
 
-def _compute_prescription_compliance(today: date) -> str | None:
+# The context fetches four weeks of activities; the prescription check sees
+# exactly that window (every declared cadence is far shorter).
+PRESCRIPTION_LOOKBACK_DAYS = 28
+
+
+def _compute_prescription_compliance(activities: list[dict], today: date) -> str | None:
     """Flag standing prescriptions that were not actually executed.
 
     Complements `_compute_complementary_due`, which resolves only to the tag
@@ -1373,9 +1378,10 @@ def _compute_prescription_compliance(today: date) -> str | None:
     from app.utils.config_loader import load_config
 
     findings = compute_prescription_compliance(
-        load_config("exercise_progressions"), today
+        load_config("exercise_progressions"), today, activities,
+        lookback_days=PRESCRIPTION_LOOKBACK_DAYS,
     )
-    return format_findings(findings)
+    return format_findings(findings, lookback_days=PRESCRIPTION_LOOKBACK_DAYS)
 
 
 def _compute_progression_queue() -> str | None:
@@ -1566,17 +1572,6 @@ def _compute_cross_training_status(activities: list[dict], today: date) -> str:
     )
 
 
-# Re-evaluation cadence — exercise selection is re-challenged at natural
-# boundaries (recovery week, periodization phase change, staleness), NOT
-# every session. The helpers below emit a cheap advisory flag: it never
-# blocks and never does the re-evaluation itself. When the flag is present
-# the /training flow runs the `exercise-reviewer` agent before the
-# specialists. The mechanic is generic; every threshold and the phase
-# schedule come from config/ (athlete_status.md re-eval block) so no
-# athlete specifics live in framework code.
-_REEVAL_STALENESS_WEEKS_DEFAULT = 6
-
-
 def _parse_rhr_overload_bpm(status_content: str | None) -> float:
     """Read the athlete's RHR overload step from ``athlete_status.md``.
 
@@ -1600,174 +1595,6 @@ def _parse_rhr_overload_bpm(status_content: str | None) -> float:
         return float(m.group(1).replace(",", "."))
     except ValueError:
         return 5.0
-
-
-def _parse_reeval_config(status_content: str | None) -> dict:
-    """Parse the re-eval trigger config from athlete_status.md.
-
-    Returns ``{staleness_weeks, last_reeval_phase, phases}`` where ``phases``
-    is a list of ``(name, start_date, end_date)``. A missing block degrades
-    to staleness-only defaults (no phase schedule → phase trigger disabled).
-    """
-    import re as _re
-
-    from app.utils.date_parse import parse_config_date
-
-    weeks = _REEVAL_STALENESS_WEEKS_DEFAULT
-    last_phase: str | None = None
-    phases: list[tuple[str, date, date]] = []
-    if not status_content:
-        return {"staleness_weeks": weeks, "last_reeval_phase": None, "phases": phases}
-
-    m = _re.search(r"\*\*staleness_weeks:\*\*\s*(\d+)", status_content)
-    if m:
-        try:
-            weeks = int(m.group(1))
-        except ValueError:
-            pass
-
-    m = _re.search(r"\*\*last_reeval_phase:\*\*\s*(.+)", status_content)
-    if m:
-        cand = m.group(1).strip()
-        if cand and cand not in ("—", "-", "–"):
-            last_phase = cand
-
-    # Phase schedule lines: "Name | YYYY-MM-DD | YYYY-MM-DD" anywhere in the
-    # file. A machine-readable mirror of the periodization table in
-    # competition_plan.md — the human table stays the documentation source.
-    for line in status_content.splitlines():
-        pm = _re.match(
-            r"\s*([^|]+?)\s*\|\s*(\d{4}-\d{2}-\d{2})\s*\|\s*(\d{4}-\d{2}-\d{2})\s*$",
-            line,
-        )
-        if not pm:
-            continue
-        start = parse_config_date(pm.group(2))
-        end = parse_config_date(pm.group(3))
-        if start and end and end >= start:
-            phases.append((pm.group(1).strip(), start, end))
-
-    return {"staleness_weeks": weeks, "last_reeval_phase": last_phase, "phases": phases}
-
-
-def _current_phase(phases: list[tuple[str, date, date]], today: date) -> str | None:
-    """Return the phase whose [start, end] window contains today, else None."""
-    for name, start, end in phases:
-        if start <= today <= end:
-            return name
-    return None
-
-
-def _parse_stale_exercises(
-    prog_content: str | None, today: date, max_weeks: int
-) -> list[str]:
-    """Return exercise names whose ``letzte-Re-Eval`` is older than max_weeks.
-
-    Reads the per-exercise Re-Eval block in exercise_progressions.md:
-    ``- **Re-Eval:** dient=… | eingeführt=… | letzte-Re-Eval=YYYY-MM-DD | Status=keep``
-    The exercise name is the nearest preceding ``##``–``####`` heading.
-    Entries with ``Status=retire`` are skipped (no longer in rotation).
-    Pure date logic — robust against the canonical-name gap between
-    ``exercises_seen`` keywords and progression headings.
-    """
-    import re as _re
-
-    from app.utils.date_parse import parse_config_date
-
-    if not prog_content:
-        return []
-    cutoff_days = max_weeks * 7
-    stale: list[str] = []
-    current_heading: str | None = None
-    for line in prog_content.splitlines():
-        h = _re.match(r"^#{2,4}\s+(.+?)\s*$", line)
-        if h:
-            current_heading = h.group(1).strip()
-            continue
-        if "Re-Eval:" not in line:
-            continue
-        dm = _re.search(r"letzte-Re-Eval=\s*([0-9.\-]+)", line)
-        if not dm:
-            continue
-        last = parse_config_date(dm.group(1))
-        if last is None:
-            continue
-        status_m = _re.search(r"Status=\s*(\w+)", line)
-        status = status_m.group(1).lower() if status_m else ""
-        if status == "retire":
-            continue
-        if (today - last).days > cutoff_days and current_heading:
-            stale.append(current_heading)
-    return stale
-
-
-def _reeval_recovery_active(deload_state: dict | None, today: date) -> bool:
-    """True when a recovery week is currently active (and not expired)."""
-    if not deload_state:
-        return False
-    from app.utils.date_parse import parse_config_date
-
-    aktiv = (
-        str(deload_state.get("aktiv") or deload_state.get("active") or "nein")
-        .strip()
-        .lower()
-    )
-    if aktiv not in ("ja", "yes", "true"):
-        return False
-    ende = deload_state.get("ende_geplant") or deload_state.get("planned_end") or ""
-    ende_date = parse_config_date(ende)
-    if ende_date is not None and ende_date < today:
-        return False
-    return True
-
-
-def _compute_reeval_trigger(today: date, deload_state: dict | None = None) -> str | None:
-    """Emit an advisory exercise-re-evaluation flag at natural boundaries.
-
-    Three OR-combined triggers, each reusing existing data:
-      A. recovery week active (``deload_state``) — natural deload boundary
-      B. periodization phase change vs. ``last_reeval_phase``
-         (phase schedule + anchor in athlete_status.md)
-      C. staleness — an exercise's ``letzte-Re-Eval`` in
-         exercise_progressions.md is older than ``staleness_weeks``
-
-    Returns a single advisory line, or None when nothing fires. Never
-    blocks: when present the /training flow runs the `exercise-reviewer`
-    agent before the specialists; otherwise the daily loop is unchanged.
-    All thresholds/schedules come from config/ so no athlete specifics
-    live here.
-    """
-    cfg = _parse_reeval_config(_read_optional_config("athlete_status.md"))
-    reasons: list[str] = []
-
-    if _reeval_recovery_active(deload_state, today):
-        reasons.append("recovery week active")
-
-    phase_now = _current_phase(cfg["phases"], today)
-    last_phase = cfg["last_reeval_phase"]
-    if phase_now and last_phase and phase_now != last_phase:
-        reasons.append(f"phase change {last_phase} → {phase_now}")
-
-    stale = _parse_stale_exercises(
-        _read_optional_config("exercise_progressions.md"),
-        today,
-        cfg["staleness_weeks"],
-    )
-    if stale:
-        shown = ", ".join(stale[:5])
-        more = f" (+{len(stale) - 5} more)" if len(stale) > 5 else ""
-        reasons.append(
-            f"{len(stale)} exercise(s) stale >{cfg['staleness_weeks']}w: {shown}{more}"
-        )
-
-    if not reasons:
-        return None
-    return (
-        "🔄 Exercise re-evaluation due (" + "; ".join(reasons) + "). "
-        "Run the exercise-reviewer agent before the specialists (see "
-        "/training) to re-challenge selection vs. goals + level. "
-        "Advisory — does not block."
-    )
 
 
 def _compute_recovery_blocks(activities: list[dict], today: date) -> list[str]:
@@ -2253,10 +2080,10 @@ def _compute_planning_constraints(
     # and therefore cannot see a prescribed exercise that lives inside another
     # block: the session runs, the tag is satisfied, and a dropped element
     # leaves no trace. This check compares declared cadences against the
-    # exercises actually recorded in the muscle logs. Fail-soft by design — a
+    # exercises listed in the completed activities. Fail-soft by design — a
     # parsing problem must never cost a plan.
     try:
-        prescription = _compute_prescription_compliance(today)
+        prescription = _compute_prescription_compliance(activities, today)
         if prescription:
             constraints.append(prescription)
     except Exception as exc:  # noqa: BLE001
@@ -2297,14 +2124,6 @@ def _compute_planning_constraints(
             "Running is the only impact modality — a cross-training day "
             "(bike/swim) breaks the streak without costing aerobic load."
         )
-
-    # Exercise re-evaluation cadence — advisory flag at natural boundaries
-    # (recovery week / phase change / staleness). Cheap: when absent the
-    # daily flow is unchanged; when present /training runs exercise-reviewer
-    # before the specialists to re-challenge selection vs. goals + level.
-    reeval = _compute_reeval_trigger(today, deload_state)
-    if reeval:
-        constraints.append(reeval)
 
     # Video locks and film-tip candidates from exercise_log.md
     video_status = _compute_filmtipp_status(today)

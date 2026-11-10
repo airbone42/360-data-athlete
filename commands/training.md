@@ -14,12 +14,7 @@ Optional: date in `YYYY-MM-DD` format. Default: today.
 
 ```bash
 python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/fetch_context.py --date {DATE}
-python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/log_muscle_load.py --backfill 7 --silent
 ```
-
-The backfill ensures all activities of the last 7 days are processed in
-the muscle profile — even if new sessions came in since the last
-`/analyse`. Idempotent, fail-soft; never blocks planning.
 
 Check `dataWarnings`. If present: 1 line to the athlete, then continue.
 Check `athleteFeedback`. If not "no feedback": show the feedback to the
@@ -28,7 +23,7 @@ Check `skippedWorkouts`. If present → inform the athlete and clean up:
 `python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/delete_workouts.py --event-ids {IDs}`
 Check `hrvReviewPending`. If present → **before the planner** ask the
 athlete (see CLAUDE.md "HRV readiness review"). Persist answer as NOTE,
-then continue with step 1.5.
+then continue with step 2.
 
 **Week change — ledger rollover.** On the first `/training` run of a new
 week, roll the slot ledger in `config/competition_plan.md` over before
@@ -36,45 +31,6 @@ planning: move the completed week(s) verbatim to
 `config/archive/competition_plan-history.md`, keep their open items
 (with the unlock condition) in the ledger, and leave a one-line pointer
 (CLAUDE.md → "Scheduling decisions have exactly one canonical home").
-
-### Step 1.5: Exercise re-evaluation (CONDITIONAL — only when flagged)
-
-Check `planningConstraints` for the `🔄 Exercise re-evaluation due` flag
-(emitted by `context_builder._compute_reeval_trigger` at natural
-boundaries — recovery week, periodization phase change, or staleness).
-
-- **Flag absent (the normal case):** skip this step entirely — the daily
-  flow is unchanged. Do not run the reviewer; micro-progression via the
-  specialists is enough.
-- **Flag present:** re-challenge the exercise selection *before* the
-  specialists carry it forward:
-
-  1. Load a wider type history for the affected pillar(s) so the reviewer
-     sees the real progression / sentiment trend:
-     ```bash
-     python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/fetch_type_history.py \
-       --date {DATE} --type WeightTraining --tags {pillar tags} --max-sessions 8
-     ```
-  2. Launch the `exercise-reviewer` agent in a pane. Pass: the flag line
-     (which trigger fired), the type history, and the date. The agent
-     reads `competition_plan.md`, `exercise_progressions.md` (incl. the
-     `Re-Eval:` blocks), and `athlete_static.md` itself.
-  3. Present the reviewer's keep/progress/swap/retire recommendations to
-     the athlete as **one** proposal (Coach decisiveness rule) and ask for
-     confirmation. **Never** swap/retire silently — restrictions and
-     standing prescriptions clear only by explicit athlete confirmation
-     (see CLAUDE.md "Never silently drop or replace standing
-     prescriptions").
-  4. On confirmation, write the outcome back into
-     `config/exercise_progressions.md`: update each reviewed exercise's
-     `Re-Eval:` line — `Status=` (keep/progress/swap/retire) and
-     `letzte-Re-Eval={DATE}`. This **resets the staleness clock** so the
-     flag clears next session. Route any confirmed swap into the relevant
-     specialist in step 3.
-
-  This step runs at natural boundaries only, so it does not reinvent the
-  plan every day — it just keeps the selection honest against the current
-  goals. Then continue with step 2.
 
 ### Step 2: Launch planner as teammate
 

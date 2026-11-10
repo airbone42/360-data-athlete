@@ -7,7 +7,10 @@ Handles formats like:
   3x10 Push-ups RPE 6-7
   10 reps x 3 sets Goblet Squat 20kg
 
-Unmatched lines are returned as-is for queue logging.
+Unmatched lines are returned as-is. Consumers: `prescription_compliance`
+(which exercises were executed) and `scripts/sync_description_drift.py`
+(athlete-edited values back into `exercise_progressions.md`, keyed via
+`match_to_mapping_key` and `config/exercise_aliases.json`).
 """
 from __future__ import annotations
 
@@ -184,8 +187,8 @@ def _normalise_asymmetric_sets(line: str) -> tuple[str, bool]:
     return line[: m.start()] + f"{total}x{m.group('reps')}" + line[m.end():], True
 
 # "RPE~7" / "RPE ≈ 7" are the forms the specialist agents actually emit; without
-# the approximation marker the value is silently dropped and the session lands
-# in the muscle log with no RPE at all.
+# the approximation marker the value is silently dropped and the parsed
+# exercise carries no RPE at all.
 _RPE_ONLY_RE = re.compile(r"RPE\s*(?:~|≈|bis|ca\.?|max\.?)?\s*(\d+(?:[,.\-–]\d+)?)", re.IGNORECASE)
 _WEIGHT_ONLY_RE = re.compile(r"(\d+(?:[.,]\d+)?)\s*kg", re.IGNORECASE)
 _PER_SIDE_RE = re.compile(r"je\s*seite|per\s*side|/\s*seite|beidseitig", re.IGNORECASE)
@@ -294,7 +297,7 @@ _PARAM_SUFFIX_WORDS = re.compile(
     re.IGNORECASE,
 )
 
-# Exercises intentionally not tracked (no meaningful muscle-fatigue signal).
+# Exercises intentionally not tracked (warm-up / mobility, no training signal).
 # Bilingual list to cover both German and English notes.
 _SKIP_ALWAYS: frozenset[str] = frozenset({
     # German
@@ -309,7 +312,7 @@ _SKIP_ALWAYS: frozenset[str] = frozenset({
     "active ankle mobilisation", "active ankle mobilization", "ankle mobilisation",
 })
 
-# Stretch, mobilisation, and massage lines — not tracked for muscle fatigue
+# Stretch, mobilisation, and massage lines — not tracked as exercises
 _STRETCH_MOBILITY_RE = re.compile(
     r"(?:"
     # Mobilisation/warmup routines (original _WARMUP_NOISE_RE patterns)
@@ -340,7 +343,7 @@ _STRETCH_MOBILITY_RE = re.compile(
     r"\bsoleus[\s\-]dehnung\b|"
     r"\bpec[\s\-]minor\s+stretch\b|"
     r"\bmuskelbauch\b|"
-    # Yoga-/passive mobility poses (low-load, no muscle-fatigue signal)
+    # Yoga-/passive mobility poses (low-load, no training signal)
     r"\bcat[\s\-]cow\b|\bkatze[\s\-]kuh\b|"
     r"\bpigeon\s+pose\b|\btaubenstellung\b|"
     r"\bcross[\s\-]body\s+schulterdehnung\b|"
@@ -601,7 +604,7 @@ def _significant_tokens(text: str) -> frozenset[str]:
 def match_to_mapping_key(
     exercise_name: str, exercise_mappings: dict, *, strict: bool = False
 ) -> str | None:
-    """Find mapping key for a normalised exercise name via alias lookup.
+    """Find the alias-table key (`exercise_aliases.json`) for a normalised name.
 
     Match order:
     1. Exact key / exact alias (string equality after lowercasing).

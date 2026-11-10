@@ -127,7 +127,7 @@ All scripts are invoked as `python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/<name>.py
 Code layout (`app/api`, `app/utils`, `app/graphs`, config loading):
 [docs/architecture.md](docs/architecture.md).
 
-Field names are self-describing in the script output; the ones to process before answering are listed above. `configDrift[]` carries drift findings auto-surfaced from `check_log_vs_history` — an `exercise_progressions.md` entry that is stale relative to the last activity that performed the exercise (`{source_file, source_line, evidence}`, `evidence` sanitized at the write boundary) — so planner and specialists see the drift at session start without an explicit `/audit`. Methodology: `framework/research/hrv-rhr-baseline-methodology.md`, `hrv-forecast-model.md`, `recovery-week-triggers.md`.
+Field names are self-describing in the script output; the ones to process before answering are listed above. `configDrift[]` carries drift findings auto-surfaced from `check_log_vs_history` — an `exercise_progressions.md` entry that is stale relative to the last activity that performed the exercise (`{source_file, source_line, evidence}`, `evidence` sanitized at the write boundary) — so planner and specialists see the drift at session start. Methodology: `framework/research/hrv-rhr-baseline-methodology.md`, `hrv-forecast-model.md`, `recovery-week-triggers.md`.
 
 ---
 
@@ -196,8 +196,7 @@ history.
 - After specialists return their structures, present **one** plan with
   a 1-sentence rationale and ask whether it fits or should be adjusted.
 - When the coach is genuinely torn between two reasonable plans, the
-  resolution happens **internally** (planner pane feedback, mental-coach
-  cross-check) — never by handing the dilemma back to the athlete as
+  resolution happens **internally** (planner pane feedback) — never by handing the dilemma back to the athlete as
   a multiple-choice ballot.
 - Exceptions: explicit athlete question for alternatives ("what are my
   options?"), or decisions outside the coaching domain (logistics,
@@ -388,7 +387,7 @@ prescription and the new instruction, propose the additive
 interpretation, and ask one yes/no question. Do NOT present a 3-option
 menu (see "Coach decisiveness rule").
 
-**Audit-time correlate:** `config-auditor` and `plan-validator` should
+**Validation-time correlate:** `plan-validator` should
 flag plans that contain a new physio layer while the underlying
 atomic block's per-exercise last-seen exceeds its cadence — a hard
 ERROR before push.
@@ -476,7 +475,7 @@ flag" section.*
 
 ### Interim updates during a flow stay terse (policy)
 
-A multi-step flow (`/training`, `/analyse`, `/audit`) runs several agents
+A multi-step flow (`/training`, `/analyse`, `/research`) runs several agents
 in sequence and can take many minutes. Everything the head coach sends the
 athlete **before the final deliverable** is an interim update, and interim
 updates are **not** the place to narrate the work. The athlete asked for a
@@ -754,7 +753,7 @@ When an exercise provokes a symptom **at the end position** rather than under fa
 - **Load and range are two separate progression steps — never advance both in the same session and never gate one on the other's criterion.** A load cap is released by the 24-hour pain gate; a range restriction by its own criteria (symptom stable in the current range across two sessions, quiet morning, no strength regression at the anchor, no new neurological signs).
 - **A cap waiting on an unanswered question is a drop, not a cap:** when a ceiling is gated on an external answer (a practitioner's verdict, a pending appointment) that fails to arrive across two scheduled opportunities, re-derive the criterion from evidence or escalate the question — do not let the cap stand by default.
 - **Silence is not a data point:** a progression counter advances on a *documented* clean session; where the athlete's convention treats an unreported session as symptom-free, write that down and apply it consistently, otherwise the counter drifts in whichever direction the coach prefers.
-- **Know the limit of this rule:** it supplies stimulus class, lever and release criteria, not the classification — separating tendinopathy from entrapment, enthesopathy or a capsular problem needs hands-on testing. When the 24-hour response stops fitting the pattern across two reaction cycles, or neurological signs appear, hand over to `physio-consultant` / `sports-ortho-consultant`, **not** another research pass.
+- **Know the limit of this rule:** it supplies stimulus class, lever and release criteria, not the classification — separating tendinopathy from entrapment, enthesopathy or a capsular problem needs hands-on testing. When the 24-hour response stops fitting the pattern across two reaction cycles, or neurological signs appear, hand over to `physio-consultant`, **not** another research pass.
 
 **Research anchor:** [end-range-loading-tendon-buildup-rom-vs-load.md](research/end-range-loading-tendon-buildup-rom-vs-load.md).
 
@@ -961,27 +960,6 @@ definitions.
 
 ---
 
-## Mental-coach triggers (policy)
-
-Start `mental-coach` automatically in these situations:
-
-| Situation | When | Mechanization | Context to pass |
-|-----------|------|---------------|-----------------|
-| Pre-long-effort | Planner schedules `LONG` (> 90 min) or `RACE` | **Code: `push_workouts.py::_warn_on_mental_coach_triggers`** logs `🧠 MENTAL-COACH-TRIGGER` after every push | Workout, HRV, TSB, weather |
-| After a bad session | `coach-analyst` flags significantly under plan | Head-coach judgment (analysis-time signal) | Analysis output, activity details |
-| After a setback | Injury NOTE, abandoned session, race well below goal | Head-coach judgment | Note + activity context |
-| Unexplained HRV drop | Review yields no external factor | Head-coach judgment | HRV data, training load |
-| Motivation signal | "no energy", "tired", "not motivated" | Head-coach judgment (text) | Direct text |
-| Direct invocation | Athlete asks for mental support directly | Head-coach launches on request | Free interaction |
-
-The Pre-long-effort row is mechanically surfaced — every `push_workouts.py`
-invocation that contains a Long/RACE workout emits a `🧠 MENTAL-COACH-TRIGGER`
-WARNING line in the push log. The head-coach reads it and launches the
-`mental-coach` pane. The remaining rows are not derivable from push-time
-data alone and stay head-coach judgment for now.
-
----
-
 ## Feedback loop
 
 Everything in chat:
@@ -1043,12 +1021,6 @@ To start: set the recovery-week status block in `config/athlete_status.md`
 (active/start/planned-end/reason). To end: clear the block or let the
 planned-end date expire — `_compute_planning_constraints` ignores expired
 flags automatically.
-
----
-
-## Exercise re-evaluation cadence
-
-Daily planning does **micro-progression** well (via `exercise_progressions.md` + type history) but never asks whether an exercise still serves the athlete's **current goals and fitness level**; selection is therefore re-challenged at **natural boundaries**, not every session. `context_builder._compute_reeval_trigger` adds a single advisory line (`🔄 Exercise re-evaluation due …`) to `planningConstraints` when (1) a recovery week is active (`deload_state`), (2) today's periodization phase (machine-readable phase plan in `config/athlete_status.md`) differs from `last_reeval_phase`, or (3) an exercise's `letzte-Re-Eval` in `exercise_progressions.md` is older than `staleness_weeks` (`config/athlete_status.md`, default 6); no trigger → no line → the daily flow is unchanged. With the line present, `/training` step 1.5 runs the `exercise-reviewer` (fresh context; keep / progress / swap / retire, advisory only). The athlete confirms — **never a silent swap** (see "Never silently drop or replace standing prescriptions"); the head coach then writes `Status=` + `letzte-Re-Eval={today}` back into `config/exercise_progressions.md`, which resets the staleness clock. `plan-validator` S10 surfaces the same flag (advisory, never blocks). Per-exercise `Re-Eval:` blocks (`dient=` / `eingeführt=` / `letzte-Re-Eval=` / `Status=`) are athlete-specific in `config/`; schema defaults live in `config.example/`.
 
 ---
 
@@ -1138,9 +1110,8 @@ The git history is the authoritative provenance record; a manually maintained gr
 
 *Enforcement: `audit_consistency.py::check_stale_cancellation_markers`
 (check `STALE_MARKERS`) mechanically flags leftover `~~strikethrough~~` and
-`❌` markers in `config/*.md` as LOW hygiene findings; the `config-auditor`
-agent confirms semantically and the head coach deletes on sight during any
-edit.*
+`❌` markers in `config/*.md` as LOW hygiene findings; the head coach
+deletes them on sight during any edit.*
 
 ## Athlete feedback persistence (policy)
 
@@ -1168,7 +1139,7 @@ state only in Claude memory.
 A date carries **exactly one** NOTE event. Both write paths
 (`post_message.py --date` and `save_feedback.py`) upsert via
 `app.utils.note_upsert`: the day NOTE is organised in `## <Section>`
-blocks (one per feedback category — HRV-Review, Mental-Coach,
+blocks (one per feedback category — HRV-Review, DFA-Analyse,
 Athleten-Feedback, …); writing a section that already exists **replaces**
 that block, a new section is **appended**, other sections stay untouched.
 A single-section note keeps the section name as event name; from the
@@ -1202,11 +1173,7 @@ not belong in a NOTE alone — it must be lifted into a config file:
 Volatile artefacts are **not** persistent stores and must never be the
 sole home of qualitative feedback:
 
-- `data/muscles/_unmapped.jsonl` — parser queue, regularly purged by parser
-  refactors (e.g. `fix(muscles): Exercise-Parser — Queue leer`)
-- `data/muscles/YYYY-MM-DD.json` — keeps the numeric RPE, drops the
-  qualitative reasoning ("too easy", "wrong exercise for build-up")
-- lap chronicles, type-history outputs, cache files
+- `analyse_activity.py` output, type-history outputs, cache files
 
 **Lift-rule:** Whenever raw athlete feedback arrives via parser/queue/lap
 output and contains a verdict the athlete expects to influence future
@@ -1427,9 +1394,9 @@ register in `RULES`. Auditable via `audit_consistency.py`.
 
 ---
 
-## Consistency audit (`/audit`)
+## Consistency scanner
 
-Reproducible drift scanner: `scripts/audit_consistency.py` (mechanical checks) → `config-auditor` subagent (semantic refinement, report in `data/audits/YYYY-MM-DD-HHMM-audit.md`) → `config-fixer` subagent (one finding at a time, **every edit logged to `data/approvals/YYYY-MM-DD-config-fixer.jsonl`** with finding ID, diff hash and athlete approval). Audit reports are committed. Flow and check inventory: `commands/audit.md`, `scripts/audit_consistency.py`.
+`scripts/audit_consistency.py` runs mechanical drift checks across `config/`, `agents/` and intervals.icu on demand (`--offline`, `--human`, `--check <NAME>`). `fetch_context.py` uses its `check_log_vs_history` for the `configDrift` field. Findings are fixed by the head coach after athlete approval.
 
 ---
 

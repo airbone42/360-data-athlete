@@ -1,15 +1,17 @@
 """Consistency scanner for the coach knowledge base.
 
-Mechanical drift checks between `config/`, `agents/`,
-`exercise_muscle_mapping.json` and external sources (intervals.icu).
+Mechanical drift checks between `config/`, `agents/` and external sources
+(intervals.icu).
 
-Output: JSON to stdout — consumed by the config-auditor agent.
+Output: JSON to stdout. `fetch_context.py` imports `check_log_vs_history`
+from here for the `configDrift` context field; the CLI runs the full scan
+on demand.
 
 Usage:
     python3 scripts/audit_consistency.py                  # online, JSON
     python3 scripts/audit_consistency.py --offline        # local files only
     python3 scripts/audit_consistency.py --human          # readable summary
-    python3 scripts/audit_consistency.py --check ORPHAN   # single check
+    python3 scripts/audit_consistency.py --check SHOES    # single check
 """
 
 from __future__ import annotations
@@ -37,7 +39,6 @@ from app.utils.paths import (  # noqa: E402
     CONFIG_DIR,
     CONFIG_FALLBACK,
     COACH_HOME,
-    DATA_DIR,
     FRAMEWORK_ROOT,
     resolve_config,
 )
@@ -103,11 +104,9 @@ HARDCODE_SCAN_GLOBS = [
     "config/equipment.md",
 ]
 
-# Files excluded from hardcode scan (meta-files about the audit itself)
-HARDCODE_SCAN_EXCLUDE = {
-    "agents/config-auditor.md",
-    "agents/config-fixer.md",
-}
+# Files excluded from hardcode scan (meta-files about the audit itself; the
+# former auditor/fixer agents were retired 2026-11-10)
+HARDCODE_SCAN_EXCLUDE: set[str] = set()
 
 
 # ── Helpers ──────────────────────────────────────────────────────────
@@ -201,77 +200,6 @@ def check_hr_zones(athlete_settings: dict | None) -> list[dict]:
             description="HR-Zonen in athlete_status.md weichen von intervals.icu ab — Spezialisten arbeiten ggf. mit falschen Schwellwerten",
         )]
     return []
-
-
-# ── Check 2: Orphan Muscle IDs ───────────────────────────────────────
-
-
-def check_orphan_muscles() -> list[dict]:
-    db_text = _read(resolve_config("muscle_db.md"))
-    valid_ids: set[str] = set()
-    for line in db_text.splitlines():
-        m = re.match(r"\|\s*([a-z][a-z0-9_]+)\s*\|", line)
-        if m:
-            valid_ids.add(m.group(1))
-
-    mapping_path = resolve_config("exercise_muscle_mapping.json")
-    try:
-        mapping = json.loads(_read(mapping_path))
-    except json.JSONDecodeError as e:
-        return [_finding(
-            HIGH, "json_parse_error", "config/exercise_muscle_mapping.json",
-            evidence=str(e),
-            description="JSON ist nicht parsebar — Mapping-Konsumenten brechen",
-        )]
-
-    findings: list[dict] = []
-    for ex_key, ex in mapping.items():
-        if ex_key.startswith("_"):
-            continue
-        for role in ("primary", "secondary", "stabilizer"):
-            for entry in ex.get(role, []) or []:
-                muscle_id = entry.get("muscle")
-                if muscle_id and muscle_id not in valid_ids:
-                    findings.append(_finding(
-                        MEDIUM,
-                        "orphan_muscle_id",
-                        "config/exercise_muscle_mapping.json",
-                        evidence=f"{ex_key}.{role}: '{muscle_id}'",
-                        canonical_source="config/muscle_db.md",
-                        suggested_action="add_or_rename",
-                        fix_hint=f"Add muscle ID '{muscle_id}' to muscle_db.md or fix the mapping entry",
-                        description=f"Exercise '{ex_key}' ({role}) references non-existent muscle ID '{muscle_id}'",
-                    ))
-    return findings
-
-
-# ── Check 3: Unmapped Exercises ──────────────────────────────────────
-
-
-def check_unmapped_exercises() -> list[dict]:
-    path = DATA_DIR / "muscles" / "_unmapped.jsonl"
-    if not path.exists():
-        return []
-    findings: list[dict] = []
-    for line in path.read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            entry = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        findings.append(_finding(
-            LOW,
-            "unmapped_exercise",
-            "data/muscles/_unmapped.jsonl",
-            evidence=f"{entry.get('parsed_name')} (act {entry.get('activity_id')}, {entry.get('date')})",
-            canonical_source="config/exercise_muscle_mapping.json",
-            suggested_action="add_mapping",
-            fix_hint=f"Add mapping for '{entry.get('parsed_name')}' in exercise_muscle_mapping.json",
-            description=f"Exercise in activity {entry.get('activity_id')} could not be mapped — muscle load missing from DB",
-        ))
-    return findings
 
 
 # ── Check 4: NOTE-vs-Static Drift ────────────────────────────────────
@@ -2243,8 +2171,6 @@ def check_rpe_hr_discrepancy(
 
 CHECK_MAP = {
     "HR_ZONES": ("check_hr_zones", True),       # online
-    "ORPHAN_MUSCLES": ("check_orphan_muscles", False),
-    "UNMAPPED": ("check_unmapped_exercises", False),
     "NOTE_DRIFT": ("check_note_vs_static", True),
     "SHOES": ("check_shoes", True),
     "HARDCODED": ("check_hardcoded_restrictions", False),
@@ -2279,10 +2205,6 @@ def run_audit(offline: bool, only: str | None) -> dict[str, Any]:
         try:
             if name == "HR_ZONES":
                 results = check_hr_zones(online_data.get("athlete_settings"))
-            elif name == "ORPHAN_MUSCLES":
-                results = check_orphan_muscles()
-            elif name == "UNMAPPED":
-                results = check_unmapped_exercises()
             elif name == "NOTE_DRIFT":
                 results = check_note_vs_static(online_data.get("notes"))
             elif name == "SHOES":

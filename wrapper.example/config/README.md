@@ -29,7 +29,7 @@ Optional, copy if you need them:
 - `recovery_protocol.md` — deload-week rules
 - `balance_pool.json` — balance-rotation pool
 - `zone_validation_protocol.md` — DFA-α1 step-test protocol
-- `muscle_db.md`, `exercise_muscle_mapping.json` — muscle bookkeeping
+- `exercise_aliases.json` — exercise name aliases for the description sync
 
 Path resolution is governed by the plugin's `app/utils/paths.py`
 (`CONFIG_DIR`, `CONFIG_FALLBACK`).

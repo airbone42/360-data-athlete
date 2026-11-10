@@ -9,27 +9,6 @@
 - **planned end:** —
 - **reason:** —
 
-## Exercise re-evaluation (trigger config)
-
-Machine-readable input for the exercise re-evaluation trigger
-(`context_builder._compute_reeval_trigger` → `planningConstraints` →
-`/training`). When a natural boundary is hit the coach re-challenges the
-exercise selection against current goals instead of blindly carrying it
-forward. Leave the phase plan empty to disable the phase-change trigger;
-staleness + recovery-week triggers still work.
-
-- **staleness_weeks:** 6
-- **last_reeval_phase:** —
-
-### Phase plan (format: `Phase | start | end`, ISO dates)
-
-A machine-readable mirror of the periodization table in
-`competition_plan.md` (the human table stays the documentation source).
-Empty by default — fill in per athlete:
-
-```
-```
-
 ## Reference HR values
 - **LTHR (current):** 168 bpm
 - **HR max (estimated):** 185 bpm

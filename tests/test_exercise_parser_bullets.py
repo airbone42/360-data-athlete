@@ -8,8 +8,8 @@ silent:
    disabled the hyphen-tolerant name path for *every* bulleted line. Parsing
    fell through to the `name_pre` group of `_LINE_RE`, whose character class
    excludes "-" — so any hyphenated exercise name was truncated to the
-   fragment after its last hyphen. Real corruption observed in
-   `data/muscles/2026-09-04.json`:
+   fragment after its last hyphen. Real corruption observed in the parsed
+   exercise log of 2026-09-04:
        "Side Plank mit Hüft-Abduktion"          -> "abduktion"
        "Side Plank mit Drehung nach unten (T-Reach)" -> "reach)"
        "Stir-the-Pot (Pezziball)"               -> "pot (pezziball)"
@@ -17,9 +17,9 @@ silent:
    the bullet itself in the name ("- mcgill curl-up").
 
    The downstream effect is what makes this a correctness bug rather than a
-   cosmetic one: mangled names miss their mapping key, so the exercise never
-   reaches the muscle log, and `prescription_compliance` then reports a
-   standing prescription as overdue although it was executed.
+   cosmetic one: mangled names no longer match the prescribed name, and
+   `prescription_compliance` then reports a standing prescription as overdue
+   although it was executed.
 
 2. `RPE~7` — the form the specialist agents actually emit — was not matched by
    either RPE pattern, so the value was dropped and the session was logged

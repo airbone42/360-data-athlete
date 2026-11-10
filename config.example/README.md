@@ -29,9 +29,9 @@ Three patterns of override apply:
    - Demo versions here are placeholder/Alex Demo for standalone runs.
 
 2. **Generic-only files** — usually exist only here in `config.example/`.
-   - `balance_pool.json`, `exercise_muscle_mapping.json`,
+   - `balance_pool.json`, `exercise_aliases.json`,
      `training_rules_endurance.md`, `training_rules_strength.md`,
-     `training_rules_planner.md`, `muscle_db.md`, `exercise_checklist.md`,
+     `training_rules_planner.md`, `exercise_checklist.md`,
      `zone_validation_protocol.md`, `recovery_protocol.md`
    - Wrapper typically does **not** copy these — relies on framework defaults.
    - Anything athlete-specific (active injury blocks, equipment models)
@@ -61,11 +61,10 @@ Three patterns of override apply:
 | `training_rules_endurance.md` | DE — generic | TODO: translate |
 | `training_rules_strength.md` | DE — generic | TODO: translate |
 | `training_rules_planner.md` | DE — generic | TODO: translate |
-| `muscle_db.md` | DE — generic | TODO: translate |
 | `exercise_checklist.md` | DE — generic | TODO: translate |
 | `zone_validation_protocol.md` | DE — generic | TODO: translate |
 | `balance_pool.json` | DE strings — generic | TODO: translate exercise names |
-| `exercise_muscle_mapping.json` | mostly language-neutral keys | exercise aliases include some German |
+| `exercise_aliases.json` | mostly language-neutral keys | exercise aliases include some German |
 
 Files marked **TODO: translate** are functional in their current form but
 keep German section headings and prose; English translations welcome.

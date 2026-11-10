@@ -93,8 +93,6 @@ first in a mixed session so its ground-contact stays short. See
 
 **Communicate explicitly:** in `focus`, name which exercise is new (from research or rotation) and why it fits now. Do not silently repeat.
 
-**Re-evaluation flag takes precedence.** When the briefing carries `🔄 Exercise re-evaluation due` (or confirmed `exercise-reviewer` outcomes), use those keep/progress/swap/retire decisions — do not improvise a separate rotation. Absent the flag, the per-session rotation rule applies.
-
 ---
 
 ## Gripmaster — correct usage

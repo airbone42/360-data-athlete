@@ -2,9 +2,9 @@
 
 An **AI coach for endurance and strength athletes** that runs entirely
 inside [Claude Code](https://claude.com/claude-code). A team of
-specialised sub-agents (planner, three workout specialists, mental
-coach, video analyst, post-activity analyst, data scientist, plan
-validator, config auditor, two clinical consultants) collaborate to
+specialised sub-agents (planner, three workout specialists, plan
+validator, post-activity analyst, video analyst, clinical consultant,
+two research agents) collaborate to
 plan, push, and review training — grounded in intervals.icu, Garmin
 and (optionally) Telegram.
 
@@ -36,21 +36,22 @@ that produces it:
 - **Fits real life.** Travelled, slept badly, missed a day? It re-plans
   same-day around the disruption instead of guilting you back onto a fixed
   schedule.
-- **Understands your runs.** `/analyse` turns a finished activity into a
-  factual lap chronicle (HR zones, pace / GAP, running dynamics) plus
+- **Understands your runs.** `/analyse` computes the lap figures in code
+  (HR zones, pace / GAP, running dynamics, decoupling) and turns them into
   concise coaching feedback.
 - **Keeps you healthy.** HRV-gated intensity, evidence-based deload weeks,
   active injury locks, and a mechanical + semantic validator that blocks a
-  bad plan before it can reach you. Two clinical-consultant agents (physio
-  / ortho) act as debate partners — *not* a substitute for real care.
+  bad plan before it can reach you. A clinical-consultant agent (physio
+  with orthopaedic depth) acts as a debate partner — *not* a substitute
+  for real care.
 - **The right shoe, every run.** A shoe advisor rotates your fleet by
   surface and accumulated mileage, so no single pair takes all the load.
 
 Under the hood there's also a **video form check** (Gemini, for strength /
-core / ninja and running), **per-muscle 30-day load tracking**, and a
-**consistency audit** that catches drift across configs and agents — with
-the exercise-log slice auto-surfaced at every session start, so stale
-progression entries don't wait for `/audit` to be noticed.
+core / ninja and running), **evidence research** with a citation check
+(`/research`), and a **consistency scanner** that catches drift across
+configs and agents — with the exercise-log slice auto-surfaced at every
+session start, so stale progression entries are noticed right away.
 
 ---
 
@@ -481,10 +482,10 @@ Plan:
 
 ### `/aicoach-framework:analyse i12345678` — Post-session review
 
-Pulls the activity, parses the FIT file, builds sub-laps, then the
-data-scientist agent produces a factual lap chronicle and the
-coach-analyst writes coaching feedback (short enough to read as one
-activity message, GAP-aware on hilly profiles).
+`analyse_activity.py` pulls the activity, parses the FIT file and builds
+the sub-laps in code; the coach-analyst reads those figures directly and
+writes coaching feedback (short enough to read as one activity message,
+GAP-aware on hilly profiles).
 
 ```
 > /aicoach-framework:analyse i12345678
@@ -513,26 +514,19 @@ Pulls context and shows a compact wellness block (HRV, RHR, sleep, CTL /
 ATL / TSB, intensity readiness, weather, upcoming events, last 4-week
 zone distribution). No plan generated.
 
-### `/aicoach-framework:muscleoverview` — 30-day fatigue map
+### `/aicoach-framework:research` — Evidence research
 
-Per-muscle fatigue based on logged loads, with traffic-light readiness
-flags (🟢 trainable / 🟡 moderate / 🔴 rest).
+Resolves a flagged sport-science question: the research-collector gathers
+sources into a dossier, the research-analyst weighs them, writes a
+document under `research/` and checks its own citations against the
+sources before anything is presented.
 
-### `/aicoach-framework:audit` — Consistency audit
+### Consistency scanner and description sync
 
-Scans configs, agents and external NOTEs for drift, refines
-findings via the `config-auditor` subagent (fresh context), and writes
-a markdown report. Fixes go through the `config-fixer` (also fresh
-context) with an explicit approval log per edit.
-
-The `exercise_progressions.md` slice of the audit
-(`check_log_vs_history`) also auto-surfaces at the top of every
-`/training` / `/wellness` session via the `configDrift` field of
-`fetch_context.py` — so stale exercise entries are visible to the
-planner and specialists without having to run `/audit` explicitly. The
-explicit `/audit` flow remains the right tool for the full sweep
-(HR-zones, orphan muscle IDs, recovery-week consistency,
-override-drift, etc.).
+`scripts/audit_consistency.py` scans configs, agents and external NOTEs
+for drift on demand. Its `exercise_progressions.md` slice
+(`check_log_vs_history`) auto-surfaces at the top of every `/training` /
+`/wellness` session via the `configDrift` field of `fetch_context.py`.
 
 Companion script: `sync_description_drift.py` lifts athlete-edited
 sets/reps/duration/weight **and hold-time / TUT** values from activity
@@ -588,12 +582,11 @@ Athlete-specific overrides go in your `config/training_paradigms.md`.
 │       │                                                        │
 │       └─ planner ─→ specialist-ninja ─────────┤               │
 │                                                                │
-│       coach-analyst ◀─ data-scientist                          │
-│       mental-coach (auto-triggered)                            │
+│       coach-analyst (on /analyse)                              │
 │       video-analyst (on Telegram video)                        │
 │       plan-validator (pre-push, fresh context)                 │
-│       config-auditor / config-fixer (on /audit)                │
-│       physio-consultant / sports-ortho-consultant              │
+│       physio-consultant (on request)                           │
+│       research-collector → research-analyst (on /research)     │
 │                                                                │
 └────────┬───────────────┬────────────────────────────────────────┘
          │               │
@@ -615,15 +608,12 @@ outputs, and applies cross-workout consistency rules before pushing.
 | `specialist-endurance` | Run / ride structure (pace, zones, intervals.icu format) | per-workout pane after planner (Run / Ride) | planner directive, `fetch_type_history.py`, `exercise_log.md` | workout structure JSON (structure, intervals_icu, focus, surface) |
 | `specialist-complementary` | Strength, plyo, core structure (sets, reps, weights) | per-workout pane after planner (WeightTraining / Workout w/o ninja tag) | planner directive, type history, `exercise_progressions.md` | workout JSON with exercises[] |
 | `specialist-ninja` | Ninja athletics (5 pillars, grip, push/pull balance) | per-workout pane after planner (ninja tag) | planner directive, type history, pillar rotation | workout JSON with exercises[] |
-| `data-scientist` | Factual lap chronicle — no interpretation | `/analyse` after FIT parse | sub-laps JSON, HR zones | per-lap chronicle markdown |
-| `coach-analyst` | Coaching feedback on the lap chronicle | `/analyse` after data-scientist | data-scientist output + activity + wellness | feedback markdown (overview / strengths / growth, one short activity message) |
-| `mental-coach` | Pre-workout motivation, setback processing | auto-triggered on LONG / RACE / setback / motivation signal; on request | wellness, last 3 activities, free-text context | short chat message |
+| `coach-analyst` | Coaching feedback on the session's lap figures | `/analyse` after `analyse_activity.py` | `analyse_activity.py` output + wellness | feedback markdown (overview / strengths / growth, one short activity message) |
 | `video-analyst` | Form check + sports-physiology challenge | Telegram video upload or manual `analyse_video.py` invocation | video frames, athlete restrictions, exercise checklist | execution + drill + challenge block (≤ 10 sentences) |
 | `plan-validator` | Semantic plan check before push | `/training` step 3.5b | final plan JSON + mechanical validator output + wellness + last 7 days | findings (ERROR / WARNING / INFO) + clearance |
-| `config-auditor` | Drift scanner across configs / agents | `/audit` | scanner JSON from `audit_consistency.py` | markdown report at `data/audits/...md` |
-| `config-fixer` | Implements one audit finding at a time, with approval log | `/audit` after auditor handoff | one finding YAML + audit report path | diff applied + approval log entry + report mark |
-| `physio-consultant` | Physiotherapy consultation on injuries / symptoms | athlete invokes manually | symptoms, training history, athlete_static | rehab / load / red-flag assessment (≤ 300 words, with disclaimer) |
-| `sports-ortho-consultant` | Orthopaedic consultation, imaging indication | athlete invokes manually | symptoms, training history, athlete_static | differential diagnoses + imaging + return-to-sport (≤ 300 words, with disclaimer) |
+| `physio-consultant` | Physio + orthopaedic consultation on injuries / symptoms | athlete invokes manually | symptoms, training history, athlete_static | ranked differential + red flags + load / rehab + clinical tests / imaging + return-to-sport (with disclaimer) |
+| `research-collector` | Searches and extracts sources into a dossier | `/research` | research question | dossier with verbatim quotes |
+| `research-analyst` | Weighs the evidence, writes and citation-checks the research document | `/research` after the collector | dossier + question | `research/<topic>.md` + summary |
 
 **Specialization without inheritance.** Plugin agents are generic and
 read all athlete-specific facts (PRs, HR zones, injury restrictions,
@@ -702,18 +692,18 @@ a plugin), see
 - Not stable — agent definitions, configs, and validator rules evolve
   weekly
 
-### Specifically: the clinical-consultant agents
+### Specifically: the clinical-consultant agent
 
-> ⚠️ **The `physio-consultant` and `sports-ortho-consultant` agents are
-> not licensed medical practitioners.** They are conversational
-> reasoning tools generated by an LLM, with no examination, no
+> ⚠️ **The `physio-consultant` agent is not a licensed medical
+> practitioner.** It is a conversational
+> reasoning tool generated by an LLM, with no examination, no
 > palpation, no imaging, no clinical context.
 >
-> Output from these agents is **not suitable as a basis for
+> Output from this agent is **not suitable as a basis for
 > self-diagnosis or treatment decisions**. In jurisdictions where
 > AI-based medical advice is regulated (e.g. EU MDR, Germany / Austria /
 > Switzerland), use is at your own legal risk. Always consult a
-> qualified human professional for actual care. We provide these agents
+> qualified human professional for actual care. We provide this agent
 > as a debate partner for the head coach — nothing more.
 
 If any of these matter to you, this is not the project for you. Fork it
@@ -730,8 +720,8 @@ exposing it to data you care about. Key points:
   and athlete messages is **escaped** before injection into LLM prompts
   (`app/utils/sanitize.py`), but this is hygiene, not a hardened
   defence.
-- Config-modifying agents (`config-fixer`) log every edit to an
-  append-only approval log (`data/approvals/...jsonl`).
+- No agent edits `config/` on its own; config changes go through the
+  head coach after explicit athlete approval.
 - The system trusts the operator's environment — secrets are loaded
   from `.env`, intervals.icu / Telegram / Garmin credentials are yours
   to protect.

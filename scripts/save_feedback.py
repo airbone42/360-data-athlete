@@ -7,7 +7,6 @@ statt eine neue NOTE zu stapeln.
 
 Usage:
     python3 scripts/save_feedback.py --date 2026-04-20 --note "Achilles ok" --category hrv_review
-    python3 scripts/save_feedback.py --date 2026-04-20 --note "Mental gut" --category mental
     python3 scripts/save_feedback.py --note "RPE 8, Beine schwer"  # default: athlete_feedback
 """
 
@@ -33,7 +32,6 @@ logger = configure(__name__)
 _CATEGORY_NAMES: dict[str, str] = {
     "athlete_feedback": "Athleten-Feedback",
     "hrv_review": "HRV-Review",
-    "mental": "Mental-Coach",
     "dfa": "DFA-Analyse",
     "video": "Video-Formcheck",
 }

@@ -14,9 +14,8 @@ the system to data you care about.
 | Prompt injection via Garmin activity names and descriptions | Sanitized at every write boundary that lands in a prompt: `_summarize_activity` (`name`, `coaching_notes`), `_summarize_today_workouts` (`name`), and `history_fetcher._format_activity` (`name`, `description`, message `content`) |
 | Prompt injection via third-party weather descriptions | OpenWeather `description` text is sanitized in `_build_weather_info` before it flows into the planner context as `weatherInfo` (defense-in-depth — small attack surface, but cost is zero) |
 | Prompt injection via auto-surfaced drift findings (`configDrift`) | `evidence` strings produced by `check_log_vs_history` carry Activity-Description-derived text and are sanitized in `fetch_context.py` before being attached to the planner context, so a third-party-sync-roundtrip-injected exercise line cannot break the planner prompt |
-| Prompt injection via parsed exercise lines in workout descriptions | `escape_for_prompt()` applied before persisting to `data/muscles/_unmapped.jsonl` (which can later be loaded into a review context) |
 | Prompt injection via Gemini video-analysis output | `escape_for_prompt()` applied before writing to `config/exercise_log.md` |
-| Hidden / un-audited config edits by `config-fixer` | Mandatory approval log (`data/approvals/YYYY-MM-DD-config-fixer.jsonl`) per edit, with finding ID + diff hash + athlete approval text |
+| Hidden / un-audited config edits by sub-agents | No sub-agent edits `config/` on its own; the head coach applies changes after explicit athlete approval, and every change is a git commit |
 | Accidental destructive bash commands from Telegram | `CLAUDE.md` rule: destructive bash commands (`rm`, `git reset --hard`, force push, `docker rm -f`, etc.) require terminal confirmation, never Telegram-only |
 
 ### What we explicitly do NOT defend against
@@ -63,9 +62,9 @@ You — the operator — are responsible for:
    this, but it's not a guarantee.
 2. **Trusting your athlete channels.** Only allow trusted Telegram chat IDs.
    The Coach trusts authenticated messages.
-3. **Reviewing config-fixer edits.** The approval log captures every edit,
-   but it is the operator's job to actually read it and revert if anything
-   looks wrong.
+3. **Reviewing config edits.** Every config change lands as a git commit,
+   but it is the operator's job to actually read them and revert if
+   anything looks wrong.
 4. **Auditing your prompt cache.** Tracing via LangSmith is optional and
    off by default. If you enable it, your prompts and athlete data flow
    to LangSmith — make sure that's acceptable for you.

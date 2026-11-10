@@ -73,13 +73,6 @@ through `app/utils/paths.py` — set `COACH_HOME`, `CONFIG_DIR`,
 | `check_warmup_overlap.py` | Warn on duplicate warmup drills on the same day | `--date YYYY-MM-DD` | intervals.icu API | stdout WARNING lines |
 | `audit_consistency.py` | Drift scanner across configs, agents, prompts | `[--offline] > /tmp/audit_raw.json` | configs + intervals.icu NOTEs | stdout JSON |
 
-## Muscle load + nutrition
-
-| Script | Purpose | Typical invocation | Reads | Writes |
-|--------|---------|--------------------|-------|--------|
-| `log_muscle_load.py` | Log per-muscle load from an activity / backfill | `--activity-id ...` or `--backfill 7 --silent` | activity, `exercise_muscle_mapping.json` | `data/muscles/` |
-| `muscle_overview.py` | 30-day muscle fatigue overview, exponential decay | `[--backfill 30] [--review-unmapped]` | `data/muscles/` | stdout table |
-
 ## Setup, internals
 
 | Script | Purpose | Typical invocation | Reads | Writes |
@@ -99,9 +92,8 @@ through `app/utils/paths.py` — set `COACH_HOME`, `CONFIG_DIR`,
 - **Alex Demo dry run.** `fetch_context.py --date <today>` works without
   any API keys against the bundled `config.example/` demo profile —
   it returns a static context, no live data.
-- **Idempotence.** `log_muscle_load.py --backfill` and
-  `push_workouts.py` are idempotent by design. Re-running them does
-  not produce duplicates.
+- **Idempotence.** `push_workouts.py` is idempotent by design.
+  Re-running it does not produce duplicates.
 - **Exit codes.** `validate_plan.py` exits `2` on a hard ERROR finding;
   `push_workouts.py` propagates that to block the push. Override with
   `--skip-validation` in genuine emergencies (and document why).

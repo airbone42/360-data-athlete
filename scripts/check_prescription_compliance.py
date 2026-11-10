@@ -4,7 +4,8 @@ Tag-level due-warnings answer "did a core session happen?". They cannot see
 a prescribed exercise that lives *inside* such a session — the block runs,
 the tag is satisfied, and a dropped element leaves no trace. This script
 closes that gap by comparing the `**Soll-Frequenz:**` declarations in
-`exercise_progressions.md` against the exercises recorded in the muscle logs.
+`exercise_progressions.md` against the exercises listed in the completed
+activities (intervals.icu descriptions).
 
 Usage:
     python3 scripts/check_prescription_compliance.py [--date YYYY-MM-DD] [--json]
@@ -15,10 +16,11 @@ Exit codes: 0 = clean, 1 = findings present, 2 = infrastructure error.
 from __future__ import annotations
 
 import argparse
+import asyncio
 import json
 import os
 import sys
-from datetime import date
+from datetime import date, timedelta
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -27,6 +29,15 @@ from app.analytics.prescription_compliance import (  # noqa: E402
     format_findings,
 )
 from app.utils.config_loader import load_config  # noqa: E402
+
+
+async def _fetch_activities(today: date, lookback_days: int) -> list[dict]:
+    from app.api.intervals_cache import CachedIntervalsClient
+    from app.config import settings
+
+    client = CachedIntervalsClient(settings.intervals_icu_athlete_id)
+    oldest = (today - timedelta(days=lookback_days)).isoformat()
+    return await client.get_activities(oldest, today.isoformat())
 
 
 def main() -> int:
@@ -48,8 +59,14 @@ def main() -> int:
         print(f"Could not load exercise_progressions: {exc}", file=sys.stderr)
         return 2
 
+    try:
+        activities = asyncio.run(_fetch_activities(today, args.lookback_days))
+    except Exception as exc:  # noqa: BLE001
+        print(f"Could not fetch activities: {exc}", file=sys.stderr)
+        return 2
+
     findings = compute_prescription_compliance(
-        progressions, today, lookback_days=args.lookback_days
+        progressions, today, activities, lookback_days=args.lookback_days
     )
 
     if args.as_json:

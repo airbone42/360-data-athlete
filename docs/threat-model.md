@@ -40,8 +40,6 @@ prompts.
 It is applied at every known boundary:
 
 - `context_builder._format_notes()` — for intervals.icu NOTEs
-- `scripts/log_muscle_load._append_unmapped()` — before persisting raw
-  exercise lines to `data/muscles/_unmapped.jsonl`
 - `scripts/analyse_video._update_exercise_log()` — before persisting the
   Gemini response to `config/exercise_log.md`
 
@@ -54,27 +52,18 @@ detected.
 
 ### 2. Hidden config edits by sub-agents
 
-**Vector.** The `config-fixer` agent has `Edit` tool access. If
-compromised (e.g. by a successful prompt injection from a finding's
-text), it could silently change `config/*.md` or `agents/*.md` in ways
-the athlete wouldn't notice for days.
+**Vector.** An agent with `Edit` access that is steered by injected text
+could silently change `config/*.md` or `agents/*.md` in ways the athlete
+would not notice for days.
 
-**Defence.** Mandatory approval log
-(`data/approvals/YYYY-MM-DD-config-fixer.jsonl`) per edit, with:
+**Defence.** No sub-agent edits `config/` on its own. The specialists,
+validator and analysts return proposals; the head coach applies a config
+change in the main session after an explicit athlete yes, and the wrapper
+commits it, so every edit is a reviewable git diff. The dedicated
+auditor/fixer agents that once edited configs were retired (2026-11).
 
-- Finding ID being fixed
-- SHA-256 of the proposed new content
-- Athlete's exact approval text from the chat
-- ISO timestamp
-
-The agent prompt instructs: if the actual `Edit` deviates from the
-approved diff (different hash), abort.
-
-**Limits.** This is a prompt-level convention, not a filesystem lock. An
-agent that does not follow its instructions can bypass it. The defence
-is two-fold: (a) the log makes silent edits traceable after the fact,
-(b) the athlete is in the loop and must approve a specific diff before
-the agent edits.
+**Limits.** This is a prompt-level convention, not a filesystem lock. The
+git history makes a silent edit traceable after the fact, not impossible.
 
 ### 3. Destructive bash commands via Telegram
 

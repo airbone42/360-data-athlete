@@ -30,7 +30,7 @@ before writing a day NOTE twice:
   So: one topic per section. A second write about the same topic on the
   same day must contain the **complete, merged** text, and a write about a
   different topic must pass its own `--section` (e.g. `Tagesabschluss`,
-  `HRV-Review`, `Mental-Coach`).
+  `HRV-Review`, `DFA-Analyse`).
   The failure mode this parameter exists for: with a fixed section name,
   a later write about a different topic lands in the same block and replaces
   it. The loss is invisible at the call site, because the upsert reports a

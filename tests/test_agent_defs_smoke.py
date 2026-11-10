@@ -72,7 +72,7 @@ def test_readme_references_main_slash_commands():
     """README must visibly advertise the slash commands the plugin exposes."""
     assert README.exists()
     content = README.read_text(encoding="utf-8")
-    for cmd in ("training", "analyse", "wellness", "muscleoverview", "audit"):
+    for cmd in ("training", "analyse", "wellness", "research"):
         # Either bare or namespaced reference is fine
         assert (
             f"/{cmd}" in content or f"aicoach-framework:{cmd}" in content

@@ -88,7 +88,7 @@ def test_auto_push_balance_forwards_travel_false_by_default(monkeypatch):
 def test_cli_parses_travel_flag(monkeypatch):
     """--travel and its --no-equipment alias both set args.travel True, and
     main() forwards it into `_auto_push_balance`. Every other side effect
-    (validation, shoe enrichment, push, warmup/mental-coach warnings) is
+    (validation, shoe enrichment, push, warmup warnings) is
     mocked out so this stays a pure argument-plumbing test."""
     captured_calls: list[bool] = []
 
@@ -97,7 +97,6 @@ def test_cli_parses_travel_flag(monkeypatch):
 
     monkeypatch.setattr(pw, "_auto_push_balance", fake_auto_push_balance)
     monkeypatch.setattr(pw, "_warn_on_warmup_overlap", lambda *a, **k: None)
-    monkeypatch.setattr(pw, "_warn_on_mental_coach_triggers", lambda *a, **k: None)
     monkeypatch.setattr(pw, "prepare_workout_events", lambda workouts, date_str: [])
 
     async def fake_push(athlete_id, events, dry_run, date_str, incremental=False):
@@ -132,7 +131,6 @@ def test_cli_no_equipment_alias_sets_travel(monkeypatch):
 
     monkeypatch.setattr(pw, "_auto_push_balance", fake_auto_push_balance)
     monkeypatch.setattr(pw, "_warn_on_warmup_overlap", lambda *a, **k: None)
-    monkeypatch.setattr(pw, "_warn_on_mental_coach_triggers", lambda *a, **k: None)
     monkeypatch.setattr(pw, "prepare_workout_events", lambda workouts, date_str: [])
 
     async def fake_push(athlete_id, events, dry_run, date_str, incremental=False):
@@ -166,7 +164,6 @@ def test_cli_travel_defaults_off(monkeypatch):
 
     monkeypatch.setattr(pw, "_auto_push_balance", fake_auto_push_balance)
     monkeypatch.setattr(pw, "_warn_on_warmup_overlap", lambda *a, **k: None)
-    monkeypatch.setattr(pw, "_warn_on_mental_coach_triggers", lambda *a, **k: None)
     monkeypatch.setattr(pw, "prepare_workout_events", lambda workouts, date_str: [])
 
     async def fake_push(athlete_id, events, dry_run, date_str, incremental=False):

@@ -25,7 +25,7 @@ from app.analytics.exercise_parser import (
 _MAPPING_PATH = (
     Path(__file__).resolve().parents[1]
     / "config.example"
-    / "exercise_muscle_mapping.json"
+    / "exercise_aliases.json"
 )
 
 

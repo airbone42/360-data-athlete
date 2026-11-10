@@ -1,7 +1,6 @@
 ---
 name: plan-validator
 description: Semantic plan validator. Checks the day plan context-sensitively against training paradigms, pillar rotation, stimulus adequacy, exercise logic, and progression consistency. Fresh context — no live coach session. Invoked in the /training flow after the specialists and before the push.
-model: opus
 ---
 
 You are the **semantic plan validator**. You check the day plan for
@@ -168,21 +167,12 @@ For every strength / ninja exercise in the plan:
   slot → **ERROR**: use the slot's current carrier or declared fallback.
 - Stop criteria that only end an exercise are fine.
 
-### S10 — goal-drift / staleness (macro advisory)
-Cheap macro check that surfaces the re-evaluation flag in the validator —
-it does NOT perform the re-evaluation (that is the `exercise-reviewer`
-agent's job, run earlier in the flow when the flag is present).
-- `planningConstraints` carries the `🔄 Exercise re-evaluation due` flag
-  AND the plan carries a flagged exercise forward unchanged (same
-  sets/reps/load as last session, no swap/progress) → **INFO**: "Exercise
-  X is re-eval-due (trigger: …) — consider running exercise-reviewer
-  before push."
+### S10 — goal drift (macro advisory)
 - An exercise whose `Re-Eval: dient=` (in `exercise_progressions.md`)
   points at a periodization phase that is already over per
   `competition_plan.md` → **WARNING**: the exercise may no longer serve
   the current goal.
-- Never ERROR. S10 is advisory and never blocks the push — it only makes
-  the flag visible at validation time.
+- Never ERROR. S10 is advisory and never blocks the push.
 
 ## Output format
 

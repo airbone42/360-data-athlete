@@ -21,13 +21,6 @@ def test_agent_files_collected_nonempty() -> None:
     )
 
 
-def test_scan_excludes_audit_meta_agents() -> None:
-    """config-auditor/config-fixer describe the audit itself — excluded."""
-    rels = {rel for _path, rel in ac._hardcode_scan_paths()}
-    assert "agents/config-auditor.md" not in rels
-    assert "agents/config-fixer.md" not in rels
-
-
 def test_scan_paths_are_posix_relative() -> None:
     """Exclude matching relies on posix-style relative paths (no backslashes)."""
     for _path, rel in ac._hardcode_scan_paths():

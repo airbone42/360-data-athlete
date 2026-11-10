@@ -104,13 +104,13 @@ def test_upsert_second_category_merges_and_renames_to_coach_log() -> None:
         "id": 7, "category": "NOTE", "start_date_local": "2025-05-20T08:00:00",
         "name": "HRV-Review", "description": "HRV 72ms, grün",
     }])
-    result = _run(upsert_day_note(client, "2025-05-20", "Mental-Coach", "Fokus Grip-Session"))
+    result = _run(upsert_day_note(client, "2025-05-20", "DFA-Analyse", "Fokus Grip-Session"))
     assert result["action"] == "updated"
     _, payload = client.updated[0]
     assert payload["name"] == f"{DAY_NOTE_PREFIX} 2025-05-20"
     # Both topics survive as sections; HRV-Review substring detection keeps working.
     assert "## HRV-Review\nHRV 72ms, grün" in payload["description"]
-    assert "## Mental-Coach\nFokus Grip-Session" in payload["description"]
+    assert "## DFA-Analyse\nFokus Grip-Session" in payload["description"]
 
 
 def test_upsert_targets_oldest_note_when_duplicates_exist() -> None:

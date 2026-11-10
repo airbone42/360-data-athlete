@@ -63,14 +63,11 @@ def test_commands_directory_populated():
         "specialist-complementary",
         "specialist-ninja",
         "coach-analyst",
-        "data-scientist",
-        "mental-coach",
         "video-analyst",
         "plan-validator",
-        "config-auditor",
-        "config-fixer",
         "physio-consultant",
-        "sports-ortho-consultant",
+        "research-collector",
+        "research-analyst",
     ],
 )
 def test_expected_agent_present(agent_name: str):
@@ -83,7 +80,7 @@ def test_expected_agent_present(agent_name: str):
 
 @pytest.mark.parametrize(
     "command_name",
-    ["training", "analyse", "wellness", "muscleoverview", "audit", "pull"],
+    ["training", "analyse", "wellness", "pull", "research"],
 )
 def test_expected_command_present(command_name: str):
     path = PLUGIN_ROOT / "commands" / f"{command_name}.md"
@@ -121,11 +118,33 @@ def test_no_bare_scripts_path_in_plugin_artifacts(subdir: str) -> None:
 
 
 def test_clinical_agents_carry_strong_disclaimer():
-    """Physio + ortho consultant agents must carry the EU MDR / DE-AT-CH legal banner."""
-    for name in ("physio-consultant", "sports-ortho-consultant"):
+    """The clinical consultant agent must carry the EU MDR / DE-AT-CH legal banner."""
+    for name in ("physio-consultant",):
         content = (PLUGIN_ROOT / "agents" / f"{name}.md").read_text(encoding="utf-8")
         lower = content.lower()
         assert "not a medical practitioner" in lower or "not a licensed" in lower, (
             f"{name}: missing 'not a medical practitioner' disclaimer"
         )
         assert "eu mdr" in lower, f"{name}: missing EU MDR jurisdiction note"
+
+
+@pytest.mark.parametrize(
+    "agent_name",
+    [
+        "mental-coach",
+        "data-scientist",
+        "exercise-reviewer",
+        "config-auditor",
+        "config-fixer",
+        "citation-verifier",
+        "sports-ortho-consultant",
+    ],
+)
+def test_retired_agent_stays_retired(agent_name: str):
+    """Agents retired in the 2026-11 slimming must not come back silently."""
+    assert not (PLUGIN_ROOT / "agents" / f"{agent_name}.md").exists()
+
+
+@pytest.mark.parametrize("command_name", ["muscleoverview", "audit"])
+def test_retired_command_stays_retired(command_name: str):
+    assert not (PLUGIN_ROOT / "commands" / f"{command_name}.md").exists()
