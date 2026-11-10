@@ -30,6 +30,51 @@ def _window_size_for_lap(duration_s: int) -> int:
     return 30       # 30 s
 
 
+def lap_boundaries(laps: list[dict]) -> list[tuple[int, int, int]]:
+    """``(lap_index, start_s, end_s)`` per lap on the elapsed stream axis.
+
+    Accepts three lap shapes, in this order of preference:
+      * explicit ``start_s`` / ``end_s`` offsets (laps derived from
+        intervals.icu ``icu_intervals`` via the time stream),
+      * absolute ``start_time`` stamps plus ``elapsed_s`` (parsed FIT laps),
+      * cumulative ``duration_s`` (synthetic laps, older fixtures).
+    """
+    if laps and all(lap.get("start_s") is not None and lap.get("end_s") is not None
+                    for lap in laps):
+        return [(lap.get("lap_index", i + 1), int(lap["start_s"]), int(lap["end_s"]))
+                for i, lap in enumerate(laps)]
+    # The windows are matched against `time_stream`, which is *elapsed*
+    # seconds from activity start (it contains gaps wherever recording was
+    # paused). Lap boundaries must therefore live on the same axis.
+    #
+    # Cumulating `duration_s` does NOT: that field is timer time, which
+    # excludes stopped time, so every lap after the first pause is shifted
+    # earlier by the stopped time accumulated so far. On an activity with a
+    # few minutes of auto-pause that is enough to slide short laps (strides,
+    # drills) completely off their real position — the window keeps the label
+    # of one lap while carrying another lap's samples, which is worse than
+    # missing data because it reads as valid.
+    #
+    # Prefer the absolute `start_time` stamps when the parser supplied them,
+    # and fall back to the old cumulative behaviour otherwise (callers that
+    # synthesise laps without timestamps, and older fixtures).
+    bounds: list[tuple[int, int, int]] = []
+    lap_starts = [_to_timestamp(lap.get("start_time")) for lap in laps]
+    if laps and all(ts is not None for ts in lap_starts):
+        origin = lap_starts[0]
+        for lap, start_ts in zip(laps, lap_starts):
+            start_s = int(start_ts - origin)  # type: ignore[operator]
+            span = lap.get("elapsed_s") or lap.get("duration_s") or 0
+            bounds.append((lap.get("lap_index", 0), start_s, start_s + span))
+    else:
+        cursor = 0
+        for lap in laps:
+            dur = lap.get("duration_s") or 0
+            bounds.append((lap.get("lap_index", 0), cursor, cursor + dur))
+            cursor += dur
+    return bounds
+
+
 def build_sub_laps(
     streams: dict[str, list],
     surface_labels: list[str],
@@ -43,12 +88,13 @@ def build_sub_laps(
 
     Each window contains:
       window_index, lap_index, start_s, end_s, avg_pace_min_km,
-      avg_hr, dominant_surface, avg_gct_ms, avg_stride_mm, avg_vo_mm, avg_cadence_spm,
+      avg_hr, max_hr, avg_watts, dominant_surface, avg_gct_ms, avg_stride_mm, avg_vo_mm, avg_cadence_spm,
       avg_gct_balance_pct
     """
     time_stream: list[int] = streams.get("time", [])
     hr_stream: list[float | None] = streams.get("heartrate", [])
     vel_stream: list[float | None] = streams.get("velocity_smooth", [])
+    watts_stream: list[float | None] = streams.get("watts") or []
 
     if not time_stream:
         return []
@@ -64,42 +110,14 @@ def build_sub_laps(
                     offset_s = int(ts - first_ts)
                     fit_by_offset[offset_s] = rec
 
-    # ── Lap boundaries ────────────────────────────────────────────────────────
-    # The windows below are matched against `time_stream`, which is *elapsed*
-    # seconds from activity start (it contains gaps wherever recording was
-    # paused). Lap boundaries must therefore live on the same axis.
-    #
-    # Cumulating `duration_s` does NOT: that field is timer time, which
-    # excludes stopped time, so every lap after the first pause is shifted
-    # earlier by the stopped time accumulated so far. On an activity with a
-    # few minutes of auto-pause that is enough to slide short laps (strides,
-    # drills) completely off their real position — the window keeps the label
-    # of one lap while carrying another lap's samples, which is worse than
-    # missing data because it reads as valid.
-    #
-    # Prefer the absolute `start_time` stamps when the parser supplied them,
-    # and fall back to the old cumulative behaviour otherwise (callers that
-    # synthesise laps without timestamps, and older fixtures).
-    lap_boundaries: list[tuple[int, int, int]] = []  # (lap_idx, start_s, end_s)
-    lap_starts = [_to_timestamp(lap.get("start_time")) for lap in laps]
-    if laps and all(ts is not None for ts in lap_starts):
-        origin = lap_starts[0]
-        for lap, start_ts in zip(laps, lap_starts):
-            start_s = int(start_ts - origin)  # type: ignore[operator]
-            span = lap.get("elapsed_s") or lap.get("duration_s") or 0
-            lap_boundaries.append((lap.get("lap_index", 0), start_s, start_s + span))
-    else:
-        cursor = 0
-        for lap in laps:
-            dur = lap.get("duration_s") or 0
-            lap_boundaries.append((lap.get("lap_index", 0), cursor, cursor + dur))
-            cursor += dur
+    # ── Lap boundaries (elapsed stream axis, see lap_boundaries) ─────────────
+    lap_boundaries_ = lap_boundaries(laps)
 
     # ── Build windows per-lap ─────────────────────────────────────────────────
     sub_laps: list[dict[str, Any]] = []
     window_index = 0
 
-    for lap_idx, lap_start, lap_end in lap_boundaries:
+    for lap_idx, lap_start, lap_end in lap_boundaries_:
         duration = lap_end - lap_start
         if duration <= 0:
             continue
@@ -115,6 +133,12 @@ def build_sub_laps(
             # HR
             hr_vals = [hr_stream[i] for i in indices if i < len(hr_stream) and hr_stream[i] is not None]
             avg_hr = round(sum(hr_vals) / len(hr_vals)) if hr_vals else None
+            max_hr = round(max(hr_vals)) if hr_vals else None
+
+            # Power (rides, run power meters)
+            w_vals = [watts_stream[i] for i in indices
+                      if i < len(watts_stream) and watts_stream[i] is not None]
+            avg_watts = round(sum(w_vals) / len(w_vals)) if w_vals else None
 
             # Pace
             vel_vals = [vel_stream[i] for i in indices if i < len(vel_stream) and vel_stream[i] is not None and vel_stream[i] > 0]
@@ -161,6 +185,8 @@ def build_sub_laps(
                 "end_s": win_end,
                 "avg_pace_min_km": avg_pace,
                 "avg_hr": avg_hr,
+                "max_hr": max_hr,
+                "avg_watts": avg_watts,
                 "dominant_surface": dominant_surface,
                 "avg_gct_ms": avg_gct,
                 "avg_stride_mm": avg_stride,

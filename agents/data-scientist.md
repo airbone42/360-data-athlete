@@ -17,8 +17,10 @@ chronicles and structured fact reports from raw data.
 
 ## Lap analysis (standard task)
 
-The data uses dynamic window sizes depending on lap duration (30 s / 60 s
-/ 5 min).
+Input is the `analyse_activity.py` output: `laps[]` with `sub_laps[]`
+(dynamic window sizes by lap duration: 30 s / 60 s / 5 min), `hr_zones` +
+`hr_zone_times` (zones of the activity's own sport), `decoupling` and the
+`activity` header. Report its figures; do not recompute them from memory.
 
 Per lap:
 - Produce a factual chronicle. Name the exact time segment (e.g. min
@@ -46,7 +48,9 @@ Per lap:
 
 - **GAP + activity elevation MANDATORY as header on run chronicles:**
   Before the lap detail list, always include an activity header with
-  these fields from intervals.icu (`get_activity()`):
+  these fields from intervals.icu (`activity` block of the
+  `analyse_activity.py` output: `elevation_gain_m`, `elevation_loss_m`,
+  `pace`, `gap_pace`):
   - `total_elevation_gain` and `total_elevation_loss` (activity values,
     NOT FIT-lap sums — those are regularly inflated by GPS drift)
   - `gap` (m/s) → derive GAP pace: `1000 / gap_speed` seconds/km

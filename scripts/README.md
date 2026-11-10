@@ -38,7 +38,8 @@ through `app/utils/paths.py` — set `COACH_HOME`, `CONFIG_DIR`,
 |--------|---------|--------------------|-------|--------|
 | `fetch_context.py` | Full athlete context (wellness, activities, weather, events, shoes) | `--date YYYY-MM-DD` | intervals.icu API, config | stdout JSON |
 | `fetch_type_history.py` | Last N sessions of a given type + activity messages | `--date YYYY-MM-DD --type Run --tags run --max-sessions 5` | intervals.icu API | stdout JSON |
-| `fetch_activity.py` | Activity detail + streams + linked planned workout | `--activity-id i12345678` | intervals.icu API | stdout JSON |
+| `fetch_activity.py` | Activity detail + linked planned workout + wellness (raw streams only with `--streams`, debug) | `--activity-id i12345678` | intervals.icu API | stdout JSON |
+| `analyse_activity.py` | Compact `/analyse` summary: HR avg/max per lap and sub-lap, HR-zone times by the activity's sport, power, pace, decoupling — FIT for Garmin sessions, intervals.icu streams otherwise | `--activity-id i12345678 [--no-fit] [--fit-path f.fit]` | intervals.icu API, Garmin Connect | stdout JSON |
 | `push_workouts.py` | Push workouts as events to intervals.icu | `echo '<workouts JSON>' \| python3 scripts/push_workouts.py --date YYYY-MM-DD` | stdin, validator | intervals.icu API |
 | `delete_workouts.py` | Delete workout events | `--event-ids id1,id2` | — | intervals.icu API |
 | `post_message.py` | Post coaching note on an activity, or write a NOTE event on a date | `--activity-id ... --message "..."` or `--date ... --note "..."` | — | intervals.icu API |

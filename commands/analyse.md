@@ -11,8 +11,12 @@ Required: intervals.icu activity ID, e.g. `i12345678`
 ## Workflow
 
 **Analysis standard:**
-- FIT file + sub-laps is the primary data path — intervals.icu streams
-  alone are not enough
+- All numbers come from `analyse_activity.py` (step 1): FIT laps + sub-laps
+  for Garmin-recorded sessions, intervals.icu streams + laps otherwise
+  (indoor trainer, other platforms). Never paste raw streams into a prompt
+  or a command — quote the figures the script prints (HR avg/max per lap
+  and sub-lap, zone times by the sport's own zones, power, pace,
+  decoupling)
 - **Compliance — one canonical definition:** direct compliance = actual
   vs. planned, computed by the analysing agent itself from activity +
   plan data. The **precomputed `compliance` property** from intervals.icu
@@ -60,11 +64,22 @@ Required: intervals.icu activity ID, e.g. `i12345678`
   window rather than silently trimming it. The same applies to the
   post-interval jog segments inside a session.
 
-### Step 1: Load athlete knowledge + activity (parallel)
+### Step 1: Load athlete knowledge + activity analysis (parallel)
 
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/fetch_activity.py --activity-id {ID}
+python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/analyse_activity.py --activity-id {ID}
 ```
+
+One call fetches the activity, its laps and streams, the Garmin FIT when
+the session came from Garmin Connect (matched by start time), parses it and
+builds the sub-laps — in code. The output is a compact JSON: `activity`
+(session values as `session_avg_hr` / `session_max_hr`, description),
+`laps[]` with `sub_laps[]`, `hr_zones` + `hr_zone_times` (the activity's
+own sport), `decoupling` (intervals.icu value plus `main_block`),
+`planned_workout`, `wellness`, `data_source` and `notes`. A note such as
+"no Garmin FIT for source WAHOO — intervals.icu streams used" is the
+expected path for indoor rides, not an error. `fetch_activity.py` stays
+for the raw activity object (`--streams` only for debugging).
 
 Read in parallel: `config/athlete_static.md`, `config/athlete_status.md`,
 `config/equipment.md`.
@@ -85,30 +100,24 @@ the coach is about to ask about a completed session.
 python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/fetch_context.py --date {activity_date}
 ```
 
-### Step 3: Load and parse FIT file (parallel)
+### Step 3: Manual sessions
 
-**Guard:** If `activity.source == "MANUAL"` or `activity.stream_types ==
-null` (manually logged session without Garmin recording) → skip steps 3
-and 4. Data-scientist is dropped. Coach-analyst works directly from the
+**Guard:** `data_source == "none"` (manually logged session without a
+recording) → skip step 5. Coach-analyst works directly from the
 description (step 6).
 
-```bash
-python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/download_fit.py --date {activity_date}
-python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/parse_fit.py --fit-path {fit_path}
-```
+### Step 4: (folded into step 1)
 
-### Step 4: Build sub-laps
-
-```bash
-echo '{"streams": {...}, "fit_records": [...], "laps": [...]}' | \
-  python3 "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/build_sub_laps.py
-```
+FIT download, parsing and sub-lap windows run inside
+`analyse_activity.py`. Flags for special cases: `--no-fit` (force the
+streams path), `--fit-path <file>` (a FIT the athlete supplied),
+`--no-surface` (skip the surface lookup).
 
 ### Step 5: Lap chronicle (data-scientist)
 
 Launch the `data-scientist` agent in a pane. Pass:
-- Sub-lap data from step 4
-- HR zones from `context.hrZones`
+- The `analyse_activity.py` output from step 1 (laps, sub-laps, zone times)
+- HR zones: the `hr_zones` block of that output (the activity's sport)
 
 The data scientist produces a factual chronicle per lap (HR-zone
 transitions, running dynamics, surface). No interpretation.
@@ -125,8 +134,8 @@ transitions, running dynamics, surface). No interpretation.
 
 Launch the `coach-analyst` agent in a pane. Pass:
 - Lap chronicle from the data scientist
-- Activity data (planned workout, actual values)
-- HR zones from `context.hrZones`
+- Activity data (planned workout, actual values from step 1)
+- HR zones: the `hr_zones` block of the step-1 output
 - Athlete context (wellness_brief, recent_training)
 
 Structure: **Session overview** | **Strengths** | **Growth areas**.
