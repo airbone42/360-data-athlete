@@ -383,6 +383,9 @@ def build_context(state: AthleteContextState) -> dict:
     agenda_feed: dict = state.get("agenda_feed") or {}
     upcoming_appointments: list[dict] = list(agenda_feed.get("appointments") or [])
     warnings.extend(agenda_feed.get("warnings") or [])
+    ledger_gap_warning = _compute_ledger_feed_gaps(today, agenda_feed)
+    if ledger_gap_warning:
+        warnings.append(ledger_gap_warning)
     skipped_workouts = _find_skipped_workouts(activities, state["workouts"], today)
 
     # Shoe context (optional — degrades silently if no shoe backend configured).
@@ -1401,6 +1404,41 @@ def _compute_progression_queue() -> str | None:
     from app.utils.config_loader import load_config
 
     return format_queue(parse_open_steps(load_config("exercise_progressions")))
+
+
+def _compute_ledger_feed_gaps(today: date, agenda_feed: dict) -> str | None:
+    """Clock-time appointments in the slot ledger that the agenda feed lacks.
+
+    The calendar feed outranks the ledger for appointments: one that only the
+    ledger names is stale or was never entered. Runs only when the feed is
+    configured and loaded (an unavailable feed proves nothing). Horizon is the
+    feed window. Pure read of ``competition_plan.md``; never raises.
+    """
+    from app.api.agenda_feed import UNAVAILABLE_PREFIX
+    from app.config import settings
+
+    if not (settings.agenda_feed_url or "").strip():
+        return None
+    if any(str(w).startswith(UNAVAILABLE_PREFIX) for w in agenda_feed.get("warnings") or []):
+        return None
+    try:
+        from app.analytics.slot_ledger import (
+            format_ledger_feed_gaps,
+            unmatched_ledger_appointments,
+        )
+        from app.utils.paths import resolve_config
+
+        ledger_text = resolve_config("competition_plan.md").read_text(encoding="utf-8")
+        gaps = unmatched_ledger_appointments(
+            ledger_text,
+            list(agenda_feed.get("appointments") or []),
+            today,
+            horizon_days=settings.agenda_feed_days,
+        )
+    except Exception as exc:  # noqa: BLE001 — a context hint, never fatal
+        logger.warning("Ledger/feed comparison skipped: %s", exc)
+        return None
+    return format_ledger_feed_gaps(gaps)
 
 
 def _compute_dated_commitments(today: date) -> str | None:
