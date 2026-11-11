@@ -102,6 +102,10 @@ class Context:
     # surfaced by run_validation() so rules that silently self-deactivate
     # on missing context (R004/R006/R014/R017) are visible as degraded.
     load_warnings: list[Finding] = field(default_factory=list)
+    # Planned workouts on the day after target_date (calendar WORKOUT events),
+    # None when not fetched. Used by R041 (PAP lock needs a quality today or
+    # tomorrow).
+    tomorrow_workouts: list[dict] | None = None
 
 
 # ─────────────────────────── Helpers ───────────────────────────
@@ -523,33 +527,41 @@ def check_lthr_settings_drift(workouts: list[dict], ctx: Context) -> list[Findin
 
 
 def check_pillar_rotation(workouts: list[dict], ctx: Context) -> list[Finding]:
-    """R007 — Ninja pillar rotation: Pull+Push on the same day = WARNING (pillar double)."""
-    findings = []
-    has_pull = False
-    has_push = False
-    pull_workout = ""
-    push_workout = ""
-    for w in workouts:
+    """R007 — Ninja pillar rotation: Pull+Push on the same day = WARNING (pillar double).
+
+    A single session tagged ``upperbody`` combines pull and push on purpose
+    (~2:1 pull:push, ``agents/specialist-ninja.md``) and is exempt. Pull in
+    one session and push in another still warns, upperbody tag or not.
+    """
+    pull_re = [r"\bpull-säule", r"\bpull\s*block", r"\btrx row", r"\bface\s*pull", r"\brudern\b"]
+    # Push indicators (excluding rehab OHP)
+    push_re = [r"\bpush-?up", r"\bdip\b", r"\bbench\s*press", r"\bpush-säule", r"\bpush\s*block"]
+    pulls: list[tuple[int, dict]] = []
+    pushes: list[tuple[int, dict]] = []
+    for i, w in enumerate(workouts):
         if "ninja" not in (w.get("tags") or []):
             continue
         desc = _description(w).lower()
-        # Pull indicators
-        if any(re.search(p, desc, flags=re.IGNORECASE) for p in [r"\bpull-säule", r"\bpull\s*block", r"\btrx row", r"\bface\s*pull", r"\brudern\b"]):
-            has_pull = True
-            pull_workout = _workout_name(w)
-        # Push indicators (excluding rehab OHP)
-        if any(re.search(p, desc, flags=re.IGNORECASE) for p in [r"\bpush-?up", r"\bdip\b", r"\bbench\s*press", r"\bpush-säule", r"\bpush\s*block"]):
-            has_push = True
-            push_workout = _workout_name(w)
-    if has_pull and has_push:
-        findings.append(Finding(
-            rule_id="R007",
-            severity=SEVERITY_WARNING,
-            workout=f"{pull_workout} + {push_workout}",
-            message="Pull and Push pillar on the same day — pillar rotation violated.",
-            suggestion="Move one pillar to a different day (check the pillar history in CLAUDE.md / planningConstraints).",
-        ))
-    return findings
+        if any(re.search(p, desc, flags=re.IGNORECASE) for p in pull_re):
+            pulls.append((i, w))
+        if any(re.search(p, desc, flags=re.IGNORECASE) for p in push_re):
+            pushes.append((i, w))
+    for i, pw in pulls:
+        for j, qw in pushes:
+            if i == j and "upperbody" in [str(t).lower() for t in (pw.get("tags") or [])]:
+                continue
+            return [Finding(
+                rule_id="R007",
+                severity=SEVERITY_WARNING,
+                workout=f"{_workout_name(pw)} + {_workout_name(qw)}",
+                message="Pull and Push pillar on the same day — pillar rotation violated.",
+                suggestion=(
+                    "Move one pillar to a different day (pillar history in "
+                    "planningConstraints), or combine both in one session tagged "
+                    "upperbody when the day asks for it."
+                ),
+            )]
+    return []
 
 
 def check_intervals_lthr_format(workouts: list[dict], ctx: Context) -> list[Finding]:
@@ -3610,6 +3622,220 @@ def check_description_budget(workouts: list[dict], ctx: Context) -> list[Finding
     return findings
 
 
+_ENDURANCE_TYPES = {"Run", "VirtualRun", "TrailRun", "Ride", "VirtualRide"}
+_R038_ACK_RE = re.compile(r"\[double-ok:\s*\S[^\]]*\]", re.IGNORECASE)
+
+
+def _is_structured_hard(w: dict) -> bool:
+    """Structured Z4+ endurance session: ``intervals`` tag or a Z4+ step target."""
+    if (w.get("type") or "") not in _ENDURANCE_TYPES:
+        return False
+    tags = [str(t).lower() for t in (w.get("tags") or [])]
+    return "intervals" in tags or bool(HARD_SIGNATURE_RE.search(w.get("intervals_icu") or ""))
+
+
+def check_same_day_hard_double(workouts: list[dict], ctx: Context) -> list[Finding]:
+    """R038 — two structured Z4+ sessions on the same day.
+
+    The two weekly stimuli go on separate days (framework/CLAUDE.md →
+    "Weekly outlook"); R017 caps the rolling week per system but not two hard
+    sessions across systems on one day (run intervals + ride VO2max). A
+    structured Z4+ session = Run/Ride with the ``intervals`` tag or a Z4+ step
+    target (same signature as R017/R034). WARNING; INFO when a session's
+    ``coaching_notes`` documents the double as ``[double-ok: <reason>]``
+    (e.g. a deliberate race simulation).
+    """
+    hard = [w for w in workouts if _is_structured_hard(w)]
+    if len(hard) < 2:
+        return []
+    acked = any(_R038_ACK_RE.search(str(w.get("coaching_notes") or "")) for w in hard)
+    names = " + ".join(_workout_name(w) for w in hard)
+    return [Finding(
+        rule_id="R038",
+        severity=SEVERITY_INFO if acked else SEVERITY_WARNING,
+        workout=names,
+        message=(
+            f"{len(hard)} structured Z4+ sessions on the same day"
+            + (" — documented as [double-ok]." if acked else
+               " — the weekly stimuli belong on separate days.")
+        ),
+        suggestion=(
+            "Keep the one the weekly strategy names next and make the other an "
+            "easy/Z2 session, or defer it to a named slot in the ledger. A "
+            "deliberate double goes into coaching_notes as `[double-ok: <reason>]`."
+        ),
+    )]
+
+
+_RPE_RE = re.compile(r"\bRPE\b", re.IGNORECASE)
+_SECTION_HEADER_RE = re.compile(r"^\W*(WARM[-\s]?UP|AUFW(?:Ä|AE)RM\w*|COOL[-\s]?DOWN|MAIN|HAUPTTEIL)\b", re.IGNORECASE)
+
+
+def check_kg_line_without_rpe(workouts: list[dict], ctx: Context) -> list[Finding]:
+    """R039 — a loaded exercise line (kg figure) without an RPE target.
+
+    A kg figure is a target until the athlete reports it (R026); the RPE on
+    the same line is what lets the next session tell "load was right" from
+    "load was luck" (``agents/specialist-ninja.md`` / ``specialist-complementary.md``
+    → Target RPE). Checks the MAIN part of non-endurance descriptions;
+    warm-up and cool-down lines and the trailing feedback block are skipped.
+    Unloaded holds carry no kg and are never hit. WARNING.
+    """
+    findings: list[Finding] = []
+    for w in workouts:
+        if (w.get("type") or "") in _ENDURANCE_TYPES:
+            continue
+        section = "main"
+        missing: list[str] = []
+        for raw in (w.get("description") or "").splitlines():
+            line = raw.strip()
+            if not line:
+                continue
+            if _FEEDBACK_BLOCK_START.match(line):
+                break
+            hm = _SECTION_HEADER_RE.match(line)
+            if hm:
+                head = hm.group(1).upper()
+                section = "main" if head.startswith(("MAIN", "HAUPT")) else "aux"
+                continue
+            if section != "main" or not _KG_FIGURE.search(line) or _RPE_RE.search(line):
+                continue
+            missing.append(line.split(":", 1)[0].strip()[:40])
+        if missing:
+            findings.append(Finding(
+                rule_id="R039",
+                severity=SEVERITY_WARNING,
+                workout=_workout_name(w),
+                message=(
+                    f"{len(missing)} loaded line(s) without an RPE target: "
+                    + ", ".join(missing[:5]) + "."
+                ),
+                suggestion=(
+                    "Add `| RPE X-Y` to every line with a kg figure "
+                    "(`Name: sets×reps @ load | RPE | cue`)."
+                ),
+            ))
+    return findings
+
+
+_STEP_HR_TARGET_RE = re.compile(
+    r"\bZ\d(?:-Z\d)?\s+HR\b|\d+(?:-\d+)?\s*%\s*(?:LTHR|HR)\b|\d+(?:-\d+)?\s*bpm\b",
+    re.IGNORECASE,
+)
+_STRIDE_LABEL_RE = re.compile(r"stride|steigerung|surge|sprint|spike", re.IGNORECASE)
+
+
+def check_short_step_hr_target(workouts: list[dict], ctx: Context) -> list[Finding]:
+    """R040 — HR target on a run step shorter than 60 s or on a stride.
+
+    Heart rate lags a short effort by tens of seconds: on a stride or a
+    < 60 s rep the watch alarm fires on the recovery, not the rep, and pulls
+    the athlete off the intended effort. Short steps carry label and duration
+    only, the effort in words after the ``—`` (``agents/specialist-endurance.md``
+    → HR target syntax, Strides). R012 checks for missing targets; this is
+    the superfluous one. Only the step part before the ``—`` cue is read.
+    WARNING.
+    """
+    findings: list[Finding] = []
+    for w in workouts:
+        if (w.get("type") or "") not in {"Run", "VirtualRun", "TrailRun"}:
+            continue
+        hits: list[str] = []
+        for raw in (w.get("intervals_icu") or "").splitlines():
+            line = raw.strip()
+            if not line.startswith("-"):
+                continue
+            step = re.split(r"\s[—–]\s|\s--\s", line, maxsplit=1)[0]
+            if not _STEP_HR_TARGET_RE.search(step):
+                continue
+            secs = _step_duration_seconds(step)
+            if _STRIDE_LABEL_RE.search(step) or 0 < secs < 60:
+                hits.append(step.lstrip("- ").strip())
+        if hits:
+            findings.append(Finding(
+                rule_id="R040",
+                severity=SEVERITY_WARNING,
+                workout=_workout_name(w),
+                message=(
+                    f"HR target on {len(hits)} short/stride step(s): "
+                    + "; ".join(f"'{h}'" for h in hits[:3]) + "."
+                ),
+                suggestion=(
+                    "Drop the HR target: `- Stride 20s — <effort in words>`. "
+                    "Steps ≥ 60 s keep their % LTHR target."
+                ),
+            ))
+    return findings
+
+
+_PAP_LOCK_RE = re.compile(
+    r"\bPAP\b[-\s]*(?:lock|locked|sperre|gesperrt|rule|regel|block|inhibition|hemmung)"
+    r"|(?:lock(?:ed)?|sperre|gesperrt|verboten|no\s+heavy\s+eccentric|"
+    r"keine\s+schwere[n]?\s+exzentrik)[^\n.]{0,60}\bPAP\b"
+    r"|\(\s*PAP\s*\)",
+    re.IGNORECASE,
+)
+_LEDGER_QUALITY_RE = re.compile(
+    r"\bquality\b|\binterval|\bthreshold\b|\bschwelle|\bvo2\s*max\b|\btempo\b|"
+    r"race[-\s]?pace|renntempo|\brace\b|\bwettkampf|"
+    r"\d+\s*[x×]\s*\d+(?:[.,]\d+)?\s*(?:min|m|s|km)\b",
+    re.IGNORECASE,
+)
+
+
+def _is_quality_session(w: dict) -> bool:
+    return _is_quality(w) or _is_structured_hard(w) or is_quality_run(w, "block")
+
+
+def check_pap_lock_trigger(workouts: list[dict], ctx: Context) -> list[Finding]:
+    """R041 — a PAP lock without a quality session today or tomorrow.
+
+    The PAP rule (no heavy eccentric before a quality session) is
+    conditional: an active block cites a current trigger, and for PAP that
+    is a quality session today or tomorrow (framework/CLAUDE.md → Presenting
+    the plan, "Active blocks"). A lock without one silently drops strength
+    work. Fires when any of today's workouts names a PAP lock in ``focus``,
+    ``coaching_notes`` or ``description`` while neither today's plan, nor
+    tomorrow's planned workouts on the calendar, nor tomorrow's row in the
+    slot ledger (``competition_plan.md``) holds a quality session. Plans are
+    made same-day, so a quality decided for tomorrow belongs in the ledger.
+    WARNING.
+    """
+    texts = [
+        f"{w.get('focus') or ''}\n{w.get('coaching_notes') or ''}\n{w.get('description') or ''}"
+        for w in workouts
+    ]
+    lock_w = next((w for w, t in zip(workouts, texts) if _PAP_LOCK_RE.search(t)), None)
+    if lock_w is None:
+        return []
+    if any(_is_quality_session(w) for w in workouts):
+        return []
+    if any(_is_quality_session(w) for w in ctx.tomorrow_workouts or []):
+        return []
+    try:
+        today = date.fromisoformat(ctx.target_date)
+    except (TypeError, ValueError):
+        return []
+    from app.analytics.slot_ledger import ledger_rows
+    row = ledger_rows(ctx.competition_plan or "", today, horizon_days=1).get(today + timedelta(days=1), "")
+    if _LEDGER_QUALITY_RE.search(row):
+        return []
+    seen = "calendar and ledger" if ctx.tomorrow_workouts is not None else "ledger (calendar not fetched)"
+    return [Finding(
+        rule_id="R041",
+        severity=SEVERITY_WARNING,
+        workout=_workout_name(lock_w),
+        message=(
+            "PAP lock without a quality session today or tomorrow "
+            f"(checked today's plan, tomorrow's {seen})."
+        ),
+        suggestion=(
+            "Drop the PAP lock and plan the strength work, or book tomorrow's "
+            "quality in the slot ledger (competition_plan.md) if it is decided."
+        ),
+    )]
+
+
 RULES: list[tuple[str, Callable[[list[dict], Context], list[Finding]]]] = [
     ("R001", check_reps_ceiling),
     ("R002", check_injury_locks_shoulder),
@@ -3648,6 +3874,10 @@ RULES: list[tuple[str, Callable[[list[dict], Context], list[Finding]]]] = [
     ("R035", check_deload_due),
     ("R036", check_ride_easy_watt_floor),
     ("R037", check_description_budget),
+    ("R038", check_same_day_hard_double),
+    ("R039", check_kg_line_without_rpe),
+    ("R040", check_short_step_hr_target),
+    ("R041", check_pap_lock_trigger),
 ]
 
 
@@ -3807,6 +4037,26 @@ async def _fetch_race_days_ahead(target_date: str, lookahead: int = 14) -> int |
     return min(ahead) if ahead else None
 
 
+async def _fetch_tomorrow_workouts(target_date: str) -> list[dict]:
+    """Planned workouts (calendar WORKOUT events) on the day after target_date."""
+    from app.api.intervals_client import IntervalsClient
+    tomorrow = (datetime.fromisoformat(target_date).date() + timedelta(days=1)).isoformat()
+    events = await IntervalsClient().get_events(oldest=tomorrow, newest=tomorrow)
+    out = []
+    for e in events or []:
+        if (e.get("category") or "") != "WORKOUT":
+            continue
+        out.append({
+            "name": e.get("name") or "",
+            "type": e.get("type") or "",
+            "tags": e.get("tags") or [],
+            "workout_type": e.get("workout_type") or "",
+            "intervals_icu": e.get("description") or "",
+            "description": e.get("description") or "",
+        })
+    return out
+
+
 def load_context(target_date: str, fetch_remote: bool = True) -> Context:
     ctx = Context(
         target_date=target_date,
@@ -3870,6 +4120,11 @@ def load_context(target_date: str, fetch_remote: bool = True) -> Context:
         except Exception as exc:  # noqa: BLE001
             ctx.race_days_ahead = None
             _degraded("calendar events", "R025 (sauna pre-race lockout)", exc)
+        try:
+            ctx.tomorrow_workouts = asyncio.run(_fetch_tomorrow_workouts(target_date))
+        except Exception as exc:  # noqa: BLE001
+            ctx.tomorrow_workouts = None
+            _degraded("tomorrow's calendar", "R041 (PAP lock trigger)", exc)
         try:
             raw = asyncio.run(_fetch_raw_activities_for_hardreize(target_date))
             from app.graphs.sub_athlete_context.context_builder import _compute_weekly_hard_reize_balance

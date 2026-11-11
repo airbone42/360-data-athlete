@@ -7,7 +7,7 @@ reference like `CLAUDE.md → "No silent conservatism"` resolves to the
 short rule there and to the long form here. When the two disagree, the
 short rule in `CLAUDE.md` and the validator code win; fix this file.
 
-Mechanical rules live in `scripts/validate_plan.py` (R001–R037) and the
+Mechanical rules live in `scripts/validate_plan.py` (R001–R041) and the
 scripts named in each section — prose here never replaces a check.
 
 ## Session start (policy)

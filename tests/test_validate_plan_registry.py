@@ -105,6 +105,7 @@ def test_load_context_failed_fetches_surface_as_warnings(monkeypatch):
     monkeypatch.setattr(vp, "_fetch_ctl", _boom)
     monkeypatch.setattr(vp, "_fetch_raw_activities_for_hardreize", _boom)
     monkeypatch.setattr(vp, "_fetch_race_days_ahead", _boom)
+    monkeypatch.setattr(vp, "_fetch_tomorrow_workouts", _boom)
 
     ctx = load_context("2025-05-23", fetch_remote=True)
 
@@ -115,10 +116,11 @@ def test_load_context_failed_fetches_surface_as_warnings(monkeypatch):
     assert ctx.weekly_hard_reize_balance == ""
     assert ctx.ctl is None
     assert ctx.race_days_ahead is None
+    assert ctx.tomorrow_workouts is None
 
-    assert len(ctx.load_warnings) == 6
+    assert len(ctx.load_warnings) == 7
     messages = [w.message for w in ctx.load_warnings]
-    for impacted in ("R004", "R006", "R014", "R017", "R025"):
+    for impacted in ("R004", "R006", "R014", "R017", "R025", "R041"):
         assert any(impacted in m for m in messages), f"{impacted} not surfaced: {messages}"
     for w in ctx.load_warnings:
         assert w.rule_id == "VALIDATOR"
@@ -137,15 +139,16 @@ def test_run_validation_emits_load_warnings(monkeypatch):
     monkeypatch.setattr(vp, "_fetch_ctl", _boom)
     monkeypatch.setattr(vp, "_fetch_raw_activities_for_hardreize", _boom)
     monkeypatch.setattr(vp, "_fetch_race_days_ahead", _boom)
+    monkeypatch.setattr(vp, "_fetch_tomorrow_workouts", _boom)
 
     ctx = load_context("2025-05-23", fetch_remote=True)
     findings = run_validation([], ctx)
     validator_warnings = [f for f in findings if f.rule_id == "VALIDATOR"]
-    assert len(validator_warnings) == 6
+    assert len(validator_warnings) == 7
 
     # Warnings are not filtered away by --rule selection either.
     findings = run_validation([], ctx, only_rule="R003")
-    assert len([f for f in findings if f.rule_id == "VALIDATOR"]) == 6
+    assert len([f for f in findings if f.rule_id == "VALIDATOR"]) == 7
 
 
 def test_load_context_no_remote_no_warnings(monkeypatch):

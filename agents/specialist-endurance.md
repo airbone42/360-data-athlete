@@ -21,7 +21,7 @@ Read these configuration files:
 
 - **Easy / long (Z1–Z2):** HR only, no pace target. Easy HR ceiling stays below Z3 (R010).
 - **Recovery (`workout_type=RECOVERY`):** HR ceiling = upper Z1, below the Z2 floor (R010 checks the Z1 ceiling). Never a Z2 corridor on a recovery step — it invites "run faster to reach Z2". If form degrades at very slow pace, walking is better. Evidence: [recovery-run-intensity.md](../research/recovery-run-intensity.md).
-- **Steps < 60 s, strides, sprints:** pace / effort only, no HR target.
+- **Steps < 60 s, strides, sprints:** pace / effort only, no HR target (R040).
 - **Tempo / threshold:** pace leads, HR is the cap.
 - **HM-pace / race-pace block:** pace is the target, HR a duration-dependent `cap`, never the target (R027 checks band vs. label):
 
