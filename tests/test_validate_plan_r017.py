@@ -157,3 +157,34 @@ def test_r017_silent_when_race_week_active_in_coaching_notes():
     w["coaching_notes"] = "Race-week active — D-3 sharpening."
     findings = check_weekly_hardreize_cap([w], _ctx(BALANCE_RUN_DONE_RIDE_OPEN))
     assert findings == []
+
+
+# ── Macro-block override (per workout, waives only R017) ─────────────────
+
+
+def test_r017_override_with_reason_turns_error_into_info() -> None:
+    w = _run_z4_workout()
+    w["coaching_notes"] = "R017-override: athlete-confirmed race-pace pairing block"
+    findings = check_weekly_hardreize_cap([w], _ctx(BALANCE_RUN_DONE_RIDE_OPEN))
+    assert [f.severity for f in findings] == ["INFO"]
+    assert "race-pace pairing" in findings[0].message
+
+
+def test_r017_macro_block_active_marker_waives() -> None:
+    w = _run_z4_workout()
+    w["coaching_notes"] = "Makro-Block aktiv (zweiter Reiz bestätigt)"
+    findings = check_weekly_hardreize_cap([w], _ctx(BALANCE_RUN_DONE_RIDE_OPEN))
+    assert [f.severity for f in findings] == ["INFO"]
+
+
+def test_r017_override_without_reason_still_errors() -> None:
+    w = _run_z4_workout()
+    w["coaching_notes"] = "R017-override:"
+    findings = check_weekly_hardreize_cap([w], _ctx(BALANCE_RUN_DONE_RIDE_OPEN))
+    assert [f.severity for f in findings] == ["ERROR"]
+
+
+def test_r017_override_silent_when_cap_would_not_fire() -> None:
+    w = _run_z4_workout()
+    w["coaching_notes"] = "macro-block active"
+    assert check_weekly_hardreize_cap([w], _ctx(BALANCE_BOTH_OPEN)) == []

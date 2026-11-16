@@ -1987,7 +1987,10 @@ def check_weekly_hardreize_cap(workouts: list[dict], ctx: Context) -> list[Findi
     2. That balance shows `✓` for the workout's system (Run or Ride).
     3. The workout has a Hard-Reiz signature: `intervals` tag OR
        intervals_icu text contains `Z4 HR`/`Z5 HR` OR `% LTHR` ≥ 95.
-    4. No active taper window detected in `athlete_status` or
+    4. No per-workout macro-block override in `coaching_notes`
+       (`R017-override: <reason>` or `macro-block active`); an override
+       turns the ERROR into an INFO naming the reason.
+    5. No active taper window detected in `athlete_status` or
        `training_paradigms` (regex: `taper\\s+(active|aktiv|window\\s*open)`
        OR `RACE_A\\s*in\\s*\\d+d` with `d ≤ taper_length_default`).
 
@@ -2030,6 +2033,14 @@ def check_weekly_hardreize_cap(workouts: list[dict], ctx: Context) -> list[Findi
         return findings
 
     HARD_SIG_RE = HARD_SIGNATURE_RE  # shared with the quality-run definition (R034)
+    # Macro-block override (per workout, in coaching_notes): either
+    # "R017-override: <reason of at least a few words>" or
+    # "macro-block active" / "Makro-Block aktiv".
+    macro_override_re = re.compile(
+        r"\bR017[-\s]?override\s*:\s*(?P<reason>\S.{9,}?)\s*(?:$|\n)|"
+        r"\bma[ck]ro[-\s]?block\s+(?:active|aktiv)\b",
+        re.IGNORECASE,
+    )
 
     for w in workouts:
         w_type = (w.get("type") or "")
@@ -2048,6 +2059,23 @@ def check_weekly_hardreize_cap(workouts: list[dict], ctx: Context) -> list[Findi
 
         is_run = w_type in {"Run", "VirtualRun"}
         is_ride = w_type in {"Ride", "VirtualRide"}
+
+        # Per-workout macro-block override: an athlete-confirmed block that
+        # deliberately carries an extra same-system Hard-Reiz (e.g. a paired
+        # race-pace build). Waives only R017 for this workout, unlike
+        # --skip-validation which drops every rule; the finding stays
+        # visible as INFO with the documented reason.
+        override = macro_override_re.search(coaching_notes)
+        if override and ((is_run and run_done) or (is_ride and ride_done)):
+            reason = (override.group("reason") or override.group(0)).strip()
+            findings.append(Finding(
+                rule_id="R017",
+                severity=SEVERITY_INFO,
+                workout=_workout_name(w),
+                message=f"Weekly Hard-Reiz cap waived by documented override: {reason}",
+                suggestion="",
+            ))
+            continue
 
         if is_run and run_done:
             findings.append(Finding(
@@ -2068,7 +2096,9 @@ def check_weekly_hardreize_cap(workouts: list[dict], ctx: Context) -> list[Findi
                     "cross-training slot is what's open. If a true taper "
                     "window is active, document it in athlete_status.md or "
                     "the workout's coaching_notes (regex: "
-                    "`taper active`/`race-week active`)."
+                    "`taper active`/`race-week active`). An athlete-confirmed "
+                    "macro block waives only this rule via coaching_notes "
+                    "`R017-override: <reason>` or `macro-block active`."
                 ),
             ))
         elif is_ride and ride_done:
