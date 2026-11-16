@@ -149,11 +149,14 @@ HARD_STIMULUS_MIN_Z4_Z5_SECS = 8 * 60
 
 
 def _z4_z5_secs(activity: dict) -> float:
-    """Total seconds spent in Z4+Z5 according to icu_hr_zone_times."""
-    zone_times = list(activity.get("icu_hr_zone_times") or [])[:5]
-    return (zone_times[3] if len(zone_times) > 3 else 0) + (
-        zone_times[4] if len(zone_times) > 4 else 0
-    )
+    """Total seconds spent in Z4 and above according to icu_hr_zone_times.
+
+    A 7-zone model (common for Ride profiles) carries Z6/Z7 above Z5; that
+    time is at least as hard and counts here, consistent with the "Z5+"
+    folding in the zone distribution.
+    """
+    zone_times = list(activity.get("icu_hr_zone_times") or [])
+    return float(sum(t or 0 for t in zone_times[3:]))
 
 
 def is_hard_stimulus(

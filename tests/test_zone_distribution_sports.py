@@ -29,3 +29,12 @@ def test_ride_time_stays_in_ride_zone_in_mixed_window():
     assert out.startswith("Z1: 50% | Z2: 50%")
     assert "| Run: Z1: 100% Z2: 0%" in out
     assert "| Ride: Z1: 0% Z2: 100%" in out
+
+
+def test_hard_stimulus_counts_z6_z7_of_seven_zone_ride() -> None:
+    from app.analytics.zones import is_hard_stimulus
+
+    ride = {"type": "Ride", "icu_hr_zone_times": [600, 600, 0, 0, 0, 300, 300]}
+    assert is_hard_stimulus(ride)
+    five_zone = {"type": "Run", "icu_hr_zone_times": [600, 600, 0, 200, 200]}
+    assert not is_hard_stimulus(five_zone)
