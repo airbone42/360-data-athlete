@@ -1061,6 +1061,16 @@ def check_intervals_step_targets(workouts: list[dict], ctx: Context) -> list[Fin
         r"\b\d+(?:-\d+)?\s*bpm\b|\bHR\s*\d{2,3}\s*[-–]\s*\d{2,3}\b",
         re.IGNORECASE,
     )
+    # Explicit sanity-cap syntax: a single bpm value introduced by a cap word
+    # (`HR cap 131 bpm`, `HF-Deckel 131 bpm`, `max 131 bpm`, `<131 bpm`). It is
+    # a ceiling cue, not a target — intervals.icu parses and ignores the bpm
+    # suffix (Trap A), so it is harmless as long as the step carries a real
+    # target. Ranges (`126-135 bpm`) never qualify.
+    SANITY_CAP_RE = re.compile(
+        r"(?:\b(?:hr|hf)[-\s]?(?:cap|max|decke|deckel|ceiling|limit)\b|\bmax\.?|\bcap\b|[≤<])"
+        r"\s*:?\s*(?<![\d-])\d{2,3}\s*bpm\b",
+        re.IGNORECASE,
+    )
     LAP_PRESS_RE = _LAP_PRESS_RE
     LOOP_HEADER_RE = re.compile(r"\b\d+x\b", re.IGNORECASE)
 
@@ -1077,6 +1087,14 @@ def check_intervals_step_targets(workouts: list[dict], ctx: Context) -> list[Fin
             if not line or not line.startswith("-"):
                 continue
             content = line.lstrip("-").strip()
+
+            # A sanity cap is stripped before the BPM check when what is left
+            # still carries a real target; otherwise it stays and errors.
+            capless = SANITY_CAP_RE.sub("", content)
+            if capless != content:
+                cap_patterns = TARGET_PATTERNS_RIDE if is_ride else TARGET_PATTERNS_COMMON
+                if any(re.search(p, capless, re.IGNORECASE) for p in cap_patterns):
+                    content = capless
 
             # Bad-BPM-Range first — produces silent drop on ALL types
             if BAD_BPM_RE.search(content):

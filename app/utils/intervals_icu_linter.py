@@ -31,6 +31,14 @@ _HR_ZONE_RE = re.compile(
     r"|HR\s*\d{2,3}\s*[-–—]\s*\d{2,3}",
     re.IGNORECASE,
 )
+# Power target (watts or %FTP/MAP/MMP). On a smart trainer watts are the
+# controlling variable; HR is only a secondary signal, so a power-targeted
+# step needs no HR target. An HR zone there would even be wrong when the
+# athlete's ride HR zones differ from the run-derived ones.
+_POWER_TARGET_RE = re.compile(
+    r"\d+(?:\s*[-–]\s*\d+)?\s*w\b|\d+(?:\s*[-–]\s*\d+)?\s*%\s*(?:ftp|map|mmp)\b",
+    re.IGNORECASE,
+)
 # press lap marker
 _PRESS_LAP_RE = re.compile(r"press\s*lap", re.IGNORECASE)
 # spm (forbidden for cadence — must be rpm)
@@ -192,6 +200,7 @@ def validate_intervals_icu(text: str) -> list[str]:
         duration_s = _parse_duration_seconds(content)
         has_hr = bool(_HR_ZONE_RE.search(content))
         has_press_lap = bool(_PRESS_LAP_RE.search(content))
+        has_power = bool(_POWER_TARGET_RE.search(content))
 
         if duration_s is not None:
             # Warm-up / cool-down label detection — bilingual (German +
@@ -210,10 +219,11 @@ def validate_intervals_icu(text: str) -> list[str]:
                     errors.append(
                         f"Warm-up / cool-down jog must not have an HR target: '{stripped}' — remove Z* HR"
                     )
-            elif duration_s >= 60 and not has_hr and not has_press_lap:
-                # Steps ≥60s: must have an HR zone (unless press lap)
+            elif duration_s >= 60 and not has_hr and not has_press_lap and not has_power:
+                # Steps ≥60s: must have an HR zone (unless press lap or a
+                # power target — watts lead on an indoor ride)
                 errors.append(
-                    f"Step ≥60s without HR target: '{stripped}' — add an HR zone (Z1-Z5 HR) or 'press lap'"
+                    f"Step ≥60s without HR target: '{stripped}' — add an HR zone (Z1-Z5 HR), a power target (watts) or 'press lap'"
                 )
             elif duration_s < 60 and has_hr:
                 # Steps <60s: no HR target

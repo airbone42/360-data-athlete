@@ -66,3 +66,22 @@ def test_lthr_target_on_short_step_is_flagged() -> None:
 def test_percent_without_lthr_is_not_a_target() -> None:
     # A bare percentage (e.g. an effort or grade note) is not an HR target.
     assert len(_hr_target_errors("Main\n- Bergauf 3m 8% Steigung")) == 1
+
+
+@pytest.mark.parametrize(
+    "step",
+    [
+        "- Sweet Spot 12m 200W 90rpm",
+        "- Easy 20m 150-170W",
+        "- Tempo 10m 85% FTP",
+        "- VO2 4m 110-120% MAP",
+    ],
+)
+def test_power_target_needs_no_hr_target(step: str) -> None:
+    # Watts lead on a smart trainer; an HR zone there would resolve against
+    # run-derived zones and could target the wrong bpm.
+    assert _hr_target_errors(f"Main\n{step}") == []
+
+
+def test_bare_percent_is_not_a_power_target() -> None:
+    assert len(_hr_target_errors("Main\n- Bergauf 3m 8%")) == 1
