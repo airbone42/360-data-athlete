@@ -284,6 +284,33 @@ def _interference_gap_min(prev: dict, curr: dict) -> int:
     return 120
 
 
+_START_TIME_RE = re.compile(r"^([01]?\d|2[0-3]):([0-5]\d)(?::[0-5]\d)?$")
+
+
+def _explicit_start_minutes(w: dict, index: int) -> int | None:
+    """Minutes since midnight for an explicit ``start_time`` ("HH:MM"), else None."""
+    raw = w.get("start_time")
+    if raw is None or raw == "":
+        return None
+    m = _START_TIME_RE.match(str(raw).strip())
+    if not m:
+        raise ValueError(
+            f"❌ Workout {index} '{w.get('name')}': invalid start_time {raw!r} (expected HH:MM)"
+        )
+    return int(m.group(1)) * 60 + int(m.group(2))
+
+
+def _order_key(w: dict) -> tuple[int, int]:
+    """Explicit ``order`` first (ascending), workouts without it follow."""
+    order = w.get("order")
+    if order is None or order == "":
+        return (1, 0)
+    try:
+        return (0, int(order))
+    except (TypeError, ValueError):
+        raise ValueError(f"❌ Workout '{w.get('name')}': invalid order {order!r} (expected int)") from None
+
+
 def prepare_workout_events(workouts: list[dict], date: str) -> list[dict]:
     """Convert parsed workouts to intervals.icu event format (port of 'Split Workouts').
 
@@ -296,8 +323,17 @@ def prepare_workout_events(workouts: list[dict], date: str) -> list[dict]:
     # The quality-first inversion is a leg-interference rule, so it only
     # fires when the day actually carries leg strength work.
     invert_quality = any(_loads_legs(w) for w in workouts)
+    # Athlete-driven order: if any workout of the day sets ``order`` (int),
+    # those sort first by it; workouts without it follow in the default
+    # order (stable sort, ``_sort_key`` as tiebreak). Without the field the
+    # result is exactly the default order.
+    use_order = any(w.get("order") not in (None, "") for w in workouts)
     sorted_workouts = sorted(
-        workouts, key=lambda w: _sort_key(w, invert_quality=invert_quality)
+        workouts,
+        key=lambda w: (
+            (_order_key(w) if use_order else ()),
+            _sort_key(w, invert_quality=invert_quality),
+        ),
     )
     for i, w in enumerate(sorted_workouts):
         _lint_intervals_icu(w, i + 1)
@@ -305,10 +341,27 @@ def prepare_workout_events(workouts: list[dict], date: str) -> list[dict]:
     start_minutes = 6 * 60  # first workout always at 06:00
     prev_start_minutes = start_minutes
     for i, w in enumerate(sorted_workouts):
+        explicit = _explicit_start_minutes(w, i + 1)
         if i > 0:
             prev = sorted_workouts[i - 1]
             gap = _interference_gap_min(prev, w)
-            start_minutes = prev_start_minutes + prev.get("duration_min", 0) + gap
+            earliest = prev_start_minutes + prev.get("duration_min", 0) + gap
+            if explicit is None:
+                start_minutes = earliest
+            else:
+                # The athlete's time wins; the interference gap is only a
+                # minimum, checked in the actual direction (prev -> w).
+                if explicit < earliest:
+                    logger.warning(
+                        "Workout %d '%s': start_time %02d:%02d is %d min before the %d min "
+                        "minimum gap after '%s' (earliest %02d:%02d) — kept as given",
+                        i + 1, w.get("name"), explicit // 60, explicit % 60,
+                        earliest - explicit, gap, prev.get("name"),
+                        earliest // 60, earliest % 60,
+                    )
+                start_minutes = explicit
+        elif explicit is not None:
+            start_minutes = explicit
         prev_start_minutes = start_minutes
         start_time = f"{start_minutes // 60:02d}:{start_minutes % 60:02d}:00"
 

@@ -129,7 +129,7 @@ Head-coach judgment.
 
 ## Workout JSON format
 
-Planner output shape: `agents/planner.md`. Parser (`workout_parser.py`): types Run, Ride, WeightTraining, Workout; tags run, ride, core, legs, plyo, balance, mobility, intervals, ninja, grip, upperbody (legacy `beine` only on read). Empty list = rest day. `uid` `coach-{date}-{index}`, start times 06:00, 08:00, … Run/Ride: `intervals_icu` text becomes the description and `surface` is mandatory (`asphalt | forest-path | trail | track | treadmill`). Non-endurance descriptions carry no time patterns.
+Planner output shape: `agents/planner.md`. Parser (`workout_parser.py`): types Run, Ride, WeightTraining, Workout; tags run, ride, core, legs, plyo, balance, mobility, intervals, ninja, grip, upperbody (legacy `beine` only on read). Empty list = rest day. `uid` `coach-{date}-{index}`, start times 06:00, 08:00, … (optional per-workout `order` int / `start_time` HH:MM override; gaps then only warn). Run/Ride: `intervals_icu` text becomes the description and `surface` is mandatory (`asphalt | forest-path | trail | track | treadmill`). Non-endurance descriptions carry no time patterns.
 
 ### Workout descriptions are execution aids, not decision records (policy)
 

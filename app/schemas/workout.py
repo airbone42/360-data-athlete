@@ -53,6 +53,8 @@ class PlannedWorkout(BaseModel):
     description: str | None = None
     duration_range: list[float] | None = None
     coaching_notes: str | None = None
+    start_time: str | None = None  # optional "HH:MM", used verbatim as start
+    order: int | None = None  # optional within-day order, ascending
 
     @field_validator("type")
     @classmethod

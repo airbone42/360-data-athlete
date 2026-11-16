@@ -186,6 +186,12 @@ present it in chat as described at the end of this file. Omit the
 Allowed tags: `run, ride, core, legs, plyo, balance, mobility, intervals,
 ninja, grip, upperbody`
 
+`order` (int) and `start_time` ("HH:MM") are optional and only for
+athlete-driven sequencing (e.g. outdoor run in the cool morning, strength
+later): `order` sorts the day (unordered workouts follow), `start_time` is
+used verbatim; the interference gap stays a minimum and only warns.
+Omit both by default.
+
 Set `duration_range` as the allowed range [min, max] based on your load
 management. The specialist may decide freely within this range.
 

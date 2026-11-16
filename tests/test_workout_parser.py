@@ -398,3 +398,75 @@ def test_a_negated_stretch_note_does_not_block_the_push() -> None:
         date="2026-01-01",
     )
     assert len(events) == 1
+
+
+# ---------------------------------------------------------------------------
+# Explicit within-day order / start_time
+# ---------------------------------------------------------------------------
+
+_LEG_STRENGTH = {"type": "WeightTraining", "name": "Legs", "duration_min": 45,
+                 "workout_type": "STRENGTH", "tags": ["legs"]}
+_EASY_RUN = {"type": "Run", "name": "Morning run", "duration_min": 40,
+             "workout_type": "EASY", "tags": ["run"]}
+
+
+def _starts(workouts: list[dict]) -> dict:
+    events = prepare_workout_events(workouts, date="2026-01-01")
+    return {e["name"]: e["start_date_local"] for e in events}
+
+
+def test_default_order_unchanged_without_explicit_fields() -> None:
+    by_name = _starts([dict(_EASY_RUN), dict(_LEG_STRENGTH)])
+    # strength first, then run after the 6h leg gap
+    assert by_name["Legs"] == "2026-01-01T06:00:00"
+    assert by_name["Morning run"] == "2026-01-01T12:45:00"
+
+
+def test_order_puts_run_before_leg_strength_with_run_to_strength_gap() -> None:
+    by_name = _starts([
+        {**_LEG_STRENGTH, "order": 2},
+        {**_EASY_RUN, "order": 1},
+    ])
+    assert by_name["Morning run"] == "2026-01-01T06:00:00"
+    # easy run -> strength: default 120 min gap (not the 360 of strength -> run)
+    assert by_name["Legs"] == "2026-01-01T08:40:00"
+
+
+def test_workouts_without_order_follow_ordered_ones() -> None:
+    by_name = _starts([dict(_LEG_STRENGTH), {**_EASY_RUN, "order": 1}])
+    assert by_name["Morning run"] == "2026-01-01T06:00:00"
+    assert by_name["Legs"] > by_name["Morning run"]
+
+
+def test_explicit_start_time_used_verbatim(caplog: pytest.LogCaptureFixture) -> None:
+    import logging
+    with caplog.at_level(logging.WARNING):
+        by_name = _starts([
+            {**_EASY_RUN, "order": 1, "start_time": "07:30"},
+            {**_LEG_STRENGTH, "order": 2, "start_time": "14:00"},
+        ])
+    assert by_name["Morning run"] == "2026-01-01T07:30:00"
+    assert by_name["Legs"] == "2026-01-01T14:00:00"
+    assert "kept as given" not in caplog.text
+
+
+def test_start_time_violating_gap_warns_but_keeps(caplog: pytest.LogCaptureFixture) -> None:
+    import logging
+    with caplog.at_level(logging.WARNING):
+        by_name = _starts([
+            {**_EASY_RUN, "order": 1},
+            {**_LEG_STRENGTH, "order": 2, "start_time": "07:00"},
+        ])
+    assert by_name["Legs"] == "2026-01-01T07:00:00"
+    assert "kept as given" in caplog.text
+
+
+def test_invalid_start_time_raises() -> None:
+    with pytest.raises(ValueError, match="start_time"):
+        prepare_workout_events([{**_EASY_RUN, "start_time": "25:99"}], date="2026-01-01")
+
+
+def test_schema_keeps_order_and_start_time() -> None:
+    from app.schemas import PlannedWorkout
+    w = PlannedWorkout(**_MINIMAL, order=2, start_time="07:00")
+    assert (w.order, w.start_time) == (2, "07:00")
