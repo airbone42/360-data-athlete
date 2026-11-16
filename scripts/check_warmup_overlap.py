@@ -68,6 +68,27 @@ _SECTION_HEADER_PATTERN = re.compile(
 )
 
 
+# Lines that *name* a drill only to say it is deliberately left out here
+# ("Cat-Cow und Glute Bridge laufen heute schon im Bein-Warm-up — hier
+# deshalb nicht doppelt"). That is exactly what the one-warm-up-per-day
+# convention asks the specialist to write; flagging it as a duplicate would
+# train the coach to ignore the warning.
+_REFERENCE_PATTERN = re.compile(
+    r"nicht\s+doppelt|bewusst\s+nicht|entf[aä]llt|weggelassen|ausgelassen"
+    r"|l[aä]uf(?:t|en)\s+(?:heute\s+)?(?:schon|bereits)"
+    r"|liegt\s+(?:schon\s+|bereits\s+)?im\b|liegen\s+(?:schon\s+|bereits\s+)?im\b"
+    r"|stattdessen\s+im\b|(?:schon|bereits)\s+im\s+\S*warm"
+    r"|not\s+repeated|not\s+duplicated|deliberately\s+(?:omitted|left\s+out)"
+    r"|already\s+(?:done\s+|covered\s+)?in\b|\bomitted\b",
+    flags=re.IGNORECASE,
+)
+
+
+def _is_reference_line(line: str) -> bool:
+    """True when the line points to a drill elsewhere instead of prescribing it."""
+    return bool(_REFERENCE_PATTERN.search(line))
+
+
 def _strip_parentheses(line: str) -> str:
     """Klammern-Inhalte entfernen — typische Annotationen ('A-Skips folgen im Lauf-WU')."""
     return re.sub(r"\([^)]*\)", "", line)
@@ -87,14 +108,15 @@ def find_drills(text: str) -> set[str]:
     """Return canonical drill names found as actual exercise instructions in text.
 
     Scannt zeilenweise und ignoriert Fließtext-Erwähnungen ohne Mengenangabe
-    (z.B. Hinweise wie 'A-Skips folgen im Lauf-WU').
+    (z.B. Hinweise wie 'A-Skips folgen im Lauf-WU') sowie Verweis-Zeilen, die
+    einen Drill nur als bewusst ausgelassen nennen (``_REFERENCE_PATTERN``).
     """
     if not text:
         return set()
     found: set[str] = set()
     for raw_line in text.splitlines():
         line = raw_line.strip()
-        if not line or not _is_exercise_line(line):
+        if not line or not _is_exercise_line(line) or _is_reference_line(line):
             continue
         scan_line = _strip_parentheses(line)
         for name, patterns in DRILL_PATTERNS.items():
