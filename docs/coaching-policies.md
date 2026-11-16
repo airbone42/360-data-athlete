@@ -1357,7 +1357,7 @@ required recording setup get no DFA suggestion.
 
 ## Plan validator (policy, in every /training flow)
 
-Two layers: (1) the **mechanical validator** `scripts/validate_plan.py` — plugin-based rule registry (`RULES`), run by `push_workouts.py` before every push; ERRORs block (exit 2), override only with `--skip-validation` (emergency, document as NOTE); rule inputs such as `config/injury_locks.json` (R002) and `config/exercise_tag_mapping.json` (R024, empty default = off) are documented in `config.example/`. (2) the **semantic validator** — the `plan-validator` subagent (fresh context), `/training` step 3.5b: pillar rotation, stimulus adequacy vs. wellness, weekly volume jump, progression consistency, form findings from `exercise_log.md`.
+Two layers: (1) the **mechanical validator** `scripts/validate_plan.py` — plugin-based rule registry (`RULES`), run by `push_workouts.py` before every push; ERRORs block (exit 2), override only with `--skip-validation` (emergency, document as NOTE); rule inputs such as `config/injury_locks.json` (R002, per-zone `activation_keywords` / `block_patterns` / `allow_patterns`; every configured zone is evaluated) and `config/exercise_tag_mapping.json` (R024, empty default = off) are documented in `config.example/`. (2) the **semantic validator** — the `plan-validator` subagent (fresh context), `/training` step 3.5b: pillar rotation, stimulus adequacy vs. wellness, weekly volume jump, progression consistency, form findings from `exercise_log.md`.
 
 ### A validator finding's own severity is an input, not a verdict (policy)
 

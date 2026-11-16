@@ -85,6 +85,10 @@ class Context:
     # framework default (config.example) keeps these empty so a fresh user
     # starts fully locked.
     injury_lock_allows: dict[str, list[str]] = field(default_factory=dict)
+    # Per-zone block-patterns (regex strings) of exercises blocked while the
+    # zone's lock is active. Zone "shoulder" falls back to the built-in
+    # SHOULDER_LOCK_PATTERNS when absent.
+    injury_lock_blocks: dict[str, list[str]] = field(default_factory=dict)
     weekly_hard_reize_balance: str = ""
     # Longer run history (~10 weeks) for R035's calendar-deload walk; only
     # fetched when `deload_every_n_weeks` is configured. Falls back to
@@ -326,65 +330,99 @@ def check_reps_ceiling(workouts: list[dict], ctx: Context) -> list[Finding]:
     return findings
 
 
-def check_injury_locks_shoulder(workouts: list[dict], ctx: Context) -> list[Finding]:
-    """R002 — Shoulder lock: Pull-up, Hang, Rope Climb, Bar Traverse, Campus Board prohibited.
+def check_injury_locks(workouts: list[dict], ctx: Context) -> list[Finding]:
+    """R002 — Injury locks: block exercise classes for every configured lock zone.
 
-    Activation: `config/injury_locks.json` defines keywords per lock zone. When any
-    keyword is found in `athlete_static.md`, the corresponding lock is active.
+    `config/injury_locks.json` holds one entry per body zone. Per zone:
+    - `activation_keywords`: case-insensitive substrings matched against
+      `athlete_static.md`; if ANY matches, the lock is active (a zone without
+      keywords never activates). A legacy `zone: [keywords]` list is accepted.
+    - `block_patterns`: regexes of blocked exercise lines. Zone `shoulder`
+      falls back to the built-in `SHOULDER_LOCK_PATTERNS` when it has none.
+    - `allow_patterns`: regexes that exempt a cleared exercise at any dosage
+      (e.g. a physio-cleared passive Dead Hang). Empty by default, so a fresh
+      user starts fully locked.
 
-    Exceptions:
-    - Config-driven clearance: `injury_locks.json` may list `allow_patterns`
-      per zone (regex) that exempt a cleared exercise at any dosage — e.g. a
-      physio-cleared passive Dead Hang. The framework default
-      (config.example) keeps these empty so a fresh user starts fully locked;
-      an athlete documents the clearance in their own config/injury_locks.json.
-    - Dead Hang with hold times of 2-5 s is allowed framework-wide as a
-      rehab-tier decompression hold even without an allow_pattern; longer
-      holds (15 s, 45 s) stay blocked unless an allow_pattern clears them.
-    - Hang-position lift variants (hang power clean, hang snatch) are not
-      bar hangs and are not matched by the hang lock.
-    - Scapular Pullups (scapular depression, no elbow flexion) are rehab-tier
-      and belong to the shoulder rehab repertoire — not a prohibited pull-up.
+    An ACTIVE zone with neither configured nor built-in block patterns cannot
+    be enforced; that yields a WARNING instead of silence.
+
+    Shoulder-specific extras (built-in, zone `shoulder` only):
+    - Dead Hang with hold times of 2-5 s is allowed as a rehab-tier
+      decompression hold even without an allow_pattern; longer holds stay
+      blocked unless an allow_pattern clears them.
+    - Hang-position lift variants (hang power clean, hang snatch) are not bar
+      hangs. Scapular Pullups (no elbow flexion) are rehab-tier, not a
+      prohibited pull-up.
+    - Heavy overhead press (barbell overhead, or named press >= 10 kg) is an
+      ERROR while the shoulder lock is active.
     Hard stop (ERROR) on clear injury violations.
     """
-    findings = []
-    shoulder_keywords = ctx.injury_locks.get("shoulder", [])
-    if not shoulder_keywords:
-        return findings
+    findings: list[Finding] = []
     static_lower = ctx.athlete_static.lower()
-    if not any(kw.lower() in static_lower for kw in shoulder_keywords):
-        return findings
-    shoulder_allows = ctx.injury_lock_allows.get("shoulder", [])
-    for w in workouts:
-        name = _workout_name(w)
-        for line in _exercise_lines(_description(w)):
-            if _matches_any(line, SHOULDER_LOCK_PATTERNS):
-                # Config-driven clearance (config/injury_locks.json allow_patterns)
-                # — e.g. an athlete whose passive Dead Hang is physio-cleared at
-                # any hold time. Pull-up/rope/traverse/campus patterns are separate
-                # and stay blocked unless their own allow-pattern is configured.
-                if shoulder_allows and _matches_any(line, shoulder_allows):
-                    continue
-                if _dead_hang_allowed(line):
-                    continue
-                if re.search(r"\b(scapular?|skapula(r|re|ren)?)\s*pull[-\s]?ups?", line, flags=re.IGNORECASE):
-                    continue
-                findings.append(Finding(
-                    rule_id="R002",
-                    severity=SEVERITY_ERROR,
-                    workout=name,
-                    message=f"Shoulder lock violated — blocked exercise: «{line[:80]}»",
-                    suggestion="Replace with allowed variant (TRX Row instead of Pull-up, Face Pull instead of Hang, etc.) or remove.",
-                ))
-            if _is_heavy_overhead(line):
-                findings.append(Finding(
-                    rule_id="R002",
-                    severity=SEVERITY_ERROR,
-                    workout=name,
-                    message=f"Heavy overhead press despite shoulder restriction: «{line[:80]}»",
-                    suggestion="Reduce load to rehab level (KB OHP 4kg = OK) or remove exercise.",
-                ))
+    for zone, keywords in ctx.injury_locks.items():
+        if not keywords:
+            continue
+        if not any(kw.lower() in static_lower for kw in keywords):
+            continue
+        is_shoulder = zone == "shoulder"
+        block_patterns = ctx.injury_lock_blocks.get(zone) or (
+            SHOULDER_LOCK_PATTERNS if is_shoulder else []
+        )
+        if not block_patterns:
+            findings.append(Finding(
+                rule_id="R002",
+                severity=SEVERITY_WARNING,
+                workout="(all)",
+                message=(
+                    f"Injury lock zone '{zone}' is active but has no block_patterns "
+                    "— not enforced"
+                ),
+                suggestion=(
+                    f"Add 'block_patterns' (regex list) to zone '{zone}' in "
+                    "config/injury_locks.json."
+                ),
+            ))
+            continue
+        allows = ctx.injury_lock_allows.get(zone, [])
+        label = "Shoulder" if is_shoulder else f"Injury ({zone})"
+        for w in workouts:
+            name = _workout_name(w)
+            for line in _exercise_lines(_description(w)):
+                if _matches_any(line, block_patterns):
+                    # Config-driven clearance (allow_patterns), e.g. a passive
+                    # Dead Hang that is physio-cleared at any hold time. Other
+                    # blocked patterns stay blocked unless separately allowed.
+                    if allows and _matches_any(line, allows):
+                        continue
+                    if is_shoulder:
+                        if _dead_hang_allowed(line):
+                            continue
+                        if re.search(r"\b(scapular?|skapula(r|re|ren)?)\s*pull[-\s]?ups?", line, flags=re.IGNORECASE):
+                            continue
+                    findings.append(Finding(
+                        rule_id="R002",
+                        severity=SEVERITY_ERROR,
+                        workout=name,
+                        message=f"{label} lock violated — blocked exercise: «{line[:80]}»",
+                        suggestion=(
+                            "Replace with allowed variant (TRX Row instead of Pull-up, Face Pull instead of Hang, etc.) or remove."
+                            if is_shoulder
+                            else "Replace with an exercise outside the locked class or remove."
+                        ),
+                    ))
+                if is_shoulder and _is_heavy_overhead(line):
+                    findings.append(Finding(
+                        rule_id="R002",
+                        severity=SEVERITY_ERROR,
+                        workout=name,
+                        message=f"Heavy overhead press despite shoulder restriction: «{line[:80]}»",
+                        suggestion="Reduce load to rehab level (KB OHP 4kg = OK) or remove exercise.",
+                    ))
     return findings
+
+
+# Backward-compatible alias (pre-generalisation name).
+check_injury_locks_shoulder = check_injury_locks
 
 
 def check_surface_required(workouts: list[dict], ctx: Context) -> list[Finding]:
@@ -3838,7 +3876,7 @@ def check_pap_lock_trigger(workouts: list[dict], ctx: Context) -> list[Finding]:
 
 RULES: list[tuple[str, Callable[[list[dict], Context], list[Finding]]]] = [
     ("R001", check_reps_ceiling),
-    ("R002", check_injury_locks_shoulder),
+    ("R002", check_injury_locks),
     ("R003", check_surface_required),
     ("R004", check_glute_doms),
     ("R005", check_achilles_plyo_surface),
@@ -3997,6 +4035,24 @@ def _load_injury_lock_allows() -> dict[str, list[str]]:
     return result
 
 
+def _load_injury_lock_blocks() -> dict[str, list[str]]:
+    """Load per-zone block_patterns from config/injury_locks.json.
+
+    Optional schema key — a zone may carry `block_patterns: [regex, ...]`
+    listing the exercise classes blocked while the lock is active."""
+    from app.utils.paths import resolve_config
+    try:
+        path = resolve_config("injury_locks.json")
+        data = json.loads(path.read_text())
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+    result: dict[str, list[str]] = {}
+    for zone, cfg in data.items():
+        if isinstance(cfg, dict) and cfg.get("block_patterns"):
+            result[zone] = cfg["block_patterns"]
+    return result
+
+
 def _load_tag_content_map() -> dict[str, dict]:
     """Load config/exercise_tag_mapping.json for R024 (empty default = rule off)."""
     from app.utils.paths import resolve_config
@@ -4067,6 +4123,7 @@ def load_context(target_date: str, fetch_remote: bool = True) -> Context:
         competition_plan=_read_config("competition_plan.md"),
         injury_locks=_load_injury_locks(),
         injury_lock_allows=_load_injury_lock_allows(),
+        injury_lock_blocks=_load_injury_lock_blocks(),
         tag_content_map=_load_tag_content_map(),
     )
     if fetch_remote:

@@ -1,9 +1,15 @@
 {
-  "_schema": "injury_locks.json — configurable injury-lock activation keywords",
-  "_usage": "Used by validate_plan.py rule R002 (shoulder lock). Each top-level key is a body zone. The 'activation_keywords' list contains case-insensitive substrings matched against athlete_static.md. If ANY keyword matches, the corresponding lock rule activates. The optional 'allow_patterns' list (regex strings) exempts specific exercise lines from the lock even when active — used for physio-cleared exercises (e.g. a passive Dead Hang). Leave it empty/absent for a fully-locked default. Override this file in config/injury_locks.json with athlete-specific keywords and clearances.",
+  "_schema": "injury_locks.json — per-zone injury locks (validator rule R002)",
+  "_usage": "Each top-level key not starting with '_' is a body zone; every zone is evaluated. 'activation_keywords': case-insensitive substrings matched against athlete_static.md — if ANY matches, the lock is active (no keywords = never active). 'block_patterns': regex strings of exercise lines blocked while the lock is active; zone 'shoulder' falls back to a built-in list when absent, any other zone without block_patterns yields a WARNING ('not enforced'). 'allow_patterns': regex strings that exempt cleared exercises even when active (e.g. a physio-cleared passive Dead Hang); empty/absent = fully locked. Override this file in config/injury_locks.json with athlete-specific keywords, patterns and clearances.",
   "shoulder": {
     "activation_keywords": ["shoulder lock", "shoulder restricted"],
     "allow_patterns": [],
-    "note": "Override in config/injury_locks.json with athlete-specific keywords (e.g. language-specific terms) and allow_patterns for physio-cleared exercises"
+    "note": "block_patterns omitted: the built-in shoulder list (pull-ups, hangs, rope climb, ...) applies. Add 'block_patterns' to replace it."
+  },
+  "ankle": {
+    "activation_keywords": ["ankle lock", "ankle restricted"],
+    "block_patterns": ["\\bjump\\s*rope", "\\bbox\\s*jump", "\\bplyo"],
+    "allow_patterns": [],
+    "note": "Example of a generic zone: keywords activate it, block_patterns list the blocked exercise classes."
   }
 }

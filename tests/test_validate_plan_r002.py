@@ -22,6 +22,7 @@ from scripts.validate_plan import (  # type: ignore  # noqa: E402
     HYPERTROPHY_REPS_CAP_OVERRIDES,
     Context,
     _matches_any,
+    check_injury_locks,
     check_injury_locks_shoulder,
 )
 
@@ -152,3 +153,85 @@ def test_r002_dead_hang_still_blocked_without_allow_pattern():
     findings = check_injury_locks_shoulder([_workout("Dead Hang 15s")], _ctx())
     assert len(findings) == 1
     assert findings[0].severity == "ERROR"
+
+
+# ─── Generic zones (block_patterns) ──────────────────────────────────────
+
+def _ctx_zone(static: str, **kw) -> Context:
+    return Context(
+        target_date="2025-05-23",
+        athlete_static=static,
+        injury_locks={"ankle": ["ankle restricted"]},
+        **kw,
+    )
+
+
+def test_r002_alias_is_generalised_function():
+    assert check_injury_locks_shoulder is check_injury_locks
+
+
+def test_r002_new_zone_block_patterns_block_match():
+    ctx = _ctx_zone("Ankle restricted.", injury_lock_blocks={"ankle": [r"\bbox\s*jump"]})
+    findings = check_injury_locks([_workout("Box Jump: 3x5")], ctx)
+    assert len(findings) == 1
+    assert findings[0].rule_id == "R002"
+    assert findings[0].severity == "ERROR"
+    assert "ankle" in findings[0].message
+    assert check_injury_locks([_workout("Goblet Squat: 3x8")], ctx) == []
+
+
+def test_r002_new_zone_inactive_without_keyword():
+    ctx = _ctx_zone("All clear.", injury_lock_blocks={"ankle": [r"\bbox\s*jump"]})
+    assert check_injury_locks([_workout("Box Jump: 3x5")], ctx) == []
+
+
+def test_r002_new_zone_allow_pattern_clears():
+    ctx = _ctx_zone(
+        "Ankle restricted.",
+        injury_lock_blocks={"ankle": [r"\bjump"]},
+        injury_lock_allows={"ankle": [r"\bbox\s*jump"]},
+    )
+    assert check_injury_locks([_workout("Box Jump: 3x5")], ctx) == []
+    assert len(check_injury_locks([_workout("Jump Rope 3min")], ctx)) == 1
+
+
+def test_r002_zone_without_patterns_warns():
+    ctx = _ctx_zone("Ankle restricted.")
+    findings = check_injury_locks([_workout("Box Jump: 3x5")], ctx)
+    assert len(findings) == 1
+    assert findings[0].severity == "WARNING"
+    assert "ankle" in findings[0].message and "not enforced" in findings[0].message
+
+
+def test_r002_zone_without_patterns_silent_when_inactive():
+    assert check_injury_locks([_workout("Box Jump")], _ctx_zone("All clear.")) == []
+
+
+def test_r002_shoulder_default_patterns_with_legacy_list_config():
+    """Legacy `zone -> [keywords]` shape, no block_patterns: built-in list applies."""
+    ctx = Context(
+        target_date="2025-05-23",
+        athlete_static="shoulder lock",
+        injury_locks={"shoulder": ["shoulder lock"]},
+    )
+    findings = check_injury_locks([_workout("Pull-up: 3x5")], ctx)
+    assert len(findings) == 1 and findings[0].severity == "ERROR"
+    assert check_injury_locks([_workout("Dead Hang 3s")], ctx) == []
+
+
+def test_r002_shoulder_block_patterns_override_builtin():
+    ctx = _ctx()
+    ctx.injury_lock_blocks = {"shoulder": [r"\bcampus"]}
+    assert check_injury_locks([_workout("Pull-up: 3x5")], ctx) == []
+    assert len(check_injury_locks([_workout("Campus Board: 3x5")], ctx)) == 1
+
+
+def test_r002_multiple_zones_evaluated():
+    ctx = Context(
+        target_date="2025-05-23",
+        athlete_static="shoulder lock; ankle restricted",
+        injury_locks={"shoulder": ["shoulder lock"], "ankle": ["ankle restricted"]},
+        injury_lock_blocks={"ankle": [r"\bbox\s*jump"]},
+    )
+    findings = check_injury_locks([_workout("Pull-up: 3x5\nBox Jump: 3x5")], ctx)
+    assert len(findings) == 2
