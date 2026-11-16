@@ -57,6 +57,43 @@ def _correct_cardiac_drift(zone_times: list[int], moving_time_secs: int) -> list
     return adjusted
 
 
+def _fold_zones(raw: list, n: int = 5) -> tuple[list[float], bool]:
+    """Fold zone times beyond the n-th into the top bucket.
+
+    A 7-zone model (e.g. a ride profile) must not lose Z6/Z7 time. Returns
+    (n-bucket list, whether anything was folded).
+    """
+    raw = list(raw)
+    folded = len(raw) > n
+    head = raw[:n]
+    if folded:
+        head[n - 1] = head[n - 1] + sum(raw[n:])
+    head += [0] * (n - len(head))
+    return head, folded
+
+
+def _zone_sums(with_hr: list[dict]) -> tuple[list[float], bool]:
+    sums = [0, 0, 0, 0, 0]
+    any_folded = False
+    for a in with_hr:
+        raw, folded = _fold_zones(a.get("icu_hr_zone_times") or [])
+        any_folded = any_folded or folded
+        corrected = _correct_cardiac_drift(raw, a.get("moving_time", 0))
+        for i, secs in enumerate(corrected):
+            sums[i] += secs
+    return sums, any_folded
+
+
+def _zones_text(sums: list[float], top_plus: bool, sep: str = " | ") -> str:
+    total = sum(sums)
+    labels = [f"Z{i + 1}" for i in range(5)]
+    if top_plus:
+        labels[4] = "Z5+"
+    return sep.join(
+        f"{lab}: {round(s / total * 100)}%" for lab, s in zip(labels, sums)
+    )
+
+
 def _compute_zone_distribution(activities: list[dict]) -> str:
     cardio = [a for a in activities if a.get("type") in CARDIO_TYPES]
     with_hr = [
@@ -64,12 +101,7 @@ def _compute_zone_distribution(activities: list[dict]) -> str:
     ]
     without_hr = [a for a in cardio if a not in with_hr]
 
-    zone_sums = [0, 0, 0, 0, 0]
-    for a in with_hr:
-        raw = list(a.get("icu_hr_zone_times", []))[:5]
-        corrected = _correct_cardiac_drift(raw, a.get("moving_time", 0))
-        for i, secs in enumerate(corrected):
-            zone_sums[i] += secs
+    zone_sums, top_plus = _zone_sums(with_hr)
 
     total_secs = sum(zone_sums)
     total_min_no_hr = sum(
@@ -80,10 +112,24 @@ def _compute_zone_distribution(activities: list[dict]) -> str:
         return "No HR data available"
 
     total_min_hr = round(total_secs / 60)
-    zones_str = " | ".join(
-        f"Z{i + 1}: {round(s / total_secs * 100)}%" for i, s in enumerate(zone_sums)
-    )
+    zones_str = _zones_text(zone_sums, top_plus)
     result = f"{zones_str} ({total_min_hr} min with HR data)"
+
+    # Per-sport split when the window mixes sports: each sport's zone times
+    # come from intervals.icu against that sport's own zone bounds, so "Z2"
+    # differs in bpm between run and ride.
+    by_family: dict[str, list[dict]] = {}
+    for a in with_hr:
+        fam = sports.canonical_type(a.get("type"))
+        if fam in ("Run", "Ride"):
+            by_family.setdefault(fam, []).append(a)
+    if len(by_family) > 1:
+        parts = []
+        for fam in ("Run", "Ride"):
+            sums, plus = _zone_sums(by_family[fam])
+            if sum(sums) > 0:
+                parts.append(f"{fam}: {_zones_text(sums, plus, ' ')}")
+        result += " | " + " | ".join(parts)
 
     if without_hr:
         missing = ", ".join(
