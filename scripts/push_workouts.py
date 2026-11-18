@@ -149,6 +149,13 @@ async def _dedup_existing_events(
 async def _push(
     athlete_id: str, events: list[dict], dry_run: bool, date_str: str, incremental: bool = False
 ) -> list[dict]:
+    if not events:
+        # Empty workouts array (e.g. a balance-only day with no main program):
+        # intervals.icu rejects an empty `events/bulk` body with HTTP 422, and
+        # there is nothing to dedup against. Skip both — the caller still runs
+        # the auto-balance rotation afterwards.
+        logger.info("push_workouts: no workouts to push for %s — skipping events/bulk", date_str)
+        return []
     if dry_run:
         logger.info("[DRY-RUN] Would create %d event(s): %s", len(events), [e.get("uid") for e in events])
         return [{"uid": e["uid"], "dry_run": True} for e in events]
