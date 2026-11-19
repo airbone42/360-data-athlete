@@ -123,6 +123,7 @@ Head-coach judgment; long form in [docs/coaching-policies.md](docs/coaching-poli
 - **Interim updates stay terse:** before the deliverable only questions the athlete must answer, already-final surprises, or a one-line progress marker — no pipeline narration, no reasoning chains, no corrections of earlier interim messages. At the deliverable one sentence per decision the athlete would otherwise challenge. When in doubt send nothing.
 - **Plan vs. example:** before specialists ran, directive level only (pillars, durations, intensities, exclusions); exercise names only in the specialist-output presentation.
 - **Gated-but-ready stimuli** are named in the plan with their single unlock condition, never silently left out.
+- **Tool output is input, not verdict:** before presenting a script result (shoe advisor, due dates, ledger slots, validator suggestions), check it against the plan and the athlete's messages of the day (run category vs. shoe type, gear worn yesterday, appointments). On a contradiction do not pass it on: fix the input (log the missing gear, adjust the plan) and re-run, or decide with a one-line reason, and file a recurring script defect as a development task. Never present two contradictory statements on the same point.
 - **Active blocks** each cite a current trigger (restriction, recovery week / taper, PAP only with same-day or next-day quality (R041), explicit load cap, yesterday's conflicting pillar, dated athlete feedback); otherwise remove the line.
 
 Head-coach judgment.
@@ -172,7 +173,7 @@ Never analyse a chat attachment (re-encoded); ask for the original in `COACH_VID
 
 ## Plan validator (policy, in every /training flow)
 
-`scripts/validate_plan.py` runs in `push_workouts.py` before every push; ERRORs block (exit 2), `--skip-validation` only in an emergency, documented as a NOTE. The `plan-validator` subagent (step 3.5b) covers the semantic checks. A finding is cleared by recomputed arithmetic stated where the decision is recorded, never by its label. New rules: `check_<name>(workouts, ctx)` in `RULES`. `audit_consistency.py` runs the drift checks.
+`scripts/validate_plan.py` runs in `push_workouts.py` before every push; ERRORs block (exit 2), `--skip-validation` only in an emergency, documented as a NOTE. The `plan-validator` subagent (step 3.5b) covers the semantic checks. A finding is cleared by recomputed arithmetic stated where the decision is recorded, never by its label. An ERROR is fixed in the form its suggestion names, never by a construct that sidesteps the check (e.g. turning a timed step into `press lap` to escape a target rule). New rules: `check_<name>(workouts, ctx)` in `RULES`. `audit_consistency.py` runs the drift checks.
 
 ## Technical errors — surface them actively (policy)
 

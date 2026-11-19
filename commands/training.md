@@ -212,6 +212,16 @@ Take `primary` / `alternative` from its output:
 - Alternative: name (if any)
 - Warnings / fleet gaps: surfaced in the same advisor output
 
+**Plausibility check before presenting** (CLAUDE.md, "Tool output is input,
+not verdict"): the primary must fit the run category (an easy / Z2 /
+treadmill run never gets a race, carbon or tempo shoe) and must not be the
+shoe the athlete reports having worn yesterday or today. A run without logged
+gear makes rotation wrong: log the gear first, then re-run the advisor. If
+the result still contradicts the plan, name the shoe you recommend with a
+one-line reason, push with `--no-shoes` so the event carries no conflicting
+footer, and file the advisor defect as a development task. The athlete sees
+exactly one shoe statement.
+
 The same recommendation is re-applied deterministically at push time
 (`push_workouts.py` embeds the footer + `[coach-gear]` marker), so the shoe
 shown to the athlete and the one assigned in `/analyse` match.
