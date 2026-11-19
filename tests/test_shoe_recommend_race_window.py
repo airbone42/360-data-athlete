@@ -83,7 +83,7 @@ def test_recommend_derives_race_window_and_picks_race_shoe(monkeypatch, _profile
             "workout_type": "INTERVALS",
             "intensity": "high",
             "tags": ["run", "intervals"],
-            "surface": "forest-path",
+            "surface": "asphalt",
         }
     ]
     # 2025-03-15 → race on 2025-03-28 = 13 days out, inside race_prep_days=21.
@@ -112,7 +112,7 @@ def test_set_activity_gear_fallback_derives_race_window(monkeypatch, _profiles):
         "tags": ["run", "intervals"],
     }
     plan = {
-        "surface": "forest-path",
+        "surface": "asphalt",
         "tags": ["run", "intervals"],
         "workout_type": "INTERVALS",
         "intensity": "high",
@@ -124,6 +124,25 @@ def test_set_activity_gear_fallback_derives_race_window(monkeypatch, _profiles):
     )
     assert rec is not None
     assert rec.get("gear_id") == "gRACE1"
+
+
+def test_race_window_bonus_needs_the_race_shoe_surface(monkeypatch, _profiles):
+    """A forest-path session is no habituation for a flat-asphalt race shoe:
+    inside the window the +50 is withheld, the rested daily keeps the slot."""
+    fake = _FakeClient()
+    monkeypatch.setattr(shoe_recommend, "IntervalsClient", lambda: fake)
+    workouts = [
+        {
+            "type": "Run",
+            "workout_type": "INTERVALS",
+            "intensity": "high",
+            "tags": ["run", "intervals"],
+            "surface": "forest-path",
+        }
+    ]
+    ctx = asyncio.run(shoe_recommend.recommend(workouts, "", "2025-03-15"))
+    primary = (ctx.get("shoeRecommendation") or {}).get("primary") or {}
+    assert primary.get("gear_id") == "gDAILY1"
 
 
 def test_recommend_survives_events_fetch_failure(monkeypatch, _profiles):

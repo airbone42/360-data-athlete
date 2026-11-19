@@ -138,7 +138,7 @@ One line per exercise: `Name: sets×reps/duration @ load | RPE or target | ≤1 
 - **One executable path per workout:** no alternative branches, no "not today" lists, no moved exercises in the description; resolve gates before the push, or push the substitute later with `--incremental`. Substitutes pass the same history check. Checked by `plan-validator` S11.
 - **A load is a target until reported:** every kg line carries an RPE target (R039); a session with a kg figure asks for RPE and the actual load once (R026); when a load changes, the feedback question changes with it (R029).
 
-Shoe advisor: `SHOE_TRACKING_BACKEND` (`.env`, `intervals` | `off`); a belt session never opens the race-prep window. Details: `.env.example`, `scripts/set_activity_gear.py`.
+Shoe advisor: `SHOE_TRACKING_BACKEND` (`.env`, `intervals` | `off`); the run category (easy default) and the shoe `type` are hard filters, a tempo / carbon shoe never carries an easy run, carbon never runs on a belt, days unused only break ties (`config.example/equipment.md`). Details: `.env.example`, `scripts/set_activity_gear.py`.
 
 ## Feedback loop and push
 

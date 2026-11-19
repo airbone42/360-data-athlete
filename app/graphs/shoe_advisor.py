@@ -64,6 +64,55 @@ _PACE_BUCKETS: dict[str, tuple[float, float]] = {
 }
 
 
+# ── Run category vs. shoe category ────────────────────────────────────────────
+#
+# The run category is a hard input to the shoe choice, never a nudge. Before
+# it existed, a session carrying no quality marker (tags `[run]` only, no
+# workout_type / intensity — e.g. a treadmill Z2 run with strides) had no pace
+# bucket and no category, so every asphalt shoe was eligible and the rotation
+# bonus alone decided: a carbon tempo shoe idle for 54 days beat the easy
+# trainers worn two and three days earlier.
+#
+# Precedence: an explicit `workout_type` decides; only without one do tags /
+# intensity count. A session with no quality marker is `easy` — strides inside
+# an easy run do not make it a quality session.
+_RUN_CATEGORY_BY_WORKOUT_TYPE: dict[str, str] = {
+    "RACE": "race",
+    "INTERVALS": "intervals",
+    "TEMPO": "tempo",
+    "LONG": "long",
+    "RECOVERY": "recovery",
+    "EASY": "easy",
+}
+_RUN_CATEGORY_BY_KEY: tuple[tuple[str, frozenset[str]], ...] = (
+    ("race", frozenset({"race"})),
+    ("intervals", frozenset({"intervals", "interval", "vo2max", "threshold", "z4", "z5", "high"})),
+    ("tempo", frozenset({"tempo"})),
+    ("long", frozenset({"long"})),
+    ("recovery", frozenset({"recovery", "z1"})),
+)
+_EASY_RUN_CATEGORIES = frozenset({"easy", "recovery"})
+
+# Which shoe categories (profile `type`; `role: race` counts as `race`) may
+# carry which run category. 0 = native fit, 1 = acceptable fallback; a shoe
+# category missing from the map is disqualified. `trail` and an unset type are
+# intensity-neutral — the terrain filter already keeps them off asphalt.
+_SHOE_CATEGORY_TIERS: dict[str, dict[str, int]] = {
+    "easy": {"easy": 0, "recovery": 0, "long": 1},
+    "recovery": {"recovery": 0, "easy": 0, "long": 1},
+    "long": {"long": 0, "easy": 0},
+    "tempo": {"tempo": 0, "race": 0, "easy": 1, "long": 1},
+    "intervals": {"tempo": 0, "race": 0, "easy": 1, "long": 1},
+    "race": {"race": 0, "tempo": 0},
+}
+_NEUTRAL_SHOE_TYPES = frozenset({"", "trail"})
+_FAST_SHOE_CATEGORIES = frozenset({"tempo", "race"})
+
+# Rotation is a tie-breaker inside the category: rest days count up to this
+# cap, a shoe not seen in the look-back window counts as the cap.
+_ROTATION_REST_CAP_DAYS = 14
+
+
 # ── Profile loading ───────────────────────────────────────────────────────────
 
 def load_shoe_profiles() -> list[dict]:
@@ -347,11 +396,104 @@ def _workout_keys(workout: dict) -> list[str]:
 
 
 def _derive_pace_bucket(workout: dict) -> tuple[float, float] | None:
-    """Return (min_pace, max_pace) in min/km from workout metadata."""
+    """Return (min_pace, max_pace) in min/km from workout metadata.
+
+    Falls back to the run category's bucket, so a session without an
+    explicit pace descriptor (the `easy` default) still filters out shoes
+    built for a different pace range.
+    """
     for key in _workout_keys(workout):
         if key in _PACE_BUCKETS:
             return _PACE_BUCKETS[key]
+    return _PACE_BUCKETS.get(run_category(workout))
+
+
+def _category_from(workout_type: str, keys: set[str] | list[str]) -> str:
+    """Run category from workout_type (wins) or the descriptor keys."""
+    by_type = _RUN_CATEGORY_BY_WORKOUT_TYPE.get((workout_type or "").upper())
+    if by_type:
+        return by_type
+    keyset = {str(k).lower() for k in keys}
+    for category, markers in _RUN_CATEGORY_BY_KEY:
+        if keyset & markers:
+            return category
+    return "easy"
+
+
+def run_category(workout: dict) -> str:
+    """Return the run category: race | intervals | tempo | long | recovery | easy.
+
+    `workout_type` decides when set; otherwise tags and intensity; a session
+    with no quality marker is `easy`.
+    """
+    return _category_from(str(workout.get("workout_type") or ""), _workout_keys(workout))
+
+
+def shoe_category(profile: dict) -> str:
+    """Shoe category: `race` for `role: race`, else the profile `type`."""
+    if str(profile.get("role") or "").lower() == "race":
+        return "race"
+    return str(profile.get("type") or "").lower().strip()
+
+
+def _is_carbon(profile: dict) -> bool:
+    """A plated race shoe: `carbon: true`, `role: race` or `primary_race: true`."""
+    if profile.get("carbon") in (True, "true"):
+        return True
+    if str(profile.get("role") or "").lower() == "race":
+        return True
+    return profile.get("primary_race") in (True, "true")
+
+
+def _category_tier(profile: dict, category: str) -> int | None:
+    """0 = native fit, 1 = fallback, None = the shoe never carries this run.
+
+    Hard rule: a tempo / race / carbon shoe never carries an easy or recovery
+    run. A shoe outside the category map may opt in through its
+    `recommended_tags` naming the category (e.g. a tempo shoe with `long`) —
+    as a fallback only, and never across the hard rule.
+    """
+    sc = shoe_category(profile)
+    if category in _EASY_RUN_CATEGORIES and (sc in _FAST_SHOE_CATEGORIES or _is_carbon(profile)):
+        return None
+    if sc in _NEUTRAL_SHOE_TYPES:
+        return 0
+    tiers = _SHOE_CATEGORY_TIERS.get(category, {})
+    if sc in tiers:
+        return tiers[sc]
+    rec_tags = profile.get("recommended_tags") or []
+    if isinstance(rec_tags, str):
+        rec_tags = re.findall(r"\w+", rec_tags)
+    if category in {str(t).lower() for t in rec_tags}:
+        return 1
     return None
+
+
+def _surface_fits_race_shoe(surface: str, terrain: str, shoe_terrain: str) -> bool:
+    """Whether the session runs on the surface the race shoe is built for.
+
+    `terrain` collapses forest-path into asphalt (right for grip, wrong here):
+    a forest-path session is no habituation for a flat-asphalt race shoe. So
+    the canonical `surface` is checked first; without one, the terrain bucket.
+    """
+    canonical = normalize_surface(surface.lower().strip()) if surface else ""
+    if shoe_terrain == "mixed":
+        return True
+    if canonical:
+        if shoe_terrain == "trail":
+            return canonical in ("trail", "forest-path")
+        return canonical in ("asphalt", "track")
+    if shoe_terrain == "trail":
+        return terrain == "trail"
+    return terrain in ("asphalt", "track")
+
+
+def _rotation_rest_days(sid: str, last_used: dict[str, str], today_str: str) -> int:
+    """Rest days for the rotation tie-break, capped; unseen = the cap."""
+    last = last_used.get(sid)
+    if not last:
+        return _ROTATION_REST_CAP_DAYS
+    return min(max(_days_ago(last, today_str), 0), _ROTATION_REST_CAP_DAYS)
 
 
 # ── Candidate scoring ─────────────────────────────────────────────────────────
@@ -378,21 +520,43 @@ def _score_shoe(
     workout_type: str = "",
     workout_keys: list[str] | None = None,
     indoor: bool = False,
+    surface: str = "",
+    category: str = "",
 ) -> float | None:
-    """Return a score ≥ 0 or None if the shoe is disqualified.
+    """Return the fit score, or None if the shoe is disqualified.
 
-    Higher score = better recommendation.
+    Higher score = better fit. Rotation (days unused) is deliberately not
+    part of it: `build_shoe_context` ranks by category tier, then this score,
+    and only then by rest days — a long-idle shoe never wins on idleness
+    alone.
     """
     role = profile.get("role", "daily")
     keys = set(workout_keys or ())
     if workout_type:
         keys.add(workout_type.lower())
+    category = category or _category_from(workout_type, keys)
+    # The derived category joins the descriptor vocabulary, so a profile's
+    # `recommended_tags` / `excluded_workout_types` match it even when the
+    # session only carries `run`.
+    keys.add(category)
     sid = str(profile.get("gear_key") or "")
     threshold = float(profile.get("threshold_km", 800))
     distance_km = shoe.get("distance_km", 0)
     pct = distance_km / threshold if threshold else 0
 
     # ── Hard filters (return None = disqualified) ──────────────────────
+
+    # 0a. Run category vs. shoe category (`_category_tier`): a tempo / race /
+    #     carbon shoe never carries an easy or recovery run.
+    if _category_tier(profile, category) is None:
+        return None
+
+    # 0b. No carbon race shoe on a belt (athlete decision 19.11.2026): a belt
+    #     neither habituates the race surface nor needs the plate, and it
+    #     spends a short-lived shoe. A non-plated tempo trainer stays allowed
+    #     for treadmill quality. An explicit RACE on a belt is left alone.
+    if indoor and _is_carbon(profile) and workout_type.upper() != "RACE":
+        return None
 
     # 1. Race-day lock
     if role == "race":
@@ -452,9 +616,9 @@ def _score_shoe(
     if wet and shoe_terrain in ("trail", "mixed"):
         score += 10.0
 
-    # recommended_tags: a nudge, not a verdict. Deliberately small relative to
-    # the rotation bonus below — "suited to this session" should break a tie
-    # between equally-rested shoes, never override the rotation intent.
+    # recommended_tags: within the category, a shoe that names this session
+    # kind fits better than one that does not. Rotation only breaks ties
+    # after this score (athlete decision 19.11.2026).
     rec_tags = profile.get("recommended_tags") or []
     if isinstance(rec_tags, str):
         rec_tags = re.findall(r"\w+", rec_tags)
@@ -472,7 +636,10 @@ def _score_shoe(
     ):
         prep_days = int(profile.get("race_prep_days", 7))
         if workout_type.upper() == "RACE" or (
-            not indoor and race_in_days is not None and race_in_days <= prep_days
+            not indoor
+            and race_in_days is not None
+            and race_in_days <= prep_days
+            and _surface_fits_race_shoe(surface, terrain, shoe_terrain)
         ):
             score += 50.0
 
@@ -481,19 +648,6 @@ def _score_shoe(
         score -= 20.0
     elif pct >= 0.8:
         score -= 8.0
-
-    # Rotation bonus: reward longest rest. A shoe not seen in the activity
-    # look-back window has rested at least as long as that window — it is among
-    # the *longest*-rested shoes — so it must never rank below a shoe worn a few
-    # days ago. Award it the ceiling bonus. (Previously it got a flat +14 and
-    # lost to an in-window shoe worn ~12 days ago at +24, inverting the rotation
-    # intent for long-idle shoes.)
-    last = last_used.get(sid)
-    if last:
-        days_rest = _days_ago(last, today_str)
-        score += min(days_rest, 14) * 2.0  # up to +28
-    else:
-        score += 28.0  # rested >= look-back window -> treat as the longest rest
 
     return score
 
@@ -603,6 +757,7 @@ def build_shoe_context(
         wet = _is_wet_weather(weather_info)
         terrain = _detect_terrain_from_context(run_workout, weather_info)
         pace_bucket = _derive_pace_bucket(run_workout)
+        category = run_category(run_workout)
 
         scored: list[tuple[float, dict]] = []
         for s in enriched:
@@ -613,24 +768,33 @@ def build_shoe_context(
                 workout_type=run_workout.get("workout_type") or "",
                 workout_keys=_workout_keys(run_workout),
                 indoor=_is_treadmill(run_workout),
+                surface=str(run_workout.get("surface") or ""),
+                category=category,
             )
             if sc is not None:
                 scored.append((sc, s))
 
-        # Primary key: score (desc). Tie-break: prefer the less-worn shoe
-        # (lower pct_used) so equally-rested candidates spread mileage evenly
-        # across the fleet — the even-wear half of the rotation intent.
-        scored.sort(key=lambda x: (x[0], -x[1].get("pct_used", 0.0)), reverse=True)
+        # Ranking: category tier (native before fallback), then fit score,
+        # then rotation (longest rest, capped), then the less-worn shoe so
+        # equally-rested candidates spread mileage evenly across the fleet.
+        def _rank(item: tuple[float, dict]) -> tuple:
+            sc, s = item
+            p = profile_map.get(s["gear_key"], {})
+            tier = _category_tier(p, category) or 0
+            rest = _rotation_rest_days(s["gear_key"], last_used, today_str)
+            return (-tier, sc, rest, -s.get("pct_used", 0.0))
+
+        scored.sort(key=_rank, reverse=True)
 
         def _rec_entry(score: float, s: dict) -> dict:
             p = profile_map.get(s["gear_key"], {})
-            reasons = []
+            reasons = [f"{category} run, shoe type {shoe_category(p) or '?'}"]
             if s.get("days_since_used") is not None:
                 reasons.append(f"{s['days_since_used']} days unused")
             if wet and s.get("terrain") in ("trail", "mixed"):
                 reasons.append("grip in the wet")
-            if not reasons:
-                reasons.append(f"type: {p.get('type', '?')}, terrain: {p.get('terrain', '?')}")
+            if len(reasons) == 1:
+                reasons.append(f"terrain: {p.get('terrain', '?')}")
             return {
                 "gear_id": s["gear_key"],
                 "name": s["name"],
@@ -643,6 +807,10 @@ def build_shoe_context(
             recommendation["primary"] = _rec_entry(*scored[0])
         if len(scored) >= 2:
             recommendation["alternative"] = _rec_entry(*scored[1])
+        # Every shoe that passed the hard filters. The context path uses it to
+        # refuse a pinned push-time pick that no longer fits the session.
+        recommendation["eligible"] = [s["gear_key"] for _, s in scored]
+        recommendation["category"] = category
 
     # ── Fleet gap detection ───────────────────────────────────────────
     active_types = {profile_map.get(s["gear_key"], {}).get("type", "") for s in enriched}

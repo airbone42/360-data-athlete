@@ -15,9 +15,10 @@ comments are stripped before parsing.
 | Field | Values | Effect |
 |---|---|---|
 | `name` | free text | Display name. |
-| `type` | `tempo` · `easy` · `long` · `trail` · `recovery` | Shoe category. The fleet check warns when one of these five has no active shoe, or only one that is past 80 % of its `threshold_km`. |
-| `role` | `daily` (default) · `race` | `race` locks the shoe to RACE sessions and to the `race_prep_days` before a race — never on a treadmill. |
-| `primary_race` | `true` | Marks the current main race shoe (set it on one shoe only): strong bonus for matching sessions inside the prep window. |
+| `type` | `tempo` · `easy` · `long` · `trail` · `recovery` | Shoe category, a **hard** input matched against the run category (see below). The fleet check warns when one of these five has no active shoe, or only one that is past 80 % of its `threshold_km`. |
+| `role` | `daily` (default) · `race` | `race` locks the shoe to RACE sessions and to quality sessions in the `race_prep_days` before a race — never on a treadmill, never on an easy run. |
+| `primary_race` | `true` | Marks the current main race shoe (set it on one shoe only): strong bonus for matching quality sessions inside the prep window **on the shoe's own surface** (an `asphalt` shoe: asphalt or track, not forest-path; use `terrain: mixed` for a forest-path race shoe). Counts as carbon. |
+| `carbon` | `true` | Plated shoe. `role: race` and `primary_race: true` imply it. A carbon shoe never runs on a treadmill or an easy / recovery run. |
 | `terrain` | `asphalt` (default) · `trail` · `mixed` · `track` | Trail sessions need `trail` or `mixed`; asphalt and track sessions exclude `trail`. |
 | `race_prep_days` | integer, default 7 | Days before a race from which a `role: race` shoe is released. |
 | `active` | `false` | Keeps a profile on file but out of the rotation. |
@@ -38,11 +39,29 @@ Optional per-shoe fields that steer the recommendation:
 | `pace_range_min_km: [min, max]` | Hard filter. The shoe is dropped unless its pace range overlaps the session's pace bucket by at least half. |
 | `required_workout_type: RECOVERY` | Hard filter. The shoe is offered **only** for that session type. |
 | `excluded_workout_types: [long, race]` | Hard filter, the inverse of the above — the shoe is fine in general but unsuited to these sessions (e.g. a medium-cushion daily on a long run). Matched against tags, intensity and workout type alike. |
-| `recommended_tags: [easy, recovery]` | Soft bonus only. Nudges a matching shoe ahead of an equally-rested one; deliberately too small to override the rotation bonus. |
+| `recommended_tags: [easy, recovery]` | Fit bonus inside the shoe's category: a matching shoe ranks ahead of a non-matching one, rotation only breaks the remaining tie. Naming a run category here also lets a shoe outside that category serve it as a fallback (e.g. a tempo shoe with `long`), except across the hard rule below. |
 | `threshold_km` | Replacement mileage. Drives the wear penalty and the "renew soon" warning. |
 
 Leave them unset to keep a shoe eligible everywhere — the defaults are
 permissive on purpose.
+
+**Run category vs. shoe category (hard).** Every run gets one category:
+`workout_type` decides (`EASY` · `LONG` · `RECOVERY` · `INTERVALS` · `TEMPO` ·
+`RACE`); without one, tags / intensity (`race`, `intervals`/`high`/`z4`,
+`tempo`, `long`, `recovery`/`z1`); a run with no quality marker is `easy`
+(strides inside an easy run do not change that). Allowed shoe types:
+
+| Run | Native | Fallback | Never |
+|---|---|---|---|
+| easy, recovery | `easy`, `recovery` | `long` | `tempo`, `race`, any carbon shoe |
+| long | `long`, `easy` | others only via `recommended_tags: [long]` | — |
+| tempo, intervals | `tempo`, `race` (lock applies) | `easy`, `long` | — |
+| race | `race`, `tempo` | — | — |
+
+`trail` and an unset `type` are intensity-neutral (the terrain filter places
+them). Ranking: native before fallback, then fit (tags, wet grip, race-window
+bonus, wear penalty), then days unused (capped at 14, a tie-breaker only),
+then the less-worn shoe.
 
 - icu_gear_id: b1234567
   name: "Demo Daily Trainer"

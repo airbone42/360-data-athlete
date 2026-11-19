@@ -263,12 +263,10 @@ def test_context_without_marker_diverges_from_push_on_long_run(
     _equipment: None
 ) -> None:
     """Regression pin: without any recovery, the context path leaves surface
-    empty / workout_type empty / intensity empty — the terrain filter still
-    accepts both shoes and pace_bucket becomes None, so both shoes qualify.
-    The picked shoe is not guaranteed to equal the push pick. This test
-    documents the pre-fix behaviour so future changes to the empty-input
-    handling stay intentional (currently: tempo wins on the ``pct_used``
-    tiebreak because it has less mileage)."""
+    empty / workout_type empty / intensity empty. A run without a quality
+    marker is an ``easy`` run, which rules the tempo shoe out — before the
+    run category existed, the tempo shoe won here on the ``pct_used``
+    tiebreak (the 19.11.2026 carbon-on-easy-run incident)."""
     events = [
         {
             "id": 200,
@@ -291,10 +289,8 @@ def test_context_without_marker_diverges_from_push_on_long_run(
         backend="intervals",
     )
     primary = ctx["shoeRecommendation"]["primary"]["gear_id"]
-    # Without pace-filter, both are eligible; tie-break on less mileage picks
-    # the tempo shoe — NOT what push would pick on a LONG run. This is why
-    # the SSOT backstop below matters for legacy events.
-    assert primary == "gTEMPO"
+    assert primary == "gLONG"
+    assert ctx["shoeRecommendation"]["eligible"] == ["gLONG"]
 
 
 def test_coach_gear_ssot_overrides_diverging_advisor_pick(
@@ -323,14 +319,39 @@ def test_coach_gear_ssot_overrides_diverging_advisor_pick(
         today_str=_TODAY,
         backend="intervals",
     )
-    # Advisor without recovered inputs would pick the tempo shoe (see the
-    # divergence pin above); SSOT flips it back to the pinned long shoe.
-    assert ctx["shoeRecommendation"]["primary"]["gear_id"] == "gTEMPO"
+    # The easy default already lands on the pinned shoe; SSOT is a no-op.
+    assert ctx["shoeRecommendation"]["primary"]["gear_id"] == "gLONG"
     ctx_after = _apply_coach_gear_ssot(ctx, planned)
     assert ctx_after["shoeRecommendation"]["primary"]["gear_id"] == "gLONG"
-    # Previously-picked primary demoted to alternative — read side still sees
-    # a runner-up.
-    assert ctx_after["shoeRecommendation"]["alternative"]["gear_id"] == "gTEMPO"
+
+
+def test_coach_gear_ssot_refuses_a_pin_that_fails_the_hard_filters(
+    _equipment: None
+) -> None:
+    """A stale push-time pin on a tempo shoe must not re-surface it on an
+    easy run: SSOT only promotes shoes the advisor still finds eligible."""
+    events = [
+        {
+            "id": 301,
+            "type": "Run",
+            "start_date_local": f"{_TODAY}T08:00:00",
+            "tags": ["run"],
+            "description": "no plan marker\n[coach-gear:gTEMPO]",
+        },
+    ]
+    planned = _build_shoe_planned_workouts(events, _TODAY)
+    ctx = build_shoe_context(
+        shoes=[dict(s) for s in _shoes()],
+        profiles=load_shoe_profiles(),
+        activities=[],
+        planned_workouts=planned,
+        weather_info="",
+        race_in_days=None,
+        today_str=_TODAY,
+        backend="intervals",
+    )
+    ctx_after = _apply_coach_gear_ssot(ctx, planned)
+    assert ctx_after["shoeRecommendation"]["primary"]["gear_id"] == "gLONG"
 
 
 def test_coach_gear_ssot_noop_when_pinned_shoe_missing(

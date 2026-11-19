@@ -84,11 +84,10 @@ def test_recommended_tags_add_a_bonus_when_they_match():
     assert _score(matching, workout=workout) > _score(neutral, workout=workout)
 
 
-def test_recommended_tags_do_not_override_the_rotation_intent():
-    """A tag match is a tie-breaker, never a reason to re-wear a fresh shoe.
-
-    The rested shoe carries no matching tag; the recently-worn one does. The
-    rested shoe must still win, or the advisor stops being a rotation advisor.
+def test_rotation_is_not_part_of_the_fit_score():
+    """Days unused only break ties inside the category (athlete decision
+    19.11.2026): a tag match outranks idleness, the fit score carries no
+    rotation term at all. Ranking by rest days happens in build_shoe_context.
     """
     rested = _profile(gear_key="iRESTED", recommended_tags=["intervals"])
     just_worn = _profile(gear_key="iWORN", recommended_tags=["easy"])
@@ -96,4 +95,5 @@ def test_recommended_tags_do_not_override_the_rotation_intent():
     last_used = {"iWORN": _TODAY}  # worn today -> zero rotation bonus
     rested_score = _score(rested, workout=workout, last_used=last_used)
     worn_score = _score(just_worn, workout=workout, last_used=last_used)
-    assert rested_score > worn_score
+    assert worn_score > rested_score
+    assert _score(rested, workout=workout, last_used={}) == rested_score

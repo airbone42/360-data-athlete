@@ -68,17 +68,24 @@ def test_race_shoe_disqualified_for_non_race_non_prep_workout():
 
 def test_race_shoe_available_inside_prep_window():
     profile = _profile(race_prep_days=7)
-    assert _score(profile, workout_type="EASY", race_in_days=5) is not None
+    assert _score(profile, workout_type="INTERVALS", race_in_days=5) is not None
+
+
+def test_race_shoe_never_carries_an_easy_run_even_inside_prep_window():
+    """The window habituates race pace; an easy run is not part of it."""
+    profile = _profile(race_prep_days=7)
+    assert _score(profile, workout_type="EASY", race_in_days=5) is None
+    assert _score(profile, workout_type="RECOVERY", race_in_days=1) is None
 
 
 def test_race_shoe_disqualified_outside_prep_window():
     profile = _profile(race_prep_days=7)
-    assert _score(profile, workout_type="EASY", race_in_days=8) is None
+    assert _score(profile, workout_type="INTERVALS", race_in_days=8) is None
 
 
 def test_race_shoe_prep_window_boundary_is_inclusive():
     profile = _profile(race_prep_days=7)
-    assert _score(profile, workout_type="EASY", race_in_days=7) is not None
+    assert _score(profile, workout_type="INTERVALS", race_in_days=7) is not None
 
 
 def test_race_shoe_workout_type_match_is_case_insensitive():

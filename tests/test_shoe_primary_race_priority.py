@@ -85,9 +85,10 @@ def test_primary_race_beats_fresher_daily_inside_prep_window():
     assert race_score > daily_score
 
 
-def test_no_bonus_without_tag_match_easy_sessions_keep_rotating():
-    # Same shoe, easy-run descriptors: eligible (window) but no tag match,
-    # so only the rotation bonus applies — no +50.
+def test_easy_session_never_draws_the_race_shoe_even_in_window():
+    # Same shoe, easy-run descriptors: the run category rules a race / carbon
+    # shoe out of easy runs altogether (athlete decision 19.11.2026), so
+    # the window does not matter.
     with_match = _score(
         _profile(),
         workout_type="INTERVALS",
@@ -101,9 +102,8 @@ def test_no_bonus_without_tag_match_easy_sessions_keep_rotating():
         keys=["run", "easy"],
         last_used={"iRACE1": "2025-03-06"},
     )
-    assert with_match is not None and without_match is not None
-    # +50 priority and +6 tag nudge are both tied to the tag match
-    assert with_match - without_match == 56.0
+    assert with_match is not None
+    assert without_match is None
 
 
 def test_no_bonus_for_non_primary_race_shoe():

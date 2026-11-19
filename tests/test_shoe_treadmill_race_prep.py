@@ -107,32 +107,24 @@ def test_race_typed_workout_still_passes_indoors() -> None:
     assert score is not None
 
 
-def test_primary_race_bonus_is_withheld_indoors() -> None:
-    """A `role: daily` race shoe is not disqualified, so the +50 must go.
-
-    This is the case that actually bit: the designated race shoe is kept on
-    `role: daily` on purpose, so the hard filter never sees it and only the
-    bonus decides. Indoors it has to lose to a rested trainer.
-    """
+def test_primary_race_daily_shoe_is_disqualified_indoors() -> None:
+    """A `role: daily` race shoe is kept on daily on purpose, so the race lock
+    never sees it. On a belt it is a carbon race shoe all the same: out,
+    whatever the distance to the race (athlete decision 19.11.2026)."""
     daily_race_shoe = _race_profile(role="daily")
-    outdoor = _score(daily_race_shoe, indoor=False)
-    indoor = _score(daily_race_shoe, indoor=True)
-    assert outdoor is not None and indoor is not None
-    assert outdoor - indoor == 50.0
+    for days in (0, 1, 7, 25, 99, None):
+        assert _score(daily_race_shoe, indoor=False, race_in_days=days) is not None
+        assert _score(daily_race_shoe, indoor=True, race_in_days=days) is None, days
 
 
-def test_bonus_is_withheld_regardless_of_how_close_the_race_is() -> None:
-    daily_race_shoe = _race_profile(role="daily")
-    for days in (0, 1, 7, 25):
-        outdoor = _score(daily_race_shoe, indoor=False, race_in_days=days)
-        indoor = _score(daily_race_shoe, indoor=True, race_in_days=days)
-        assert outdoor is not None and indoor is not None
-        assert outdoor - indoor == 50.0, f"race_in_days={days}"
+def test_explicit_carbon_flag_is_disqualified_indoors() -> None:
+    plated = _race_profile(role="daily", primary_race=False, carbon=True)
+    assert _score(plated, indoor=True, race_in_days=99) is None
 
 
-def test_outside_the_prep_window_indoor_changes_nothing() -> None:
-    """The guard must not be a second, hidden penalty on ordinary sessions."""
-    daily_race_shoe = _race_profile(role="daily")
-    outdoor = _score(daily_race_shoe, indoor=False, race_in_days=99)
-    indoor = _score(daily_race_shoe, indoor=True, race_in_days=99)
-    assert outdoor == indoor
+def test_plain_tempo_trainer_still_runs_treadmill_quality() -> None:
+    """Only the plate is the problem on a belt, not a light tempo trainer."""
+    tempo = _race_profile(role="daily", primary_race=False, type="tempo")
+    outdoor = _score(tempo, indoor=False, race_in_days=99)
+    indoor = _score(tempo, indoor=True, race_in_days=99)
+    assert outdoor is not None and outdoor == indoor

@@ -200,6 +200,13 @@ def _apply_coach_gear_ssot(shoe_ctx: dict, planned_workouts: list[dict]) -> dict
         logger.info("coach-gear marker %s not in active shoes — SSOT skipped", pinned)
         return shoe_ctx
     rec = dict(shoe_ctx.get("shoeRecommendation") or {})
+    eligible = rec.get("eligible")
+    if eligible is not None and pinned not in eligible:
+        # The pinned shoe fails today's hard filters (run category, carbon on
+        # a belt, …) — a stale push-time pick must not re-surface a shoe the
+        # advisor now rules out.
+        logger.info("coach-gear marker %s not eligible for this run — SSOT skipped", pinned)
+        return shoe_ctx
     current_primary = rec.get("primary") or {}
     if current_primary.get("gear_id") == pinned:
         return shoe_ctx  # already converged
