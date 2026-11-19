@@ -1,0 +1,9 @@
+{
+  "_schema": "external_coverage.json — which external session already covers which planned stimulus (validator rule R042, WARNING only)",
+  "_usage": "'sessions' is a list of entries. An entry identifies an external session on the plan day by 'match' (regex, case-insensitive search on the calendar event name or agenda appointment title) and/or 'tags_any' (calendar event tags; agenda appointment categories count lower-cased as tags) — both optional, combined with AND, at least one required. 'covers' lists the planned-workout tags the session already delivers (e.g. core, mobility, upperbody). Optional 'workout_match' (regex on the planned workout name) narrows the hit, e.g. only shoulder mobility instead of every mobility block. 'label' names the session in the finding. External sessions are calendar WORKOUT events on the day that the plan did not produce (same name as a planned workout = re-push, '[coach-' marker = coach event, both skipped) and agenda-feed appointments. Empty list = rule off. Override in config/external_coverage.json.",
+  "_example": [
+    {"match": "^climbing gym", "tags_any": ["gym"], "covers": ["core"], "label": "climbing gym session"},
+    {"tags_any": ["therapy"], "covers": ["mobility"], "workout_match": "shoulder", "label": "therapy appointment"}
+  ],
+  "sessions": []
+}

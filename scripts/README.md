@@ -68,7 +68,7 @@ through `app/utils/paths.py` — set `COACH_HOME`, `CONFIG_DIR`,
 
 | Script | Purpose | Typical invocation | Reads | Writes |
 |--------|---------|--------------------|-------|--------|
-| `validate_plan.py` | Mechanical plan validator (rule plug-ins, R001–R011) | `echo '<workouts JSON>' \| python3 scripts/validate_plan.py --date YYYY-MM-DD --json` | stdin, config | stdout JSON (exit 2 on ERROR) |
+| `validate_plan.py` | Mechanical plan validator (rule plug-ins, R001–R042) | `echo '<workouts JSON>' \| python3 scripts/validate_plan.py --date YYYY-MM-DD --json` | stdin, config | stdout JSON (exit 2 on ERROR) |
 | `pre_push_validator.py` | Last-line validator wrapper run from `push_workouts.py` | (called internally) | — | — |
 | `check_warmup_overlap.py` | Warn on duplicate warmup drills on the same day | `--date YYYY-MM-DD` | intervals.icu API | stdout WARNING lines |
 | `audit_consistency.py` | Drift scanner across configs, agents, prompts | `[--offline] > /tmp/audit_raw.json` | configs + intervals.icu NOTEs | stdout JSON |

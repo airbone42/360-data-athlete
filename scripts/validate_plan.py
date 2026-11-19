@@ -110,6 +110,13 @@ class Context:
     # None when not fetched. Used by R041 (PAP lock needs a quality today or
     # tomorrow).
     tomorrow_workouts: list[dict] | None = None
+    # R042 — which external session covers which stimulus
+    # (config/external_coverage.json, empty = rule off), plus the external
+    # sessions on target_date: calendar WORKOUT events (None when not
+    # fetched) and agenda-feed appointments (None when not fetched).
+    external_coverage: list[dict] = field(default_factory=list)
+    day_calendar_events: list[dict] | None = None
+    day_appointments: list[dict] | None = None
 
 
 # ─────────────────────────── Helpers ───────────────────────────
@@ -3948,6 +3955,115 @@ def check_pap_lock_trigger(workouts: list[dict], ctx: Context) -> list[Finding]:
     )]
 
 
+# Marker the push appends to coach-generated events (`[coach-gear:…]`,
+# `[coach-plan:…]`, scripts/push_workouts.py) — such an event is the coach's
+# own earlier plan, never an external session.
+_COACH_EVENT_MARKER = "[coach-"
+
+
+def _coverage_entry_matches(entry: dict, name: str, tags: list[str]) -> bool:
+    """True when an external session (name + tags) satisfies a coverage entry.
+
+    ``match`` (regex, case-insensitive search on the name) and ``tags_any``
+    are both optional but combine with AND; an entry carries at least one.
+    """
+    rx = entry.get("_match_re")
+    if rx is not None and not rx.search(name or ""):
+        return False
+    tags_any = entry.get("tags_any") or []
+    if tags_any and not ({str(t).lower() for t in tags or []} & set(tags_any)):
+        return False
+    return True
+
+
+def check_external_coverage(workouts: list[dict], ctx: Context) -> list[Finding]:
+    """R042 — an external session on the same day already covers a planned block.
+
+    Real incident: a core block and a shoulder-mobility block were planned
+    on a day whose evening physio class and gym-hall session already carry
+    both stimuli. The athlete config stated it in prose; the planner did not
+    apply it. This is the deterministic net.
+
+    Config: ``config/external_coverage.json`` → ``sessions`` — a list of
+    ``{"match": "<regex on the session name>", "tags_any": [...],
+    "covers": [<planned-workout tags>], "workout_match": "<regex>",
+    "label": "..."}``. ``match`` and ``tags_any`` identify the external
+    session (AND, at least one of them); ``covers`` lists the planned-workout
+    tags it already delivers; the optional ``workout_match`` narrows the
+    planned workouts to those whose name matches (e.g. only shoulder
+    mobility, not every ``mobility`` block). Empty / missing = rule off.
+
+    External sessions on ``target_date``: (1) calendar WORKOUT events not
+    produced by this plan — events whose name equals a planned workout's
+    name (re-push) and events carrying a ``[coach-`` push marker are
+    skipped; (2) agenda-feed appointments (``upcomingAppointments``), matched
+    by title, their ``categories`` (lower-cased) count as tags. A planned
+    workout is a hit when one of its tags is in ``covers``, unless it matches
+    the entry itself (the coach's own blocker for that external session).
+    WARNING, never blocking.
+    """
+    entries = ctx.external_coverage or []
+    if not entries:
+        return []
+    planned_names = {(w.get("name") or "").strip().casefold() for w in workouts}
+    planned_names.discard("")
+    sessions: list[tuple[str, list[str], str]] = []
+    for e in ctx.day_calendar_events or []:
+        name = (e.get("name") or "").strip()
+        if name.casefold() in planned_names:
+            continue
+        if _COACH_EVENT_MARKER in (e.get("description") or ""):
+            continue
+        sessions.append((name, [str(t) for t in e.get("tags") or []], "calendar"))
+    for a in ctx.day_appointments or []:
+        sessions.append((
+            (a.get("title") or "").strip(),
+            [str(c).lower() for c in a.get("categories") or []],
+            "agenda",
+        ))
+    if not sessions:
+        return []
+
+    findings: list[Finding] = []
+    for w in workouts:
+        w_name = w.get("name") or ""
+        w_tags = {str(t).lower() for t in w.get("tags") or []}
+        if not w_tags:
+            continue
+        hits: dict[str, list[str]] = {}
+        for entry in entries:
+            covered = w_tags & set(entry.get("covers") or [])
+            if not covered:
+                continue
+            wrx = entry.get("_workout_match_re")
+            if wrx is not None and not wrx.search(w_name):
+                continue
+            if _coverage_entry_matches(entry, w_name, list(w_tags)):
+                continue
+            for name, tags, source in sessions:
+                if not _coverage_entry_matches(entry, name, tags):
+                    continue
+                label = entry.get("label") or name or "(unnamed)"
+                key = f"{label} ({source}: '{name}')"
+                for tag in sorted(covered):
+                    if key not in hits.setdefault(tag, []):
+                        hits[tag].append(key)
+        if hits:
+            parts = [f"'{tag}' by {', '.join(srcs)}" for tag, srcs in sorted(hits.items())]
+            findings.append(Finding(
+                rule_id="R042",
+                severity=SEVERITY_WARNING,
+                workout=_workout_name(w),
+                message="External session today already covers " + "; ".join(parts) + ".",
+                suggestion=(
+                    "Drop the block or move it to a day without that session "
+                    "(see the coverage note in athlete_static.md); keep it only "
+                    "with a named reason in coaching_notes."
+                ),
+            ))
+    return findings
+
+
 RULES: list[tuple[str, Callable[[list[dict], Context], list[Finding]]]] = [
     ("R001", check_reps_ceiling),
     ("R002", check_injury_locks),
@@ -3990,6 +4106,7 @@ RULES: list[tuple[str, Callable[[list[dict], Context], list[Finding]]]] = [
     ("R039", check_kg_line_without_rpe),
     ("R040", check_short_step_hr_target),
     ("R041", check_pap_lock_trigger),
+    ("R042", check_external_coverage),
 ]
 
 
@@ -4141,6 +4258,45 @@ def _load_tag_content_map() -> dict[str, dict]:
     return {str(k).lower(): v for k, v in tags.items() if isinstance(v, dict)}
 
 
+def _load_external_coverage() -> list[dict]:
+    """Load config/external_coverage.json for R042 (missing/empty = rule off).
+
+    Each entry needs a non-empty ``covers`` list and at least one of
+    ``match`` / ``tags_any``; regexes are compiled case-insensitive here,
+    entries with an invalid regex are dropped.
+    """
+    from app.utils.paths import resolve_config
+    try:
+        data = json.loads(resolve_config("external_coverage.json").read_text())
+    except (FileNotFoundError, json.JSONDecodeError):
+        return []
+    raw = data.get("sessions") if isinstance(data, dict) else data
+    out: list[dict] = []
+    for e in raw if isinstance(raw, list) else []:
+        if not isinstance(e, dict):
+            continue
+        covers = [str(c).lower() for c in e.get("covers") or [] if str(c).strip()]
+        tags_any = [str(t).lower() for t in e.get("tags_any") or [] if str(t).strip()]
+        match = str(e.get("match") or "")
+        if not covers or not (match or tags_any):
+            continue
+        try:
+            match_re = re.compile(match, re.IGNORECASE) if match else None
+            wm = str(e.get("workout_match") or "")
+            workout_re = re.compile(wm, re.IGNORECASE) if wm else None
+        except re.error:
+            continue
+        out.append({
+            "match": match,
+            "tags_any": tags_any,
+            "covers": covers,
+            "label": str(e.get("label") or ""),
+            "_match_re": match_re,
+            "_workout_match_re": workout_re,
+        })
+    return out
+
+
 async def _fetch_race_days_ahead(target_date: str, lookahead: int = 14) -> int | None:
     """Days until the next race on the calendar, or None when none is near.
 
@@ -4187,6 +4343,36 @@ async def _fetch_tomorrow_workouts(target_date: str) -> list[dict]:
     return out
 
 
+async def _fetch_day_workout_events(target_date: str) -> list[dict]:
+    """Calendar WORKOUT events on target_date (R042 external sessions)."""
+    from app.api.intervals_client import IntervalsClient
+    events = await IntervalsClient().get_events(oldest=target_date, newest=target_date)
+    return [
+        {
+            "name": e.get("name") or "",
+            "tags": e.get("tags") or [],
+            "description": e.get("description") or "",
+        }
+        for e in events or []
+        if (e.get("category") or "") == "WORKOUT"
+    ]
+
+
+async def _fetch_day_appointments(target_date: str) -> list[dict]:
+    """Agenda-feed appointments overlapping target_date (R042).
+
+    ``fetch_agenda`` never raises; its "unavailable" warning is turned into
+    an exception here so load_context() reports R042 as degraded. Feature
+    off (no feed URL) → empty list, no warning.
+    """
+    from app.api.agenda_feed import UNAVAILABLE_PREFIX, fetch_agenda
+    feed = await fetch_agenda(datetime.fromisoformat(target_date).date(), days=0)
+    for w in feed.get("warnings") or []:
+        if str(w).startswith(UNAVAILABLE_PREFIX):
+            raise RuntimeError(str(w))
+    return list(feed.get("appointments") or [])
+
+
 def load_context(target_date: str, fetch_remote: bool = True) -> Context:
     ctx = Context(
         target_date=target_date,
@@ -4199,6 +4385,7 @@ def load_context(target_date: str, fetch_remote: bool = True) -> Context:
         injury_lock_allows=_load_injury_lock_allows(),
         injury_lock_blocks=_load_injury_lock_blocks(),
         tag_content_map=_load_tag_content_map(),
+        external_coverage=_load_external_coverage(),
     )
     if fetch_remote:
         # Fail-soft per source: a failed fetch never crashes the validator,
@@ -4256,6 +4443,18 @@ def load_context(target_date: str, fetch_remote: bool = True) -> Context:
         except Exception as exc:  # noqa: BLE001
             ctx.tomorrow_workouts = None
             _degraded("tomorrow's calendar", "R041 (PAP lock trigger)", exc)
+        if ctx.external_coverage:
+            # Only fetched when R042 is configured — no extra calls otherwise.
+            try:
+                ctx.day_calendar_events = asyncio.run(_fetch_day_workout_events(target_date))
+            except Exception as exc:  # noqa: BLE001
+                ctx.day_calendar_events = None
+                _degraded("today's calendar", "R042 (external session coverage)", exc)
+            try:
+                ctx.day_appointments = asyncio.run(_fetch_day_appointments(target_date))
+            except Exception as exc:  # noqa: BLE001
+                ctx.day_appointments = None
+                _degraded("agenda feed", "R042 (external session coverage)", exc)
         try:
             raw = asyncio.run(_fetch_raw_activities_for_hardreize(target_date))
             from app.graphs.sub_athlete_context.context_builder import _compute_weekly_hard_reize_balance

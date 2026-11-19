@@ -7,7 +7,7 @@ reference like `CLAUDE.md → "No silent conservatism"` resolves to the
 short rule there and to the long form here. When the two disagree, the
 short rule in `CLAUDE.md` and the validator code win; fix this file.
 
-Mechanical rules live in `scripts/validate_plan.py` (R001–R041) and the
+Mechanical rules live in `scripts/validate_plan.py` (R001–R042) and the
 scripts named in each section — prose here never replaces a check.
 
 ## Session start (policy)
@@ -716,7 +716,7 @@ On days the athlete attends a hands-on therapy / rehab / physio appointment, the
 4. **Athlete-confirmed deviations** ("today only the upper body, no core") are accepted for that day; update the persisted scope only if the change is structural.
 5. **Post-treatment reaction — re-load by irritability, not by calendar day.** A benign post-treatment soreness has its own 24–72 h course (onset 2–24 h, peak ~48 h), distinct from eccentric DOMS. On the following days classify the **treated structure** before loading it (current pain rating, rest / night pain yes/no, active ROM ≈ passive ROM, red flags): **red flag** (worsening beyond 48–72 h, swelling / warmth, spread, new neurological signs) → skip the block and refer back to the practice; **high** → no mechanical loading, passive mobility only, re-check in 24 h; **moderate** → one progression step below the anchor, volume −30 %; **low** (settled) → **hold the documented anchor**, no progression step — a prophylactic reduction below it is not evidence-based and counts as silent conservatism. The per-set pain-monitoring gate stays active (pain during the exercise within the accepted band, baseline again the next morning, no week-over-week escalation); re-progression is released **one clean session after** the anchor session; avoid stacking the appointment and a structured home block on the same structure on the same day. Details and sources: [post-treatment-reaction-reload-dosing.md](../research/post-treatment-reaction-reload-dosing.md).
 
-*Enforcement: head-coach judgment — relies on a persisted therapy-scope note in `config/athlete_static.md` and on treating the appointment like a sibling workout (item 2).*
+*Enforcement: head-coach judgment — relies on a persisted therapy-scope note in `config/athlete_static.md` and on treating the appointment like a sibling workout (item 2). Mechanical net for item 2: `validate_plan.py` R042 `check_external_coverage` (WARNING, never blocking) flags a planned workout whose tag an external session on the same day already covers — calendar WORKOUT events the plan did not produce and agenda-feed appointments, mapped to covered tags in `config/external_coverage.json` (empty = off). Tests: `tests/test_validate_plan_r042.py`.*
 
 ### Load before range of motion on an irritable tendon (policy)
 
