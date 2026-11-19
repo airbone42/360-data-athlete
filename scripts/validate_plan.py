@@ -3265,8 +3265,7 @@ def check_treadmill_pace_dosing(workouts: list[dict], ctx: Context) -> list[Find
     Checked: every Run on a treadmill (``surface: treadmill`` or ``indoor``,
     shared ``_is_treadmill`` helper). Main work steps — >= 60 s or a km
     distance, outside warm-up / cool-down / stride blocks, not drills, not
-    press-lap steps, not recovery jogs inside a repeat block — must be dosed by
-    pace. Canonical form: an explicit **belt speed in km/h** anywhere on the
+    recovery jogs inside a repeat block — must be dosed by pace. Canonical form: an explicit **belt speed in km/h** anywhere on the
     step line, cue included (``- Steady 29m — belt 11.8 km/h fixed; …``), with
     **no** watch target. A watch pace target (``5:05/km Pace``) is still
     accepted for backward compatibility, but it makes the watch alarm against
@@ -3277,7 +3276,9 @@ def check_treadmill_pace_dosing(workouts: list[dict], ctx: Context) -> list[Find
     - carries an HR target in the step syntax (``% LTHR``, ``% HR``, ``Zn HR``)
       — regardless of any km/h figure: the watch then steers by HR, which is
       HR dosing; HR belongs in the cue as a yielding cap, not as the target;
-    - carries neither a km/h belt speed nor a pace target.
+    - carries neither a km/h belt speed nor a pace target;
+    - is ``press lap`` at a fixed belt speed (a fixed-speed step has a known
+      duration; ``press lap`` belongs to warm-up and cool-down only).
     """
     m = _R031_DOSING_RE.search(ctx.athlete_status or "")
     if not m or m.group(1).lower() != "pace":
@@ -3306,8 +3307,6 @@ def check_treadmill_pace_dosing(workouts: list[dict], ctx: Context) -> list[Find
                 continue
             content = line.lstrip("-").strip()
             step = _R031_CUE_SEP_RE.split(content, maxsplit=1)[0]
-            if _LAP_PRESS_RE.search(step):
-                continue
             if (
                 _R031_WARMUP_RE.match(step)
                 or _R031_COOLDOWN_RE.match(step)
@@ -3316,6 +3315,31 @@ def check_treadmill_pace_dosing(workouts: list[dict], ctx: Context) -> list[Find
             ):
                 continue
             if section == "repeat" and _R031_RECOVERY_RE.search(step):
+                continue
+            if _LAP_PRESS_RE.search(step):
+                # A main step at a fixed belt speed has a known duration: the
+                # timer ends it, not the athlete. `press lap` there is the
+                # wrong escape from the HR-target error above (19.11.2026: a
+                # 14-min steady step became `press lap` after R031 rejected
+                # its `% LTHR` target).
+                if _R031_BELT_KMH_RE.search(content):
+                    findings.append(Finding(
+                        rule_id="R031",
+                        severity=SEVERITY_ERROR,
+                        workout=_workout_name(w),
+                        message=(
+                            f"Treadmill main step `{step[:80]}` is `press lap` "
+                            f"at a fixed belt speed; a fixed-speed main step "
+                            f"has a known duration and ends on the timer."
+                        ),
+                        suggestion=(
+                            "Write it as a timed step without any watch target "
+                            "(`- Steady 14m — belt 11.0 km/h fixed; …`). A belt "
+                            "step without target is the canonical form and "
+                            "passes R012; `press lap` stays for warm-up and "
+                            "cool-down only."
+                        ),
+                    ))
                 continue
             if _step_duration_seconds(step) < 60 and not _R031_DISTANCE_RE.search(step):
                 continue
@@ -3343,7 +3367,9 @@ def check_treadmill_pace_dosing(workouts: list[dict], ctx: Context) -> list[Find
                 suggestion=(
                     "Drop the watch target and put the belt speed at the outdoor "
                     "target pace into the step (`- Steady 29m — belt 11.8 km/h "
-                    "fixed; …`; no uplift for the missing air resistance, grade "
+                    "fixed; …`). The step then carries no watch target at all; "
+                    "that is the canonical form, R012 accepts it, and it is "
+                    "not a reason to turn the step into `press lap` (no uplift for the missing air resistance, grade "
                     "per the specialist's treadmill rule). HR stays only in the "
                     "cue as a yielding cap (~+5-8 bpm indoors; breathing binds). "
                     "No bare `Zn` label either — intervals.icu reads it as a "

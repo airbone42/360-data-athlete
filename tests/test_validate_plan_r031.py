@@ -127,3 +127,43 @@ def test_r012_no_missing_target_warning_for_belt_kmh_step():
     assert check_intervals_step_targets([_w(icu)], PACE_CTX) == []
     # outdoor: a km/h figure is no anchor, the R012 warning stays
     assert len(check_intervals_step_targets([_w(icu, surface="asphalt")], PACE_CTX)) == 1
+
+
+# 19.11.2026: after R031 rejected `Steady 14m 78-82% LTHR`, the specialist made
+# the fixed-speed main step `press lap` instead of dropping the target.
+PRESS_LAP_MAIN = (
+    "Warmup\n- Easy 5m press lap - belt 9.5 km/h; aim ~5 min, then press lap\n\n"
+    "Main\n- Steady 14m press lap - belt 11.0 km/h fixed, aim ~14 min, then press lap\n\n"
+    "Strides 4x\n- Easy 90s 65-75% LTHR\n- Stride 20s - quick feet\n\n"
+    "Cool-down\n- Cool-down 4m40s press lap - belt 9.5 km/h; aim ~4.5 min, then press lap"
+)
+TIMED_MAIN = PRESS_LAP_MAIN.replace(
+    "- Steady 14m press lap - belt 11.0 km/h fixed, aim ~14 min, then press lap",
+    "- Steady 14m - belt 11.0 km/h fixed",
+)
+
+
+def test_r031_errors_on_press_lap_belt_main_step():
+    f = check_treadmill_pace_dosing([_w(PRESS_LAP_MAIN)], PACE_CTX)
+    assert len(f) == 1
+    assert f[0].severity == "ERROR"
+    assert "press lap" in f[0].message
+
+
+def test_r031_timed_belt_main_step_passes_r031_and_r012():
+    assert check_treadmill_pace_dosing([_w(TIMED_MAIN)], PACE_CTX) == []
+    assert check_intervals_step_targets([_w(TIMED_MAIN)], PACE_CTX) == []
+
+
+def test_r031_press_lap_warmup_and_cooldown_stay_allowed():
+    icu = (
+        "Warmup\n- Easy 8m press lap - belt 9.5 km/h; aim ~8 min, then press lap\n\n"
+        "Main\n- Z2 29m - belt 11.8 km/h fixed\n\n"
+        "Cool-down\n- Cool-down 5m press lap - belt 9.5 km/h; aim ~5 min, then press lap"
+    )
+    assert check_treadmill_pace_dosing([_w(icu)], PACE_CTX) == []
+
+
+def test_r031_hr_target_suggestion_rules_out_press_lap():
+    f = check_treadmill_pace_dosing([_w(HR_ONLY)], PACE_CTX)
+    assert "press lap" in f[0].suggestion
