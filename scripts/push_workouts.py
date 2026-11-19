@@ -376,9 +376,10 @@ def main() -> None:
             if findings:
                 logger.warning("Validator findings:\n%s", format_findings_text(findings))
             if errors:
-                notify_error("push_workouts: validate_plan ERROR(s) — push blocked", {
-                    "errors": [f.to_dict() for f in errors],
-                })
+                # No Telegram alert: a validator block is the normal correction
+                # loop of the planning session (fix, re-push), not a technical
+                # fault, and the raw finding must not reach the athlete
+                # (19.11.2026, R031 sent as "Technischer Fehler").
                 logger.error("Push blocked due to %d ERROR finding(s). Override with --skip-validation.", len(errors))
                 sys.exit(2)
             if warnings:
