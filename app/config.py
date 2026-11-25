@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     langchain_api_key: str = ""
     langchain_project: str = "ai_coach_dev"
     telegram_chat_id: str = ""
+    # Alert transport (app/utils/alerts.py): when set, alerts go to this command
+    # on stdin instead of Telegram, e.g. "python3 /path/to/inbox_alert.py".
+    alert_command: str = ""
     openrouter_model: str = "google/gemini-3.1-pro-preview"
     gemini_model: str = "google/gemini-2.0-flash-001"
     garmin_email: str = ""
