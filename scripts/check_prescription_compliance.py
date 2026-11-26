@@ -27,6 +27,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app.analytics.prescription_compliance import (  # noqa: E402
     compute_prescription_compliance,
     format_findings,
+    load_external_coverage,
 )
 from app.utils.config_loader import load_config  # noqa: E402
 
@@ -66,7 +67,8 @@ def main() -> int:
         return 2
 
     findings = compute_prescription_compliance(
-        progressions, today, activities, lookback_days=args.lookback_days
+        progressions, today, activities, lookback_days=args.lookback_days,
+        coverage=load_external_coverage(),
     )
 
     if args.as_json:

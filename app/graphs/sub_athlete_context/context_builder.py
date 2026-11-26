@@ -1384,12 +1384,14 @@ def _compute_prescription_compliance(activities: list[dict], today: date) -> str
     from app.analytics.prescription_compliance import (
         compute_prescription_compliance,
         format_findings,
+        load_external_coverage,
     )
     from app.utils.config_loader import load_config
 
     findings = compute_prescription_compliance(
         load_config("exercise_progressions"), today, activities,
         lookback_days=PRESCRIPTION_LOOKBACK_DAYS,
+        coverage=load_external_coverage(),
     )
     return format_findings(findings, lookback_days=PRESCRIPTION_LOOKBACK_DAYS)
 

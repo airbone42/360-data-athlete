@@ -20,6 +20,20 @@ actually executed:
   activity description. That is a real execution log and needs no extra
   bookkeeping from the athlete.
 
+Two optional fields widen what counts as an execution, for prescriptions
+whose parts are logged under other names than the prescription itself:
+
+- ``**Zählt als Ausführung:**`` — comma-separated names of the parts (the
+  exercises inside a block, or an alternative block name). Any of them in a
+  logged exercise, a session name or — for non-endurance activities — the
+  description text counts as the prescription having run.
+- ``**Tags:**`` — the planned-workout tags the prescription carries (same
+  vocabulary as ``covers`` in ``external_coverage.json``). A completed
+  external session (therapy appointment, class, gym hall) that
+  ``external_coverage.json`` says covers one of those tags — and whose
+  ``workout_match`` fits the prescription name — counts as an execution on
+  its day, the same rule the plan validator applies in the other direction.
+
 The output is advisory. It never blocks a plan; it makes a silent omission
 loud enough to be a decision.
 """
@@ -41,6 +55,22 @@ STRENGTH_ACTIVITY_TYPES = frozenset({"WeightTraining", "Workout"})
 # block hangs under. Level is not meaningful here, only the title.
 _HEADING_RE = re.compile(r"^#{3,4}\s+(.+?)\s*$")
 # `- **Soll-Frequenz:** 2x/Woche` — bold or plain, German or English key.
+_ALIAS_RE = re.compile(
+    r"\*\*Zählt als Ausführung\s*:?\*\*\s*(.+?)\s*$"
+    r"|^\s*-?\s*Zählt als Ausführung\s*:\s*(.+?)\s*$",
+    re.IGNORECASE,
+)
+_TAGS_RE = re.compile(
+    r"\*\*Tags\s*:?\*\*\s*(.+?)\s*$" r"|^\s*-?\s*Tags\s*:\s*(.+?)\s*$",
+    re.IGNORECASE,
+)
+# Endurance sessions carry prose and intervals; a description search for an
+# alias there would match incidental mentions ("skipped the wall angels").
+ENDURANCE_ACTIVITY_TYPES = frozenset({
+    "Run", "VirtualRun", "TrailRun", "Ride", "VirtualRide", "GravelRide",
+    "MountainBikeRide", "EBikeRide", "Swim", "OpenWaterSwim", "Walk", "Hike",
+    "Rowing", "NordicSki",
+})
 _FREQ_RE = re.compile(
     r"\*\*(?:Soll-Frequenz|Soll-Frequenz)\s*:?\*\*\s*(.+?)\s*$"
     r"|^\s*-?\s*(?:Soll-Frequenz)\s*:\s*(.+?)\s*$",
@@ -103,36 +133,66 @@ def parse_frequency(raw: str) -> int | None:
     return None
 
 
+def _split_list(raw: str) -> list[str]:
+    """Split a comma/semicolon list; drop prose after a dash and empties."""
+    raw = re.split(r"\s+[—–]\s+", raw)[0]
+    return [x.strip() for x in re.split(r"[;,]", raw) if x.strip()]
+
+
 def parse_prescriptions(progressions_md: str) -> list[dict]:
-    """Extract `{name, raw_frequency, max_gap_days}` for every declaring entry."""
+    """Extract one record per entry that declares a cadence.
+
+    Each record is ``{name, raw_frequency, max_gap_days, aliases, tags}``;
+    ``aliases`` (``**Zählt als Ausführung:**``) and ``tags`` (``**Tags:**``)
+    are optional lists, empty when the entry does not declare them.
+    """
     out: list[dict] = []
-    current: str | None = None
+    current: dict | None = None
+
+    def flush() -> None:
+        if current is not None and current.get("max_gap_days") is not None:
+            out.append(current)
+
     for line in progressions_md.splitlines():
         heading = _HEADING_RE.match(line)
         if heading:
-            current = heading.group(1).strip()
+            flush()
+            name = heading.group(1).strip()
             # Headings carry documentation alongside the name: a trailing
             # parenthetical qualifier ("(Kernlift-Option A)") and everything
             # after a dash separator ("— Physio-Protokoll ab …"). Both would
             # wreck the match against the logged exercise name, which only
             # ever contains the exercise itself.
-            current = re.split(r"\s+[—–]\s+", current)[0].strip()
-            current = re.sub(r"\s*\([^)]*\)\s*$", "", current).strip()
+            name = re.split(r"\s+[—–]\s+", name)[0].strip()
+            name = re.sub(r"\s*\([^)]*\)\s*$", "", name).strip()
+            current = {
+                "name": name, "raw_frequency": "", "max_gap_days": None,
+                "aliases": [], "tags": [],
+            }
             continue
         if current is None:
             continue
         m = _FREQ_RE.search(line)
-        if not m:
+        if m and current["max_gap_days"] is None:  # one declaration per entry
+            raw = (m.group(1) or m.group(2) or "").strip()
+            # Drop trailing prose after a sentence separator: the cadence is
+            # the leading clause, anything after an em dash is rationale.
+            raw = re.split(r"\s+[—–-]\s+", raw)[0].strip()
+            gap = parse_frequency(raw)
+            if gap is not None:
+                current["raw_frequency"] = raw
+                current["max_gap_days"] = gap
             continue
-        raw = (m.group(1) or m.group(2) or "").strip()
-        # Drop trailing prose after a sentence separator: the cadence is the
-        # leading clause, anything after an em dash is rationale.
-        raw = re.split(r"\s+[—–-]\s+", raw)[0].strip()
-        gap = parse_frequency(raw)
-        if gap is None:
+        m = _ALIAS_RE.search(line)
+        if m:
+            current["aliases"] += _split_list(m.group(1) or m.group(2) or "")
             continue
-        out.append({"name": current, "raw_frequency": raw, "max_gap_days": gap})
-        current = None  # one declaration per entry
+        m = _TAGS_RE.search(line)
+        if m:
+            current["tags"] += [
+                t.lower() for t in _split_list(m.group(1) or m.group(2) or "")
+            ]
+    flush()
     return out
 
 
@@ -220,16 +280,135 @@ def _match_execution(name: str, executions: dict[str, date]) -> date | None:
     return best
 
 
+def load_external_coverage() -> list[dict]:
+    """Load ``config/external_coverage.json`` (missing/invalid = no coverage).
+
+    Same file and entry shape as validator rule R042; regexes are compiled
+    case-insensitive and entries with an invalid regex are dropped.
+    """
+    import json
+
+    from app.utils.paths import resolve_config
+
+    try:
+        data = json.loads(resolve_config("external_coverage.json").read_text())
+    except (FileNotFoundError, json.JSONDecodeError, OSError):
+        return []
+    raw = data.get("sessions") if isinstance(data, dict) else data
+    out: list[dict] = []
+    for e in raw if isinstance(raw, list) else []:
+        if not isinstance(e, dict):
+            continue
+        covers = {str(c).lower() for c in e.get("covers") or [] if str(c).strip()}
+        tags_any = {str(t).lower() for t in e.get("tags_any") or [] if str(t).strip()}
+        match, wm = str(e.get("match") or ""), str(e.get("workout_match") or "")
+        if not covers or not (match or tags_any):
+            continue
+        try:
+            out.append({
+                "covers": covers,
+                "tags_any": tags_any,
+                "match_re": re.compile(match, re.IGNORECASE) if match else None,
+                "workout_re": re.compile(wm, re.IGNORECASE) if wm else None,
+            })
+        except re.error:
+            continue
+    return out
+
+
+def _in_window(activity: dict, today: date, lookback_days: int) -> date | None:
+    try:
+        day = date.fromisoformat(activity_date(activity))
+    except ValueError:
+        return None
+    if day < today - timedelta(days=lookback_days) or day > today:
+        return None
+    return day
+
+
+def _latest_alias_execution(
+    aliases: list[str], activities: list[dict], today: date, lookback_days: int
+) -> date | None:
+    """Latest day an activity shows one of the declared part names.
+
+    Three places count: a parsed exercise name (substring, as for the
+    prescription's own name), the session name, and — for activities that are
+    not endurance sessions — the description text, so a part that is logged
+    in prose ("Wall Angel, No-Wall Slide 2x8") or under a non-strength
+    activity type still registers. Aliases shorter than four characters are
+    ignored; they would match half the log.
+    """
+    from app.analytics.exercise_parser import parse_description
+
+    targets = [t for t in (_normalise(a) for a in aliases) if len(t) >= 4]
+    if not targets:
+        return None
+    best: date | None = None
+    for activity in activities:
+        day = _in_window(activity, today, lookback_days)
+        if day is None or (best is not None and day <= best):
+            continue
+        hay = [f" {_normalise(str(activity.get('name') or ''))} "]
+        description = str(activity.get("description") or "")
+        if activity.get("type") in STRENGTH_ACTIVITY_TYPES:
+            parsed, _ = parse_description(description)
+            hay += [f" {_normalise(ex.name or '')} " for ex in parsed]
+        if activity.get("type") not in ENDURANCE_ACTIVITY_TYPES:
+            hay.append(f" {_normalise(description)} ")
+        if any(f" {t} " in h for t in targets for h in hay):
+            best = day
+    return best
+
+
+def _latest_coverage_execution(
+    p: dict, coverage: list[dict], activities: list[dict], today: date,
+    lookback_days: int,
+) -> date | None:
+    """Latest day an external session covered this prescription's tags.
+
+    Mirrors R042 from the other side: that rule drops a planned block when an
+    external session already covers it, this one stops the counter from
+    calling the block "never executed" when such a session took its place.
+    Needs ``**Tags:**`` on the prescription; without them nothing is credited.
+    """
+    tags = set(p.get("tags") or [])
+    if not tags or not coverage:
+        return None
+    best: date | None = None
+    for activity in activities:
+        day = _in_window(activity, today, lookback_days)
+        if day is None or (best is not None and day <= best):
+            continue
+        name = str(activity.get("name") or "")
+        a_tags = {str(t).lower() for t in activity.get("tags") or []}
+        for e in coverage:
+            if not (e["covers"] & tags):
+                continue
+            if e["workout_re"] is not None and not e["workout_re"].search(p["name"]):
+                continue
+            if e["match_re"] is not None and not e["match_re"].search(name):
+                continue
+            if e["tags_any"] and not (e["tags_any"] & a_tags):
+                continue
+            best = day
+            break
+    return best
+
+
 def compute_prescription_compliance(
     progressions_md: str,
     today: date,
     activities: list[dict],
     lookback_days: int = 60,
+    coverage: list[dict] | None = None,
 ) -> list[dict]:
     """Return one finding per prescription that is overdue or never executed.
 
     ``activities`` are intervals.icu activity dicts (``start_date_local``,
-    ``name``, ``type``, ``description``) covering at least ``lookback_days``.
+    ``name``, ``type``, ``tags``, ``description``) covering at least
+    ``lookback_days``. ``coverage`` is the parsed ``external_coverage.json``
+    (see ``load_external_coverage``); None or empty credits no external
+    session.
     """
     prescriptions = parse_prescriptions(progressions_md)
     if not prescriptions:
@@ -243,6 +422,12 @@ def compute_prescription_compliance(
             for d in (
                 _match_execution(p["name"], executions),
                 _match_session(p["name"], sessions),
+                _latest_alias_execution(
+                    p["aliases"], activities, today, lookback_days
+                ),
+                _latest_coverage_execution(
+                    p, coverage or [], activities, today, lookback_days
+                ),
             )
             if d is not None
         ]

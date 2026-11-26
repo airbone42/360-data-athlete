@@ -160,3 +160,116 @@ def test_activity_outside_the_window_is_ignored():
         MD, date(2026, 7, 31), acts, lookback_days=28
     )
     assert [f["status"] for f in findings] == ["never"]
+
+
+PARTS_MD = (
+    "### Mobility Block — Protocol\n"
+    "- **Soll-Frequenz:** alle 2 Tage\n"
+    "- **Zählt als Ausführung:** Wall Angel, Banded No-Wall Slide — Rationale\n"
+    "- **Tags:** mobility\n"
+)
+
+
+def test_parse_prescriptions_reads_aliases_and_tags():
+    got = pc.parse_prescriptions(PARTS_MD)
+    assert len(got) == 1
+    assert got[0]["aliases"] == ["Wall Angel", "Banded No-Wall Slide"]
+    assert got[0]["tags"] == ["mobility"]
+    assert got[0]["max_gap_days"] == 2
+
+
+def test_parse_prescriptions_lines_after_frequency_stay_with_entry():
+    md = PARTS_MD + "### Next\n- **Soll-Frequenz:** täglich\n"
+    got = pc.parse_prescriptions(md)
+    assert [g["name"] for g in got] == ["Mobility Block", "Next"]
+    assert got[1]["aliases"] == [] and got[1]["tags"] == []
+
+
+def test_alias_in_exercise_list_counts():
+    acts = [_activity("2026-10-09", ["Wall Angel"], workout_name="Core + Mobility")]
+    assert pc.compute_prescription_compliance(PARTS_MD, date(2026, 10, 10), acts) == []
+
+
+def test_alias_in_prose_description_of_non_strength_type_counts():
+    acts = [{
+        "start_date_local": "2026-10-09T18:00:00", "name": "Evening flow",
+        "type": "Yoga", "description": "Wall Angel, No-Wall Slide 2x8",
+    }]
+    # "Wall Angel" is a declared part: any hit is enough.
+    assert pc.compute_prescription_compliance(PARTS_MD, date(2026, 10, 10), acts) == []
+
+
+def test_alias_mention_in_run_description_does_not_count():
+    acts = [{
+        "start_date_local": "2026-10-09T18:00:00", "name": "Easy run",
+        "type": "Run", "description": "Skipped the wall angel work today.",
+    }]
+    findings = pc.compute_prescription_compliance(PARTS_MD, date(2026, 10, 10), acts)
+    assert findings and findings[0]["status"] == "never"
+
+
+def test_alias_outside_lookback_is_ignored():
+    acts = [_activity("2026-07-01", ["Wall Angel"])]
+    findings = pc.compute_prescription_compliance(
+        PARTS_MD, date(2026, 10, 10), acts, lookback_days=28
+    )
+    assert findings and findings[0]["status"] == "never"
+
+
+COVERAGE = [{
+    "covers": {"mobility"},
+    "tags_any": {"physio"},
+    "match_re": None,
+    "workout_re": __import__("re").compile("schulter|shoulder|mobility", 2),
+}]
+
+
+def test_external_session_with_scope_is_credited():
+    acts = [{
+        "start_date_local": "2026-10-09T10:00:00", "name": "Therapy (clinic)",
+        "type": "Workout", "tags": ["mobility", "physio"], "description": "",
+    }]
+    assert pc.compute_prescription_compliance(
+        PARTS_MD, date(2026, 10, 10), acts, coverage=COVERAGE
+    ) == []
+
+
+def test_external_session_not_credited_without_coverage_or_tags():
+    acts = [{
+        "start_date_local": "2026-10-09T10:00:00", "name": "Therapy (clinic)",
+        "type": "Workout", "tags": ["mobility", "physio"], "description": "",
+    }]
+    assert pc.compute_prescription_compliance(
+        PARTS_MD, date(2026, 10, 10), acts
+    )[0]["status"] == "never"
+    no_tags = PARTS_MD.replace("- **Tags:** mobility\n", "")
+    assert pc.compute_prescription_compliance(
+        no_tags, date(2026, 10, 10), acts, coverage=COVERAGE
+    )[0]["status"] == "never"
+
+
+def test_external_session_workout_match_must_fit_the_prescription():
+    cov = [{**COVERAGE[0], "workout_re": __import__("re").compile("knee", 2)}]
+    acts = [{
+        "start_date_local": "2026-10-09T10:00:00", "name": "Therapy (clinic)",
+        "type": "Workout", "tags": ["physio"], "description": "",
+    }]
+    assert pc.compute_prescription_compliance(
+        PARTS_MD, date(2026, 10, 10), acts, coverage=cov
+    )[0]["status"] == "never"
+
+
+def test_load_external_coverage_reads_config(tmp_path, monkeypatch):
+    import json
+
+    cfg = tmp_path / "external_coverage.json"
+    cfg.write_text(json.dumps({"sessions": [
+        {"tags_any": ["physio"], "covers": ["mobility"], "workout_match": "shoulder"},
+        {"covers": ["core"]},  # neither match nor tags_any: dropped
+        {"match": "(", "covers": ["core"]},  # invalid regex: dropped
+    ]}))
+    monkeypatch.setattr(
+        "app.utils.paths.resolve_config", lambda name: cfg, raising=True
+    )
+    got = pc.load_external_coverage()
+    assert len(got) == 1 and got[0]["covers"] == {"mobility"}

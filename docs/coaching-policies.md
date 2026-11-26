@@ -340,7 +340,12 @@ exists to prevent, reached by a route it did not cover.
 `exercise_progressions.md`. The tag-level due-warnings cannot do this —
 they resolve to "did a `core` session happen?", so a prescription living
 *inside* such a session is invisible to them. Declare the cadence for any
-prescription whose omission would otherwise be silent.
+prescription whose omission would otherwise be silent. A block whose parts
+are logged under their own names declares them with `**Zählt als Ausführung:**`,
+and an external session that stands in for it (therapy, class, gym hall) is
+credited through `**Tags:**` plus `config/external_coverage.json` — the same
+file R042 reads when planning, so the counter and the validator cannot disagree
+about what a session covers.
 
 **The mirror gap: a step that is waiting.** Nothing sees a *pending* step — and, more importantly, **two pending steps landing on the same tissue**: each exercise entry declares only its own step, so two steps run in one session, the next morning's reading is unattributable and neither step is confirmed. An agreed order is lost the same way — it is written into whichever entry the argument happened in, and the next planning cycle re-derives it from the nearest heuristic ("oldest queue entry first" vs. "largest distance to target band first" give different answers). Declare `**Schritt-offen:**` (plus optional `**Schritt-Kette:**` and `**Schritt-Rang:**`) on any entry whose step is due and not yet run (schema: `config.example/exercise_progressions.md` → Schritt-Felder). **No date in those fields** — when a step runs belongs in the slot ledger (see "Scheduling decisions have exactly one canonical home"); the rank says in which order, not on which day.
 

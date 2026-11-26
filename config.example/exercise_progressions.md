@@ -64,6 +64,25 @@ meldet Rückstand in `planningConstraints`. Ad hoc:
 python3 scripts/check_prescription_compliance.py [--date YYYY-MM-DD] [--json]
 ```
 
+**Block-Verschreibungen** (ein Block, dessen Teile unter eigenen Namen im
+Log stehen) tragen zwei optionale Zusatzzeilen:
+
+```markdown
+- **Zählt als Ausführung:** Übung A, Übung B, Alternativer Blockname
+- **Tags:** mobility
+```
+
+- `Zählt als Ausführung` listet die enthaltenen Übungsnamen (kommagetrennt).
+  Jeder Treffer in einer geloggten Übung, einem Sessionnamen oder — außer bei
+  Ausdauer-Aktivitäten — im Beschreibungstext gilt als Ausführung. Ohne die
+  Zeile zählt nur der Blockname selbst (Präfix des Sessionnamens).
+- `Tags` nennt die Planungs-Tags des Blocks (Vokabular wie `covers` in
+  `external_coverage.json`). Eine abgeschlossene externe Einheit (Praxis,
+  Kurs, Halle), die `external_coverage.json` für eines dieser Tags abdeckt
+  und deren `workout_match` zum Blocknamen passt, gilt am selben Tag als
+  Ausführung — dieselbe Regel, die R042 beim Planen anwendet. Ohne `Tags`
+  wird nichts angerechnet.
+
 **Opt-in pro Übung:** Ohne `Soll-Frequenz`-Zeile wird eine Übung nicht
 verfolgt. Das hält die Meldung kurz — sie soll auf die wenigen stehenden
 Verschreibungen zeigen, nicht auf jeden Eintrag der Datei.
